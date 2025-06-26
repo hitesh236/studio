@@ -60,7 +60,7 @@ export const columns = ({
           <div className="px-2">
             <Checkbox
               checked={isAllSelected ? true : isIndeterminate ? 'indeterminate' : false}
-              onCheckedChange={() => onSelectAll(!isAllSelected)}
+              onCheckedChange={(checked) => onSelectAll(checked === true)}
               aria-label="Select all"
               className={cn("translate-y-[2px]", density === 'compact' && "h-3.5 w-3.5")}
             />
@@ -148,7 +148,7 @@ export const columns = ({
         }
         return (
           <div className={cn("p-2", density === 'compact' && 'py-1 px-2')}>
-            <Badge variant={variant}>{row.status}</Badge>
+            <Badge variant={variant} className="w-[100px] justify-center font-normal">{row.status}</Badge>
           </div>
         );
       },

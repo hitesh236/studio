@@ -176,11 +176,19 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
   }, [data, filter, activeFilters, filterValues]);
 
   const requestSort = (key: string) => {
-    let direction: "ascending" | "descending" = "ascending";
-    if (sortConfig.key === key && sortConfig.direction === "ascending") {
-      direction = "descending";
+    let newKey: string | null = key;
+    let direction: 'ascending' | 'descending' = 'ascending';
+
+    if (sortConfig.key === key) {
+        if (sortConfig.direction === 'ascending') {
+            direction = 'descending';
+        } else {
+            // It was descending, so turn off sort
+            newKey = null;
+        }
     }
-    setSortConfig({ key, direction });
+    
+    setSortConfig({ key: newKey, direction });
     setPage(0);
   };
 
