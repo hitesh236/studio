@@ -593,13 +593,6 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-3xl font-bold font-headline">HicksTable</h1>
-        <p className="text-muted-foreground">
-          A demonstration of data interaction following Hick's Law.
-        </p>
-      </header>
-      
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard
           icon={Users}

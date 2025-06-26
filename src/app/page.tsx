@@ -5,8 +5,8 @@ export default function Home() {
   const data: Person[] = generateData(10000);
 
   return (
-    <main className="min-h-screen bg-background text-foreground p-4 sm:p-6 lg:p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <HicksTableContainer data={data} />
-    </main>
+    </div>
   );
 }
