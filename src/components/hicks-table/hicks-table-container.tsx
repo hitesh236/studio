@@ -30,6 +30,10 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
   const [density, setDensity] = useState<"normal" | "compact">("normal");
   const [page, setPage] = useState(0);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [sortConfig, setSortConfig] = useState<{
+    key: string | null;
+    direction: "ascending" | "descending";
+  }>({ key: null, direction: "ascending" });
 
   const summaryStats = useMemo(() => {
     const totalRecords = data.length;
@@ -66,12 +70,58 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
     });
   }, [data, filter]);
 
-  const totalPages = Math.ceil(filteredData.length / ROWS_PER_PAGE);
+  const requestSort = (key: string) => {
+    let direction: "ascending" | "descending" = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    }
+    setSortConfig({ key, direction });
+    setPage(0);
+  };
+
+  const sortedData = useMemo(() => {
+    const dataToSort = [...filteredData];
+    if (sortConfig.key) {
+      dataToSort.sort((a, b) => {
+        const { key, direction } = sortConfig;
+        
+        let valA, valB;
+
+        switch(key) {
+            case 'name':
+                valA = `${a.firstName} ${a.lastName}`;
+                valB = `${b.firstName} ${b.lastName}`;
+                break;
+            case 'lastSeen':
+                valA = a.lastSeen.getTime();
+                valB = b.lastSeen.getTime();
+                break;
+            default:
+                valA = (a as any)[key];
+                valB = (b as any)[key];
+        }
+
+        if (valA === null || valA === undefined) return 1;
+        if (valB === null || valB === undefined) return -1;
+        
+        if (valA < valB) {
+            return direction === 'ascending' ? -1 : 1;
+        }
+        if (valA > valB) {
+            return direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return dataToSort;
+  }, [filteredData, sortConfig]);
+
+  const totalPages = Math.ceil(sortedData.length / ROWS_PER_PAGE);
   const paginatedData = useMemo(() => {
     const start = page * ROWS_PER_PAGE;
     const end = start + ROWS_PER_PAGE;
-    return filteredData.slice(start, end);
-  }, [filteredData, page]);
+    return sortedData.slice(start, end);
+  }, [sortedData, page]);
 
   const toggleRowExpansion = (id: string) => {
     setExpandedRows((prev) => {
@@ -85,7 +135,7 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
     });
   };
   
-  const tableColumns = useMemo(() => columns({ expandedRows, toggleRowExpansion, density }), [expandedRows, density]);
+  const tableColumns = useMemo(() => columns({ expandedRows, toggleRowExpansion, density, sortConfig, requestSort }), [expandedRows, density, sortConfig]);
 
   const getPaginationButtons = () => {
     if (totalPages <= 1) return null;
