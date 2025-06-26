@@ -19,7 +19,7 @@ export function SummaryCard({ title, value, icon: Icon, className }: SummaryCard
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold text-primary">{value}</div>
+        <div className="text-2xl font-bold">{value}</div>
       </CardContent>
     </Card>
   );

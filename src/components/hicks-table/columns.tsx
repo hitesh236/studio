@@ -66,6 +66,32 @@ export const columns = ({ expandedRows, toggleRowExpansion, density }: ColumnPro
       )
   },
   {
+    accessor: "status",
+    header: "Status",
+    cell: (row: Person) => {
+      let variant: "default" | "secondary" | "destructive" | "outline";
+      switch (row.status) {
+        case "Converted":
+          variant = "default";
+          break;
+        case "Active":
+          variant = "secondary";
+          break;
+        case "Lost":
+          variant = "destructive";
+          break;
+        case "Follow-Up":
+          variant = "outline";
+          break;
+      }
+      return (
+        <div className={cn("p-2", density === 'compact' && 'p-1')}>
+          <Badge variant={variant}>{row.status}</Badge>
+        </div>
+      );
+    },
+  },
+  {
     accessor: "lastSeen",
     header: "Last Seen",
     cell: (row: Person) => {

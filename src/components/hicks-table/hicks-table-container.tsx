@@ -60,7 +60,8 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
         person.firstName.toLowerCase().includes(searchTerm) ||
         person.lastName.toLowerCase().includes(searchTerm) ||
         person.email.toLowerCase().includes(searchTerm) ||
-        person.company.toLowerCase().includes(searchTerm)
+        person.company.toLowerCase().includes(searchTerm) ||
+        person.status.toLowerCase().includes(searchTerm)
       );
     });
   }, [data, filter]);
@@ -137,7 +138,7 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-3xl font-bold font-headline text-primary-foreground">HicksTable</h1>
+        <h1 className="text-3xl font-bold font-headline">HicksTable</h1>
         <p className="text-muted-foreground">
           A demonstration of data interaction following Hick's Law.
         </p>

@@ -7,6 +7,7 @@ export type Person = {
   saleAmount: number;
   lastSeen: Date;
   rating: number;
+  status: "Active" | "Follow-Up" | "Lost" | "Converted";
   address: {
     street: string;
     city: string;
@@ -22,6 +23,7 @@ const companies = ["Innovate Inc.", "Solutions Corp.", "Quantum Tech", "Synergy 
 const streets = ["Main St", "Oak Ave", "Pine St", "Maple Ave", "Cedar Ln", "Elm St", "Washington Blvd", "Lakeview Dr", "Park Ave", "River Rd"];
 const cities = ["Springfield", "Metropolis", "Gotham", "Star City", "Central City", "Coast City", "National City", "Fawcett City", "Keystone City", "Midway City"];
 const states = ["CA", "NY", "TX", "FL", "IL", "PA", "OH", "GA", "NC", "MI"];
+const statuses = ["Active", "Follow-Up", "Lost", "Converted"] as const;
 const bios = [
   "A dedicated professional with a passion for data analysis and strategic planning.",
   "Experienced in client relations and project management, always aiming for excellence.",
@@ -46,6 +48,7 @@ export function generateData(count: number): Person[] {
       saleAmount: Math.floor(Math.random() * 5000) + 500,
       lastSeen: new Date(Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30)),
       rating: Math.round((Math.random() * 4 + 1) * 10) / 10,
+      status: getRandomElement(statuses),
       address: {
         street: `${Math.floor(Math.random() * 1000) + 1} ${getRandomElement(streets)}`,
         city: getRandomElement(cities),
