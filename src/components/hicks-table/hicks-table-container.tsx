@@ -22,13 +22,19 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
-
-const ROWS_PER_PAGE = 10;
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function HicksTableContainer({ data }: { data: Person[] }) {
   const [filter, setFilter] = useState("");
   const [density, setDensity] = useState<"normal" | "compact">("normal");
   const [page, setPage] = useState(0);
+  const [rowsPerPageSelection, setRowsPerPageSelection] = useState("10");
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [sortConfig, setSortConfig] = useState<{
     key: string | null;
@@ -116,12 +122,22 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
     return dataToSort;
   }, [filteredData, sortConfig]);
 
-  const totalPages = Math.ceil(sortedData.length / ROWS_PER_PAGE);
+  const totalPages = useMemo(() => {
+    if (rowsPerPageSelection === "all" || sortedData.length === 0) {
+      return 1;
+    }
+    return Math.ceil(sortedData.length / Number(rowsPerPageSelection));
+  }, [sortedData.length, rowsPerPageSelection]);
+
   const paginatedData = useMemo(() => {
-    const start = page * ROWS_PER_PAGE;
-    const end = start + ROWS_PER_PAGE;
+    if (rowsPerPageSelection === "all") {
+      return sortedData;
+    }
+    const rpp = Number(rowsPerPageSelection);
+    const start = page * rpp;
+    const end = start + rpp;
     return sortedData.slice(start, end);
-  }, [sortedData, page]);
+  }, [sortedData, page, rowsPerPageSelection]);
 
   const toggleRowExpansion = (id: string) => {
     setExpandedRows((prev) => {
@@ -183,6 +199,11 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
         </span>
       )
     );
+  };
+
+  const handleRowsPerPageChange = (value: string) => {
+    setRowsPerPageSelection(value);
+    setPage(0);
   };
 
   return (
@@ -254,10 +275,30 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
 
 
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <p className="text-sm text-muted-foreground">
-          Page {page + 1} of {totalPages > 0 ? totalPages : 1}
-        </p>
-        {totalPages > 0 && (
+        <div className="flex items-center gap-4">
+          <p className="text-sm text-muted-foreground">
+            Page {page + 1} of {totalPages}
+          </p>
+          <div className="flex items-center space-x-2">
+            <p className="text-sm text-muted-foreground">Rows per page:</p>
+            <Select
+              value={rowsPerPageSelection}
+              onValueChange={handleRowsPerPageChange}
+            >
+              <SelectTrigger className="w-[80px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+                <SelectItem value="all">All</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        {totalPages > 1 && (
           <div className="flex items-center space-x-1">
             <Button variant="outline" size="icon" onClick={() => setPage(0)} disabled={page === 0}>
               <span className="sr-only">Go to first page</span>
