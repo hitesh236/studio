@@ -16,6 +16,8 @@ import {
   Filter as FilterIcon,
   X,
   Calendar as CalendarIcon,
+  Tag,
+  Building,
 } from "lucide-react";
 
 import { SummaryCard } from "./summary-card";
@@ -51,6 +53,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Slider } from "@/components/ui/slider";
 import { format } from "date-fns";
+import { Separator } from "../ui/separator";
 
 const availableFilters = [
   { id: "status", label: "Status" },
@@ -321,36 +324,57 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
         switch(filterId) {
             case 'dateRange':
                 return (
-                    <Badge key={filterId} variant="outline" className="flex items-center gap-2 p-2">
-                        <span className="font-semibold">Date:</span>
+                    <div key={filterId} className="flex items-center gap-2">
                         <Popover>
                             <PopoverTrigger asChild>
-                                <Button variant={"outline"} size="sm" className={cn("w-[150px] justify-start text-left font-normal", !filterValues.dateRange.from && "text-muted-foreground")}>
+                                <Button id="date" variant={"outline"} className={cn("w-[260px] justify-start text-left font-normal", !filterValues.dateRange.from && "text-muted-foreground")}>
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {filterValues.dateRange.from ? format(filterValues.dateRange.from, "LLL dd, y") : <span>Start date</span>}
+                                    {filterValues.dateRange.from ? (
+                                        filterValues.dateRange.to ? (
+                                            <>
+                                                {format(filterValues.dateRange.from, "LLL dd, y")} -{" "}
+                                                {format(filterValues.dateRange.to, "LLL dd, y")}
+                                            </>
+                                        ) : (
+                                            format(filterValues.dateRange.from, "LLL dd, y")
+                                        )
+                                    ) : (
+                                        <span>Pick a date range</span>
+                                    )}
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={filterValues.dateRange.from} onSelect={(date) => setFilterValues(prev => ({ ...prev, dateRange: { ...prev.dateRange, from: date } }))} initialFocus /></PopoverContent>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    initialFocus
+                                    mode="range"
+                                    defaultMonth={filterValues.dateRange.from}
+                                    selected={filterValues.dateRange}
+                                    onSelect={(range) => setFilterValues(prev => ({ ...prev, dateRange: range ?? { from: undefined, to: undefined } }))}
+                                    numberOfMonths={2}
+                                />
+                            </PopoverContent>
                         </Popover>
-                        -
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button variant={"outline"} size="sm" className={cn("w-[150px] justify-start text-left font-normal", !filterValues.dateRange.to && "text-muted-foreground")}>
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {filterValues.dateRange.to ? format(filterValues.dateRange.to, "LLL dd, y") : <span>End date</span>}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={filterValues.dateRange.to} onSelect={(date) => setFilterValues(prev => ({ ...prev, dateRange: { ...prev.dateRange, to: date } }))} initialFocus /></PopoverContent>
-                        </Popover>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
-                    </Badge>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
+                    </div>
                 );
             case 'status':
                 return (
-                    <Badge key={filterId} variant="outline" className="flex items-center gap-2 p-2">
-                        <span className="font-semibold">Status:</span>
+                    <div key={filterId} className="flex items-center gap-2">
                         <DropdownMenu>
-                            <DropdownMenuTrigger asChild><Button variant="outline" size="sm">{filterValues.statuses.length > 0 ? `${filterValues.statuses.length} selected` : 'Select Status'}</Button></DropdownMenuTrigger>
+                             <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="w-auto">
+                                    <Tag className="mr-2 h-4 w-4" />
+                                    Status
+                                    <Separator orientation="vertical" className="mx-2 h-4 bg-border" />
+                                    {filterValues.statuses.length > 0 ? (
+                                        <Badge variant="secondary" className="rounded-sm px-1 font-normal">
+                                            {filterValues.statuses.length} selected
+                                        </Badge>
+                                    ) : (
+                                        <span className="text-muted-foreground">Any</span>
+                                    )}
+                                </Button>
+                            </DropdownMenuTrigger>
                             <DropdownMenuContent className="w-56">
                                 <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
@@ -361,15 +385,27 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
                                 ))}
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
-                    </Badge>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
+                    </div>
                 );
             case 'company':
                 return (
-                    <Badge key={filterId} variant="outline" className="flex items-center gap-2 p-2">
-                        <span className="font-semibold">Company:</span>
+                    <div key={filterId} className="flex items-center gap-2">
                         <DropdownMenu>
-                            <DropdownMenuTrigger asChild><Button variant="outline" size="sm">{filterValues.companies.length > 0 ? `${filterValues.companies.length} selected` : 'Select Company'}</Button></DropdownMenuTrigger>
+                             <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="w-auto">
+                                    <Building className="mr-2 h-4 w-4" />
+                                    Company
+                                    <Separator orientation="vertical" className="mx-2 h-4 bg-border" />
+                                    {filterValues.companies.length > 0 ? (
+                                        <Badge variant="secondary" className="rounded-sm px-1 font-normal">
+                                            {filterValues.companies.length} selected
+                                        </Badge>
+                                    ) : (
+                                        <span className="text-muted-foreground">Any</span>
+                                    )}
+                                </Button>
+                            </DropdownMenuTrigger>
                             <DropdownMenuContent className="w-56 h-72 overflow-y-auto">
                                 <DropdownMenuLabel>Filter by Company</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
@@ -380,16 +416,20 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
                                 ))}
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
-                    </Badge>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
+                    </div>
                 );
             case 'rating':
                 return (
-                    <Badge key={filterId} variant="outline" className="flex items-center gap-2 p-2">
-                        <span className="font-semibold">Rating &ge; {filterValues.rating.toFixed(1)}</span>
+                    <div key={filterId} className="flex items-center gap-2">
+                        <div className="flex items-center rounded-md border h-10 px-3 text-sm">
+                             <Star className="w-4 h-4 mr-2 text-yellow-400 fill-yellow-400" />
+                            <span className="font-medium text-muted-foreground">Rating:</span>
+                            <span className="ml-1 font-semibold">&ge; {filterValues.rating.toFixed(1)}</span>
+                        </div>
                         <Slider value={[filterValues.rating]} max={5} step={0.1} className="w-32" onValueChange={(value) => setFilterValues(prev => ({ ...prev, rating: value[0] }))} />
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
-                    </Badge>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
+                    </div>
                 );
             default:
                 return null;
@@ -456,7 +496,10 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
           </div>
           <Popover>
             <PopoverTrigger asChild>
-                <Button variant="outline"><FilterIcon className="mr-2 h-4 w-4"/>Filter</Button>
+                <Button variant="outline" size="icon">
+                  <FilterIcon className="h-4 w-4"/>
+                  <span className="sr-only">Filter</span>
+                </Button>
             </PopoverTrigger>
             <PopoverContent className="w-56 p-4" align="end">
                 <div className="space-y-4">
@@ -476,7 +519,7 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
       </div>
       
       {activeFilters.size > 0 && (
-        <div className="flex flex-wrap items-center gap-2 p-4 border rounded-lg bg-muted/50">
+        <div className="flex flex-wrap items-center gap-2">
           {renderActiveFilters()}
         </div>
       )}
