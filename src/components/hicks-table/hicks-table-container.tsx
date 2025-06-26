@@ -65,7 +65,7 @@ const availableFilters = [
 ];
 
 const ALL_COLUMNS = [
-    { id: 'expander', label: 'Expand' },
+    { id: 'select', label: 'Select' },
     { id: 'name', label: 'User' },
     { id: 'company', label: 'Company' },
     { id: 'phone', label: 'Phone' },
@@ -82,6 +82,7 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
   const [page, setPage] = useState(0);
   const [rowsPerPageSelection, setRowsPerPageSelection] = useState("10");
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [sortConfig, setSortConfig] = useState<{
     key: string | null;
     direction: "ascending" | "descending";
@@ -237,6 +238,36 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
     return sortedData.slice(start, end);
   }, [sortedData, page, rowsPerPageSelection]);
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+        setSelectedRows(new Set(paginatedData.map(row => row.id)));
+    } else {
+        setSelectedRows(new Set());
+    }
+  };
+
+  const toggleRowSelection = (id: string) => {
+      setSelectedRows(prev => {
+          const newSet = new Set(prev);
+          if (newSet.has(id)) {
+              newSet.delete(id);
+          } else {
+              newSet.add(id);
+          }
+          return newSet;
+      });
+  };
+
+  const setPageAndClearSelection = (p: number) => {
+    setPage(p);
+    setSelectedRows(new Set());
+  }
+
+  const handleRowsPerPageChange = (value: string) => {
+    setRowsPerPageSelection(value);
+    setPageAndClearSelection(0);
+  };
+
   const toggleRowExpansion = (id: string) => {
     setExpandedRows((prev) => {
       const newSet = new Set(prev);
@@ -250,7 +281,17 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
   };
   
   const tableColumns = useMemo(() => {
-    const allCols = columns({ expandedRows, toggleRowExpansion, density, sortConfig, requestSort });
+    const allCols = columns({ 
+      expandedRows, 
+      toggleRowExpansion, 
+      density, 
+      sortConfig, 
+      requestSort,
+      selectedRows,
+      onSelectAll: handleSelectAll,
+      onSelectRow: toggleRowSelection,
+      paginatedData,
+    });
     
     const visibleCols = allCols.filter(c => columnVisibility.has(c.accessor as string));
     
@@ -259,7 +300,7 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
     });
 
     return visibleCols;
-  }, [expandedRows, toggleRowExpansion, density, sortConfig, requestSort, columnVisibility, columnOrder]);
+  }, [expandedRows, toggleRowExpansion, density, sortConfig, requestSort, columnVisibility, columnOrder, selectedRows, paginatedData]);
 
 
   const getPaginationButtons = () => {
@@ -297,7 +338,7 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
           key={`${p}-${index}`}
           variant={page === p ? 'default' : 'outline'}
           size="icon"
-          onClick={() => setPage(p)}
+          onClick={() => setPageAndClearSelection(p)}
           className="h-9 w-9"
         >
           {p + 1}
@@ -310,11 +351,6 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
     );
   };
 
-  const handleRowsPerPageChange = (value: string) => {
-    setRowsPerPageSelection(value);
-    setPage(0);
-  };
-
   const toggleFilter = (filterId: string) => {
     setActiveFilters(prev => {
         const newSet = new Set(prev);
@@ -325,7 +361,7 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
         }
         return newSet;
     });
-    setPage(0);
+    setPageAndClearSelection(0);
   };
 
   const removeFilter = (filterId: string) => {
@@ -350,7 +386,7 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
             setFilterValues(prev => ({...prev, rating: 2.5}));
             break;
     }
-    setPage(0);
+    setPageAndClearSelection(0);
   };
 
   const handleDragStart = (e: React.DragEvent, columnId: string) => {
@@ -548,17 +584,34 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
       </div>
 
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="relative w-full md:max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Filter records..."
-            value={filter}
-            onChange={(e) => {
-                setFilter(e.target.value);
-                setPage(0);
-            }}
-            className="pl-10"
-          />
+        <div className="flex items-center gap-4 flex-1">
+          <div className="relative w-full md:max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Filter records..."
+              value={filter}
+              onChange={(e) => {
+                  setFilter(e.target.value);
+                  setPageAndClearSelection(0);
+              }}
+              className="pl-10"
+            />
+          </div>
+          {selectedRows.size > 0 && (
+              <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">{selectedRows.size} selected</span>
+                  <Select onValueChange={() => setSelectedRows(new Set())}>
+                      <SelectTrigger className="w-[120px] h-9">
+                          <SelectValue placeholder="Assign" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="user1">User 1</SelectItem>
+                          <SelectItem value="user2">User 2</SelectItem>
+                          <SelectItem value="user3">User 3</SelectItem>
+                      </SelectContent>
+                  </Select>
+              </div>
+          )}
         </div>
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
@@ -568,6 +621,7 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
               onCheckedChange={(checked) =>
                 setDensity(checked ? "compact" : "normal")
               }
+              className="h-5 w-9 shrink-0 [&>span]:h-4 [&>span]:w-4 [&>span[data-state=checked]]:translate-x-4 [&>span[data-state=unchecked]]:translate-x-0"
             />
             <Label htmlFor="density-mode">Compact View</Label>
           </div>
@@ -608,7 +662,7 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
                     return (
                       <div
                         key={column.id}
-                        draggable={column.id !== 'expander'}
+                        draggable={column.id !== 'select'}
                         onDragStart={(e) => handleDragStart(e, column.id)}
                         onDragOver={(e) => handleDragOver(e, column.id)}
                         onDragLeave={handleDragLeave}
@@ -616,12 +670,12 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
                         onDragEnd={handleDragEnd}
                         className={cn(
                           "flex items-center p-2 rounded-md transition-all text-sm",
-                          column.id !== 'expander' && "cursor-grab active:cursor-grabbing",
+                          column.id !== 'select' && "cursor-grab active:cursor-grabbing",
                           draggedColumn.current === column.id && "opacity-50",
                           dragOverColumn === column.id && draggedColumn.current !== column.id && "bg-accent/50"
                         )}
                       >
-                        <GripVertical className={cn("h-5 w-5 text-muted-foreground mr-2 shrink-0", column.id === 'expander' && "opacity-0")} />
+                        <GripVertical className={cn("h-5 w-5 text-muted-foreground mr-2 shrink-0", column.id === 'select' && "opacity-0")} />
                         <span className="flex-grow">{column.label}</span>
                         <Switch
                           checked={columnVisibility.has(column.id)}
@@ -635,7 +689,7 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
                             setColumnVisibility(newVisibility);
                           }}
                           onClick={(e) => e.stopPropagation()}
-                          disabled={column.id === 'expander'}
+                          disabled={column.id === 'select'}
                           className="h-5 w-9 shrink-0 [&>span]:h-4 [&>span]:w-4 [&>span[data-state=checked]]:translate-x-4 [&>span[data-state=unchecked]]:translate-x-0"
                         />
                       </div>
@@ -660,6 +714,9 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
             data={paginatedData}
             expandedRows={expandedRows}
             toggleRowExpansion={toggleRowExpansion}
+            selectedRows={selectedRows}
+            onSelectRow={toggleRowSelection}
+            density={density}
         />
       </div>
 
@@ -690,22 +747,22 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
         </div>
         {totalPages > 1 && (
           <div className="flex items-center space-x-1">
-            <Button variant="outline" size="icon" onClick={() => setPage(0)} disabled={page === 0}>
+            <Button variant="outline" size="icon" onClick={() => setPageAndClearSelection(0)} disabled={page === 0}>
               <span className="sr-only">Go to first page</span>
               <ChevronsLeft className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>
+            <Button variant="outline" size="icon" onClick={() => setPageAndClearSelection(p => Math.max(0, p - 1))} disabled={page === 0}>
               <span className="sr-only">Go to previous page</span>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             
             {getPaginationButtons()}
 
-            <Button variant="outline" size="icon" onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>
+            <Button variant="outline" size="icon" onClick={() => setPageAndClearSelection(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>
               <span className="sr-only">Go to next page</span>
               <ChevronRight className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" onClick={() => setPage(totalPages - 1)} disabled={page >= totalPages - 1}>
+            <Button variant="outline" size="icon" onClick={() => setPageAndClearSelection(totalPages - 1)} disabled={page >= totalPages - 1}>
               <span className="sr-only">Go to last page</span>
               <ChevronsRight className="h-4 w-4" />
             </Button>

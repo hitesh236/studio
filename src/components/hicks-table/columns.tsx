@@ -2,6 +2,7 @@
 
 import type { Person } from "@/lib/data";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown, ChevronRight, Star, Eye, Edit, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { format } from "date-fns";
@@ -14,9 +15,23 @@ type ColumnProps = {
   density: 'normal' | 'compact';
   sortConfig: { key: string | null; direction: 'ascending' | 'descending' };
   requestSort: (key: string) => void;
+  selectedRows: Set<string>;
+  onSelectAll: (checked: boolean) => void;
+  onSelectRow: (id: string) => void;
+  paginatedData: Person[];
 };
 
-export const columns = ({ expandedRows, toggleRowExpansion, density, sortConfig, requestSort }: ColumnProps) => {
+export const columns = ({ 
+  expandedRows, 
+  toggleRowExpansion, 
+  density, 
+  sortConfig, 
+  requestSort,
+  selectedRows,
+  onSelectAll,
+  onSelectRow,
+  paginatedData 
+}: ColumnProps) => {
   const getSortableHeader = (title: string, accessor: string) => {
     const isSorted = sortConfig.key === accessor;
     return (
@@ -35,28 +50,39 @@ export const columns = ({ expandedRows, toggleRowExpansion, density, sortConfig,
   
   return [
     {
-      accessor: "expander",
-      header: <span className="sr-only">Expand</span>,
-      cell: (row: Person) => {
-        const isExpanded = expandedRows.has(row.id);
-        row.isExpanded = isExpanded;
+      accessor: "select",
+      header: () => {
+        const numSelected = selectedRows.size;
+        const rowCount = paginatedData.length;
+        const isAllSelected = rowCount > 0 && numSelected === rowCount;
+        const isIndeterminate = numSelected > 0 && !isAllSelected;
         return (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => toggleRowExpansion(row.id)}
-            className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}
-          >
-            {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-          </Button>
+          <div className="px-2">
+            <Checkbox
+              checked={isAllSelected ? true : isIndeterminate ? 'indeterminate' : false}
+              onCheckedChange={() => onSelectAll(!isAllSelected)}
+              aria-label="Select all"
+              className={cn("translate-y-[2px]", density === 'compact' && "h-3.5 w-3.5")}
+            />
+          </div>
         );
       },
+      cell: (row: Person) => (
+        <div className="px-2">
+            <Checkbox
+                checked={selectedRows.has(row.id)}
+                onCheckedChange={() => onSelectRow(row.id)}
+                aria-label="Select row"
+                className={cn("translate-y-[2px]", density === 'compact' && "h-3.5 w-3.5")}
+            />
+        </div>
+      ),
     },
     {
       accessor: "name",
       header: getSortableHeader("User", "name"),
       cell: (row: Person) => (
-        <div className={cn("p-2", density === 'compact' && 'p-1')}>
+        <div className={cn("p-2", density === 'compact' && 'py-1 px-2 text-sm')}>
           <div className="font-medium">{`${row.firstName} ${row.lastName}`}</div>
           <div className="text-xs text-muted-foreground">{row.email}</div>
         </div>
@@ -65,25 +91,37 @@ export const columns = ({ expandedRows, toggleRowExpansion, density, sortConfig,
     {
       accessor: "company",
       header: getSortableHeader("Company", "company"),
-      cell: (row: Person) => <div className={cn("p-2", density === 'compact' && 'p-1')}>{row.company}</div>,
+      cell: (row: Person) => (
+        <div 
+          onClick={() => toggleRowExpansion(row.id)} 
+          className={cn("p-2 cursor-pointer", density === 'compact' && 'py-1 px-2 text-sm')}>
+          <div className="flex items-center gap-2">
+             {row.company}
+            <Button variant="ghost" size="icon" className="h-6 w-6 opacity-60 hover:opacity-100 data-[state=open]:opacity-100">
+               {expandedRows.has(row.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+               <span className="sr-only">Expand row</span>
+            </Button>
+          </div>
+        </div>
+      )
     },
     {
       accessor: "phone",
       header: "Phone",
-      cell: (row: Person) => <div className={cn("p-2 font-mono", density === 'compact' && 'p-1')}>{row.phone}</div>,
+      cell: (row: Person) => <div className={cn("p-2 font-mono", density === 'compact' && 'py-1 px-2 text-sm')}>{row.phone}</div>,
     },
     {
       accessor: "saleAmount",
       header: getSortableHeader("Sale Amount", "saleAmount"),
       cell: (row: Person) => (
-          <div className={cn("p-2 font-mono text-right", density === 'compact' && 'p-1')}>{formatCurrency(row.saleAmount)}</div>
+          <div className={cn("p-2 font-mono text-right", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.saleAmount)}</div>
       ),
     },
     {
         accessor: "rating",
         header: getSortableHeader("Rating", "rating"),
         cell: (row: Person) => (
-            <div className={cn("p-2 flex items-center gap-1", density === 'compact' && 'p-1')}>
+            <div className={cn("p-2 flex items-center gap-1", density === 'compact' && 'py-1 px-2 text-sm')}>
                 <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                 <span>{row.rating.toFixed(1)}</span>
             </div>
@@ -109,7 +147,7 @@ export const columns = ({ expandedRows, toggleRowExpansion, density, sortConfig,
             break;
         }
         return (
-          <div className={cn("p-2", density === 'compact' && 'p-1')}>
+          <div className={cn("p-2", density === 'compact' && 'py-1 px-2')}>
             <Badge variant={variant}>{row.status}</Badge>
           </div>
         );
@@ -122,7 +160,7 @@ export const columns = ({ expandedRows, toggleRowExpansion, density, sortConfig,
           const date = row.lastSeen;
           const isRecent = new Date().getTime() - date.getTime() < 1000 * 60 * 60 * 24 * 7;
           return (
-              <div className={cn("p-2 flex flex-col items-start gap-1", density === 'compact' && 'p-1')}>
+              <div className={cn("p-2 flex flex-col items-start gap-1", density === 'compact' && 'py-1 px-2 text-sm')}>
                   <span>{format(date, "MMM d, yyyy")}</span>
                   {isRecent && <Badge variant="secondary">Recent</Badge>}
               </div>
