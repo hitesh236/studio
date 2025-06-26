@@ -23,7 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
 
-const ROWS_PER_PAGE = 50;
+const ROWS_PER_PAGE = 10;
 
 export function HicksTableContainer({ data }: { data: Person[] }) {
   const [filter, setFilter] = useState("");
@@ -43,7 +43,7 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
     const top10PercentSales = sortedBySale.slice(0, top10PercentCount);
     const top10PercentAverageSale =
       top10PercentSales.reduce((acc, person) => acc + person.saleAmount, 0) /
-      top10PercentCount;
+      (top10PercentCount || 1);
 
     return {
       totalRecords,
@@ -84,13 +84,60 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
     });
   };
   
-  const tableColumns = useMemo(() => columns({ expandedRows, toggleRowExpansion, density }), [expandedRows, density, toggleRowExpansion]);
+  const tableColumns = useMemo(() => columns({ expandedRows, toggleRowExpansion, density }), [expandedRows, density]);
 
+  const getPaginationButtons = () => {
+    if (totalPages <= 1) return null;
+
+    const pageNumbers: (number | string)[] = [];
+    if (totalPages <= 7) {
+      for (let i = 0; i < totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      pageNumbers.push(0);
+      if (page > 2) {
+        pageNumbers.push('...');
+      }
+      
+      const startPage = Math.max(1, page - 1);
+      const endPage = Math.min(totalPages - 2, page + 1);
+
+      for (let i = startPage; i <= endPage; i++) {
+        pageNumbers.push(i);
+      }
+
+      if (page < totalPages - 3) {
+        pageNumbers.push('...');
+      }
+      pageNumbers.push(totalPages - 1);
+    }
+
+    const uniquePageNumbers = [...new Set(pageNumbers)];
+
+    return uniquePageNumbers.map((p, index) =>
+      typeof p === 'number' ? (
+        <Button
+          key={`${p}-${index}`}
+          variant={page === p ? 'default' : 'outline'}
+          size="icon"
+          onClick={() => setPage(p)}
+          className="h-9 w-9"
+        >
+          {p + 1}
+        </Button>
+      ) : (
+        <span key={`dots-${index}`} className="flex h-9 w-9 items-center justify-center">
+          ...
+        </span>
+      )
+    );
+  };
 
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-3xl font-bold font-headline text-primary">HicksTable</h1>
+        <h1 className="text-3xl font-bold font-headline text-primary-foreground">HicksTable</h1>
         <p className="text-muted-foreground">
           A demonstration of data interaction following Hick's Law.
         </p>
@@ -154,22 +201,31 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
 
       <div className="flex items-center justify-between flex-wrap gap-4">
         <p className="text-sm text-muted-foreground">
-          Page {page + 1} of {totalPages}
+          Page {page + 1} of {totalPages > 0 ? totalPages : 1}
         </p>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="icon" onClick={() => setPage(0)} disabled={page === 0}>
-            <ChevronsLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon" onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon" onClick={() => setPage(totalPages - 1)} disabled={page >= totalPages - 1}>
-            <ChevronsRight className="h-4 w-4" />
-          </Button>
-        </div>
+        {totalPages > 0 && (
+          <div className="flex items-center space-x-1">
+            <Button variant="outline" size="icon" onClick={() => setPage(0)} disabled={page === 0}>
+              <span className="sr-only">Go to first page</span>
+              <ChevronsLeft className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>
+              <span className="sr-only">Go to previous page</span>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            {getPaginationButtons()}
+
+            <Button variant="outline" size="icon" onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>
+              <span className="sr-only">Go to next page</span>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={() => setPage(totalPages - 1)} disabled={page >= totalPages - 1}>
+              <span className="sr-only">Go to last page</span>
+              <ChevronsRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
