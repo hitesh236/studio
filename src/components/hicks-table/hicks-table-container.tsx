@@ -54,7 +54,7 @@ import {
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import { Slider } from "@/components/ui/slider";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth, subMonths, startOfYear } from "date-fns";
 import { Separator } from "../ui/separator";
 
 const availableFilters = [
@@ -432,6 +432,32 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
     setDragOverColumn(null);
   };
 
+  const setDateRangePreset = (preset: 'this_month' | 'last_month' | 'last_2_months' | 'ytd') => {
+    const now = new Date();
+    let from: Date | undefined;
+    let to: Date | undefined;
+
+    switch (preset) {
+        case 'this_month':
+            from = startOfMonth(now);
+            to = endOfMonth(now);
+            break;
+        case 'last_month':
+            from = startOfMonth(subMonths(now, 1));
+            to = endOfMonth(subMonths(now, 1));
+            break;
+        case 'last_2_months':
+            from = startOfMonth(subMonths(now, 2));
+            to = endOfMonth(subMonths(now, 1));
+            break;
+        case 'ytd':
+            from = startOfYear(now);
+            to = now;
+            break;
+    }
+    setFilterValues(prev => ({...prev, dateRange: { from, to }}));
+  };
+
   const renderActiveFilters = () => {
     return Array.from(activeFilters).map(filterId => {
         switch(filterId) {
@@ -440,7 +466,7 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
                     <div key={filterId} className="flex items-center gap-2">
                         <Popover>
                             <PopoverTrigger asChild>
-                                <Button id="date" variant={"outline"} className={cn("w-[260px] justify-start text-left font-normal", !filterValues.dateRange.from && "text-muted-foreground")}>
+                                <Button id="date" variant={"outline"} className={cn("w-[300px] justify-start text-left font-normal", !filterValues.dateRange.from && "text-muted-foreground")}>
                                     <CalendarIcon className="mr-2 h-4 w-4" />
                                     {filterValues.dateRange.from ? (
                                         filterValues.dateRange.to ? (
@@ -456,7 +482,14 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
                                     )}
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
+                            <PopoverContent className="flex w-auto p-0" align="start">
+                                <div className="flex flex-col space-y-1 border-r border-border p-3">
+                                    <div className="mb-2 text-sm font-semibold">Presets</div>
+                                    <Button variant="ghost" className="h-8 justify-start px-2 font-normal" onClick={() => setDateRangePreset('this_month')}>This Month</Button>
+                                    <Button variant="ghost" className="h-8 justify-start px-2 font-normal" onClick={() => setDateRangePreset('last_month')}>Last Month</Button>
+                                    <Button variant="ghost" className="h-8 justify-start px-2 font-normal" onClick={() => setDateRangePreset('last_2_months')}>Last 2 Months</Button>
+                                    <Button variant="ghost" className="h-8 justify-start px-2 font-normal" onClick={() => setDateRangePreset('ytd')}>Year-to-date</Button>
+                                </div>
                                 <Calendar
                                     initialFocus
                                     mode="range"
