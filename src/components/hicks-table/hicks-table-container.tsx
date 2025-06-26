@@ -1,0 +1,176 @@
+"use client";
+
+import type { Person } from "@/lib/data";
+import { useMemo, useState } from "react";
+import {
+  DollarSign,
+  Search,
+  Star,
+  TrendingUp,
+  Users,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
+
+import { SummaryCard } from "./summary-card";
+import { DataTable } from "./data-table";
+import { columns } from "./columns";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { formatCurrency } from "@/lib/utils";
+
+const ROWS_PER_PAGE = 50;
+
+export function HicksTableContainer({ data }: { data: Person[] }) {
+  const [filter, setFilter] = useState("");
+  const [density, setDensity] = useState<"normal" | "compact">("normal");
+  const [page, setPage] = useState(0);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const summaryStats = useMemo(() => {
+    const totalRecords = data.length;
+    const averageSale =
+      data.reduce((acc, person) => acc + person.saleAmount, 0) / totalRecords;
+    const averageRating =
+      data.reduce((acc, person) => acc + person.rating, 0) / totalRecords;
+
+    const sortedBySale = [...data].sort((a, b) => b.saleAmount - a.saleAmount);
+    const top10PercentCount = Math.floor(totalRecords * 0.1);
+    const top10PercentSales = sortedBySale.slice(0, top10PercentCount);
+    const top10PercentAverageSale =
+      top10PercentSales.reduce((acc, person) => acc + person.saleAmount, 0) /
+      top10PercentCount;
+
+    return {
+      totalRecords,
+      averageSale,
+      averageRating,
+      top10PercentAverageSale,
+    };
+  }, [data]);
+
+  const filteredData = useMemo(() => {
+    return data.filter((person) => {
+      const searchTerm = filter.toLowerCase();
+      return (
+        person.firstName.toLowerCase().includes(searchTerm) ||
+        person.lastName.toLowerCase().includes(searchTerm) ||
+        person.email.toLowerCase().includes(searchTerm) ||
+        person.company.toLowerCase().includes(searchTerm)
+      );
+    });
+  }, [data, filter]);
+
+  const totalPages = Math.ceil(filteredData.length / ROWS_PER_PAGE);
+  const paginatedData = useMemo(() => {
+    const start = page * ROWS_PER_PAGE;
+    const end = start + ROWS_PER_PAGE;
+    return filteredData.slice(start, end);
+  }, [filteredData, page]);
+
+  const toggleRowExpansion = (id: string) => {
+    setExpandedRows((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+  
+  const tableColumns = useMemo(() => columns({ expandedRows, toggleRowExpansion, density }), [expandedRows, density, toggleRowExpansion]);
+
+
+  return (
+    <div className="space-y-6">
+      <header>
+        <h1 className="text-3xl font-bold font-headline text-primary-foreground">HicksTable</h1>
+        <p className="text-muted-foreground">
+          A demonstration of data interaction following Hick's Law.
+        </p>
+      </header>
+      
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <SummaryCard
+          icon={Users}
+          title="Total Records"
+          value={summaryStats.totalRecords.toLocaleString()}
+        />
+        <SummaryCard
+          icon={DollarSign}
+          title="Average Sale"
+          value={formatCurrency(summaryStats.averageSale)}
+        />
+        <SummaryCard
+          icon={TrendingUp}
+          title="Top 10% Avg. Sale"
+          value={formatCurrency(summaryStats.top10PercentAverageSale)}
+        />
+        <SummaryCard
+          icon={Star}
+          title="Average Rating"
+          value={`${summaryStats.averageRating.toFixed(1)} / 5.0`}
+        />
+      </div>
+
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="relative w-full md:max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Filter records..."
+            value={filter}
+            onChange={(e) => {
+                setFilter(e.target.value);
+                setPage(0);
+            }}
+            className="pl-10"
+          />
+        </div>
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="density-mode"
+            checked={density === "compact"}
+            onCheckedChange={(checked) =>
+              setDensity(checked ? "compact" : "normal")
+            }
+          />
+          <Label htmlFor="density-mode">Compact View</Label>
+        </div>
+      </div>
+      
+      <div className="rounded-lg border overflow-hidden">
+        <DataTable
+            columns={tableColumns}
+            data={paginatedData}
+        />
+      </div>
+
+
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <p className="text-sm text-muted-foreground">
+          Page {page + 1} of {totalPages}
+        </p>
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" size="icon" onClick={() => setPage(0)} disabled={page === 0}>
+            <ChevronsLeft className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" onClick={() => setPage(totalPages - 1)} disabled={page >= totalPages - 1}>
+            <ChevronsRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
