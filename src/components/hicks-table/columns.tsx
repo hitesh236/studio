@@ -2,7 +2,7 @@
 
 import type { Person } from "@/lib/data";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, Star } from "lucide-react";
+import { ChevronDown, ChevronRight, Star, Eye, Edit, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -109,5 +109,25 @@ export const columns = ({ expandedRows, toggleRowExpansion, density }: ColumnPro
             </div>
         )
     },
+  },
+  {
+    accessor: "actions",
+    header: "Actions",
+    cell: () => (
+      <div className={cn("flex items-center gap-1 p-2", density === 'compact' && 'p-1')}>
+        <Button variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}>
+          <Eye className="h-4 w-4" />
+          <span className="sr-only">View</span>
+        </Button>
+        <Button variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}>
+          <Edit className="h-4 w-4" />
+          <span className="sr-only">Edit</span>
+        </Button>
+        <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-destructive hover:text-destructive", density === 'compact' && 'h-6 w-6')}>
+          <Trash2 className="h-4 w-4" />
+          <span className="sr-only">Delete</span>
+        </Button>
+      </div>
+    ),
   },
 ];

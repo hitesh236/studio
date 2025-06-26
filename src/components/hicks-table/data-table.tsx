@@ -21,12 +21,12 @@ import { Separator } from "@/components/ui/separator";
 import type { Person } from "@/lib/data";
 import { formatCurrency } from "@/lib/utils";
 import { format } from "date-fns";
-import { Star, ChevronDown, ChevronRight } from "lucide-react";
+import { Star, Eye, Edit, Trash2 } from "lucide-react";
 
 interface DataTableProps {
   columns: {
     header: React.ReactNode;
-    accessor: keyof Person | "expander" | "name" | "phone";
+    accessor: keyof Person | "expander" | "name" | "phone" | "actions";
     cell: (row: Person) => React.ReactNode;
   }[];
   data: Person[];
@@ -111,6 +111,21 @@ const MobileRowCard = ({
             <p className="mt-1">
               <strong className="text-muted-foreground">Bio:</strong> {row.bio}
             </p>
+          </div>
+          <Separator />
+          <div
+            className="flex items-center justify-end gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Button variant="outline" size="sm">
+              <Eye /> View
+            </Button>
+            <Button variant="outline" size="sm">
+              <Edit /> Edit
+            </Button>
+            <Button variant="destructive" size="sm">
+              <Trash2 /> Delete
+            </Button>
           </div>
         </CardContent>
       )}
