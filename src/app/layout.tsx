@@ -35,7 +35,7 @@ export default function RootLayout({
             <SidebarInset>
               <div className="flex flex-col h-screen">
                 <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-6">
-                  <SidebarTrigger className="md:hidden" />
+                  <SidebarTrigger />
                   <div className="flex-1">
                     <h1 className="font-semibold text-lg">Dashboard</h1>
                   </div>
