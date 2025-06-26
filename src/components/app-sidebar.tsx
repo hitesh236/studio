@@ -33,10 +33,13 @@ import {
     Wallet
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { usePathname } from 'next/navigation';
 
 
 export function AppSidebar() {
   const { state } = useSidebar();
+  const pathname = usePathname();
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -52,7 +55,7 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Dashboard" href="#" isActive>
+            <SidebarMenuButton tooltip="Dashboard" href="/" isActive={pathname === '/'}>
               <LayoutDashboard />
               Dashboard
             </SidebarMenuButton>
@@ -63,7 +66,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Money In</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Customers" href="#">
+              <SidebarMenuButton tooltip="Customers" href="/customers" isActive={pathname === '/customers'}>
                 <Users />
                 Customers
               </SidebarMenuButton>
