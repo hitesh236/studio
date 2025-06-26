@@ -149,6 +149,7 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
           icon={Users}
           title="Total Records"
           value={summaryStats.totalRecords.toLocaleString()}
+          variant="primary"
         />
         <SummaryCard
           icon={DollarSign}
@@ -192,10 +193,12 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
         </div>
       </div>
       
-      <div className="rounded-lg border overflow-hidden">
+      <div className="rounded-lg border overflow-hidden bg-card">
         <DataTable
             columns={tableColumns}
             data={paginatedData}
+            expandedRows={expandedRows}
+            toggleRowExpansion={toggleRowExpansion}
         />
       </div>
 

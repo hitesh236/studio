@@ -49,6 +49,11 @@ export const columns = ({ expandedRows, toggleRowExpansion, density }: ColumnPro
     cell: (row: Person) => <div className={cn("p-2", density === 'compact' && 'p-1')}>{row.company}</div>,
   },
   {
+    accessor: "phone",
+    header: "Phone",
+    cell: (row: Person) => <div className={cn("p-2 font-mono", density === 'compact' && 'p-1')}>{row.phone}</div>,
+  },
+  {
     accessor: "saleAmount",
     header: "Sale Amount",
     cell: (row: Person) => (

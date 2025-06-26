@@ -4,6 +4,7 @@ export type Person = {
   lastName: string;
   email: string;
   company: string;
+  phone: string;
   saleAmount: number;
   lastSeen: Date;
   rating: number;
@@ -15,6 +16,7 @@ export type Person = {
     zip: string;
   };
   bio: string;
+  isExpanded?: boolean;
 };
 
 const firstNames = ["John", "Jane", "Michael", "Emily", "Chris", "Jessica", "David", "Sarah", "James", "Linda"];
@@ -32,7 +34,7 @@ const bios = [
   "Specializes in financial modeling and data-driven decision making for enterprise clients.",
 ];
 
-const getRandomElement = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+const getRandomElement = <T>(arr: T[] | readonly T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
 export function generateData(count: number): Person[] {
   const data: Person[] = [];
@@ -45,6 +47,7 @@ export function generateData(count: number): Person[] {
       lastName,
       email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}@example.com`,
       company: getRandomElement(companies),
+      phone: `(${Math.floor(Math.random() * 900) + 100}) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
       saleAmount: Math.floor(Math.random() * 5000) + 500,
       lastSeen: new Date(Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30)),
       rating: Math.round((Math.random() * 4 + 1) * 10) / 10,
