@@ -47,11 +47,11 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import { Slider } from "@/components/ui/slider";
 import { format } from "date-fns";
@@ -107,6 +107,7 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
     ALL_COLUMNS.map(c => c.id)
   );
   const draggedColumn = useRef<string | null>(null);
+  const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
   const uniqueStatuses = useMemo(() => Array.from(new Set(data.map((p) => p.status))).sort(), [data]);
   const uniqueCompanies = useMemo(() => Array.from(new Set(data.map((p) => p.company))).sort(), [data]);
@@ -352,12 +353,22 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
     setPage(0);
   };
 
-  const handleDragStart = (columnId: string) => {
+  const handleDragStart = (e: React.DragEvent, columnId: string) => {
     draggedColumn.current = columnId;
+    e.dataTransfer.effectAllowed = 'move';
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, columnId: string) => {
     e.preventDefault();
+    if (draggedColumn.current && columnId !== draggedColumn.current) {
+        if (columnId !== dragOverColumn) {
+            setDragOverColumn(columnId);
+        }
+    }
+  };
+  
+  const handleDragLeave = (e: React.DragEvent) => {
+    setDragOverColumn(null);
   };
 
   const handleDrop = (e: React.DragEvent, targetColumnId: string) => {
@@ -370,15 +381,19 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
     const draggedIndex = newOrder.indexOf(draggedColumn.current);
     const targetIndex = newOrder.indexOf(targetColumnId);
     
-    const [removed] = newOrder.splice(draggedIndex, 1);
-    newOrder.splice(targetIndex, 0, removed);
-
+    if (draggedIndex > -1) {
+        const [removed] = newOrder.splice(draggedIndex, 1);
+        newOrder.splice(targetIndex, 0, removed);
+    }
+    
     setColumnOrder(newOrder);
     draggedColumn.current = null;
+    setDragOverColumn(null);
   };
 
   const handleDragEnd = () => {
     draggedColumn.current = null;
+    setDragOverColumn(null);
   };
 
   const renderActiveFilters = () => {
@@ -584,42 +599,49 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
                     <span className="sr-only">Toggle Columns</span>
                   </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end">
+              <DropdownMenuContent className="w-64" align="end" onMouseLeave={() => setDragOverColumn(null)}>
                 <DropdownMenuLabel>Toggle & Reorder</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {columnOrder.map((columnId) => {
-                  const column = ALL_COLUMNS.find((c) => c.id === columnId)!;
-                  return (
-                    <div
-                      key={column.id}
-                      draggable
-                      onDragStart={() => handleDragStart(column.id)}
-                      onDragOver={handleDragOver}
-                      onDrop={(e) => handleDrop(e, column.id)}
-                      onDragEnd={handleDragEnd}
-                      className="relative rounded-sm cursor-grab active:cursor-grabbing"
-                    >
-                      <GripVertical className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                      <DropdownMenuCheckboxItem
-                        className="w-full pl-8"
-                        checked={columnVisibility.has(column.id)}
-                        onCheckedChange={(checked) => {
-                          if (column.id === 'expander') return;
-                          const newVisibility = new Set(columnVisibility);
-                          if (checked) {
-                            newVisibility.add(column.id);
-                          } else {
-                            newVisibility.delete(column.id);
-                          }
-                          setColumnVisibility(newVisibility);
-                        }}
-                        disabled={column.id === 'expander'}
+                <div className="flex flex-col gap-1 p-1">
+                  {columnOrder.map((columnId) => {
+                    const column = ALL_COLUMNS.find((c) => c.id === columnId)!;
+                    return (
+                      <div
+                        key={column.id}
+                        draggable={column.id !== 'expander'}
+                        onDragStart={(e) => handleDragStart(e, column.id)}
+                        onDragOver={(e) => handleDragOver(e, column.id)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, column.id)}
+                        onDragEnd={handleDragEnd}
+                        className={cn(
+                          "flex items-center p-2 rounded-md transition-all text-sm",
+                          column.id !== 'expander' && "cursor-grab active:cursor-grabbing",
+                          draggedColumn.current === column.id && "opacity-50",
+                          dragOverColumn === column.id && draggedColumn.current !== column.id && "bg-accent/50"
+                        )}
                       >
-                        {column.label}
-                      </DropdownMenuCheckboxItem>
-                    </div>
-                  );
-                })}
+                        <GripVertical className={cn("h-5 w-5 text-muted-foreground mr-2 shrink-0", column.id === 'expander' && "opacity-0")} />
+                        <span className="flex-grow">{column.label}</span>
+                        <Switch
+                          checked={columnVisibility.has(column.id)}
+                          onCheckedChange={(checked) => {
+                            const newVisibility = new Set(columnVisibility);
+                            if (checked) {
+                              newVisibility.add(column.id);
+                            } else {
+                              newVisibility.delete(column.id);
+                            }
+                            setColumnVisibility(newVisibility);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          disabled={column.id === 'expander'}
+                          className="h-5 w-9 shrink-0 [&>span]:h-4 [&>span]:w-4 [&>span[data-state=checked]]:translate-x-4 [&>span[data-state=unchecked]]:translate-x-0"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
