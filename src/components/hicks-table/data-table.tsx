@@ -185,7 +185,7 @@ export function DataTable({
       </div>
 
       {/* Desktop View */}
-      <div className="hidden w-full overflow-x-auto md:block">
+      <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>

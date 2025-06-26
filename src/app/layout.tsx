@@ -33,15 +33,15 @@ export default function RootLayout({
           <SidebarProvider>
             <AppSidebar />
             <SidebarInset>
-              <div className="flex flex-col h-screen">
-                <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-6">
+              <div className="flex flex-col h-screen overflow-hidden">
+                <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-6 shrink-0">
                   <SidebarTrigger />
                   <div className="flex-1">
                     <h1 className="font-semibold text-lg">Dashboard</h1>
                   </div>
                   <ThemeToggle />
                 </header>
-                <main className="flex-1">
+                <main className="flex-1 overflow-auto">
                   {children}
                 </main>
               </div>
