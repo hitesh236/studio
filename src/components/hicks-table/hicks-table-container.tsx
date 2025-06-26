@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Person } from "@/lib/data";
@@ -12,6 +13,9 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  Filter as FilterIcon,
+  X,
+  Calendar as CalendarIcon,
 } from "lucide-react";
 
 import { SummaryCard } from "./summary-card";
@@ -21,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -29,6 +33,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Slider } from "@/components/ui/slider";
+import { format } from "date-fns";
+
+const availableFilters = [
+  { id: "status", label: "Status" },
+  { id: "company", label: "Company" },
+  { id: "dateRange", label: "Date Range" },
+  { id: "rating", label: "Rating" },
+];
 
 export function HicksTableContainer({ data }: { data: Person[] }) {
   const [filter, setFilter] = useState("");
@@ -40,6 +69,23 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
     key: string | null;
     direction: "ascending" | "descending";
   }>({ key: null, direction: "ascending" });
+
+  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
+  const [filterValues, setFilterValues] = useState<{
+    dateRange: { from: Date | undefined; to: Date | undefined };
+    statuses: string[];
+    companies: string[];
+    rating: number;
+  }>({
+    dateRange: { from: undefined, to: undefined },
+    statuses: [],
+    companies: [],
+    rating: 2.5,
+  });
+
+  const uniqueStatuses = useMemo(() => Array.from(new Set(data.map((p) => p.status))).sort(), [data]);
+  const uniqueCompanies = useMemo(() => Array.from(new Set(data.map((p) => p.company))).sort(), [data]);
+
 
   const summaryStats = useMemo(() => {
     const totalRecords = data.length;
@@ -64,7 +110,7 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
   }, [data]);
 
   const filteredData = useMemo(() => {
-    return data.filter((person) => {
+    let results = data.filter((person) => {
       const searchTerm = filter.toLowerCase();
       return (
         person.firstName.toLowerCase().includes(searchTerm) ||
@@ -74,7 +120,33 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
         person.status.toLowerCase().includes(searchTerm)
       );
     });
-  }, [data, filter]);
+
+    if (activeFilters.has("dateRange")) {
+      const { from, to } = filterValues.dateRange;
+      if (from) {
+        results = results.filter((p) => p.lastSeen >= from);
+      }
+      if (to) {
+        const toDate = new Date(to);
+        toDate.setHours(23, 59, 59, 999);
+        results = results.filter((p) => p.lastSeen <= toDate);
+      }
+    }
+
+    if (activeFilters.has("status") && filterValues.statuses.length > 0) {
+      results = results.filter((p) => filterValues.statuses.includes(p.status));
+    }
+
+    if (activeFilters.has("company") && filterValues.companies.length > 0) {
+      results = results.filter((p) => filterValues.companies.includes(p.company));
+    }
+
+    if (activeFilters.has("rating")) {
+      results = results.filter((p) => p.rating >= filterValues.rating);
+    }
+    
+    return results;
+  }, [data, filter, activeFilters, filterValues]);
 
   const requestSort = (key: string) => {
     let direction: "ascending" | "descending" = "ascending";
@@ -206,6 +278,125 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
     setPage(0);
   };
 
+  const toggleFilter = (filterId: string) => {
+    setActiveFilters(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(filterId)) {
+            newSet.delete(filterId);
+        } else {
+            newSet.add(filterId);
+        }
+        return newSet;
+    });
+    setPage(0);
+  };
+
+  const removeFilter = (filterId: string) => {
+    setActiveFilters(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(filterId);
+        return newSet;
+    });
+
+    // Reset filter values
+    switch (filterId) {
+        case 'dateRange':
+            setFilterValues(prev => ({...prev, dateRange: { from: undefined, to: undefined }}));
+            break;
+        case 'status':
+            setFilterValues(prev => ({...prev, statuses: []}));
+            break;
+        case 'company':
+            setFilterValues(prev => ({...prev, companies: []}));
+            break;
+        case 'rating':
+            setFilterValues(prev => ({...prev, rating: 2.5}));
+            break;
+    }
+    setPage(0);
+  };
+
+  const renderActiveFilters = () => {
+    return Array.from(activeFilters).map(filterId => {
+        switch(filterId) {
+            case 'dateRange':
+                return (
+                    <Badge key={filterId} variant="outline" className="flex items-center gap-2 p-2">
+                        <span className="font-semibold">Date:</span>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant={"outline"} size="sm" className={cn("w-[150px] justify-start text-left font-normal", !filterValues.dateRange.from && "text-muted-foreground")}>
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {filterValues.dateRange.from ? format(filterValues.dateRange.from, "LLL dd, y") : <span>Start date</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={filterValues.dateRange.from} onSelect={(date) => setFilterValues(prev => ({ ...prev, dateRange: { ...prev.dateRange, from: date } }))} initialFocus /></PopoverContent>
+                        </Popover>
+                        -
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant={"outline"} size="sm" className={cn("w-[150px] justify-start text-left font-normal", !filterValues.dateRange.to && "text-muted-foreground")}>
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {filterValues.dateRange.to ? format(filterValues.dateRange.to, "LLL dd, y") : <span>End date</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={filterValues.dateRange.to} onSelect={(date) => setFilterValues(prev => ({ ...prev, dateRange: { ...prev.dateRange, to: date } }))} initialFocus /></PopoverContent>
+                        </Popover>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
+                    </Badge>
+                );
+            case 'status':
+                return (
+                    <Badge key={filterId} variant="outline" className="flex items-center gap-2 p-2">
+                        <span className="font-semibold">Status:</span>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild><Button variant="outline" size="sm">{filterValues.statuses.length > 0 ? `${filterValues.statuses.length} selected` : 'Select Status'}</Button></DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-56">
+                                <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                {uniqueStatuses.map(status => (
+                                    <DropdownMenuCheckboxItem key={status} checked={filterValues.statuses.includes(status)} onCheckedChange={(checked) => {
+                                        setFilterValues(prev => ({ ...prev, statuses: checked ? [...prev.statuses, status] : prev.statuses.filter(s => s !== status) }));
+                                    }}>{status}</DropdownMenuCheckboxItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
+                    </Badge>
+                );
+            case 'company':
+                return (
+                    <Badge key={filterId} variant="outline" className="flex items-center gap-2 p-2">
+                        <span className="font-semibold">Company:</span>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild><Button variant="outline" size="sm">{filterValues.companies.length > 0 ? `${filterValues.companies.length} selected` : 'Select Company'}</Button></DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-56 h-72 overflow-y-auto">
+                                <DropdownMenuLabel>Filter by Company</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                {uniqueCompanies.map(company => (
+                                    <DropdownMenuCheckboxItem key={company} checked={filterValues.companies.includes(company)} onCheckedChange={(checked) => {
+                                        setFilterValues(prev => ({ ...prev, companies: checked ? [...prev.companies, company] : prev.companies.filter(c => c !== company) }));
+                                    }}>{company}</DropdownMenuCheckboxItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
+                    </Badge>
+                );
+            case 'rating':
+                return (
+                    <Badge key={filterId} variant="outline" className="flex items-center gap-2 p-2">
+                        <span className="font-semibold">Rating &ge; {filterValues.rating.toFixed(1)}</span>
+                        <Slider value={[filterValues.rating]} max={5} step={0.1} className="w-32" onValueChange={(value) => setFilterValues(prev => ({ ...prev, rating: value[0] }))} />
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
+                    </Badge>
+                );
+            default:
+                return null;
+        }
+    });
+  };
+
   return (
     <div className="space-y-6">
       <header>
@@ -252,18 +443,44 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
             className="pl-10"
           />
         </div>
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="density-mode"
-            checked={density === "compact"}
-            onCheckedChange={(checked) =>
-              setDensity(checked ? "compact" : "normal")
-            }
-          />
-          <Label htmlFor="density-mode">Compact View</Label>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="density-mode"
+              checked={density === "compact"}
+              onCheckedChange={(checked) =>
+                setDensity(checked ? "compact" : "normal")
+              }
+            />
+            <Label htmlFor="density-mode">Compact View</Label>
+          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+                <Button variant="outline"><FilterIcon className="mr-2 h-4 w-4"/>Filter</Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-4" align="end">
+                <div className="space-y-4">
+                    <h4 className="font-medium leading-none">Add Filters</h4>
+                    <div className="space-y-2">
+                    {availableFilters.map((f) => (
+                        <div key={f.id} className="flex items-center space-x-2">
+                            <Checkbox id={f.id} checked={activeFilters.has(f.id)} onCheckedChange={() => toggleFilter(f.id)}/>
+                            <Label htmlFor={f.id}>{f.label}</Label>
+                        </div>
+                    ))}
+                    </div>
+                </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
       
+      {activeFilters.size > 0 && (
+        <div className="flex flex-wrap items-center gap-2 p-4 border rounded-lg bg-muted/50">
+          {renderActiveFilters()}
+        </div>
+      )}
+
       <div className="rounded-lg border overflow-hidden bg-card">
         <DataTable
             columns={tableColumns}
