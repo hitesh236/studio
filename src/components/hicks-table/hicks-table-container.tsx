@@ -2,7 +2,7 @@
 "use client";
 
 import type { Person } from "@/lib/data";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import {
   DollarSign,
   Search,
@@ -18,6 +18,8 @@ import {
   Calendar as CalendarIcon,
   Tag,
   Building,
+  Columns,
+  GripVertical,
 } from "lucide-react";
 
 import { SummaryCard } from "./summary-card";
@@ -62,6 +64,18 @@ const availableFilters = [
   { id: "rating", label: "Rating" },
 ];
 
+const ALL_COLUMNS = [
+    { id: 'expander', label: 'Expand' },
+    { id: 'name', label: 'User' },
+    { id: 'company', label: 'Company' },
+    { id: 'phone', label: 'Phone' },
+    { id: 'saleAmount', label: 'Sale Amount' },
+    { id: 'rating', label: 'Rating' },
+    { id: 'status', label: 'Status' },
+    { id: 'lastSeen', label: 'Last Seen' },
+    { id: 'actions', label: 'Actions' },
+  ];
+
 export function HicksTableContainer({ data }: { data: Person[] }) {
   const [filter, setFilter] = useState("");
   const [density, setDensity] = useState<"normal" | "compact">("normal");
@@ -85,6 +99,14 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
     companies: [],
     rating: 2.5,
   });
+
+  const [columnVisibility, setColumnVisibility] = useState<Set<string>>(
+    new Set(ALL_COLUMNS.map(c => c.id))
+  );
+  const [columnOrder, setColumnOrder] = useState<string[]>(
+    ALL_COLUMNS.map(c => c.id)
+  );
+  const draggedColumn = useRef<string | null>(null);
 
   const uniqueStatuses = useMemo(() => Array.from(new Set(data.map((p) => p.status))).sort(), [data]);
   const uniqueCompanies = useMemo(() => Array.from(new Set(data.map((p) => p.company))).sort(), [data]);
@@ -226,7 +248,18 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
     });
   };
   
-  const tableColumns = useMemo(() => columns({ expandedRows, toggleRowExpansion, density, sortConfig, requestSort }), [expandedRows, density, sortConfig]);
+  const tableColumns = useMemo(() => {
+    const allCols = columns({ expandedRows, toggleRowExpansion, density, sortConfig, requestSort });
+    
+    const visibleCols = allCols.filter(c => columnVisibility.has(c.accessor as string));
+    
+    visibleCols.sort((a, b) => {
+        return columnOrder.indexOf(a.accessor as string) - columnOrder.indexOf(b.accessor as string);
+    });
+
+    return visibleCols;
+  }, [expandedRows, toggleRowExpansion, density, sortConfig, requestSort, columnVisibility, columnOrder]);
+
 
   const getPaginationButtons = () => {
     if (totalPages <= 1) return null;
@@ -317,6 +350,35 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
             break;
     }
     setPage(0);
+  };
+
+  const handleDragStart = (columnId: string) => {
+    draggedColumn.current = columnId;
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, targetColumnId: string) => {
+    e.preventDefault();
+    if (!draggedColumn.current || draggedColumn.current === targetColumnId) {
+      return;
+    }
+
+    const newOrder = [...columnOrder];
+    const draggedIndex = newOrder.indexOf(draggedColumn.current);
+    const targetIndex = newOrder.indexOf(targetColumnId);
+    
+    const [removed] = newOrder.splice(draggedIndex, 1);
+    newOrder.splice(targetIndex, 0, removed);
+
+    setColumnOrder(newOrder);
+    draggedColumn.current = null;
+  };
+
+  const handleDragEnd = () => {
+    draggedColumn.current = null;
   };
 
   const renderActiveFilters = () => {
@@ -494,27 +556,73 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
             />
             <Label htmlFor="density-mode">Compact View</Label>
           </div>
-          <Popover>
-            <PopoverTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <FilterIcon className="h-4 w-4"/>
-                  <span className="sr-only">Filter</span>
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-56 p-4" align="end">
-                <div className="space-y-4">
-                    <h4 className="font-medium leading-none">Add Filters</h4>
-                    <div className="space-y-2">
-                    {availableFilters.map((f) => (
-                        <div key={f.id} className="flex items-center space-x-2">
-                            <Checkbox id={f.id} checked={activeFilters.has(f.id)} onCheckedChange={() => toggleFilter(f.id)}/>
-                            <Label htmlFor={f.id}>{f.label}</Label>
-                        </div>
-                    ))}
+          <div className="flex items-center space-x-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <FilterIcon className="h-4 w-4"/>
+                  </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-4" align="end">
+                  <div className="space-y-4">
+                      <h4 className="font-medium leading-none">Add Filters</h4>
+                      <div className="space-y-2">
+                      {availableFilters.map((f) => (
+                          <div key={f.id} className="flex items-center space-x-2">
+                              <Checkbox id={f.id} checked={activeFilters.has(f.id)} onCheckedChange={() => toggleFilter(f.id)}/>
+                              <Label htmlFor={f.id}>{f.label}</Label>
+                          </div>
+                      ))}
+                      </div>
+                  </div>
+              </PopoverContent>
+            </Popover>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <Columns className="h-4 w-4" />
+                    <span className="sr-only">Toggle Columns</span>
+                  </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end">
+                <DropdownMenuLabel>Toggle & Reorder</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {columnOrder.map((columnId) => {
+                  const column = ALL_COLUMNS.find((c) => c.id === columnId)!;
+                  return (
+                    <div
+                      key={column.id}
+                      draggable
+                      onDragStart={() => handleDragStart(column.id)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, column.id)}
+                      onDragEnd={handleDragEnd}
+                      className="relative rounded-sm cursor-grab active:cursor-grabbing"
+                    >
+                      <GripVertical className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      <DropdownMenuCheckboxItem
+                        className="w-full pl-8"
+                        checked={columnVisibility.has(column.id)}
+                        onCheckedChange={(checked) => {
+                          if (column.id === 'expander') return;
+                          const newVisibility = new Set(columnVisibility);
+                          if (checked) {
+                            newVisibility.add(column.id);
+                          } else {
+                            newVisibility.delete(column.id);
+                          }
+                          setColumnVisibility(newVisibility);
+                        }}
+                        disabled={column.id === 'expander'}
+                      >
+                        {column.label}
+                      </DropdownMenuCheckboxItem>
                     </div>
-                </div>
-            </PopoverContent>
-          </Popover>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
       
