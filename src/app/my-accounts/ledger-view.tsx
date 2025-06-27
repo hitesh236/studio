@@ -48,12 +48,13 @@ const LedgerEntry = ({ ledger, level, onEdit }: { ledger: Ledger; level: number;
     <div>
       <div
         className={cn(
-          'flex items-center justify-between py-2 px-2 rounded-md hover:bg-muted/50 group',
+          'flex items-center justify-between py-1 px-2 rounded-md hover:bg-muted/50 group',
           hasChildren && 'cursor-pointer'
         )}
-        style={{ paddingLeft: `${level * 1.25 + 0.5}rem` }}
+        style={{ paddingLeft: `${level * 1 + 0.5}rem` }}
+        onClick={() => hasChildren && setIsOpen(!isOpen)}
       >
-        <div className="flex items-center gap-2 flex-1" onClick={() => hasChildren && setIsOpen(!isOpen)}>
+        <div className="flex items-center gap-2 flex-1">
           {hasChildren ? (
             <span className="w-4 h-4">
                 {isOpen ? (
