@@ -1,10 +1,10 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { ThemeProvider } from '@/components/theme-provider';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { Header } from '@/components/header';
 
 export const metadata: Metadata = {
   title: 'HicksTable',
@@ -32,18 +32,12 @@ export default function RootLayout({
         >
           <SidebarProvider>
             <AppSidebar />
-            <SidebarInset>
-              <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-6 shrink-0">
-                <SidebarTrigger className="flex" />
-                <div className="flex-1">
-                  <h1 className="font-semibold text-lg">Dashboard</h1>
-                </div>
-                <ThemeToggle />
-              </header>
-              <div className="flex-1 overflow-y-auto">
+            <div className="flex flex-col flex-1 max-h-screen">
+              <Header />
+              <main className="flex-1 overflow-y-auto">
                 {children}
-              </div>
-            </SidebarInset>
+              </main>
+            </div>
           </SidebarProvider>
           <Toaster />
         </ThemeProvider>
