@@ -10,6 +10,8 @@ const pathToTitle: { [key: string]: string } = {
   '/table': 'Table',
   '/customers': 'Customers',
   '/sales-invoices': 'Sales Invoices',
+  '/sales-invoices/new': 'Create Invoice',
+  '/my-accounts': 'My Accounts',
 };
 
 export function Header() {

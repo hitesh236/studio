@@ -66,7 +66,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Component</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Table" isActive={pathname === '/table'} asChild>
+                <SidebarMenuButton tooltip="Table" isActive={pathname.startsWith('/table')} asChild>
                     <Link href="/table">
                         <FileText />
                         Table
@@ -81,7 +81,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Money In</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Customers" isActive={pathname === '/customers'} asChild>
+                <SidebarMenuButton tooltip="Customers" isActive={pathname.startsWith('/customers')} asChild>
                     <Link href="/customers">
                         <Users />
                         Customers
@@ -89,7 +89,7 @@ export function AppSidebar() {
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Sales Invoices" isActive={pathname === '/sales-invoices'} asChild>
+                <SidebarMenuButton tooltip="Sales Invoices" isActive={pathname.startsWith('/sales-invoices')} asChild>
                     <Link href="/sales-invoices">
                         <FileText />
                         Sales Invoices
@@ -133,9 +133,11 @@ export function AppSidebar() {
           <SidebarGroupLabel>Accounts & Books</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="My Accounts">
-                <Wallet />
-                <Link href="/my-accounts">    My Accounts </Link>
+              <SidebarMenuButton tooltip="My Accounts" isActive={pathname.startsWith('/my-accounts')} asChild>
+                <Link href="/my-accounts">
+                    <Wallet />
+                    My Accounts
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
