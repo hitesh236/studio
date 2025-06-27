@@ -32,7 +32,7 @@ export default function RootLayout({
         >
           <SidebarProvider>
             <AppSidebar />
-            <div className="flex flex-col flex-1 max-h-screen">
+            <div className="flex flex-col flex-1 h-screen overflow-y-hidden">
               <Header />
               <main className="flex-1 overflow-y-auto">
                 {children}
