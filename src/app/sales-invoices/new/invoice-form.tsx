@@ -107,6 +107,7 @@ const invoiceItemSchema = z.object({
   quantity: z.coerce.number().min(0.01, 'Quantity must be positive.'),
   rate: z.coerce.number().min(0, 'Rate cannot be negative.'),
   discount: z.coerce.number().min(0).max(100).optional().default(0),
+  gstRate: z.coerce.number().min(0).max(100).default(18),
 });
 
 const invoiceFormSchema = z.object({
@@ -224,7 +225,7 @@ export function InvoiceForm() {
       dueDate: new Date(new Date().setDate(new Date().getDate() + 30)),
       currency: 'INR',
       exchangeRate: 1,
-      items: [{ itemName: '', quantity: 1, rate: 0, discount: 0 }],
+      items: [{ itemName: '', quantity: 1, rate: 0, discount: 0, gstRate: 18 }],
       notes: 'Thank you for your business. All payments are due within 30 days.',
     },
   });
@@ -242,28 +243,34 @@ export function InvoiceForm() {
   const totals = React.useMemo(() => {
     let subtotal = 0;
     let totalDiscount = 0;
-    
+    const gstSummary: { [key: number]: { taxable: number; gst: number } } = {};
+
     watchedItems.forEach(item => {
         const itemAmount = (item.quantity || 0) * (item.rate || 0);
         const itemDiscount = itemAmount * ((item.discount || 0) / 100);
+        const taxableAmount = itemAmount - itemDiscount;
+        const gstRate = item.gstRate || 0;
+        const gstAmount = taxableAmount * (gstRate / 100);
+
         subtotal += itemAmount;
         totalDiscount += itemDiscount;
+
+        if (!gstSummary[gstRate]) {
+            gstSummary[gstRate] = { taxable: 0, gst: 0 };
+        }
+        gstSummary[gstRate].taxable += taxableAmount;
+        gstSummary[gstRate].gst += gstAmount;
     });
 
     const totalTaxableValue = subtotal - totalDiscount;
-    const gstRate = 0.18;
+    const totalGst = Object.values(gstSummary).reduce((acc, { gst }) => acc + gst, 0);
     const isIntraState = watchedPlaceOfSupply === sellerDetails.state;
-    
-    const totalGst = totalTaxableValue * gstRate;
-    const cgst = isIntraState ? totalGst / 2 : 0;
-    const sgst = isIntraState ? totalGst / 2 : 0;
-    const igst = !isIntraState ? totalGst : 0;
 
     const grandTotal = totalTaxableValue + totalGst;
 
-    return { subtotal, totalDiscount, totalTaxableValue, cgst, sgst, igst, grandTotal, totalGst };
+    return { subtotal, totalDiscount, totalTaxableValue, grandTotal, totalGst, gstSummary, isIntraState };
   }, [watchedItems, watchedPlaceOfSupply]);
-
+  
   const handleCustomerSelect = (customer: Person) => {
     const fullAddress = `${customer.address.street}, ${customer.address.city}, ${customer.address.state} ${customer.address.zip}`;
     form.setValue('customerId', customer.id);
@@ -619,20 +626,26 @@ export function InvoiceForm() {
                     <Table>
                         <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[40%]">Item Description</TableHead>
-                            <TableHead>HSN Code</TableHead>
+                            <TableHead className="w-[30%]">Item</TableHead>
+                            <TableHead>HSN</TableHead>
                             <TableHead className="text-right">Qty</TableHead>
                             <TableHead className="text-right">Rate</TableHead>
-                            <TableHead className="text-right">Discount (%)</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
+                            <TableHead className="text-right">Discount(%)</TableHead>
+                            <TableHead className="text-right">GST(%)</TableHead>
+                            <TableHead className="text-right">Taxable Amt.</TableHead>
+                            <TableHead className="text-right">Total</TableHead>
                             <TableHead className="w-12"></TableHead>
                         </TableRow>
                         </TableHeader>
                         <TableBody>
                         {fields.map((field, index) => {
                             const item = watchedItems[index];
-                            const amount = (item.quantity || 0) * (item.rate || 0);
-                            const finalAmount = amount * (1 - (item.discount || 0) / 100);
+                            const itemAmount = (item.quantity || 0) * (item.rate || 0);
+                            const itemDiscount = itemAmount * ((item.discount || 0) / 100);
+                            const taxableAmount = itemAmount - itemDiscount;
+                            const gstAmount = taxableAmount * ((item.gstRate || 0) / 100);
+                            const totalAmount = taxableAmount + gstAmount;
+
                             return (
                                 <TableRow key={field.id}>
                                 <TableCell>
@@ -646,31 +659,52 @@ export function InvoiceForm() {
                                     <FormField
                                         control={form.control}
                                         name={`items.${index}.hsnCode`}
-                                        render={({ field }) => <Input placeholder="e.g. 998314" {...field} />}
+                                        render={({ field }) => <Input placeholder="HSN" {...field} />}
                                     />
                                 </TableCell>
                                 <TableCell>
                                      <FormField
                                         control={form.control}
                                         name={`items.${index}.quantity`}
-                                        render={({ field }) => <Input type="number" className="text-right" {...field} />}
+                                        render={({ field }) => <Input type="number" className="text-right min-w-[60px]" {...field} />}
                                     />
                                 </TableCell>
                                 <TableCell>
                                      <FormField
                                         control={form.control}
                                         name={`items.${index}.rate`}
-                                        render={({ field }) => <Input type="number" className="text-right" {...field} />}
+                                        render={({ field }) => <Input type="number" className="text-right min-w-[80px]" {...field} />}
                                     />
                                 </TableCell>
                                 <TableCell>
                                      <FormField
                                         control={form.control}
                                         name={`items.${index}.discount`}
-                                        render={({ field }) => <Input type="number" className="text-right" {...field} />}
+                                        render={({ field }) => <Input type="number" className="text-right min-w-[70px]" {...field} />}
                                     />
                                 </TableCell>
-                                <TableCell className="text-right font-mono">{formatCurrency(finalAmount, watchedCurrency)}</TableCell>
+                                <TableCell>
+                                    <FormField
+                                        control={form.control}
+                                        name={`items.${index}.gstRate`}
+                                        render={({ field }) => (
+                                            <Select onValueChange={(v) => field.onChange(Number(v))} value={String(field.value)}>
+                                                <FormControl>
+                                                    <SelectTrigger className="min-w-[80px]">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {[0, 5, 12, 18, 28].map(rate => (
+                                                        <SelectItem key={rate} value={String(rate)}>{rate}%</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                    />
+                                </TableCell>
+                                <TableCell className="text-right font-mono">{formatCurrency(taxableAmount, watchedCurrency)}</TableCell>
+                                <TableCell className="text-right font-mono">{formatCurrency(totalAmount, watchedCurrency)}</TableCell>
                                 <TableCell>
                                     <Button
                                     type="button"
@@ -692,7 +726,7 @@ export function InvoiceForm() {
                 <Button
                     type="button"
                     variant="outline"
-                    onClick={() => append({ itemName: '', quantity: 1, rate: 0, discount: 0 })}
+                    onClick={() => append({ itemName: '', hsnCode: '', quantity: 1, rate: 0, discount: 0, gstRate: 18 })}
                 >
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add Another Item
@@ -716,24 +750,29 @@ export function InvoiceForm() {
                             <span>Taxable Value</span>
                             <span className="font-mono">{formatCurrency(totals.totalTaxableValue, watchedCurrency)}</span>
                         </div>
-                        {totals.cgst > 0 && (
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">CGST (9%)</span>
-                                <span className="font-mono">{formatCurrency(totals.cgst, watchedCurrency)}</span>
-                            </div>
-                        )}
-                        {totals.sgst > 0 && (
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">SGST (9%)</span>
-                                <span className="font-mono">{formatCurrency(totals.sgst, watchedCurrency)}</span>
-                            </div>
-                        )}
-                        {totals.igst > 0 && (
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">IGST (18%)</span>
-                                <span className="font-mono">{formatCurrency(totals.igst, watchedCurrency)}</span>
-                            </div>
-                        )}
+                        
+                        {Object.entries(totals.gstSummary).map(([rate, { gst }]) => (
+                            <React.Fragment key={rate}>
+                                {totals.isIntraState ? (
+                                    <>
+                                        <div className="flex justify-between">
+                                            <span className="text-muted-foreground">CGST ({Number(rate)/2}%)</span>
+                                            <span className="font-mono">{formatCurrency(gst/2, watchedCurrency)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-muted-foreground">SGST ({Number(rate)/2}%)</span>
+                                            <span className="font-mono">{formatCurrency(gst/2, watchedCurrency)}</span>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">IGST ({rate}%)</span>
+                                        <span className="font-mono">{formatCurrency(gst, watchedCurrency)}</span>
+                                    </div>
+                                )}
+                            </React.Fragment>
+                        ))}
+                        
                         <Separator />
                         <div className="flex justify-between text-lg font-bold">
                             <span>Grand Total ({watchedCurrency})</span>
