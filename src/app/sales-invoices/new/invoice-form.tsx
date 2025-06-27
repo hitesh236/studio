@@ -194,9 +194,7 @@ const NewCustomerForm = ({ onCustomerAdd }: { onCustomerAdd: (customer: Person) 
                 <DialogClose asChild>
                     <Button type="button" variant="outline">Cancel</Button>
                 </DialogClose>
-                <DialogClose asChild>
-                    <Button type="button" onClick={handleSave}>Save Customer</Button>
-                </DialogClose>
+                <Button type="button" onClick={handleSave}>Save Customer</Button>
             </DialogFooter>
         </div>
     );
@@ -207,6 +205,8 @@ export function InvoiceForm() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [customers, setCustomers] = React.useState<Person[]>([]);
   const [isAddCustomerOpen, setIsAddCustomerOpen] = React.useState(false);
+  const [isCustomerPopoverOpen, setIsCustomerPopoverOpen] = React.useState(false);
+
 
   React.useEffect(() => {
     // In a real app, you'd fetch this from an API
@@ -272,11 +272,13 @@ export function InvoiceForm() {
     form.setValue('shippingAddress', fullAddress);
     form.setValue('placeOfSupply', customer.address.state);
     form.setValue('isShippingSameAsBilling', true);
+    setIsCustomerPopoverOpen(false);
   };
   
   const handleAddNewCustomer = (customer: Person) => {
       setCustomers(prev => [customer, ...prev]);
       handleCustomerSelect(customer);
+      setIsAddCustomerOpen(false);
   };
 
   async function onSubmit(data: InvoiceFormValues) {
@@ -293,7 +295,7 @@ export function InvoiceForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <Card>
             <CardHeader>
                 <CardTitle>Create New Invoice</CardTitle>
@@ -320,21 +322,20 @@ export function InvoiceForm() {
                                 render={({ field }) => (
                                     <FormItem className="flex flex-col">
                                     <FormLabel>Bill To</FormLabel>
-                                    <Popover>
+                                    <Popover open={isCustomerPopoverOpen} onOpenChange={setIsCustomerPopoverOpen}>
                                         <PopoverTrigger asChild>
                                             <FormControl>
                                                 <Button
                                                     variant="outline"
                                                     role="combobox"
+                                                    aria-expanded={isCustomerPopoverOpen}
                                                     className={cn(
                                                         "w-full justify-between",
                                                         !field.value && "text-muted-foreground"
                                                     )}
                                                 >
-                                                    {field.value
-                                                        ? customers.find(
-                                                            (c) => `${c.firstName} ${c.lastName}` === field.value
-                                                        )?.company
+                                                    {form.getValues('customerId')
+                                                        ? customers.find((c) => c.id === form.getValues('customerId'))?.company
                                                         : "Select customer"}
                                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                                 </Button>
@@ -348,7 +349,7 @@ export function InvoiceForm() {
                                                     <CommandGroup>
                                                         {customers.map((customer) => (
                                                             <CommandItem
-                                                                value={`${customer.firstName} ${customer.lastName}`}
+                                                                value={customer.company}
                                                                 key={customer.id}
                                                                 onSelect={() => {
                                                                     handleCustomerSelect(customer);
@@ -361,6 +362,7 @@ export function InvoiceForm() {
                                                             </CommandItem>
                                                         ))}
                                                         <CommandItem onSelect={() => {
+                                                            setIsCustomerPopoverOpen(false);
                                                             setIsAddCustomerOpen(true);
                                                         }}>
                                                             <UserPlus className="mr-2 h-4 w-4" />
