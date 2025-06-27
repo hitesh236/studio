@@ -665,7 +665,7 @@ export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
           <TableHeader>
             <TableRow>
               {tableColumns.map((column) => (
-                <TableHead key={String(column.accessor)} className="whitespace-nowrap">
+                <TableHead key={String(column.accessor)} className="whitespace-nowrap h-14 px-4">
                   {column.header}
                 </TableHead>
               ))}
@@ -676,7 +676,7 @@ export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
               paginatedData.map((row) => (
                 <TableRow key={row.id} data-state={selectedRows.has(row.id) ? "selected" : undefined}>
                   {tableColumns.map((column) => (
-                    <TableCell key={String(column.accessor)} className={cn(density === 'compact' && 'p-0')}>
+                    <TableCell key={String(column.accessor)} className={cn("p-4", density === 'compact' && 'p-0')}>
                       {column.cell(row)}
                     </TableCell>
                   ))}
