@@ -30,6 +30,13 @@ import {
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -402,12 +409,43 @@ export function CustomerTable({ data }: CustomerTableProps) {
     setPageAndClearSelection(0);
   };
 
+  const handleDragStart = (e: React.DragEvent, columnId: string) => {
+    draggedColumn.current = columnId;
+    e.dataTransfer.effectAllowed = 'move';
+  };
 
+  const handleDragOver = (e: React.DragEvent, columnId: string) => {
+    e.preventDefault();
+    if (draggedColumn.current && columnId !== draggedColumn.current) {
+        if (columnId !== dragOverColumn) {
+            setDragOverColumn(columnId);
+        }
+    }
+  };
     
   const handleDragLeave = (e: React.DragEvent) => {
     setDragOverColumn(null);
   };
 
+  const handleDrop = (e: React.DragEvent, targetColumnId: string) => {
+    e.preventDefault();
+    if (!draggedColumn.current || draggedColumn.current === targetColumnId) {
+      return;
+    }
+
+    const newOrder = [...columnOrder];
+    const draggedIndex = newOrder.indexOf(draggedColumn.current);
+    const targetIndex = newOrder.indexOf(targetColumnId);
+    
+    if (draggedIndex > -1) {
+        const [removed] = newOrder.splice(draggedIndex, 1);
+        newOrder.splice(targetIndex, 0, removed);
+    }
+    
+    setColumnOrder(newOrder);
+    draggedColumn.current = null;
+    setDragOverColumn(null);
+  };
 
   const handleDragEnd = () => {
     draggedColumn.current = null;
@@ -418,141 +456,138 @@ export function CustomerTable({ data }: CustomerTableProps) {
     <Card>
       <CardHeader>
         <CardTitle>Sales</CardTitle>
-
-
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-4 flex-1">
-          <div className="relative w-full md:max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Filter records..."
-              value={filter}
-              onChange={(e) => {
-                  setFilter(e.target.value);
-                  setPageAndClearSelection(0);
-              }}
-              className="pl-10"
-            />
-          </div>
-          {selectedRows.size > 0 && (
-              <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">{selectedRows.size} selected</span>
-                  <Select onValueChange={() => setSelectedRows(new Set())}>
-                      <SelectTrigger className="w-[120px] h-9">
-                          <SelectValue placeholder="Assign" />
-                      </SelectTrigger>
-                      <SelectContent>
-                          <SelectItem value="user1">User 1</SelectItem>
-                          <SelectItem value="user2">User 2</SelectItem>
-                          <SelectItem value="user3">User 3</SelectItem>
-                      </SelectContent>
-                  </Select>
-              </div>
-          )}
-        </div>
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="density-mode"
-              checked={density === "compact"}
-              onCheckedChange={(checked) =>
-                setDensity(checked ? "compact" : "normal")
-              }
-              className="h-5 w-9 shrink-0 [&>span]:h-4 [&>span]:w-4 [&>span[data-state=checked]]:translate-x-4 [&>span[data-state=unchecked]]:translate-x-0"
-            />
-            <Label htmlFor="density-mode">Compact View</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                  <Button variant="outline" size="icon">
-                    <FilterIcon className="h-4 w-4"/>
-                  </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-56 p-4" align="end">
-                  <div className="space-y-4">
-                      <h4 className="font-medium leading-none">Add Filters</h4>
-                      <div className="space-y-2">
-                      {availableFilters.map((f) => (
-                          <div key={f.id} className="flex items-center space-x-2">
-                              <Checkbox id={f.id} checked={activeFilters.has(f.id)} onCheckedChange={() => toggleFilter(f.id)}/>
-                              <Label htmlFor={f.id}>{f.label}</Label>
-                          </div>
-                      ))}
-                      </div>
-                  </div>
-              </PopoverContent>
-            </Popover>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon">
-                    <Columns className="h-4 w-4" />
-                    <span className="sr-only">Toggle Columns</span>
-                  </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-64" align="end" onMouseLeave={() => setDragOverColumn(null)}>
-                <DropdownMenuLabel>Toggle & Reorder</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <div className="flex flex-col gap-1 p-1">
-                  {columnOrder.map((columnId) => {
-                    const column = ALL_COLUMNS.find((c) => c.id === columnId)!;
-                    return (
-                      <div
-                        key={column.id}
-                        draggable={column.id !== 'select'}
-                        onDragStart={(e) => handleDragStart(e, column.id)}
-                        onDragOver={(e) => handleDragOver(e, column.id)}
-                        onDragLeave={handleDragLeave}
-                        onDrop={(e) => handleDrop(e, column.id)}
-                        onDragEnd={handleDragEnd}
-                        className={cn(
-                          "flex items-center p-2 rounded-md transition-all text-sm",
-                          column.id !== 'select' && "cursor-grab active:cursor-grabbing",
-                          draggedColumn.current === column.id && "opacity-50",
-                          dragOverColumn === column.id && draggedColumn.current !== column.id && "bg-accent/50"
-                        )}
-                      >
-                        <GripVertical className={cn("h-5 w-5 text-muted-foreground mr-2 shrink-0", column.id === 'select' && "opacity-0")} />
-                        <span className="flex-grow">{column.label}</span>
-                        <Switch
-                          checked={columnVisibility.has(column.id)}
-                          onCheckedChange={(checked) => {
-                            const newVisibility = new Set(columnVisibility);
-                            if (checked) {
-                              newVisibility.add(column.id);
-                            } else {
-                              newVisibility.delete(column.id);
-                            }
-                            setColumnVisibility(newVisibility);
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                          disabled={column.id === 'select'}
-                          className="h-5 w-9 shrink-0 [&>span]:h-4 [&>span]:w-4 [&>span[data-state=checked]]:translate-x-4 [&>span[data-state=unchecked]]:translate-x-0"
-                        />
-                      </div>
-                    );
-                  })}
+          <div className="flex items-center gap-4 flex-1">
+            <div className="relative w-full md:max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Filter records..."
+                value={filter}
+                onChange={(e) => {
+                    setFilter(e.target.value);
+                    setPageAndClearSelection(0);
+                }}
+                className="pl-10"
+              />
+            </div>
+            {selectedRows.size > 0 && (
+                <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">{selectedRows.size} selected</span>
+                    <Select onValueChange={() => setSelectedRows(new Set())}>
+                        <SelectTrigger className="w-[120px] h-9">
+                            <SelectValue placeholder="Assign" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="user1">User 1</SelectItem>
+                            <SelectItem value="user2">User 2</SelectItem>
+                            <SelectItem value="user3">User 3</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            )}
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="density-mode"
+                checked={density === "compact"}
+                onCheckedChange={(checked) =>
+                  setDensity(checked ? "compact" : "normal")
+                }
+                className="h-5 w-9 shrink-0 [&>span]:h-4 [&>span]:w-4 [&>span[data-state=checked]]:translate-x-4 [&>span[data-state=unchecked]]:translate-x-0"
+              />
+              <Label htmlFor="density-mode">Compact View</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <FilterIcon className="h-4 w-4"/>
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-4" align="end">
+                    <div className="space-y-4">
+                        <h4 className="font-medium leading-none">Add Filters</h4>
+                        <div className="space-y-2">
+                        {availableFilters.map((f) => (
+                            <div key={f.id} className="flex items-center space-x-2">
+                                <Checkbox id={f.id} checked={activeFilters.has(f.id)} onCheckedChange={() => toggleFilter(f.id)}/>
+                                <Label htmlFor={f.id}>{f.label}</Label>
+                            </div>
+                        ))}
+                        </div>
+                    </div>
+                </PopoverContent>
+              </Popover>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <Columns className="h-4 w-4" />
+                      <span className="sr-only">Toggle Columns</span>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-64" align="end" onMouseLeave={() => setDragOverColumn(null)}>
+                  <DropdownMenuLabel>Toggle & Reorder</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <div className="flex flex-col gap-1 p-1">
+                    {columnOrder.map((columnId) => {
+                      const column = ALL_COLUMNS.find((c) => c.id === columnId)!;
+                      return (
+                        <div
+                          key={column.id}
+                          draggable={column.id !== 'select'}
+                          onDragStart={(e) => handleDragStart(e, column.id)}
+                          onDragOver={(e) => handleDragOver(e, column.id)}
+                          onDragLeave={handleDragLeave}
+                          onDrop={(e) => handleDrop(e, column.id)}
+                          onDragEnd={handleDragEnd}
+                          className={cn(
+                            "flex items-center p-2 rounded-md transition-all text-sm",
+                            column.id !== 'select' && "cursor-grab active:cursor-grabbing",
+                            draggedColumn.current === column.id && "opacity-50",
+                            dragOverColumn === column.id && draggedColumn.current !== column.id && "bg-accent/50"
+                          )}
+                        >
+                          <GripVertical className={cn("h-5 w-5 text-muted-foreground mr-2 shrink-0", column.id === 'select' && "opacity-0")} />
+                          <span className="flex-grow">{column.label}</span>
+                          <Switch
+                            checked={columnVisibility.has(column.id)}
+                            onCheckedChange={(checked) => {
+                              const newVisibility = new Set(columnVisibility);
+                              if (checked) {
+                                newVisibility.add(column.id);
+                              } else {
+                                newVisibility.delete(column.id);
+                              }
+                              setColumnVisibility(newVisibility);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            disabled={column.id === 'select'}
+                            className="h-5 w-9 shrink-0 [&>span]:h-4 [&>span]:w-4 [&>span[data-state=checked]]:translate-x-4 [&>span[data-state=unchecked]]:translate-x-0"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
-      </div>
-        
-      <div className="rounded-lg border overflow-hidden bg-card">
-        <DataTable
-            columns={tableColumns}
-            data={paginatedData}
-            expandedRows={expandedRows}
-            toggleRowExpansion={toggleRowExpansion}
-            selectedRows={selectedRows}
-            onSelectRow={toggleRowSelection}
-            density={density}
-        />
-      </div>
-  
       </CardHeader>
-     
+      <CardContent>
+        <div className="rounded-lg border overflow-hidden bg-card">
+          <DataTable
+              columns={tableColumns}
+              data={paginatedData}
+              expandedRows={expandedRows}
+              toggleRowExpansion={toggleRowExpansion}
+              selectedRows={selectedRows}
+              onSelectRow={toggleRowSelection}
+              density={density}
+          />
+        </div>
+      </CardContent>
     </Card>
   );
 }

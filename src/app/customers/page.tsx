@@ -1,12 +1,12 @@
-import { CustomerTable } from "@/app/customers/customer-table";
+import { HicksTableContainer } from "@/components/hicks-table/hicks-table-container";
 import { generateData, Person } from "@/lib/data";
 
 export default function CustomersPage() {
-  const data: Person[] = generateData(20);
+  const data: Person[] = generateData(500);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <CustomerTable data={data} />
+      <HicksTableContainer data={data} />
     </div>
   );
 }
