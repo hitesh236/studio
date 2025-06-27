@@ -32,6 +32,7 @@ export type Ledger = {
   name: string;
   type: 'group' | 'ledger';
   balance?: number;
+  position?: number;
   children?: Ledger[];
 };
 
@@ -64,7 +65,7 @@ const LedgerEntry = ({ ledger, level, onEdit }: { ledger: Ledger; level: number;
           ) : (
             <div className="w-4 h-4" />
           )}
-          <span className={cn("font-medium", level === 0 && "font-semibold")}>{ledger.name}</span>
+          <span className={cn("font-medium text-sm", level === 0 && "font-semibold")}>{ledger.name}</span>
         </div>
         <Button 
             variant="ghost" 
@@ -80,7 +81,7 @@ const LedgerEntry = ({ ledger, level, onEdit }: { ledger: Ledger; level: number;
       </div>
       {hasChildren && isOpen && (
         <div>
-          {ledger.children?.map((child) => (
+          {ledger.children?.sort((a, b) => (a.position ?? Number.MAX_SAFE_INTEGER) - (b.position ?? Number.MAX_SAFE_INTEGER)).map((child) => (
             <LedgerEntry key={child.id} ledger={child} level={level + 1} onEdit={onEdit} />
           ))}
         </div>
@@ -95,6 +96,7 @@ export function LedgerView({ data }: LedgerViewProps) {
   // State for Create Dialog
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newAccountName, setNewAccountName] = useState('');
+  const [newAccountPosition, setNewAccountPosition] = useState('');
   const [newAccountType, setNewAccountType] = useState<'primary' | 'subgroup'>('primary');
   const [newSelectedParent, setNewSelectedParent] = useState<string | null>(null);
   
@@ -102,6 +104,7 @@ export function LedgerView({ data }: LedgerViewProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingLedger, setEditingLedger] = useState<Ledger | null>(null);
   const [editAccountName, setEditAccountName] = useState('');
+  const [editAccountPosition, setEditAccountPosition] = useState('');
   const [editAccountType, setEditAccountType] = useState<'primary' | 'subgroup'>('primary');
   const [editSelectedParent, setEditSelectedParent] = useState<string | null>(null);
 
@@ -153,6 +156,7 @@ export function LedgerView({ data }: LedgerViewProps) {
 
   const resetCreateForm = () => {
     setNewAccountName('');
+    setNewAccountPosition('');
     setNewAccountType('primary');
     setNewSelectedParent(null);
   };
@@ -165,6 +169,7 @@ export function LedgerView({ data }: LedgerViewProps) {
       id: `ledger-${Date.now()}`,
       name: newAccountName.trim(),
       type: 'group',
+      position: newAccountPosition ? parseInt(newAccountPosition, 10) : undefined,
       children: [],
     };
 
@@ -205,6 +210,7 @@ export function LedgerView({ data }: LedgerViewProps) {
   const handleOpenEditDialog = (ledger: Ledger) => {
     setEditingLedger(ledger);
     setEditAccountName(ledger.name);
+    setEditAccountPosition(ledger.position?.toString() ?? '');
     const parent = findParent(ledgers, ledger.id);
     if (parent) {
       setEditAccountType('subgroup');
@@ -241,6 +247,7 @@ export function LedgerView({ data }: LedgerViewProps) {
       if (!nodeToMove) return currentLedgers;
 
       nodeToMove.name = editAccountName.trim();
+      nodeToMove.position = editAccountPosition ? parseInt(editAccountPosition, 10) : undefined;
       
       if (editAccountType === 'primary') {
         newLedgers.push(nodeToMove);
@@ -305,6 +312,19 @@ export function LedgerView({ data }: LedgerViewProps) {
                   onChange={(e) => setNewAccountName(e.target.value)}
                   className="col-span-3"
                   placeholder="e.g. Office Supplies"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="position" className="text-right">
+                  Position
+                </Label>
+                <Input
+                  id="position"
+                  type="number"
+                  value={newAccountPosition}
+                  onChange={(e) => setNewAccountPosition(e.target.value)}
+                  className="col-span-3"
+                  placeholder="e.g. 1"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -379,6 +399,18 @@ export function LedgerView({ data }: LedgerViewProps) {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-position" className="text-right">
+                  Position
+                </Label>
+                <Input
+                  id="edit-position"
+                  type="number"
+                  value={editAccountPosition}
+                  onChange={(e) => setEditAccountPosition(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">Type</Label>
                 <RadioGroup
                   value={editAccountType}
@@ -430,7 +462,7 @@ export function LedgerView({ data }: LedgerViewProps) {
         </Dialog>
 
         <div className="rounded-md border p-2">
-          {ledgers.map((group) => (
+          {ledgers.sort((a, b) => (a.position ?? Number.MAX_SAFE_INTEGER) - (b.position ?? Number.MAX_SAFE_INTEGER)).map((group) => (
             <LedgerEntry key={group.id} ledger={group} level={0} onEdit={handleOpenEditDialog} />
           ))}
         </div>
