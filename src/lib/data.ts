@@ -22,8 +22,8 @@ const firstNames = ["John", "Jane", "Michael", "Emily", "Chris", "Jessica", "Dav
 const lastNames = ["Smith", "Doe", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez"];
 const companies = ["Innovate Inc.", "Solutions Corp.", "Quantum Tech", "Synergy LLC", "Apex Industries", "Starlight Co.", "Blue-Ribbon Ltd.", "Venture Dynamics", "Peak Performance", "Nexus Group"];
 const streets = ["Main St", "Oak Ave", "Pine St", "Maple Ave", "Cedar Ln", "Elm St", "Washington Blvd", "Lakeview Dr", "Park Ave", "River Rd"];
-const cities = ["Springfield", "Metropolis", "Gotham", "Star City", "Central City", "Coast City", "National City", "Fawcett City", "Keystone City", "Midway City"];
-const states = ["CA", "NY", "TX", "FL", "IL", "PA", "OH", "GA", "NC", "MI"];
+const cities = ["Mumbai", "Delhi", "Bengaluru", "Kolkata", "Chennai", "Hyderabad", "Pune", "Ahmedabad", "Jaipur", "Lucknow"];
+const states = ["Maharashtra", "Delhi", "Karnataka", "Tamil Nadu", "Uttar Pradesh", "Gujarat", "West Bengal", "Rajasthan"];
 const statuses = ["Active", "Follow-Up", "Lost", "Converted"] as const;
 const bios = [
   "A dedicated professional with a passion for data analysis and strategic planning.",

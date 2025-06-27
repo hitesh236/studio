@@ -82,8 +82,8 @@ export const columns = ({
       header: getSortableHeader("User", "name"),
       cell: (row: Person) => (
         <div className={cn(density === 'compact' && 'py-1 px-2 text-sm')}>
-          <div className="font-medium">{`${row.firstName} ${row.lastName}`}</div>
-          <div className="text-xs text-muted-foreground">{row.email}</div>
+          <div className="font-medium whitespace-nowrap">{`${row.firstName} ${row.lastName}`}</div>
+          <div className="text-xs text-muted-foreground whitespace-nowrap">{row.email}</div>
         </div>
       ),
     },
@@ -93,7 +93,7 @@ export const columns = ({
       cell: (row: Person) => (
         <div 
           onClick={() => toggleRowExpansion(row.id)} 
-          className={cn("cursor-pointer", density === 'compact' && 'py-1 px-2 text-sm')}>
+          className={cn("cursor-pointer whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>
           <div className="flex items-center gap-2">
              {row.company}
             <Button variant="ghost" size="icon" className="h-6 w-6 opacity-60 hover:opacity-100 data-[state=open]:opacity-100">
@@ -105,15 +105,20 @@ export const columns = ({
       )
     },
     {
+      accessor: "state",
+      header: "State",
+      cell: (row: Person) => <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.address.state}</div>,
+    },
+    {
       accessor: "phone",
       header: "Phone",
-      cell: (row: Person) => <div className={cn("font-mono", density === 'compact' && 'py-1 px-2 text-sm')}>{row.phone}</div>,
+      cell: (row: Person) => <div className={cn("font-mono whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.phone}</div>,
     },
     {
       accessor: "saleAmount",
       header: getSortableHeader("Sale Amount", "saleAmount"),
       cell: (row: Person) => (
-          <div className={cn("font-mono text-right", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.saleAmount)}</div>
+          <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.saleAmount)}</div>
       ),
     },
     {
