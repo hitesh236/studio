@@ -225,7 +225,7 @@ export function InvoiceForm() {
       dueDate: new Date(new Date().setDate(new Date().getDate() + 30)),
       currency: 'INR',
       exchangeRate: 1,
-      items: [{ itemName: '', quantity: 1, rate: 0, discount: 0, gstRate: 18 }],
+      items: [{ itemName: '', hsnCode: '', quantity: 1, rate: 0, discount: 0, gstRate: 18 }],
       notes: 'Thank you for your business. All payments are due within 30 days.',
     },
   });
@@ -327,7 +327,7 @@ export function InvoiceForm() {
 
                     {/* Customer Details */}
                     <div className="space-y-4">
-                        <FormField
+                       <FormField
                             control={form.control}
                             name="customerName"
                             render={({ field }) => (
@@ -339,7 +339,6 @@ export function InvoiceForm() {
                                             <Button
                                                 variant="outline"
                                                 role="combobox"
-                                                aria-expanded={isCustomerPopoverOpen}
                                                 className={cn(
                                                     "w-full justify-between",
                                                     !field.value && "text-muted-foreground"
@@ -484,7 +483,7 @@ export function InvoiceForm() {
                 <Separator />
                 
                 {/* Invoice Meta */}
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                      <FormField
                         control={form.control}
                         name="invoiceNumber"
@@ -510,7 +509,7 @@ export function InvoiceForm() {
                                     <Button
                                     variant={"outline"}
                                     className={cn(
-                                        "pl-3 text-left font-normal",
+                                        "w-full pl-3 text-left font-normal",
                                         !field.value && "text-muted-foreground"
                                     )}
                                     >
@@ -549,7 +548,7 @@ export function InvoiceForm() {
                                     <Button
                                     variant={"outline"}
                                     className={cn(
-                                        "pl-3 text-left font-normal",
+                                        "w-full pl-3 text-left font-normal",
                                         !field.value && "text-muted-foreground"
                                     )}
                                     >
@@ -575,8 +574,6 @@ export function InvoiceForm() {
                             </FormItem>
                         )}
                     />
-                 </div>
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <FormField
                         control={form.control}
                         name="currency"
@@ -602,6 +599,8 @@ export function InvoiceForm() {
                         </FormItem>
                         )}
                     />
+                 </div>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     {watchedCurrency !== 'INR' && (
                         <FormField
                             control={form.control}
