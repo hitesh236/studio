@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 
 
 export function AppSidebar() {
@@ -52,9 +53,11 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Dashboard" href="/" isActive={pathname === '/'}>
-              <LayoutDashboard />
-              Dashboard
+            <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/'} asChild>
+                <Link href="/">
+                    <LayoutDashboard />
+                    Dashboard
+                </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -63,10 +66,12 @@ export function AppSidebar() {
           <SidebarGroupLabel>Component</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Table" href="/table" isActive={pathname === '/table'}>
-                <FileText />
-                Table
-              </SidebarMenuButton>
+                <SidebarMenuButton tooltip="Table" isActive={pathname === '/table'} asChild>
+                    <Link href="/table">
+                        <FileText />
+                        Table
+                    </Link>
+                </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
@@ -76,19 +81,23 @@ export function AppSidebar() {
           <SidebarGroupLabel>Money In</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Customers" href="/customers" isActive={pathname === '/customers'}>
-                <Users />
-                Customers
-              </SidebarMenuButton>
+                <SidebarMenuButton tooltip="Customers" isActive={pathname === '/customers'} asChild>
+                    <Link href="/customers">
+                        <Users />
+                        Customers
+                    </Link>
+                </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Sales Invoices" href="/sales-invoices" isActive={pathname === '/sales-invoices'}>
-                <FileText />
-                Sales Invoices
-              </SidebarMenuButton>
+                <SidebarMenuButton tooltip="Sales Invoices" isActive={pathname === '/sales-invoices'} asChild>
+                    <Link href="/sales-invoices">
+                        <FileText />
+                        Sales Invoices
+                    </Link>
+                </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Invoice Returns (Sales)" href="#">
+              <SidebarMenuButton tooltip="Invoice Returns (Sales)">
                 <Undo2 />
                 Invoice Returns (Sales)
               </SidebarMenuButton>
@@ -100,19 +109,19 @@ export function AppSidebar() {
           <SidebarGroupLabel>Money Out</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Vendors" href="#">
+              <SidebarMenuButton tooltip="Vendors">
                 <Store />
                 Vendors
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Purchase Bills" href="#">
+              <SidebarMenuButton tooltip="Purchase Bills">
                 <Receipt />
                 Purchase Bills
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Invoice Returns (Purchase)" href="#">
+              <SidebarMenuButton tooltip="Invoice Returns (Purchase)">
                 <Redo2 />
                 Invoice Returns (Purchase)
               </SidebarMenuButton>
@@ -124,13 +133,13 @@ export function AppSidebar() {
           <SidebarGroupLabel>Accounts & Books</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="My Accounts" href="#">
+              <SidebarMenuButton tooltip="My Accounts">
                 <Wallet />
                 My Accounts
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="View All Transactions" href="#">
+              <SidebarMenuButton tooltip="View All Transactions">
                 <History />
                 View All Transactions
               </SidebarMenuButton>
@@ -142,25 +151,25 @@ export function AppSidebar() {
           <SidebarGroupLabel>Reports</SidebarGroupLabel>
           <SidebarMenu>
              <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Profit & Loss" href="#">
+              <SidebarMenuButton tooltip="Profit & Loss">
                 <TrendingUp />
                 Profit & Loss
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <SidebarMenuButton tooltip="What I Own / Owe" href="#">
+              <SidebarMenuButton tooltip="What I Own / Owe">
                 <Scale />
                 What I Own / Owe
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <SidebarMenuButton tooltip="GST Summary" href="#">
+              <SidebarMenuButton tooltip="GST Summary">
                 <Percent />
                 GST Summary
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Invoice Overviews" href="#">
+              <SidebarMenuButton tooltip="Invoice Overviews">
                 <BookOpen />
                 Invoice Overviews
               </SidebarMenuButton>
@@ -171,7 +180,7 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
             <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Settings" href="#">
+                <SidebarMenuButton tooltip="Settings">
                     <Settings />
                     Settings
                 </SidebarMenuButton>
