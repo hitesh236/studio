@@ -1,28 +1,24 @@
 "use client";
 
-import type { Person } from "@/lib/data";
+import type { SalesInvoice } from "./data";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronDown, ChevronRight, Eye, Edit, Trash2, ArrowUp, ArrowDown } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { ArrowUp, ArrowDown } from "lucide-react";
+import { formatCurrency, cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 type ColumnProps = {
-  expandedRows: Set<string>;
-  toggleRowExpansion: (id: string) => void;
   density: 'normal' | 'compact';
   sortConfig: { key: string | null; direction: 'ascending' | 'descending' };
   requestSort: (key: string) => void;
   selectedRows: Set<string>;
   onSelectAll: (checked: boolean) => void;
   onSelectRow: (id: string) => void;
-  paginatedData: Person[];
+  paginatedData: SalesInvoice[];
 };
 
 export const columns = ({ 
-  expandedRows, 
-  toggleRowExpansion, 
   density, 
   sortConfig, 
   requestSort,
@@ -66,7 +62,7 @@ export const columns = ({
           </div>
         );
       })(),
-      cell: (row: Person) => (
+      cell: (row: SalesInvoice) => (
         <div className="px-2">
             <Checkbox
                 checked={selectedRows.has(row.id)}
@@ -78,91 +74,145 @@ export const columns = ({
       ),
     },
     {
-      accessor: "name",
-      header: getSortableHeader("Customer", "name"),
-      cell: (row: Person) => (
-        <div 
-          onClick={() => toggleRowExpansion(row.id)}
-          className={cn("cursor-pointer", density === 'compact' && 'py-1 px-2 text-sm')}>
-          <div className="flex items-center gap-2">
-            <div>
-              <div className="font-medium">{`${row.firstName} ${row.lastName}`}</div>
-              <div className="text-xs text-muted-foreground">{row.email}</div>
-            </div>
-            <Button variant="ghost" size="icon" className="h-6 w-6 opacity-60 hover:opacity-100 data-[state=open]:opacity-100">
-               {expandedRows.has(row.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-               <span className="sr-only">Expand row</span>
-            </Button>
-          </div>
+      accessor: "invoiceNumber",
+      header: getSortableHeader("Invoice Number", "invoiceNumber"),
+      cell: (row: SalesInvoice) => (
+        <div className={cn("font-medium", density === 'compact' && 'py-1 px-2 text-sm')}>
+          {row.invoiceNumber}
         </div>
       ),
     },
     {
-      accessor: "company",
-      header: getSortableHeader("Customer type", "company"),
-      cell: (row: Person) => (
+      accessor: "customerName",
+      header: getSortableHeader("Customer Name", "customerName"),
+      cell: (row: SalesInvoice) => (
         <div className={cn(density === 'compact' && 'py-1 px-2 text-sm')}>
-          {parseInt(row.id.replace('USR-', ''), 10) % 2 === 0 ? 'Company' : 'Customer'}
+          {row.customerName}
         </div>
-      )
-    },
-    {
-      accessor: "phone",
-      header: "Phone",
-      cell: (row: Person) => <div className={cn("font-mono", density === 'compact' && 'py-1 px-2 text-sm')}>{row.phone}</div>,
-    },
-    {
-      accessor: "saleAmount",
-      header: getSortableHeader("Sale Amount", "saleAmount"),
-      cell: (row: Person) => (
-          <div className={cn("font-mono text-right", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.saleAmount)}</div>
       ),
     },
     {
-      accessor: "status",
-      header: getSortableHeader("Status", "status"),
-      cell: (row: Person) => {
+      accessor: "invoiceDate",
+      header: getSortableHeader("Invoice Date", "invoiceDate"),
+      cell: (row: SalesInvoice) => (
+        <div className={cn(density === 'compact' && 'py-1 px-2 text-sm')}>
+          {format(row.invoiceDate, "MMM d, yyyy")}
+        </div>
+      ),
+    },
+    {
+      accessor: "dueDate",
+      header: getSortableHeader("Due Date", "dueDate"),
+      cell: (row: SalesInvoice) => (
+        <div className={cn(density === 'compact' && 'py-1 px-2 text-sm')}>
+          {format(row.dueDate, "MMM d, yyyy")}
+        </div>
+      ),
+    },
+    {
+      accessor: "currencyCode",
+      header: "Currency",
+      cell: (row: SalesInvoice) => (
+        <div className={cn(density === 'compact' && 'py-1 px-2 text-sm')}>{row.currencyCode}</div>
+      ),
+    },
+    {
+      accessor: "exchangeRate",
+      header: "Exch. Rate",
+      cell: (row: SalesInvoice) => (
+        <div className={cn("text-right", density === 'compact' && 'py-1 px-2 text-sm')}>{row.exchangeRate.toFixed(2)}</div>
+      ),
+    },
+    {
+      accessor: "amountForeign",
+      header: getSortableHeader("Amount (FCY)", "amountForeign"),
+      cell: (row: SalesInvoice) => (
+        <div className={cn("font-mono text-right", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountForeign)}</div>
+      ),
+    },
+    {
+      accessor: "amountBase",
+      header: getSortableHeader("Amount (BCY)", "amountBase"),
+      cell: (row: SalesInvoice) => (
+        <div className={cn("font-mono text-right", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountBase)}</div>
+      ),
+    },
+    {
+      accessor: "totalTaxableValue",
+      header: getSortableHeader("Taxable Value", "totalTaxableValue"),
+      cell: (row: SalesInvoice) => (
+        <div className={cn("font-mono text-right", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.totalTaxableValue)}</div>
+      ),
+    },
+    {
+      accessor: "totalGstAmount",
+      header: getSortableHeader("GST Amount", "totalGstAmount"),
+      cell: (row: SalesInvoice) => (
+        <div className={cn("font-mono text-right", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.totalGstAmount)}</div>
+      ),
+    },
+    {
+      accessor: "gstType",
+      header: "GST Type",
+      cell: (row: SalesInvoice) => (
+        <div className={cn(density === 'compact' && 'py-1 px-2 text-sm')}>
+          <Badge variant="outline">{row.gstType}</Badge>
+        </div>
+      ),
+    },
+    {
+      accessor: "placeOfSupply",
+      header: "Place of Supply",
+      cell: (row: SalesInvoice) => (
+        <div className={cn(density === 'compact' && 'py-1 px-2 text-sm')}>{row.placeOfSupply}</div>
+      ),
+    },
+    {
+      accessor: "paymentStatus",
+      header: getSortableHeader("Payment Status", "paymentStatus"),
+      cell: (row: SalesInvoice) => {
         let variant: "default" | "secondary" | "destructive" | "outline";
-        switch (row.status) {
-          case "Converted":
+        switch (row.paymentStatus) {
+          case "Paid":
             variant = "default";
             break;
-          case "Active":
+          case "Partially Paid":
             variant = "secondary";
             break;
-          case "Lost":
+          case "Overdue":
             variant = "destructive";
             break;
-          case "Follow-Up":
+          case "Outstanding":
             variant = "outline";
             break;
         }
         return (
           <div className={cn(density === 'compact' && 'py-1 px-2')}>
-            <Badge variant={variant} className="w-[100px] justify-center font-normal">{row.status}</Badge>
+            <Badge variant={variant} className="w-[110px] justify-center font-normal">{row.paymentStatus}</Badge>
           </div>
         );
       },
     },
     {
-      accessor: "actions",
-      header: "Actions",
-      cell: () => (
-        <div className={cn("flex items-center gap-1", density === 'compact' && 'p-1')}>
-          <Button variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}>
-            <Eye className="h-4 w-4" />
-            <span className="sr-only">View</span>
-          </Button>
-          <Button variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}>
-            <Edit className="h-4 w-4" />
-            <span className="sr-only">Edit</span>
-          </Button>
-          <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-destructive hover:text-destructive", density === 'compact' && 'h-6 w-6')}>
-            <Trash2 className="h-4 w-4" />
-            <span className="sr-only">Delete</span>
-          </Button>
-        </div>
+      accessor: "amountPaid",
+      header: getSortableHeader("Amount Paid", "amountPaid"),
+      cell: (row: SalesInvoice) => (
+        <div className={cn("font-mono text-right", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountPaid)}</div>
+      ),
+    },
+    {
+      accessor: "amountDue",
+      header: getSortableHeader("Amount Due", "amountDue"),
+      cell: (row: SalesInvoice) => (
+        <div className={cn("font-mono text-right", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountDue)}</div>
+      ),
+    },
+    {
+      accessor: "createdBy",
+      header: "Created By",
+      cell: (row: SalesInvoice) => (
+        <div className={cn(density === 'compact' && 'py-1 px-2 text-sm')}>{row.createdBy}</div>
       ),
     },
   ];
-}
+};

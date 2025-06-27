@@ -1,13 +1,10 @@
 
 "use client";
 
-import type { Person } from "@/lib/data";
+import type { SalesInvoice } from "./data";
 import { useMemo, useState, useRef } from "react";
 import {
-  DollarSign,
   Search,
-  TrendingUp,
-  Users,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -19,14 +16,13 @@ import {
   GripVertical,
 } from "lucide-react";
 
-import { SummaryCard } from "@/components/hicks-table/summary-card";
 import { DataTable } from "@/components/hicks-table/data-table";
 import { columns } from "./sales-invoices-columns";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -52,25 +48,34 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 const availableFilters = [
-  { id: "status", label: "Status" },
+  { id: "paymentStatus", label: "Payment Status" },
 ];
 
 const ALL_COLUMNS = [
     { id: 'select', label: 'Select' },
-    { id: 'name', label: 'Customer' },
-    { id: 'company', label: 'Customer type' },
-    { id: 'phone', label: 'Phone' },
-    { id: 'saleAmount', label: 'Sale Amount' },
-    { id: 'status', label: 'Status' },
-    { id: 'actions', label: 'Actions' },
+    { id: 'invoiceNumber', label: 'Invoice Number' },
+    { id: 'customerName', label: 'Customer Name' },
+    { id: 'invoiceDate', label: 'Invoice Date' },
+    { id: 'dueDate', label: 'Due Date' },
+    { id: 'currencyCode', label: 'Currency' },
+    { id: 'exchangeRate', label: 'Exch. Rate' },
+    { id: 'amountForeign', label: 'Amount (FCY)' },
+    { id: 'amountBase', label: 'Amount (BCY)' },
+    { id: 'totalTaxableValue', label: 'Taxable Value' },
+    { id: 'totalGstAmount', label: 'GST Amount' },
+    { id: 'gstType', label: 'GST Type' },
+    { id: 'placeOfSupply', label: 'Place of Supply' },
+    { id: 'paymentStatus', label: 'Payment Status' },
+    { id: 'amountPaid', label: 'Amount Paid' },
+    { id: 'amountDue', label: 'Amount Due' },
+    { id: 'createdBy', label: 'Created By' },
   ];
 
-export function SalesInvoicesTable({ data }: { data: Person[] }) {
+export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
   const [filter, setFilter] = useState("");
   const [density, setDensity] = useState<"normal" | "compact">("normal");
   const [page, setPage] = useState(0);
   const [rowsPerPageSelection, setRowsPerPageSelection] = useState("10");
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [sortConfig, setSortConfig] = useState<{
     key: string | null;
@@ -79,9 +84,9 @@ export function SalesInvoicesTable({ data }: { data: Person[] }) {
 
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
   const [filterValues, setFilterValues] = useState<{
-    statuses: string[];
+    paymentStatuses: string[];
   }>({
-    statuses: [],
+    paymentStatuses: [],
   });
 
   const [columnVisibility, setColumnVisibility] = useState<Set<string>>(
@@ -93,42 +98,21 @@ export function SalesInvoicesTable({ data }: { data: Person[] }) {
   const draggedColumn = useRef<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
-  const uniqueStatuses = useMemo(() => Array.from(new Set(data.map((p) => p.status))).sort(), [data]);
-
-
-  const summaryStats = useMemo(() => {
-    const totalRecords = data.length;
-    const averageSale =
-      data.reduce((acc, person) => acc + person.saleAmount, 0) / totalRecords;
-
-    const sortedBySale = [...data].sort((a, b) => b.saleAmount - a.saleAmount);
-    const top10PercentCount = Math.floor(totalRecords * 0.1);
-    const top10PercentSales = sortedBySale.slice(0, top10PercentCount);
-    const top10PercentAverageSale =
-      top10PercentSales.reduce((acc, person) => acc + person.saleAmount, 0) /
-      (top10PercentCount || 1);
-
-    return {
-      totalRecords,
-      averageSale,
-      top10PercentAverageSale,
-    };
-  }, [data]);
+  const uniquePaymentStatuses = useMemo(() => Array.from(new Set(data.map((p) => p.paymentStatus))).sort(), [data]);
 
   const filteredData = useMemo(() => {
-    let results = data.filter((person) => {
+    let results = data.filter((invoice) => {
       const searchTerm = filter.toLowerCase();
       return (
-        person.firstName.toLowerCase().includes(searchTerm) ||
-        person.lastName.toLowerCase().includes(searchTerm) ||
-        person.email.toLowerCase().includes(searchTerm) ||
-        person.company.toLowerCase().includes(searchTerm) ||
-        person.status.toLowerCase().includes(searchTerm)
+        invoice.invoiceNumber.toLowerCase().includes(searchTerm) ||
+        invoice.customerName.toLowerCase().includes(searchTerm) ||
+        invoice.paymentStatus.toLowerCase().includes(searchTerm) ||
+        invoice.createdBy.toLowerCase().includes(searchTerm)
       );
     });
 
-    if (activeFilters.has("status") && filterValues.statuses.length > 0) {
-      results = results.filter((p) => filterValues.statuses.includes(p.status));
+    if (activeFilters.has("paymentStatus") && filterValues.paymentStatuses.length > 0) {
+      results = results.filter((p) => filterValues.paymentStatuses.includes(p.paymentStatus));
     }
     
     return results;
@@ -142,7 +126,6 @@ export function SalesInvoicesTable({ data }: { data: Person[] }) {
         if (sortConfig.direction === 'ascending') {
             direction = 'descending';
         } else {
-            // It was descending, so turn off sort
             newKey = null;
         }
     }
@@ -160,9 +143,10 @@ export function SalesInvoicesTable({ data }: { data: Person[] }) {
         let valA, valB;
 
         switch(key) {
-            case 'name':
-                valA = `${a.firstName} ${a.lastName}`;
-                valB = `${b.firstName} ${b.lastName}`;
+            case 'invoiceDate':
+            case 'dueDate':
+                valA = a[key].getTime();
+                valB = b[key].getTime();
                 break;
             default:
                 valA = (a as any)[key];
@@ -230,23 +214,9 @@ export function SalesInvoicesTable({ data }: { data: Person[] }) {
     setRowsPerPageSelection(value);
     setPageAndClearSelection(0);
   };
-
-  const toggleRowExpansion = (id: string) => {
-    setExpandedRows((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
   
   const tableColumns = useMemo(() => {
     const allCols = columns({ 
-      expandedRows, 
-      toggleRowExpansion, 
       density, 
       sortConfig, 
       requestSort,
@@ -263,7 +233,7 @@ export function SalesInvoicesTable({ data }: { data: Person[] }) {
     });
 
     return visibleCols;
-  }, [expandedRows, toggleRowExpansion, density, sortConfig, requestSort, columnVisibility, columnOrder, selectedRows, paginatedData]);
+  }, [density, sortConfig, requestSort, columnVisibility, columnOrder, selectedRows, paginatedData]);
 
 
   const getPaginationButtons = () => {
@@ -334,10 +304,9 @@ export function SalesInvoicesTable({ data }: { data: Person[] }) {
         return newSet;
     });
 
-    // Reset filter values
     switch (filterId) {
-        case 'status':
-            setFilterValues(prev => ({...prev, statuses: []}));
+        case 'paymentStatus':
+            setFilterValues(prev => ({...prev, paymentStatuses: []}));
             break;
     }
     setPageAndClearSelection(0);
@@ -389,18 +358,18 @@ export function SalesInvoicesTable({ data }: { data: Person[] }) {
   const renderActiveFilters = () => {
     return Array.from(activeFilters).map(filterId => {
         switch(filterId) {
-            case 'status':
+            case 'paymentStatus':
                 return (
                     <div key={filterId} className="flex items-center gap-2">
                         <DropdownMenu>
                              <DropdownMenuTrigger asChild>
                                 <Button variant="outline" className="w-auto">
                                     <Tag className="mr-2 h-4 w-4" />
-                                    Status
+                                    Payment Status
                                     <Separator orientation="vertical" className="mx-2 h-4 bg-border" />
-                                    {filterValues.statuses.length > 0 ? (
+                                    {filterValues.paymentStatuses.length > 0 ? (
                                         <Badge variant="secondary" className="rounded-sm px-1 font-normal">
-                                            {filterValues.statuses.length} selected
+                                            {filterValues.paymentStatuses.length} selected
                                         </Badge>
                                     ) : (
                                         <span className="text-muted-foreground">Any</span>
@@ -410,9 +379,9 @@ export function SalesInvoicesTable({ data }: { data: Person[] }) {
                             <DropdownMenuContent className="w-56">
                                 <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                {uniqueStatuses.map(status => (
-                                    <DropdownMenuCheckboxItem key={status} checked={filterValues.statuses.includes(status)} onCheckedChange={(checked) => {
-                                        setFilterValues(prev => ({ ...prev, statuses: checked ? [...prev.statuses, status] : prev.statuses.filter(s => s !== status) }));
+                                {uniquePaymentStatuses.map(status => (
+                                    <DropdownMenuCheckboxItem key={status} checked={filterValues.paymentStatuses.includes(status)} onCheckedChange={(checked) => {
+                                        setFilterValues(prev => ({ ...prev, paymentStatuses: checked ? [...prev.paymentStatuses, status] : prev.paymentStatuses.filter(s => s !== status) }));
                                     }}>{status}</DropdownMenuCheckboxItem>
                                 ))}
                             </DropdownMenuContent>
@@ -428,31 +397,12 @@ export function SalesInvoicesTable({ data }: { data: Person[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <SummaryCard
-          icon={Users}
-          title="Total Records"
-          value={summaryStats.totalRecords.toLocaleString()}
-          variant="primary"
-        />
-        <SummaryCard
-          icon={DollarSign}
-          title="Average Sale"
-          value={formatCurrency(summaryStats.averageSale)}
-        />
-        <SummaryCard
-          icon={TrendingUp}
-          title="Top 10% Avg. Sale"
-          value={formatCurrency(summaryStats.top10PercentAverageSale)}
-        />
-      </div>
-
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4 flex-1">
           <div className="relative w-full md:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Filter records..."
+              placeholder="Filter invoices..."
               value={filter}
               onChange={(e) => {
                   setFilter(e.target.value);
@@ -466,12 +416,11 @@ export function SalesInvoicesTable({ data }: { data: Person[] }) {
                   <span className="text-sm text-muted-foreground whitespace-nowrap">{selectedRows.size} selected</span>
                   <Select onValueChange={() => setSelectedRows(new Set())}>
                       <SelectTrigger className="w-[120px] h-9">
-                          <SelectValue placeholder="Assign" />
+                          <SelectValue placeholder="Actions" />
                       </SelectTrigger>
                       <SelectContent>
-                          <SelectItem value="user1">User 1</SelectItem>
-                          <SelectItem value="user2">User 2</SelectItem>
-                          <SelectItem value="user3">User 3</SelectItem>
+                          <SelectItem value="paid">Mark as Paid</SelectItem>
+                          <SelectItem value="delete">Delete</SelectItem>
                       </SelectContent>
                   </Select>
               </div>
@@ -576,8 +525,8 @@ export function SalesInvoicesTable({ data }: { data: Person[] }) {
         <DataTable
             columns={tableColumns}
             data={paginatedData}
-            expandedRows={expandedRows}
-            toggleRowExpansion={toggleRowExpansion}
+            expandedRows={new Set()}
+            toggleRowExpansion={() => {}}
             selectedRows={selectedRows}
             onSelectRow={toggleRowSelection}
             density={density}
