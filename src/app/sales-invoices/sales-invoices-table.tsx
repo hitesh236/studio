@@ -18,6 +18,11 @@ import {
   Pencil,
   FileX2,
   CreditCard,
+  TrendingUp,
+  CircleDollarSign,
+  FileWarning,
+  Landmark,
+  CheckCircle2
 } from "lucide-react";
 
 import {
@@ -59,6 +64,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { format } from "date-fns";
+import { SummaryCard } from "./summary-card";
 
 const availableFilters = [
   { id: "paymentStatus", label: "Payment Status" },
@@ -240,6 +246,28 @@ export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
   };
 
   const uniquePaymentStatuses = useMemo(() => Array.from(new Set(data.map((p) => p.paymentStatus))).sort(), [data]);
+
+  const summaryStats = useMemo(() => {
+    const totalSales = data.reduce((acc, inv) => acc + inv.amountBase, 0);
+    const totalOutstanding = data
+      .filter(inv => ['Outstanding', 'Partially Paid'].includes(inv.paymentStatus))
+      .reduce((acc, inv) => acc + inv.amountDue, 0);
+    const totalOverdue = data
+      .filter(inv => inv.paymentStatus === 'Overdue')
+      .reduce((acc, inv) => acc + inv.amountDue, 0);
+    const totalGst = data.reduce((acc, inv) => acc + inv.totalGstAmount, 0);
+    const paidInvoices = data.filter(inv => inv.paymentStatus === 'Paid').length;
+    const totalInvoices = data.length;
+
+    return {
+      totalSales,
+      totalOutstanding,
+      totalOverdue,
+      totalGst,
+      paidInvoices,
+      totalInvoices,
+    };
+  }, [data]);
 
   const filteredData = useMemo(() => {
     let results = data.filter((invoice) => {
@@ -538,6 +566,35 @@ export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
 
   return (
     <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <SummaryCard
+          icon={TrendingUp}
+          title="Total Sales (BCY)"
+          value={formatCurrency(summaryStats.totalSales, 'INR')}
+          variant="primary"
+        />
+        <SummaryCard
+          icon={CircleDollarSign}
+          title="Total Outstanding"
+          value={formatCurrency(summaryStats.totalOutstanding, 'INR')}
+        />
+        <SummaryCard
+          icon={FileWarning}
+          title="Total Overdue"
+          value={formatCurrency(summaryStats.totalOverdue, 'INR')}
+        />
+        <SummaryCard
+          icon={CheckCircle2}
+          title="Invoices Paid"
+          value={`${summaryStats.paidInvoices} / ${summaryStats.totalInvoices}`}
+        />
+        <SummaryCard
+          icon={Landmark}
+          title="Total GST"
+          value={formatCurrency(summaryStats.totalGst, 'INR')}
+        />
+      </div>
+
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4 flex-1">
           <div className="relative w-full md:max-w-sm">
