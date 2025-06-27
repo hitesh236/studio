@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
@@ -13,6 +13,9 @@ import {
   Save,
   Send,
   Loader2,
+  Check,
+  ChevronsUpDown,
+  UserPlus,
 } from 'lucide-react';
 
 import { cn, formatCurrency } from '@/lib/utils';
@@ -59,6 +62,25 @@ import {
 } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from '@/components/ui/dialog';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { generateData, Person } from '@/lib/data';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -88,6 +110,7 @@ const invoiceItemSchema = z.object({
 });
 
 const invoiceFormSchema = z.object({
+  customerId: z.string().optional(),
   customerName: z.string().min(1, 'Customer name is required.'),
   customerGstin: z.string().optional(),
   billingAddress: z.string().min(1, 'Billing address is required.'),
@@ -105,9 +128,90 @@ const invoiceFormSchema = z.object({
 
 type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;
 
+const NewCustomerForm = ({ onCustomerAdd }: { onCustomerAdd: (customer: Person) => void }) => {
+    const [name, setName] = React.useState('');
+    const [gstin, setGstin] = React.useState('');
+    const [address, setAddress] = React.useState('');
+    const [city, setCity] = React.useState('');
+    const [state, setState] = React.useState('');
+    const [zip, setZip] = React.useState('');
+
+    const handleSave = () => {
+        if (!name || !address || !city || !state || !zip) {
+            alert('Please fill all required fields.');
+            return;
+        }
+
+        const newCustomer: Person = {
+            id: `cust-${Date.now()}`,
+            firstName: name.split(' ')[0],
+            lastName: name.split(' ').slice(1).join(' ') || '',
+            email: `${name.toLowerCase().replace(' ', '.')}@new-customer.com`,
+            company: name,
+            phone: 'N/A',
+            saleAmount: 0,
+            rating: 0,
+            status: 'Active',
+            gstin,
+            address: { street: address, city, state, zip },
+            bio: 'Newly added customer.',
+        };
+        onCustomerAdd(newCustomer);
+    };
+
+    return (
+        <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="cust-name" className="text-right">Name</Label>
+                <Input id="cust-name" value={name} onChange={(e) => setName(e.target.value)} className="col-span-3" />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="cust-gstin" className="text-right">GSTIN</Label>
+                <Input id="cust-gstin" value={gstin} onChange={(e) => setGstin(e.target.value)} className="col-span-3" />
+            </div>
+             <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="cust-address" className="text-right">Address</Label>
+                <Input id="cust-address" value={address} onChange={(e) => setAddress(e.target.value)} className="col-span-3" />
+            </div>
+             <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="cust-city" className="text-right">City</Label>
+                <Input id="cust-city" value={city} onChange={(e) => setCity(e.target.value)} className="col-span-3" />
+            </div>
+             <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="cust-state" className="text-right">State</Label>
+                <Select onValueChange={setState} value={state}>
+                    <SelectTrigger className="col-span-3"><SelectValue placeholder="Select state" /></SelectTrigger>
+                    <SelectContent>
+                        {indianStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+            </div>
+             <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="cust-zip" className="text-right">Zip Code</Label>
+                <Input id="cust-zip" value={zip} onChange={(e) => setZip(e.target.value)} className="col-span-3" />
+            </div>
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button type="button" variant="outline">Cancel</Button>
+                </DialogClose>
+                <DialogClose asChild>
+                    <Button type="button" onClick={handleSave}>Save Customer</Button>
+                </DialogClose>
+            </DialogFooter>
+        </div>
+    );
+}
+
 export function InvoiceForm() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [customers, setCustomers] = React.useState<Person[]>([]);
+  const [isAddCustomerOpen, setIsAddCustomerOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    // In a real app, you'd fetch this from an API
+    setCustomers(generateData(25));
+  }, []);
 
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
@@ -137,7 +241,6 @@ export function InvoiceForm() {
   const totals = React.useMemo(() => {
     let subtotal = 0;
     let totalDiscount = 0;
-    let totalTaxableValue = 0;
     
     watchedItems.forEach(item => {
         const itemAmount = (item.quantity || 0) * (item.rate || 0);
@@ -146,9 +249,7 @@ export function InvoiceForm() {
         totalDiscount += itemDiscount;
     });
 
-    totalTaxableValue = subtotal - totalDiscount;
-
-    // Simple GST calculation for now. Let's assume a flat 18% rate.
+    const totalTaxableValue = subtotal - totalDiscount;
     const gstRate = 0.18;
     const isIntraState = watchedPlaceOfSupply === sellerDetails.state;
     
@@ -161,6 +262,22 @@ export function InvoiceForm() {
 
     return { subtotal, totalDiscount, totalTaxableValue, cgst, sgst, igst, grandTotal, totalGst };
   }, [watchedItems, watchedPlaceOfSupply]);
+
+  const handleCustomerSelect = (customer: Person) => {
+    const fullAddress = `${customer.address.street}, ${customer.address.city}, ${customer.address.state} ${customer.address.zip}`;
+    form.setValue('customerId', customer.id);
+    form.setValue('customerName', `${customer.firstName} ${customer.lastName}`);
+    form.setValue('customerGstin', customer.gstin || '');
+    form.setValue('billingAddress', fullAddress);
+    form.setValue('shippingAddress', fullAddress);
+    form.setValue('placeOfSupply', customer.address.state);
+    form.setValue('isShippingSameAsBilling', true);
+  };
+  
+  const handleAddNewCustomer = (customer: Person) => {
+      setCustomers(prev => [customer, ...prev]);
+      handleCustomerSelect(customer);
+  };
 
   async function onSubmit(data: InvoiceFormValues) {
     setIsSubmitting(true);
@@ -176,17 +293,17 @@ export function InvoiceForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Card>
             <CardHeader>
                 <CardTitle>Create New Invoice</CardTitle>
                 <CardDescription>Fill out the form below to create a new sales invoice.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 p-4">
                 {/* Seller & Customer Details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Seller Details */}
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-1 text-sm">
                         <h3 className="font-semibold text-base">From:</h3>
                         <p className="font-bold text-primary">{sellerDetails.name}</p>
                         <p>{sellerDetails.address}</p>
@@ -196,19 +313,79 @@ export function InvoiceForm() {
 
                     {/* Customer Details */}
                     <div className="space-y-4">
-                         <FormField
-                            control={form.control}
-                            name="customerName"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Bill To</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Customer's Full Name or Company" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                        <Dialog open={isAddCustomerOpen} onOpenChange={setIsAddCustomerOpen}>
+                            <FormField
+                                control={form.control}
+                                name="customerName"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-col">
+                                    <FormLabel>Bill To</FormLabel>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <FormControl>
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    className={cn(
+                                                        "w-full justify-between",
+                                                        !field.value && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    {field.value
+                                                        ? customers.find(
+                                                            (c) => `${c.firstName} ${c.lastName}` === field.value
+                                                        )?.company
+                                                        : "Select customer"}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+                                            </FormControl>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                            <Command>
+                                                <CommandInput placeholder="Search customer..." />
+                                                <CommandList>
+                                                    <CommandEmpty>No customer found.</CommandEmpty>
+                                                    <CommandGroup>
+                                                        {customers.map((customer) => (
+                                                            <CommandItem
+                                                                value={`${customer.firstName} ${customer.lastName}`}
+                                                                key={customer.id}
+                                                                onSelect={() => {
+                                                                    handleCustomerSelect(customer);
+                                                                }}
+                                                            >
+                                                                <Check className={cn("mr-2 h-4 w-4",
+                                                                     form.getValues('customerId') === customer.id ? "opacity-100" : "opacity-0"
+                                                                )} />
+                                                                {customer.company}
+                                                            </CommandItem>
+                                                        ))}
+                                                        <CommandItem onSelect={() => {
+                                                            setIsAddCustomerOpen(true);
+                                                        }}>
+                                                            <UserPlus className="mr-2 h-4 w-4" />
+                                                            Add New Customer
+                                                        </CommandItem>
+                                                    </CommandGroup>
+                                                </CommandList>
+                                            </Command>
+                                        </PopoverContent>
+                                    </Popover>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                             <DialogContent>
+                                <DialogHeader>
+                                <DialogTitle>Add New Customer</DialogTitle>
+                                <DialogDescription>
+                                    Enter the details for the new customer.
+                                </DialogDescription>
+                                </DialogHeader>
+                                <NewCustomerForm onCustomerAdd={handleAddNewCustomer} />
+                            </DialogContent>
+                        </Dialog>
+
                          <FormField
                             control={form.control}
                             name="billingAddress"
@@ -216,7 +393,7 @@ export function InvoiceForm() {
                                 <FormItem>
                                 <FormLabel>Billing Address</FormLabel>
                                 <FormControl>
-                                    <Textarea placeholder="Customer's Billing Address" {...field} />
+                                    <Textarea placeholder="Customer's Billing Address" {...field} rows={2} />
                                 </FormControl>
                                 <FormMessage />
                                 </FormItem>
@@ -242,7 +419,7 @@ export function InvoiceForm() {
                                 render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Place of Supply</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                         <SelectTrigger>
                                         <SelectValue placeholder="Select state" />
@@ -294,7 +471,7 @@ export function InvoiceForm() {
                                     <FormItem>
                                     <FormLabel>Shipping Address</FormLabel>
                                     <FormControl>
-                                        <Textarea placeholder="Customer's Shipping Address" {...field} />
+                                        <Textarea placeholder="Customer's Shipping Address" {...field} rows={2} />
                                     </FormControl>
                                     <FormMessage />
                                     </FormItem>
@@ -532,7 +709,7 @@ export function InvoiceForm() {
                 
                 {/* Totals Section */}
                 <div className="flex justify-end">
-                    <div className="w-full max-w-sm space-y-3">
+                    <div className="w-full max-w-sm space-y-2">
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Subtotal</span>
                             <span className="font-mono">{formatCurrency(totals.subtotal, watchedCurrency)}</span>
@@ -588,7 +765,7 @@ export function InvoiceForm() {
                             <FormItem>
                             <FormLabel>Notes / Terms & Conditions</FormLabel>
                             <FormControl>
-                                <Textarea placeholder="Any additional notes or payment terms." {...field} />
+                                <Textarea placeholder="Any additional notes or payment terms." {...field} rows={2} />
                             </FormControl>
                             <FormMessage />
                             </FormItem>

@@ -16,6 +16,7 @@ export type Person = {
   };
   bio: string;
   isExpanded?: boolean;
+  gstin?: string;
 };
 
 const firstNames = ["John", "Jane", "Michael", "Emily", "Chris", "Jessica", "David", "Sarah", "James", "Linda"];
@@ -40,6 +41,8 @@ export function generateData(count: number): Person[] {
   for (let i = 0; i < count; i++) {
     const firstName = getRandomElement(firstNames);
     const lastName = getRandomElement(lastNames);
+    const state = getRandomElement(states);
+    const gstinStateCode = state === 'Maharashtra' ? '27' : '29'; // Simplified for example
     data.push({
       id: `USR-${1000 + i}`,
       firstName,
@@ -53,10 +56,11 @@ export function generateData(count: number): Person[] {
       address: {
         street: `${Math.floor(Math.random() * 1000) + 1} ${getRandomElement(streets)}`,
         city: getRandomElement(cities),
-        state: getRandomElement(states),
+        state: state,
         zip: `${Math.floor(Math.random() * 90000) + 10000}`,
       },
       bio: getRandomElement(bios),
+      gstin: `${gstinStateCode}ABCDE${1000 + i}F1Z${(i % 9) + 1}`,
     });
   }
   return data;
