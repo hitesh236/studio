@@ -5,10 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown, ChevronRight, Star, Eye, Edit, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
 
 type ColumnProps = {
   expandedRows: Set<string>;
@@ -21,30 +19,6 @@ type ColumnProps = {
   onSelectRow: (id: string) => void;
   paginatedData: Person[];
 };
-
-
-const LastSeenCell = ({ date, density }: { date: Date, density: 'normal' | 'compact' }) => {
-    const [isClient, setIsClient] = useState(false);
-
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
-
-    if (!isClient) {
-        // Render a placeholder on the server to prevent hydration mismatch and layout shift.
-        return <div className={cn(density === 'compact' ? "h-[34px]" : "h-[42px]")} />;
-    }
-
-    const isRecent = new Date().getTime() - date.getTime() < 1000 * 60 * 60 * 24 * 7;
-
-    return (
-        <div className={cn("flex flex-col items-start gap-1", density === 'compact' && 'py-1 px-2 text-sm')}>
-            <span>{format(date, "MMM d, yyyy")}</span>
-            {isRecent && <Badge variant="secondary">Recent</Badge>}
-        </div>
-    );
-};
-
 
 export const columns = ({ 
   expandedRows, 
@@ -177,11 +151,6 @@ export const columns = ({
           </div>
         );
       },
-    },
-    {
-      accessor: "lastSeen",
-      header: getSortableHeader("Last Seen", "lastSeen"),
-      cell: (row: Person) => <LastSeenCell date={row.lastSeen} density={density} />,
     },
     {
       accessor: "actions",

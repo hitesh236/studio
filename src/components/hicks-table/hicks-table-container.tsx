@@ -60,7 +60,6 @@ import { Separator } from "../ui/separator";
 const availableFilters = [
   { id: "status", label: "Status" },
   { id: "company", label: "Company" },
-  { id: "dateRange", label: "Date Range" },
   { id: "rating", label: "Rating" },
 ];
 
@@ -72,7 +71,6 @@ const ALL_COLUMNS = [
     { id: 'saleAmount', label: 'Sale Amount' },
     { id: 'rating', label: 'Rating' },
     { id: 'status', label: 'Status' },
-    { id: 'lastSeen', label: 'Last Seen' },
     { id: 'actions', label: 'Actions' },
   ];
 
@@ -90,12 +88,10 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
 
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
   const [filterValues, setFilterValues] = useState<{
-    dateRange: { from: Date | undefined; to: Date | undefined };
     statuses: string[];
     companies: string[];
     rating: number;
   }>({
-    dateRange: { from: undefined, to: undefined },
     statuses: [],
     companies: [],
     rating: 2.5,
@@ -148,18 +144,6 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
       );
     });
 
-    if (activeFilters.has("dateRange")) {
-      const { from, to } = filterValues.dateRange;
-      if (from) {
-        results = results.filter((p) => p.lastSeen >= from);
-      }
-      if (to) {
-        const toDate = new Date(to);
-        toDate.setHours(23, 59, 59, 999);
-        results = results.filter((p) => p.lastSeen <= toDate);
-      }
-    }
-
     if (activeFilters.has("status") && filterValues.statuses.length > 0) {
       results = results.filter((p) => filterValues.statuses.includes(p.status));
     }
@@ -204,10 +188,6 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
             case 'name':
                 valA = `${a.firstName} ${a.lastName}`;
                 valB = `${b.firstName} ${b.lastName}`;
-                break;
-            case 'lastSeen':
-                valA = a.lastSeen.getTime();
-                valB = b.lastSeen.getTime();
                 break;
             default:
                 valA = (a as any)[key];
@@ -381,9 +361,6 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
 
     // Reset filter values
     switch (filterId) {
-        case 'dateRange':
-            setFilterValues(prev => ({...prev, dateRange: { from: undefined, to: undefined }}));
-            break;
         case 'status':
             setFilterValues(prev => ({...prev, statuses: []}));
             break;
@@ -440,77 +417,9 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
     setDragOverColumn(null);
   };
 
-  const setDateRangePreset = (preset: 'this_month' | 'last_month' | 'last_2_months' | 'ytd') => {
-    const now = new Date();
-    let from: Date | undefined;
-    let to: Date | undefined;
-
-    switch (preset) {
-        case 'this_month':
-            from = startOfMonth(now);
-            to = endOfMonth(now);
-            break;
-        case 'last_month':
-            from = startOfMonth(subMonths(now, 1));
-            to = endOfMonth(subMonths(now, 1));
-            break;
-        case 'last_2_months':
-            from = startOfMonth(subMonths(now, 2));
-            to = endOfMonth(subMonths(now, 1));
-            break;
-        case 'ytd':
-            from = startOfYear(now);
-            to = now;
-            break;
-    }
-    setFilterValues(prev => ({...prev, dateRange: { from, to }}));
-  };
-
   const renderActiveFilters = () => {
     return Array.from(activeFilters).map(filterId => {
         switch(filterId) {
-            case 'dateRange':
-                return (
-                    <div key={filterId} className="flex items-center gap-2">
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button id="date" variant={"outline"} className={cn("w-[300px] justify-start text-left font-normal", !filterValues.dateRange.from && "text-muted-foreground")}>
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {filterValues.dateRange.from ? (
-                                        filterValues.dateRange.to ? (
-                                            <>
-                                                {format(filterValues.dateRange.from, "LLL dd, y")} -{" "}
-                                                {format(filterValues.dateRange.to, "LLL dd, y")}
-                                            </>
-                                        ) : (
-                                            format(filterValues.dateRange.from, "LLL dd, y")
-                                        )
-                                    ) : (
-                                        <span>Pick a date range</span>
-                                    )}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="flex w-auto p-0" align="start">
-                                <div className="flex flex-col space-y-1 border-r border-border p-3">
-                                    <div className="mb-2 text-sm font-semibold">Presets</div>
-                                    <Button variant="ghost" className="h-8 justify-start px-2 font-normal" onClick={() => setDateRangePreset('this_month')}>This Month</Button>
-                                    <Button variant="ghost" className="h-8 justify-start px-2 font-normal" onClick={() => setDateRangePreset('last_month')}>Last Month</Button>
-                                    <Button variant="ghost" className="h-8 justify-start px-2 font-normal" onClick={() => setDateRangePreset('last_2_months')}>Last 2 Months</Button>
-                                    <Button variant="ghost" className="h-8 justify-start px-2 font-normal" onClick={() => setDateRangePreset('ytd')}>Year-to-date</Button>
-                                </div>
-                                <Calendar
-                                    initialFocus
-                                    mode="range"
-                                    defaultMonth={filterValues.dateRange.from}
-                                    selected={filterValues.dateRange}
-                                    onSelect={(range) => setFilterValues(prev => ({ ...prev, dateRange: range ?? { from: undefined, to: undefined } }))}
-                                    numberOfMonths={2}
-                                />
-                            </PopoverContent>
-                        </Popover>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
-                    </div>
-                );
             case 'status':
                 return (
                     <div key={filterId} className="flex items-center gap-2">

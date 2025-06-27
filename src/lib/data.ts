@@ -6,7 +6,6 @@ export type Person = {
   company: string;
   phone: string;
   saleAmount: number;
-  lastSeen: Date;
   rating: number;
   status: "Active" | "Follow-Up" | "Lost" | "Converted";
   address: {
@@ -49,7 +48,6 @@ export function generateData(count: number): Person[] {
       company: getRandomElement(companies),
       phone: `(${Math.floor(Math.random() * 900) + 100}) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
       saleAmount: Math.floor(Math.random() * 5000) + 500,
-      lastSeen: new Date(Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30)),
       rating: Math.round((Math.random() * 4 + 1) * 10) / 10,
       status: getRandomElement(statuses),
       address: {
