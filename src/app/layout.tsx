@@ -41,7 +41,7 @@ export default function RootLayout({
                   </div>
                   <ThemeToggle />
                 </header>
-                <main className="flex-1 overflow-auto">
+                <main className="flex-1">
                   {children}
                 </main>
               </div>
