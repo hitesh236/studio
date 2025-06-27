@@ -15,9 +15,6 @@ import {
 } from '@/components/ui/sidebar';
 import {
     BookOpen,
-    Briefcase,
-    CircleDollarSign,
-    FileClock,
     FileText,
     History,
     LayoutDashboard,
@@ -57,12 +54,22 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton tooltip="Dashboard" href="/" isActive={pathname === '/'}>
               <LayoutDashboard />
-              <a href="/">  Dashboard </a>
+              Dashboard
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
         
-
+        <SidebarGroup>
+          <SidebarGroupLabel>Component</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Table" href="/table" isActive={pathname === '/table'}>
+                <FileText />
+                Table
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
 
 
         <SidebarGroup>
@@ -71,13 +78,13 @@ export function AppSidebar() {
             <SidebarMenuItem>
               <SidebarMenuButton tooltip="Customers" href="/customers" isActive={pathname === '/customers'}>
                 <Users />
-                <a href="customers">   Customers</a>   
+                Customers
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Sales Invoices" href="#">
+              <SidebarMenuButton tooltip="Sales Invoices" href="/sales-invoices" isActive={pathname === '/sales-invoices'}>
                 <FileText />
-                <a href="sales-invoices">    Sales Invoices </a>   
+                Sales Invoices
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
