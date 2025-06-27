@@ -30,7 +30,7 @@ export const columns = ({
   const getSortableHeader = (title: string, accessor: string) => {
     const isSorted = sortConfig.key === accessor;
     return (
-      <Button variant="ghost" onClick={() => requestSort(accessor)} className="text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground p-2">
+      <Button variant="ghost" onClick={() => requestSort(accessor)} className="text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground p-2 whitespace-nowrap">
         {title}
         {isSorted ? (
           sortConfig.direction === 'ascending' ? (
@@ -63,7 +63,7 @@ export const columns = ({
         );
       })(),
       cell: (row: SalesInvoice) => (
-        <div className="px-2">
+        <div className="px-2 whitespace-nowrap">
             <Checkbox
                 checked={selectedRows.has(row.id)}
                 onCheckedChange={() => onSelectRow(row.id)}
@@ -77,7 +77,7 @@ export const columns = ({
       accessor: "invoiceNumber",
       header: getSortableHeader("Invoice Number", "invoiceNumber"),
       cell: (row: SalesInvoice) => (
-        <div className={cn("font-medium", density === 'compact' && 'py-1 px-2 text-sm')}>
+        <div className={cn("font-medium whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>
           {row.invoiceNumber}
         </div>
       ),
@@ -86,7 +86,7 @@ export const columns = ({
       accessor: "customerName",
       header: getSortableHeader("Customer Name", "customerName"),
       cell: (row: SalesInvoice) => (
-        <div className={cn(density === 'compact' && 'py-1 px-2 text-sm')}>
+        <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>
           {row.customerName}
         </div>
       ),
@@ -95,7 +95,7 @@ export const columns = ({
       accessor: "invoiceDate",
       header: getSortableHeader("Invoice Date", "invoiceDate"),
       cell: (row: SalesInvoice) => (
-        <div className={cn(density === 'compact' && 'py-1 px-2 text-sm')}>
+        <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>
           {format(row.invoiceDate, "MMM d, yyyy")}
         </div>
       ),
@@ -104,7 +104,7 @@ export const columns = ({
       accessor: "dueDate",
       header: getSortableHeader("Due Date", "dueDate"),
       cell: (row: SalesInvoice) => (
-        <div className={cn(density === 'compact' && 'py-1 px-2 text-sm')}>
+        <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>
           {format(row.dueDate, "MMM d, yyyy")}
         </div>
       ),
@@ -113,49 +113,49 @@ export const columns = ({
       accessor: "currencyCode",
       header: "Currency",
       cell: (row: SalesInvoice) => (
-        <div className={cn(density === 'compact' && 'py-1 px-2 text-sm')}>{row.currencyCode}</div>
+        <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.currencyCode}</div>
       ),
     },
     {
       accessor: "exchangeRate",
       header: "Exch. Rate",
       cell: (row: SalesInvoice) => (
-        <div className={cn("text-right", density === 'compact' && 'py-1 px-2 text-sm')}>{row.exchangeRate.toFixed(2)}</div>
+        <div className={cn("text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.exchangeRate.toFixed(2)}</div>
       ),
     },
     {
       accessor: "amountForeign",
       header: getSortableHeader("Amount (FCY)", "amountForeign"),
       cell: (row: SalesInvoice) => (
-        <div className={cn("font-mono text-right", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountForeign)}</div>
+        <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountForeign, row.currencyCode)}</div>
       ),
     },
     {
       accessor: "amountBase",
       header: getSortableHeader("Amount (BCY)", "amountBase"),
       cell: (row: SalesInvoice) => (
-        <div className={cn("font-mono text-right", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountBase)}</div>
+        <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountBase, 'INR')}</div>
       ),
     },
     {
       accessor: "totalTaxableValue",
       header: getSortableHeader("Taxable Value", "totalTaxableValue"),
       cell: (row: SalesInvoice) => (
-        <div className={cn("font-mono text-right", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.totalTaxableValue)}</div>
+        <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.totalTaxableValue, 'INR')}</div>
       ),
     },
     {
       accessor: "totalGstAmount",
       header: getSortableHeader("GST Amount", "totalGstAmount"),
       cell: (row: SalesInvoice) => (
-        <div className={cn("font-mono text-right", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.totalGstAmount)}</div>
+        <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.totalGstAmount, 'INR')}</div>
       ),
     },
     {
       accessor: "gstType",
       header: "GST Type",
       cell: (row: SalesInvoice) => (
-        <div className={cn(density === 'compact' && 'py-1 px-2 text-sm')}>
+        <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>
           <Badge variant="outline">{row.gstType}</Badge>
         </div>
       ),
@@ -164,7 +164,7 @@ export const columns = ({
       accessor: "placeOfSupply",
       header: "Place of Supply",
       cell: (row: SalesInvoice) => (
-        <div className={cn(density === 'compact' && 'py-1 px-2 text-sm')}>{row.placeOfSupply}</div>
+        <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.placeOfSupply}</div>
       ),
     },
     {
@@ -188,7 +188,7 @@ export const columns = ({
         }
         return (
           <div className={cn(density === 'compact' && 'py-1 px-2')}>
-            <Badge variant={variant} className="w-[110px] justify-center font-normal">{row.paymentStatus}</Badge>
+            <Badge variant={variant} className="w-[110px] justify-center font-normal whitespace-nowrap">{row.paymentStatus}</Badge>
           </div>
         );
       },
@@ -197,21 +197,21 @@ export const columns = ({
       accessor: "amountPaid",
       header: getSortableHeader("Amount Paid", "amountPaid"),
       cell: (row: SalesInvoice) => (
-        <div className={cn("font-mono text-right", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountPaid)}</div>
+        <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountPaid, 'INR')}</div>
       ),
     },
     {
       accessor: "amountDue",
       header: getSortableHeader("Amount Due", "amountDue"),
       cell: (row: SalesInvoice) => (
-        <div className={cn("font-mono text-right", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountDue)}</div>
+        <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountDue, 'INR')}</div>
       ),
     },
     {
       accessor: "createdBy",
       header: "Created By",
       cell: (row: SalesInvoice) => (
-        <div className={cn(density === 'compact' && 'py-1 px-2 text-sm')}>{row.createdBy}</div>
+        <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.createdBy}</div>
       ),
     },
   ];

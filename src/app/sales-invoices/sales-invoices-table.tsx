@@ -16,7 +16,14 @@ import {
   GripVertical,
 } from "lucide-react";
 
-import { DataTable } from "@/components/hicks-table/data-table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { columns } from "./sales-invoices-columns";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -522,15 +529,39 @@ export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
       )}
 
       <div className="rounded-lg border overflow-hidden bg-card">
-        <DataTable
-            columns={tableColumns}
-            data={paginatedData}
-            expandedRows={new Set()}
-            toggleRowExpansion={() => {}}
-            selectedRows={selectedRows}
-            onSelectRow={toggleRowSelection}
-            density={density}
-        />
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {tableColumns.map((column) => (
+                <TableHead key={String(column.accessor)}>
+                  {column.header}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedData.length ? (
+              paginatedData.map((row) => (
+                <TableRow key={row.id} data-state={selectedRows.has(row.id) ? "selected" : undefined}>
+                  {tableColumns.map((column) => (
+                    <TableCell key={String(column.accessor)} className={cn(density === 'compact' && 'p-0')}>
+                      {column.cell(row)}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={tableColumns.length}
+                  className="h-24 text-center"
+                >
+                  No results found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
 
 
