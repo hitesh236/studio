@@ -284,12 +284,12 @@ export function LedgerView({ data }: LedgerViewProps) {
           <DialogTrigger asChild>
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" />
-              New Account
+              New Group
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Create New Account</DialogTitle>
+              <DialogTitle>Create New Group</DialogTitle>
               <DialogDescription>
                 Add a new primary or sub-group to your chart of accounts.
               </DialogDescription>
@@ -361,9 +361,9 @@ export function LedgerView({ data }: LedgerViewProps) {
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Edit Account</DialogTitle>
+              <DialogTitle>Edit Group</DialogTitle>
               <DialogDescription>
-                Update the name or parent group of this account.
+                Update the name or parent group of this group.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
