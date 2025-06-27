@@ -30,7 +30,7 @@ export function SummaryCard({ title, value, icon: Icon, className, variant = 'de
         )} />
       </CardHeader>
       <CardContent className="p-3 pt-1">
-        <div className="text-xl font-bold">{value}</div>
+        <div className="text-[1.1rem] font-bold">{value}</div>
       </CardContent>
     </Card>
   );
