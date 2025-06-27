@@ -35,8 +35,14 @@ import Link from 'next/link';
 
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
   const pathname = usePathname();
+
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -54,7 +60,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/'} asChild>
-                <Link href="/">
+                <Link href="/" onClick={handleLinkClick}>
                     <LayoutDashboard />
                     Dashboard
                 </Link>
@@ -67,7 +73,7 @@ export function AppSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
                 <SidebarMenuButton tooltip="Table" isActive={pathname.startsWith('/table')} asChild>
-                    <Link href="/table">
+                    <Link href="/table" onClick={handleLinkClick}>
                         <FileText />
                         Table
                     </Link>
@@ -82,7 +88,7 @@ export function AppSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
                 <SidebarMenuButton tooltip="Customers" isActive={pathname.startsWith('/customers')} asChild>
-                    <Link href="/customers">
+                    <Link href="/customers" onClick={handleLinkClick}>
                         <Users />
                         Customers
                     </Link>
@@ -90,7 +96,7 @@ export function AppSidebar() {
             </SidebarMenuItem>
             <SidebarMenuItem>
                 <SidebarMenuButton tooltip="Sales Invoices" isActive={pathname.startsWith('/sales-invoices')} asChild>
-                    <Link href="/sales-invoices">
+                    <Link href="/sales-invoices" onClick={handleLinkClick}>
                         <FileText />
                         Sales Invoices
                     </Link>
@@ -134,7 +140,7 @@ export function AppSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton tooltip="My Accounts" isActive={pathname.startsWith('/my-accounts')} asChild>
-                <Link href="/my-accounts">
+                <Link href="/my-accounts" onClick={handleLinkClick}>
                     <Wallet />
                     My Accounts
                 </Link>
