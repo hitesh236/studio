@@ -29,7 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -53,6 +53,8 @@ import {
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { format } from "date-fns";
 
 const availableFilters = [
   { id: "paymentStatus", label: "Payment Status" },
@@ -77,6 +79,102 @@ const ALL_COLUMNS = [
     { id: 'amountDue', label: 'Amount Due' },
     { id: 'createdBy', label: 'Created By' },
   ];
+
+const MobileInvoiceCard = ({ invoice, isExpanded, toggleRowExpansion, selectedRows, onSelectRow }: {
+  invoice: SalesInvoice;
+  isExpanded: boolean;
+  toggleRowExpansion: () => void;
+  selectedRows: Set<string>;
+  onSelectRow: (id: string) => void;
+}) => {
+  let statusVariant: "default" | "secondary" | "destructive" | "outline";
+  switch (invoice.paymentStatus) {
+    case "Paid":
+      statusVariant = "default";
+      break;
+    case "Partially Paid":
+      statusVariant = "secondary";
+      break;
+    case "Overdue":
+      statusVariant = "destructive";
+      break;
+    case "Outstanding":
+      statusVariant = "outline";
+      break;
+  }
+
+  return (
+    <Card className="transition-shadow hover:shadow-md">
+      <div className="flex items-start p-4">
+        <Checkbox
+          checked={selectedRows.has(invoice.id)}
+          onCheckedChange={() => onSelectRow(invoice.id)}
+          aria-label="Select row"
+          className="mt-1.5 mr-3"
+        />
+        <div className="w-full">
+          <div onClick={toggleRowExpansion} className="cursor-pointer">
+            <CardHeader className="p-0">
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-base">{invoice.invoiceNumber}</CardTitle>
+                  <p className="text-sm text-muted-foreground">{invoice.customerName}</p>
+                </div>
+                <Badge variant={statusVariant}>{invoice.paymentStatus}</Badge>
+              </div>
+              <p className="text-lg font-semibold pt-2">{formatCurrency(invoice.amountDue, 'INR')}</p>
+              <p className="text-xs text-muted-foreground">Amount Due</p>
+            </CardHeader>
+          </div>
+          {isExpanded && (
+            <CardContent className="space-y-4 text-sm mt-4 p-0">
+              <Separator />
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                <div>
+                  <strong className="text-muted-foreground block">Invoice Date</strong>
+                  {format(invoice.invoiceDate, "MMM d, yyyy")}
+                </div>
+                <div>
+                  <strong className="text-muted-foreground block">Due Date</strong>
+                  {format(invoice.dueDate, "MMM d, yyyy")}
+                </div>
+                <div>
+                  <strong className="text-muted-foreground block">Amount (Base)</strong>
+                  {formatCurrency(invoice.amountBase, 'INR')}
+                </div>
+                <div>
+                  <strong className="text-muted-foreground block">Amount Paid</strong>
+                  {formatCurrency(invoice.amountPaid, 'INR')}
+                </div>
+                 <div>
+                  <strong className="text-muted-foreground block">Amount (FCY)</strong>
+                  {formatCurrency(invoice.amountForeign, invoice.currencyCode)}
+                </div>
+                <div>
+                  <strong className="text-muted-foreground block">Exchange Rate</strong>
+                  {invoice.exchangeRate.toFixed(2)}
+                </div>
+                <div>
+                  <strong className="text-muted-foreground block">GST Type</strong>
+                  {invoice.gstType}
+                </div>
+                 <div>
+                  <strong className="text-muted-foreground block">Place of Supply</strong>
+                  {invoice.placeOfSupply}
+                </div>
+                <div className="col-span-2">
+                  <strong className="text-muted-foreground block">Created By</strong>
+                  {invoice.createdBy}
+                </div>
+              </div>
+            </CardContent>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
+};
+
 
 export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
   const [filter, setFilter] = useState("");
@@ -104,6 +202,19 @@ export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
   );
   const draggedColumn = useRef<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const toggleRowExpansion = (id: string) => {
+    setExpandedRows((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
 
   const uniquePaymentStatuses = useMemo(() => Array.from(new Set(data.map((p) => p.paymentStatus))).sort(), [data]);
 
@@ -528,7 +639,28 @@ export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
         </div>
       )}
 
-      <div className="rounded-lg border overflow-hidden bg-card">
+      {/* Mobile View */}
+      <div className="grid gap-4 md:hidden">
+        {paginatedData.length > 0 ? (
+          paginatedData.map((invoice) => (
+            <MobileInvoiceCard
+              key={invoice.id}
+              invoice={invoice}
+              isExpanded={expandedRows.has(invoice.id)}
+              toggleRowExpansion={() => toggleRowExpansion(invoice.id)}
+              selectedRows={selectedRows}
+              onSelectRow={toggleRowSelection}
+            />
+          ))
+        ) : (
+          <div className="py-12 text-center text-muted-foreground">
+            No results found.
+          </div>
+        )}
+      </div>
+      
+      {/* Desktop View */}
+      <div className="hidden md:block rounded-lg border overflow-hidden bg-card">
         <Table>
           <TableHeader>
             <TableRow>
