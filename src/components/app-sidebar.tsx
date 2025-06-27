@@ -57,24 +57,27 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton tooltip="Dashboard" href="/" isActive={pathname === '/'}>
               <LayoutDashboard />
-              Dashboard
+              <a href="/">  Dashboard </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
         
+
+
+
         <SidebarGroup>
           <SidebarGroupLabel>Money In</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton tooltip="Customers" href="/customers" isActive={pathname === '/customers'}>
                 <Users />
-                Customers
+                <a href="customers">   Customers</a>   
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton tooltip="Sales Invoices" href="#">
                 <FileText />
-                Sales Invoices
+                <a href="sales-invoices">    Sales Invoices </a>   
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
