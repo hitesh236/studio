@@ -2,12 +2,6 @@
 
 import * as React from 'react';
 import { useState } from 'react';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -46,7 +40,7 @@ interface LedgerViewProps {
 }
 
 const LedgerEntry = ({ ledger, level }: { ledger: Ledger; level: number }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(level === 0);
   const hasChildren = ledger.children && ledger.children.length > 0;
 
   return (
@@ -54,22 +48,24 @@ const LedgerEntry = ({ ledger, level }: { ledger: Ledger; level: number }) => {
       <div
         className={cn(
           'flex items-center justify-between py-2 px-2 rounded-md hover:bg-muted/50',
-          'cursor-pointer'
+          hasChildren && 'cursor-pointer'
         )}
-        style={{ paddingLeft: `${level * 1.5 + 0.5}rem` }}
+        style={{ paddingLeft: `${level * 1.25 + 0.5}rem` }}
         onClick={() => hasChildren && setIsOpen(!isOpen)}
       >
         <div className="flex items-center gap-2">
           {hasChildren ? (
-            isOpen ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )
+            <span className="w-4 h-4">
+                {isOpen ? (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                )}
+            </span>
           ) : (
             <div className="w-4 h-4" />
           )}
-          <span className="font-medium">{ledger.name}</span>
+          <span className={cn("font-medium", level === 0 && "font-semibold")}>{ledger.name}</span>
         </div>
       </div>
       {hasChildren && isOpen && (
@@ -238,22 +234,11 @@ export function LedgerView({ data }: LedgerViewProps) {
         </Dialog>
       </CardHeader>
       <CardContent>
-        <Accordion type="multiple" className="w-full" defaultValue={ledgers.map(g => g.id)}>
+        <div className="rounded-md border p-2">
           {ledgers.map((group) => (
-            <AccordionItem value={group.id} key={group.id}>
-              <AccordionTrigger className="font-semibold text-lg hover:no-underline -ml-2">
-                <div className="flex justify-between w-full pr-4">
-                  <span>{group.name}</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent>
-                {group.children?.map((child) => (
-                  <LedgerEntry key={child.id} ledger={child} level={0} />
-                ))}
-              </AccordionContent>
-            </AccordionItem>
+            <LedgerEntry key={group.id} ledger={group} level={0} />
           ))}
-        </Accordion>
+        </div>
       </CardContent>
     </Card>
   );
