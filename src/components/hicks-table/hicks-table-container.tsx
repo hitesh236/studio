@@ -20,6 +20,7 @@ import {
   Building,
   Columns,
   GripVertical,
+  Download,
 } from "lucide-react";
 
 import { SummaryCard } from "./summary-card";
@@ -48,6 +49,7 @@ import { Calendar } from "@/components/ui/calendar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -640,6 +642,19 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
                     );
                   })}
                 </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Download className="h-4 w-4" />
+                  <span className="sr-only">Export</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>PDF</DropdownMenuItem>
+                <DropdownMenuItem>Excel</DropdownMenuItem>
+                <DropdownMenuItem>CSV</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
