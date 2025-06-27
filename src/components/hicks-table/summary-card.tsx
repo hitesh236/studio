@@ -17,7 +17,7 @@ export function SummaryCard({ title, value, icon: Icon, className, variant = 'de
       variant === 'primary' ? "bg-primary text-primary-foreground" : "bg-card",
       className
     )}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
         <CardTitle className={cn(
           "text-sm font-medium",
           variant === 'primary' ? "text-primary-foreground/90" : "text-muted-foreground"
@@ -29,7 +29,7 @@ export function SummaryCard({ title, value, icon: Icon, className, variant = 'de
           variant === 'primary' ? "text-primary-foreground/90" : "text-muted-foreground"
         )} />
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 pt-0">
         <div className="text-2xl font-bold">{value}</div>
       </CardContent>
     </Card>

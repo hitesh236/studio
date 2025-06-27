@@ -82,7 +82,7 @@ export const columns = ({
       accessor: "name",
       header: getSortableHeader("User", "name"),
       cell: (row: Person) => (
-        <div className={cn("p-2", density === 'compact' && 'py-1 px-2 text-sm')}>
+        <div className={cn(density === 'compact' && 'py-1 px-2 text-sm')}>
           <div className="font-medium">{`${row.firstName} ${row.lastName}`}</div>
           <div className="text-xs text-muted-foreground">{row.email}</div>
         </div>
@@ -94,7 +94,7 @@ export const columns = ({
       cell: (row: Person) => (
         <div 
           onClick={() => toggleRowExpansion(row.id)} 
-          className={cn("p-2 cursor-pointer", density === 'compact' && 'py-1 px-2 text-sm')}>
+          className={cn("cursor-pointer", density === 'compact' && 'py-1 px-2 text-sm')}>
           <div className="flex items-center gap-2">
              {row.company}
             <Button variant="ghost" size="icon" className="h-6 w-6 opacity-60 hover:opacity-100 data-[state=open]:opacity-100">
@@ -108,20 +108,20 @@ export const columns = ({
     {
       accessor: "phone",
       header: "Phone",
-      cell: (row: Person) => <div className={cn("p-2 font-mono", density === 'compact' && 'py-1 px-2 text-sm')}>{row.phone}</div>,
+      cell: (row: Person) => <div className={cn("font-mono", density === 'compact' && 'py-1 px-2 text-sm')}>{row.phone}</div>,
     },
     {
       accessor: "saleAmount",
       header: getSortableHeader("Sale Amount", "saleAmount"),
       cell: (row: Person) => (
-          <div className={cn("p-2 font-mono text-right", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.saleAmount)}</div>
+          <div className={cn("font-mono text-right", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.saleAmount)}</div>
       ),
     },
     {
         accessor: "rating",
         header: getSortableHeader("Rating", "rating"),
         cell: (row: Person) => (
-            <div className={cn("p-2 flex items-center gap-1", density === 'compact' && 'py-1 px-2 text-sm')}>
+            <div className={cn("flex items-center gap-1", density === 'compact' && 'py-1 px-2 text-sm')}>
                 <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                 <span>{row.rating.toFixed(1)}</span>
             </div>
@@ -147,7 +147,7 @@ export const columns = ({
             break;
         }
         return (
-          <div className={cn("p-2", density === 'compact' && 'py-1 px-2')}>
+          <div className={cn(density === 'compact' && 'py-1 px-2')}>
             <Badge variant={variant} className="w-[100px] justify-center font-normal">{row.status}</Badge>
           </div>
         );
@@ -160,7 +160,7 @@ export const columns = ({
           const date = row.lastSeen;
           const isRecent = new Date().getTime() - date.getTime() < 1000 * 60 * 60 * 24 * 7;
           return (
-              <div className={cn("p-2 flex flex-col items-start gap-1", density === 'compact' && 'py-1 px-2 text-sm')}>
+              <div className={cn("flex flex-col items-start gap-1", density === 'compact' && 'py-1 px-2 text-sm')}>
                   <span>{format(date, "MMM d, yyyy")}</span>
                   {isRecent && <Badge variant="secondary">Recent</Badge>}
               </div>
@@ -171,7 +171,7 @@ export const columns = ({
       accessor: "actions",
       header: "Actions",
       cell: () => (
-        <div className={cn("flex items-center gap-1 p-2", density === 'compact' && 'p-1')}>
+        <div className={cn("flex items-center gap-1", density === 'compact' && 'p-1')}>
           <Button variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}>
             <Eye className="h-4 w-4" />
             <span className="sr-only">View</span>
