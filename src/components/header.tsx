@@ -21,7 +21,7 @@ export function Header() {
   }, [pathname]);
 
   return (
-    <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-6 shrink-0">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/95 px-6 shrink-0 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <SidebarTrigger className="flex" />
       <div className="flex-1">
         <h1 className="font-semibold text-lg">{title}</h1>
