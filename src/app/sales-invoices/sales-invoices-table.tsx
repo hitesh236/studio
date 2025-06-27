@@ -23,7 +23,8 @@ import {
   FileWarning,
   Landmark,
   CheckCircle2,
-  Download
+  Download,
+  MoreHorizontal
 } from "lucide-react";
 
 import {
@@ -182,21 +183,25 @@ const MobileInvoiceCard = ({ invoice, isExpanded, toggleRowExpansion, selectedRo
                 </div>
               </div>
               <Separator />
-              <div className="flex items-center justify-end gap-1 pt-2 flex-wrap">
-                <Button variant="ghost" size="sm" className="gap-1.5">
-                    <Eye className="h-4 w-4" /> View
-                </Button>
-                <Button variant="ghost" size="sm" className="gap-1.5">
-                    <Pencil className="h-4 w-4" /> Edit
-                </Button>
-                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive gap-1.5">
-                    <FileX2 className="h-4 w-4" /> Cancel
-                </Button>
-                {canAddPayment && (
-                <Button variant="ghost" size="sm" className="gap-1.5">
-                    <CreditCard className="h-4 w-4" /> Payment
-                </Button>
-                )}
+              <div className="flex items-center justify-end pt-2">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem><Eye className="mr-2 h-4 w-4" /> View Invoice</DropdownMenuItem>
+                      <DropdownMenuItem><Pencil className="mr-2 h-4 w-4" /> Edit Invoice</DropdownMenuItem>
+                      {canAddPayment && (
+                        <DropdownMenuItem><CreditCard className="mr-2 h-4 w-4" /> Add Payment</DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem className="text-destructive focus:text-destructive">
+                        <FileX2 className="mr-2 h-4 w-4" /> Cancel Invoice
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
               </div>
             </CardContent>
           )}
