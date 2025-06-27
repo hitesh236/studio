@@ -237,6 +237,7 @@ export function InvoiceForm() {
   const watchedItems = form.watch('items');
   const watchedPlaceOfSupply = form.watch('placeOfSupply');
   const watchedCurrency = form.watch('currency');
+  const watchedCustomerId = form.watch('customerId');
 
   const totals = React.useMemo(() => {
     let subtotal = 0;
@@ -266,7 +267,7 @@ export function InvoiceForm() {
   const handleCustomerSelect = (customer: Person) => {
     const fullAddress = `${customer.address.street}, ${customer.address.city}, ${customer.address.state} ${customer.address.zip}`;
     form.setValue('customerId', customer.id);
-    form.setValue('customerName', `${customer.firstName} ${customer.lastName}`);
+    form.setValue('customerName', `${customer.company}`);
     form.setValue('customerGstin', customer.gstin || '');
     form.setValue('billingAddress', fullAddress);
     form.setValue('shippingAddress', fullAddress);
@@ -293,6 +294,10 @@ export function InvoiceForm() {
     setIsSubmitting(false);
   }
 
+  const selectedCustomer = React.useMemo(() => {
+    return customers.find(c => c.id === watchedCustomerId);
+  }, [customers, watchedCustomerId]);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -315,79 +320,65 @@ export function InvoiceForm() {
 
                     {/* Customer Details */}
                     <div className="space-y-4">
-                        <Dialog open={isAddCustomerOpen} onOpenChange={setIsAddCustomerOpen}>
-                            <FormField
-                                control={form.control}
-                                name="customerName"
-                                render={({ field }) => (
-                                    <FormItem className="flex flex-col">
-                                    <FormLabel>Bill To</FormLabel>
-                                    <Popover open={isCustomerPopoverOpen} onOpenChange={setIsCustomerPopoverOpen}>
-                                        <PopoverTrigger asChild>
-                                            <FormControl>
-                                                <Button
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    aria-expanded={isCustomerPopoverOpen}
-                                                    className={cn(
-                                                        "w-full justify-between",
-                                                        !field.value && "text-muted-foreground"
-                                                    )}
-                                                >
-                                                    {form.getValues('customerId')
-                                                        ? customers.find((c) => c.id === form.getValues('customerId'))?.company
-                                                        : "Select customer"}
-                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                                </Button>
-                                            </FormControl>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                                            <Command>
-                                                <CommandInput placeholder="Search customer..." />
-                                                <CommandList>
-                                                    <CommandEmpty>No customer found.</CommandEmpty>
-                                                    <CommandGroup>
-                                                        {customers.map((customer) => (
-                                                            <CommandItem
-                                                                value={customer.company}
-                                                                key={customer.id}
-                                                                onSelect={() => {
-                                                                    handleCustomerSelect(customer);
-                                                                }}
-                                                            >
-                                                                <Check className={cn("mr-2 h-4 w-4",
-                                                                     form.getValues('customerId') === customer.id ? "opacity-100" : "opacity-0"
-                                                                )} />
-                                                                {customer.company}
-                                                            </CommandItem>
-                                                        ))}
-                                                        <CommandItem onSelect={() => {
-                                                            setIsCustomerPopoverOpen(false);
-                                                            setIsAddCustomerOpen(true);
-                                                        }}>
-                                                            <UserPlus className="mr-2 h-4 w-4" />
-                                                            Add New Customer
+                        <FormField
+                            control={form.control}
+                            name="customerName"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                <FormLabel>Bill To</FormLabel>
+                                <Popover open={isCustomerPopoverOpen} onOpenChange={setIsCustomerPopoverOpen}>
+                                    <PopoverTrigger asChild>
+                                        <FormControl>
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                aria-expanded={isCustomerPopoverOpen}
+                                                className={cn(
+                                                    "w-full justify-between",
+                                                    !field.value && "text-muted-foreground"
+                                                )}
+                                            >
+                                                {selectedCustomer?.company || "Select customer"}
+                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                        <Command>
+                                            <CommandInput placeholder="Search customer..." />
+                                            <CommandList>
+                                                <CommandEmpty>No customer found.</CommandEmpty>
+                                                <CommandGroup>
+                                                    {customers.map((customer) => (
+                                                        <CommandItem
+                                                            value={customer.company}
+                                                            key={customer.id}
+                                                            onSelect={() => {
+                                                                handleCustomerSelect(customer);
+                                                            }}
+                                                        >
+                                                            <Check className={cn("mr-2 h-4 w-4",
+                                                                  watchedCustomerId === customer.id ? "opacity-100" : "opacity-0"
+                                                            )} />
+                                                            {customer.company}
                                                         </CommandItem>
-                                                    </CommandGroup>
-                                                </CommandList>
-                                            </Command>
-                                        </PopoverContent>
-                                    </Popover>
-                                    <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                             <DialogContent>
-                                <DialogHeader>
-                                <DialogTitle>Add New Customer</DialogTitle>
-                                <DialogDescription>
-                                    Enter the details for the new customer.
-                                </DialogDescription>
-                                </DialogHeader>
-                                <NewCustomerForm onCustomerAdd={handleAddNewCustomer} />
-                            </DialogContent>
-                        </Dialog>
-
+                                                    ))}
+                                                    <CommandItem onSelect={() => {
+                                                        setIsCustomerPopoverOpen(false);
+                                                        setIsAddCustomerOpen(true);
+                                                    }}>
+                                                        <UserPlus className="mr-2 h-4 w-4" />
+                                                        Add New Customer
+                                                    </CommandItem>
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                          <FormField
                             control={form.control}
                             name="billingAddress"
@@ -776,6 +767,18 @@ export function InvoiceForm() {
                 </div>
             </CardContent>
         </Card>
+
+        <Dialog open={isAddCustomerOpen} onOpenChange={setIsAddCustomerOpen}>
+            <DialogContent>
+                <DialogHeader>
+                <DialogTitle>Add New Customer</DialogTitle>
+                <DialogDescription>
+                    Enter the details for the new customer.
+                </DialogDescription>
+                </DialogHeader>
+                <NewCustomerForm onCustomerAdd={handleAddNewCustomer} />
+            </DialogContent>
+        </Dialog>
 
         <div className="flex justify-end gap-4">
             <Button type="button" variant="outline" disabled={isSubmitting}>
