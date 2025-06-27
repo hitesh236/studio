@@ -22,7 +22,8 @@ import {
   CircleDollarSign,
   FileWarning,
   Landmark,
-  CheckCircle2
+  CheckCircle2,
+  Download
 } from "lucide-react";
 
 import {
@@ -60,6 +61,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
+  DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -707,6 +709,19 @@ export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
                     );
                   })}
                 </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Download className="h-4 w-4" />
+                  <span className="sr-only">Export</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>PDF</DropdownMenuItem>
+                <DropdownMenuItem>Excel</DropdownMenuItem>
+                <DropdownMenuItem>CSV</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
