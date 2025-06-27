@@ -625,8 +625,7 @@ export function InvoiceForm() {
                     <Table>
                         <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[30%]">Item</TableHead>
-                            <TableHead>HSN</TableHead>
+                            <TableHead className="w-[30%] min-w-[200px]">Item / HSN</TableHead>
                             <TableHead className="text-right">Qty</TableHead>
                             <TableHead className="text-right">Rate</TableHead>
                             <TableHead className="text-right">Discount(%)</TableHead>
@@ -646,40 +645,81 @@ export function InvoiceForm() {
                             const totalAmount = taxableAmount + gstAmount;
 
                             return (
-                                <TableRow key={field.id}>
-                                <TableCell>
-                                     <FormField
-                                        control={form.control}
-                                        name={`items.${index}.itemName`}
-                                        render={({ field }) => <Input placeholder="Item name" {...field} />}
-                                    />
-                                </TableCell>
+                                <TableRow key={field.id} className="align-top">
                                 <TableCell>
                                     <FormField
                                         control={form.control}
+                                        name={`items.${index}.itemName`}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <Textarea
+                                                        placeholder="Item name and description"
+                                                        {...field}
+                                                        rows={2}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
                                         name={`items.${index}.hsnCode`}
-                                        render={({ field }) => <Input placeholder="HSN" {...field} />}
+                                        render={({ field }) => (
+                                            <FormItem className="mt-1">
+                                                <FormControl>
+                                                    <Input
+                                                        placeholder="HSN/SAC Code"
+                                                        {...field}
+                                                        className="h-8 text-xs"
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
                                     />
                                 </TableCell>
                                 <TableCell>
                                      <FormField
                                         control={form.control}
                                         name={`items.${index}.quantity`}
-                                        render={({ field }) => <Input type="number" className="text-right min-w-[60px]" {...field} />}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <Input type="number" className="text-right min-w-[60px]" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
                                     />
                                 </TableCell>
                                 <TableCell>
                                      <FormField
                                         control={form.control}
                                         name={`items.${index}.rate`}
-                                        render={({ field }) => <Input type="number" className="text-right min-w-[80px]" {...field} />}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <Input type="number" className="text-right min-w-[80px]" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
                                     />
                                 </TableCell>
                                 <TableCell>
                                      <FormField
                                         control={form.control}
                                         name={`items.${index}.discount`}
-                                        render={({ field }) => <Input type="number" className="text-right min-w-[70px]" {...field} />}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <Input type="number" className="text-right min-w-[70px]" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
                                     />
                                 </TableCell>
                                 <TableCell>
@@ -687,18 +727,21 @@ export function InvoiceForm() {
                                         control={form.control}
                                         name={`items.${index}.gstRate`}
                                         render={({ field }) => (
-                                            <Select onValueChange={(v) => field.onChange(Number(v))} value={String(field.value)}>
-                                                <FormControl>
-                                                    <SelectTrigger className="min-w-[80px]">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    {[0, 5, 12, 18, 28].map(rate => (
-                                                        <SelectItem key={rate} value={String(rate)}>{rate}%</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <FormItem>
+                                                <Select onValueChange={(v) => field.onChange(Number(v))} value={String(field.value)}>
+                                                    <FormControl>
+                                                        <SelectTrigger className="min-w-[80px]">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        {[0, 5, 12, 18, 28].map(rate => (
+                                                            <SelectItem key={rate} value={String(rate)}>{rate}%</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
                                         )}
                                     />
                                 </TableCell>
