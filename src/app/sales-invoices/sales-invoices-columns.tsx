@@ -3,7 +3,7 @@
 import type { SalesInvoice } from "./data";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowUp, ArrowDown, Eye, Pencil, FileX2, CreditCard } from "lucide-react";
 import { formatCurrency, cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -30,7 +30,7 @@ export const columns = ({
   const getSortableHeader = (title: string, accessor: string) => {
     const isSorted = sortConfig.key === accessor;
     return (
-      <Button variant="ghost" onClick={() => requestSort(accessor)} className="text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground p-2 whitespace-nowrap">
+      <Button variant="ghost" onClick={() => requestSort(accessor)} className="font-bold text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground p-2 whitespace-nowrap w-full justify-start">
         {title}
         {isSorted ? (
           sortConfig.direction === 'ascending' ? (
@@ -213,6 +213,35 @@ export const columns = ({
       cell: (row: SalesInvoice) => (
         <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.createdBy}</div>
       ),
+    },
+    {
+      accessor: "actions",
+      header: "Actions",
+      cell: (row: SalesInvoice) => {
+        const canAddPayment = row.paymentStatus === 'Outstanding' || row.paymentStatus === 'Partially Paid' || row.paymentStatus === 'Overdue';
+        return (
+            <div className={cn("flex items-center gap-0", density === 'compact' && 'p-0')}>
+                <Button variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-7 w-7')}>
+                    <Eye className="h-4 w-4" />
+                    <span className="sr-only">View</span>
+                </Button>
+                <Button variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-7 w-7')}>
+                    <Pencil className="h-4 w-4" />
+                    <span className="sr-only">Edit</span>
+                </Button>
+                <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-destructive hover:text-destructive", density === 'compact' && 'h-7 w-7')}>
+                    <FileX2 className="h-4 w-4" />
+                    <span className="sr-only">Cancel</span>
+                </Button>
+                {canAddPayment && (
+                    <Button variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-7 w-7')}>
+                        <CreditCard className="h-4 w-4" />
+                        <span className="sr-only">Add Payment</span>
+                    </Button>
+                )}
+            </div>
+        )
+      },
     },
   ];
 };

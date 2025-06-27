@@ -14,6 +14,10 @@ import {
   Tag,
   Columns,
   GripVertical,
+  Eye,
+  Pencil,
+  FileX2,
+  CreditCard,
 } from "lucide-react";
 
 import {
@@ -53,7 +57,7 @@ import {
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { format } from "date-fns";
 
 const availableFilters = [
@@ -78,6 +82,7 @@ const ALL_COLUMNS = [
     { id: 'amountPaid', label: 'Amount Paid' },
     { id: 'amountDue', label: 'Amount Due' },
     { id: 'createdBy', label: 'Created By' },
+    { id: 'actions', label: 'Actions' },
   ];
 
 const MobileInvoiceCard = ({ invoice, isExpanded, toggleRowExpansion, selectedRows, onSelectRow }: {
@@ -102,6 +107,7 @@ const MobileInvoiceCard = ({ invoice, isExpanded, toggleRowExpansion, selectedRo
       statusVariant = "outline";
       break;
   }
+  const canAddPayment = invoice.paymentStatus === 'Outstanding' || invoice.paymentStatus === 'Partially Paid' || invoice.paymentStatus === 'Overdue';
 
   return (
     <Card className="transition-shadow hover:shadow-md">
@@ -166,6 +172,23 @@ const MobileInvoiceCard = ({ invoice, isExpanded, toggleRowExpansion, selectedRo
                   <strong className="text-muted-foreground block">Created By</strong>
                   {invoice.createdBy}
                 </div>
+              </div>
+              <Separator />
+              <div className="flex items-center justify-end gap-1 pt-2 flex-wrap">
+                <Button variant="ghost" size="sm" className="gap-1.5">
+                    <Eye className="h-4 w-4" /> View
+                </Button>
+                <Button variant="ghost" size="sm" className="gap-1.5">
+                    <Pencil className="h-4 w-4" /> Edit
+                </Button>
+                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive gap-1.5">
+                    <FileX2 className="h-4 w-4" /> Cancel
+                </Button>
+                {canAddPayment && (
+                <Button variant="ghost" size="sm" className="gap-1.5">
+                    <CreditCard className="h-4 w-4" /> Payment
+                </Button>
+                )}
               </div>
             </CardContent>
           )}
@@ -664,8 +687,11 @@ export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
         <Table>
           <TableHeader>
             <TableRow>
-              {tableColumns.map((column) => (
-                <TableHead key={String(column.accessor)} className="whitespace-nowrap h-14 px-4">
+              {tableColumns.map((column, index) => (
+                <TableHead key={String(column.accessor)} className={cn(
+                  "whitespace-nowrap h-14 p-4",
+                  index === 0 && "sticky left-0 z-20"
+                )}>
                   {column.header}
                 </TableHead>
               ))}
@@ -674,9 +700,14 @@ export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
           <TableBody>
             {paginatedData.length ? (
               paginatedData.map((row) => (
-                <TableRow key={row.id} data-state={selectedRows.has(row.id) ? "selected" : undefined}>
-                  {tableColumns.map((column) => (
-                    <TableCell key={String(column.accessor)} className={cn("p-4", density === 'compact' && 'p-0')}>
+                <TableRow key={row.id} data-state={selectedRows.has(row.id) ? "selected" : undefined} className="group/row">
+                  {tableColumns.map((column, index) => (
+                    <TableCell key={String(column.accessor)} className={cn(
+                      "p-4",
+                      density === 'compact' && 'p-2',
+                      index === 0 && "sticky left-0 z-10",
+                      index === 0 && (selectedRows.has(row.id) ? 'bg-muted' : 'bg-card group-hover/row:bg-muted/50'),
+                    )}>
                       {column.cell(row)}
                     </TableCell>
                   ))}
