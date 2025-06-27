@@ -665,7 +665,7 @@ export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
           <TableHeader>
             <TableRow>
               {tableColumns.map((column) => (
-                <TableHead key={String(column.accessor)}>
+                <TableHead key={String(column.accessor)} className="whitespace-nowrap">
                   {column.header}
                 </TableHead>
               ))}

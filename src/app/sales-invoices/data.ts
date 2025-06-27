@@ -50,20 +50,36 @@ export function generateSalesInvoices(count: number): SalesInvoice[] {
     }
 
     const amountBase = amountForeign * exchangeRate;
-    const amountPaidInFCY = Math.floor(Math.random() * amountForeign);
-    const amountPaid = amountPaidInFCY * exchangeRate;
-    const amountDue = amountBase - amountPaid;
-    
-    const invoiceDate = getRandomDate(new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()), now);
-    const dueDate = getRandomDate(invoiceDate, new Date(invoiceDate.getFullYear(), invoiceDate.getMonth() + 3, invoiceDate.getDate()));
 
-    let paymentStatus: SalesInvoice['paymentStatus'] = 'Outstanding';
-    if (amountDue <= 0) {
+    // Make some due dates in the past for 'Overdue' status
+    const invoiceDate = getRandomDate(new Date(now.getFullYear(), now.getMonth() - 2, 1), now);
+    const dueDate = new Date(invoiceDate);
+    dueDate.setDate(dueDate.getDate() + (Math.random() > 0.3 ? 30 : -15)); // 30% chance for due date to be in the past
+
+    const paymentRandom = Math.random();
+    let amountPaid: number;
+
+    if (paymentRandom < 0.25) { // ~25% Paid
+        amountPaid = amountBase;
+    } else if (paymentRandom < 0.5) { // ~25% Partially Paid
+        amountPaid = (Math.random() * 0.8 + 0.1) * amountBase; // 10% to 90% paid
+    } else { // ~50% will have 0 paid
+        amountPaid = 0;
+    }
+    
+    const amountDue = Math.max(0, amountBase - amountPaid);
+
+    let paymentStatus: SalesInvoice['paymentStatus'];
+    if (amountDue <= 0.01) { // Use a small epsilon for float comparison
         paymentStatus = 'Paid';
-    } else if (amountPaid > 0) {
-        paymentStatus = 'Partially Paid';
-    } else if (now > dueDate) {
-        paymentStatus = 'Overdue';
+    } else { // Not fully paid
+        if (now > dueDate) {
+            paymentStatus = 'Overdue';
+        } else if (amountPaid > 0) {
+            paymentStatus = 'Partially Paid';
+        } else {
+            paymentStatus = 'Outstanding';
+        }
     }
 
     const invoice: SalesInvoice = {
