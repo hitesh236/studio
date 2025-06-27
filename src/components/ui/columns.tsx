@@ -51,7 +51,7 @@ export const columns = ({
   return [
     {
       accessor: "select",
-      header: () => {
+      header: (() => {
         const numSelected = selectedRows.size;
         const rowCount = paginatedData.length;
         const isAllSelected = rowCount > 0 && numSelected === rowCount;
@@ -66,7 +66,7 @@ export const columns = ({
             />
           </div>
         );
-      },
+      })(),
       cell: (row: Person) => (
         <div className="px-2">
             <Checkbox
