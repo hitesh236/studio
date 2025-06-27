@@ -135,7 +135,7 @@ export function AppSidebar() {
             <SidebarMenuItem>
               <SidebarMenuButton tooltip="My Accounts">
                 <Wallet />
-                My Accounts
+                <Link href="/my-accounts">    My Accounts </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
