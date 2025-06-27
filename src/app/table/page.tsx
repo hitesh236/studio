@@ -26,12 +26,12 @@ export default function TablePage() {
           delay: 0.3,
         }}
       >
-        <Link href="/customers/new" passHref>
-          <Button size="lg" className="rounded-full shadow-lg h-14 px-5">
+        <Button asChild size="lg" className="rounded-full shadow-lg h-14 px-5">
+          <Link href="/customers/new">
             <PlusCircle className="mr-2 h-5 w-5" />
             Add Customer
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </motion.div>
     </div>
   );
