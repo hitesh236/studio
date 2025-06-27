@@ -111,7 +111,7 @@ const invoiceItemSchema = z.object({
 });
 
 const invoiceFormSchema = z.object({
-  customerId: z.string().optional(),
+  customerId: z.string().min(1, 'Please select a customer.'),
   customerName: z.string().min(1, 'Customer name is required.'),
   customerGstin: z.string().optional(),
   billingAddress: z.string().min(1, 'Billing address is required.'),
@@ -217,6 +217,7 @@ export function InvoiceForm() {
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
     defaultValues: {
+      customerId: '',
       customerName: '',
       billingAddress: '',
       isShippingSameAsBilling: true,
@@ -234,12 +235,21 @@ export function InvoiceForm() {
     control: form.control,
     name: 'items',
   });
+  
+  const uniqueCustomers = React.useMemo(() => {
+    const unique = new Map<string, Person>();
+    customers.forEach(customer => {
+      if (!unique.has(customer.company)) {
+        unique.set(customer.company, customer);
+      }
+    });
+    return Array.from(unique.values());
+  }, [customers]);
 
   const watchedItems = form.watch('items');
   const watchedPlaceOfSupply = form.watch('placeOfSupply');
   const watchedCurrency = form.watch('currency');
-  const watchedCustomerId = form.watch('customerId');
-
+  
   const totals = React.useMemo(() => {
     let subtotal = 0;
     let totalDiscount = 0;
@@ -273,7 +283,6 @@ export function InvoiceForm() {
   
   const handleCustomerSelect = (customer: Person) => {
     const fullAddress = `${customer.address.street}, ${customer.address.city}, ${customer.address.state} ${customer.address.zip}`;
-    form.setValue('customerId', customer.id);
     form.setValue('customerName', `${customer.company}`);
     form.setValue('customerGstin', customer.gstin || '');
     form.setValue('billingAddress', fullAddress);
@@ -285,6 +294,7 @@ export function InvoiceForm() {
   
   const handleAddNewCustomer = (customer: Person) => {
       setCustomers(prev => [customer, ...prev]);
+      form.setValue('customerId', customer.id);
       handleCustomerSelect(customer);
       setIsAddCustomerOpen(false);
   };
@@ -300,10 +310,6 @@ export function InvoiceForm() {
     });
     setIsSubmitting(false);
   }
-
-  const selectedCustomer = React.useMemo(() => {
-    return customers.find(c => c.id === watchedCustomerId);
-  }, [customers, watchedCustomerId]);
 
   return (
     <Form {...form}>
@@ -329,7 +335,7 @@ export function InvoiceForm() {
                     <div className="space-y-4">
                        <FormField
                             control={form.control}
-                            name="customerName"
+                            name="customerId"
                             render={({ field }) => (
                                 <FormItem className="flex flex-col">
                                 <FormLabel>Bill To</FormLabel>
@@ -344,7 +350,9 @@ export function InvoiceForm() {
                                                     !field.value && "text-muted-foreground"
                                                 )}
                                             >
-                                                {selectedCustomer?.company || "Select customer"}
+                                                {field.value
+                                                    ? uniqueCustomers.find((customer) => customer.id === field.value)?.company
+                                                    : "Select customer"}
                                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
                                         </FormControl>
@@ -355,16 +363,17 @@ export function InvoiceForm() {
                                             <CommandList>
                                                 <CommandEmpty>No customer found.</CommandEmpty>
                                                 <CommandGroup>
-                                                    {customers.map((customer) => (
+                                                    {uniqueCustomers.map((customer) => (
                                                         <CommandItem
                                                             value={customer.company}
                                                             key={customer.id}
                                                             onSelect={() => {
+                                                                field.onChange(customer.id);
                                                                 handleCustomerSelect(customer);
                                                             }}
                                                         >
                                                             <Check className={cn("mr-2 h-4 w-4",
-                                                                  watchedCustomerId === customer.id ? "opacity-100" : "opacity-0"
+                                                                  field.value === customer.id ? "opacity-100" : "opacity-0"
                                                             )} />
                                                             {customer.company}
                                                         </CommandItem>
