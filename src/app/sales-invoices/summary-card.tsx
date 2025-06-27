@@ -13,13 +13,13 @@ interface SummaryCardProps {
 export function SummaryCard({ title, value, icon: Icon, className, variant = 'default' }: SummaryCardProps) {
   return (
     <Card className={cn(
-      "shadow-lg hover:shadow-primary/20 transition-shadow",
+      "shadow-sm hover:shadow-primary/20 transition-shadow",
       variant === 'primary' ? "bg-primary text-primary-foreground" : "bg-card",
       className
     )}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
         <CardTitle className={cn(
-          "text-sm font-medium",
+          "text-xs font-medium tracking-wider uppercase",
           variant === 'primary' ? "text-primary-foreground/90" : "text-muted-foreground"
         )}>
           {title}
@@ -29,8 +29,8 @@ export function SummaryCard({ title, value, icon: Icon, className, variant = 'de
           variant === 'primary' ? "text-primary-foreground/90" : "text-muted-foreground"
         )} />
       </CardHeader>
-      <CardContent className="p-4 pt-0">
-        <div className="text-2xl font-bold">{value}</div>
+      <CardContent className="p-3 pt-1">
+        <div className="text-xl font-bold">{value}</div>
       </CardContent>
     </Card>
   );

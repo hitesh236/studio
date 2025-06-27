@@ -565,8 +565,8 @@ export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <SummaryCard
           icon={TrendingUp}
           title="Total Sales (BCY)"
