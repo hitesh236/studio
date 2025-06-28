@@ -372,9 +372,9 @@ export function InvoiceForm() {
               </DropdownMenuContent>
             </DropdownMenu>
           </CardHeader>
-          <CardContent className="space-y-4 p-4 pt-0">
-                {/* Customer Details */}
+          <CardContent className="space-y-6 p-4 pt-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Left Column */}
                     <div className="space-y-4">
                         <FormField
                             control={form.control}
@@ -439,27 +439,25 @@ export function InvoiceForm() {
                         />
                          <FormField
                             control={form.control}
-                            name="billingAddress"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Billing Address</FormLabel>
-                                <FormControl>
-                                    <Textarea placeholder="Customer's Billing Address" {...field} rows={3} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-                    <div className="space-y-4">
-                         <FormField
-                            control={form.control}
                             name="customerGstin"
                             render={({ field }) => (
                                 <FormItem>
                                 <FormLabel>Customer GSTIN</FormLabel>
                                 <FormControl>
                                     <Input placeholder="15-digit GSTIN (Optional)" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="billingAddress"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Billing Address</FormLabel>
+                                <FormControl>
+                                    <Textarea placeholder="Customer's Billing Address" {...field} rows={3} />
                                 </FormControl>
                                 <FormMessage />
                                 </FormItem>
@@ -487,187 +485,177 @@ export function InvoiceForm() {
                             </FormItem>
                             )}
                         />
-                    </div>
-                </div>
-
-                <Separator />
-                
-                {/* Shipping Details */}
-                <div>
-                     <FormField
-                        control={form.control}
-                        name="isShippingSameAsBilling"
-                        render={({ field }) => (
-                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                                <Checkbox
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                                />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                                <FormLabel>
-                                Shipping address is the same as billing address
-                                </FormLabel>
-                            </div>
-                            </FormItem>
-                        )}
-                    />
-                    {!form.watch('isShippingSameAsBilling') && (
-                         <div className="mt-4">
-                             <FormField
-                                control={form.control}
-                                name="shippingAddress"
-                                render={({ field }) => (
-                                    <FormItem>
-                                    <FormLabel>Shipping Address</FormLabel>
-                                    <FormControl>
-                                        <Textarea placeholder="Customer's Shipping Address" {...field} rows={2} />
-                                    </FormControl>
-                                    <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                         </div>
-                    )}
-                </div>
-
-                <Separator />
-                
-                {/* Invoice Meta */}
-                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                     <FormField
-                        control={form.control}
-                        name="invoiceNumber"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Invoice Number</FormLabel>
-                            <FormControl>
-                                <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="invoiceDate"
-                        render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                            <FormLabel>Invoice Date</FormLabel>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                <FormControl>
-                                    <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                        "w-full pl-3 text-left font-normal",
-                                        !field.value && "text-muted-foreground"
-                                    )}
-                                    >
-                                    {field.value ? (
-                                        format(field.value, "PPP")
-                                    ) : (
-                                        <span>Pick a date</span>
-                                    )}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                    </Button>
-                                </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                    mode="single"
-                                    selected={field.value}
-                                    onSelect={field.onChange}
-                                    disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                                    initialFocus
-                                />
-                                </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                     <FormField
-                        control={form.control}
-                        name="dueDate"
-                        render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                            <FormLabel>Due Date</FormLabel>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                <FormControl>
-                                    <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                        "w-full pl-3 text-left font-normal",
-                                        !field.value && "text-muted-foreground"
-                                    )}
-                                    >
-                                    {field.value ? (
-                                        format(field.value, "PPP")
-                                    ) : (
-                                        <span>Pick a date</span>
-                                    )}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                    </Button>
-                                </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                    mode="single"
-                                    selected={field.value}
-                                    onSelect={field.onChange}
-                                    initialFocus
-                                />
-                                </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="currency"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Currency</FormLabel>
-                            <Select onValueChange={(value) => {
-                                field.onChange(value);
-                                form.setValue('exchangeRate', value === 'INR' ? 1 : 83.50);
-                            }} defaultValue={field.value}>
-                            <FormControl>
-                                <SelectTrigger>
-                                <SelectValue placeholder="Select currency" />
-                                </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                                <SelectItem value="INR">INR (Indian Rupee)</SelectItem>
-                                <SelectItem value="USD">USD (United States Dollar)</SelectItem>
-                                <SelectItem value="EUR">EUR (Euro)</SelectItem>
-                            </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                 </div>
-                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                    {watchedCurrency !== 'INR' && (
                         <FormField
                             control={form.control}
-                            name="exchangeRate"
+                            name="isShippingSameAsBilling"
                             render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Exchange Rate (1 {watchedCurrency} to INR)</FormLabel>
-                                    <FormControl>
-                                        <Input type="number" step="0.01" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
+                                <FormItem className="flex flex-row items-start space-x-3 space-y-0 pt-2">
+                                <FormControl>
+                                    <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                    />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                    <FormLabel>
+                                    Shipping address is the same as billing address
+                                    </FormLabel>
+                                </div>
                                 </FormItem>
                             )}
                         />
-                    )}
+                        {!form.watch('isShippingSameAsBilling') && (
+                            <div className="mt-2">
+                                <FormField
+                                    control={form.control}
+                                    name="shippingAddress"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                        <FormLabel>Shipping Address</FormLabel>
+                                        <FormControl>
+                                            <Textarea placeholder="Customer's Shipping Address" {...field} rows={2} />
+                                        </FormControl>
+                                        <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right Column */}
+                    <div className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="invoiceNumber"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Invoice Number</FormLabel>
+                                <FormControl>
+                                    <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="invoiceDate"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                <FormLabel>Invoice Date</FormLabel>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                    <FormControl>
+                                        <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                            "w-full pl-3 text-left font-normal",
+                                            !field.value && "text-muted-foreground"
+                                        )}
+                                        >
+                                        {field.value ? (
+                                            format(field.value, "PPP")
+                                        ) : (
+                                            <span>Pick a date</span>
+                                        )}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                        </Button>
+                                    </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={field.value}
+                                        onSelect={field.onChange}
+                                        disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                                        initialFocus
+                                    />
+                                    </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="dueDate"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                <FormLabel>Due Date</FormLabel>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                    <FormControl>
+                                        <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                            "w-full pl-3 text-left font-normal",
+                                            !field.value && "text-muted-foreground"
+                                        )}
+                                        >
+                                        {field.value ? (
+                                            format(field.value, "PPP")
+                                        ) : (
+                                            <span>Pick a date</span>
+                                        )}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                        </Button>
+                                    </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={field.value}
+                                        onSelect={field.onChange}
+                                        initialFocus
+                                    />
+                                    </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="currency"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Currency</FormLabel>
+                                <Select onValueChange={(value) => {
+                                    field.onChange(value);
+                                    form.setValue('exchangeRate', value === 'INR' ? 1 : 83.50);
+                                }} defaultValue={field.value}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                    <SelectValue placeholder="Select currency" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value="INR">INR (Indian Rupee)</SelectItem>
+                                    <SelectItem value="USD">USD (United States Dollar)</SelectItem>
+                                    <SelectItem value="EUR">EUR (Euro)</SelectItem>
+                                </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        {watchedCurrency !== 'INR' && (
+                            <FormField
+                                control={form.control}
+                                name="exchangeRate"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Exchange Rate (1 {watchedCurrency} to INR)</FormLabel>
+                                        <FormControl>
+                                            <Input type="number" step="0.01" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        )}
+                    </div>
                 </div>
 
                 <Separator />
