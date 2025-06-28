@@ -338,8 +338,41 @@ export function InvoiceForm() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <Card>
-         
-            <CardContent className="space-y-4 p-4">
+          <CardHeader className="flex flex-row items-start justify-between p-4 pb-2">
+            <div className="flex-1 space-y-1">
+              <CardTitle className="text-2xl">New Invoice</CardTitle>
+              <CardDescription>Fill out the details below to create a new sales invoice.</CardDescription>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Settings className="h-5 w-5" />
+                  <span className="sr-only">Toggle Columns</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Show/Hide Columns</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.hsn}
+                  onCheckedChange={(checked) =>
+                    setColumnVisibility((prev) => ({ ...prev, hsn: !!checked }))
+                  }
+                >
+                  HSN/SAC Code
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.discount}
+                  onCheckedChange={(checked) =>
+                    setColumnVisibility((prev) => ({ ...prev, discount: !!checked }))
+                  }
+                >
+                  Discount (%)
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </CardHeader>
+          <CardContent className="space-y-4 p-4 pt-0">
                 {/* Seller & Customer Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Seller Details */}
@@ -653,34 +686,6 @@ export function InvoiceForm() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-semibold">Line Items</h3>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <Settings className="h-5 w-5" />
-                          <span className="sr-only">Toggle Columns</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Show/Hide Columns</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuCheckboxItem
-                          checked={columnVisibility.hsn}
-                          onCheckedChange={(checked) =>
-                            setColumnVisibility((prev) => ({ ...prev, hsn: !!checked }))
-                          }
-                        >
-                          HSN/SAC Code
-                        </DropdownMenuCheckboxItem>
-                        <DropdownMenuCheckboxItem
-                          checked={columnVisibility.discount}
-                          onCheckedChange={(checked) =>
-                            setColumnVisibility((prev) => ({ ...prev, discount: !!checked }))
-                          }
-                        >
-                          Discount (%)
-                        </DropdownMenuCheckboxItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </div>
 
                     {/* Desktop Table View */}
