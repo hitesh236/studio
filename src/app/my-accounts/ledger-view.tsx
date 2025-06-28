@@ -73,27 +73,25 @@ const LedgerEntry = ({ ledger, level, onEdit, reportType }: { ledger: Ledger; le
         
         <div className="flex items-center gap-2 shrink-0 ml-4">
             {ledger.type === 'group' && (
-                <>
-                    <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-7 w-7 opacity-0 group-hover:opacity-100"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onEdit(ledger);
-                        }}
-                    >
-                        <Pencil className="h-4 w-4" />
-                    </Button>
-                    {reportType && (
-                        <Badge 
-                            variant={reportType === 'Balance Sheet' ? 'secondary' : 'default'}
-                            className="font-normal text-xs"
-                        >
-                            {reportType}
-                        </Badge>
-                    )}
-                </>
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(ledger);
+                    }}
+                >
+                    <Pencil className="h-4 w-4" />
+                </Button>
+            )}
+            {reportType && (
+                <Badge 
+                    variant={reportType === 'Balance Sheet' ? 'secondary' : 'default'}
+                    className="font-normal text-xs"
+                >
+                    {reportType}
+                </Badge>
             )}
         </div>
       </div>
