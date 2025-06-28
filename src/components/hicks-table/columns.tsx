@@ -110,6 +110,11 @@ export const columns = ({
       cell: (row: Person) => <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.address.state}</div>,
     },
     {
+      accessor: "city",
+      header: "City",
+      cell: (row: Person) => <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.address.city}</div>,
+    },
+    {
       accessor: "phone",
       header: "Phone",
       cell: (row: Person) => <div className={cn("font-mono whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.phone}</div>,

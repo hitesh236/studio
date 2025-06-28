@@ -70,6 +70,7 @@ const ALL_COLUMNS = [
     { id: 'name', label: 'User' },
     { id: 'company', label: 'Company' },
     { id: 'state', label: 'State' },
+    { id: 'city', label: 'City' },
     { id: 'phone', label: 'Phone' },
     { id: 'saleAmount', label: 'Sale Amount' },
     { id: 'rating', label: 'Rating' },
