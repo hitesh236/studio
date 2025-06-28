@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/sidebar';
 import {
     BookOpen,
+    Eye,
     FileText,
     History,
     LayoutDashboard,
@@ -76,6 +77,14 @@ export function AppSidebar() {
                     <Link href="/table" onClick={handleLinkClick}>
                         <FileText />
                         Table
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Invoice Preview" isActive={pathname.startsWith('/invoice-preview')} asChild>
+                    <Link href="/invoice-preview" onClick={handleLinkClick}>
+                        <Eye />
+                        Invoice Preview
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>

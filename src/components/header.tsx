@@ -1,4 +1,3 @@
-
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -9,6 +8,7 @@ import { useMemo } from 'react';
 const pathToTitle: { [key: string]: string } = {
   '/': 'Dashboard',
   '/table': 'Table',
+  '/invoice-preview': 'Invoice Preview',
   '/customers': 'Customers',
   '/customers/new': 'Add Customer',
   '/sales-invoices': 'Sales Invoices',
