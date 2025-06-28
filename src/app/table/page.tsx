@@ -17,7 +17,6 @@ export default function TablePage() {
 
       <motion.div
         drag
-        dragMomentum={false}
         className="fixed bottom-8 right-8 z-50 cursor-grab active:cursor-grabbing"
         initial={{ opacity: 0, y: 100 }}
         animate={{ opacity: 1, y: 0 }}
