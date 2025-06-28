@@ -166,10 +166,10 @@ export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
                 <TableRow>
                     <TableHead className={cn("w-[100px] p-2 h-10", density === 'compact' && 'p-1 h-8')}>Date</TableHead>
                     <TableHead className={cn("w-[120px] p-2 h-10", density === 'compact' && 'p-1 h-8')}>Entry #</TableHead>
-                    <TableHead className={cn("w-[120px] p-2 h-10", density === 'compact' && 'p-1 h-8')}>Created By</TableHead>
                     <TableHead className={cn("p-2 h-10", density === 'compact' && 'p-1 h-8')}>Account & Description</TableHead>
                     <TableHead className={cn("text-right p-2 h-10", density === 'compact' && 'p-1 h-8')}>Debit</TableHead>
                     <TableHead className={cn("text-right p-2 h-10", density === 'compact' && 'p-1 h-8')}>Credit</TableHead>
+                    <TableHead className={cn("w-[120px] p-2 h-10", density === 'compact' && 'p-1 h-8')}>Created By</TableHead>
                     <TableHead className={cn("w-[50px] text-center p-2 h-10", density === 'compact' && 'p-1 h-8')}>Actions</TableHead>
                 </TableRow>
                 </TableHeader>
@@ -188,21 +188,22 @@ export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
                             {entry.entryNumber}
                             </TableCell>
                         ) : null}
-                        {lineIndex === 0 ? (
-                            <TableCell rowSpan={entry.lines.length + 1} className={cn("align-top border-r p-2", density === 'compact' && 'p-1')}>
-                            {entry.createdBy}
-                            </TableCell>
-                        ) : null}
-
+                        
                         <TableCell className={cn('p-2', line.credit > 0 ? 'pl-6' : '', density === 'compact' && 'p-1', line.credit > 0 && density === 'compact' ? 'pl-4' : '')}>
                             {line.account}
                         </TableCell>
                         <TableCell className={cn("text-right font-mono p-2", density === 'compact' && 'p-1')}>
                             {line.debit > 0 ? formatCurrency(line.debit, 'INR') : ''}
                         </TableCell>
-                        <TableCell className={cn("text-right font-mono p-2", density === 'compact' && 'p-1')}>
+                        <TableCell className={cn("text-right font-mono p-2 border-r", density === 'compact' && 'p-1')}>
                            {line.credit > 0 ? formatCurrency(line.credit, 'INR') : ''}
                         </TableCell>
+
+                        {lineIndex === 0 ? (
+                            <TableCell rowSpan={entry.lines.length + 1} className={cn("align-top border-r p-2", density === 'compact' && 'p-1')}>
+                            {entry.createdBy}
+                            </TableCell>
+                        ) : null}
 
                         {lineIndex === 0 ? (
                             <TableCell rowSpan={entry.lines.length + 1} className={cn("text-center align-top p-2", density === 'compact' && 'p-1')}>
