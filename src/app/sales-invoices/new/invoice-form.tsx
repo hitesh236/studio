@@ -687,8 +687,8 @@ export function InvoiceForm() {
                                 {columnVisibility.unit && <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">Unit</TableHead>}
                                 <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">Rate</TableHead>
                                 {columnVisibility.discount && <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">Discount(%)</TableHead>}
-                                <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">GST(%)</TableHead>
                                 <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">Taxable Amt.</TableHead>
+                                <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">GST(%)</TableHead>
                                 <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">Total</TableHead>
                                 <TableHead className="w-12 h-12 p-2 text-xs whitespace-nowrap"></TableHead>
                             </TableRow>
@@ -715,6 +715,7 @@ export function InvoiceForm() {
                                                             placeholder="Item name and description"
                                                             {...field}
                                                             rows={1}
+                                                            className="min-h-[38px]"
                                                         />
                                                     </FormControl>
                                                     <FormMessage />
@@ -794,6 +795,7 @@ export function InvoiceForm() {
                                             )}
                                         />
                                     </TableCell>}
+                                    <TableCell className="text-right font-mono">{formatCurrency(taxableAmount, watchedCurrency)}</TableCell>
                                     <TableCell>
                                         <FormField
                                             control={form.control}
@@ -817,7 +819,6 @@ export function InvoiceForm() {
                                             )}
                                         />
                                     </TableCell>
-                                    <TableCell className="text-right font-mono">{formatCurrency(taxableAmount, watchedCurrency)}</TableCell>
                                     <TableCell className="text-right font-mono">{formatCurrency(totalAmount, watchedCurrency)}</TableCell>
                                     <TableCell>
                                         <Button
