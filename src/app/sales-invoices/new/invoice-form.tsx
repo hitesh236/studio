@@ -107,6 +107,7 @@ const invoiceItemSchema = z.object({
   itemName: z.string().min(1, 'Item name is required.'),
   hsnCode: z.string().optional(),
   quantity: z.coerce.number().min(0.01, 'Quantity must be positive.'),
+  unit: z.string().optional(),
   rate: z.coerce.number().min(0, 'Rate cannot be negative.'),
   discount: z.coerce.number().min(0).max(100).optional().default(0),
   gstRate: z.coerce.number().min(0).max(100).default(18),
@@ -210,6 +211,7 @@ export function InvoiceForm() {
   const [isAddCustomerOpen, setIsAddCustomerOpen] = React.useState(false);
   const [isCustomerPopoverOpen, setIsCustomerPopoverOpen] = React.useState(false);
   const [columnVisibility, setColumnVisibility] = React.useState({
+    unit: true,
     hsn: true,
     discount: true,
   });
@@ -231,7 +233,7 @@ export function InvoiceForm() {
       dueDate: new Date(new Date().setDate(new Date().getDate() + 30)),
       currency: 'INR',
       exchangeRate: 1,
-      items: [{ itemName: '', hsnCode: '', quantity: 1, rate: 0, discount: 0, gstRate: 18 }],
+      items: [{ itemName: '', hsnCode: '', quantity: 1, rate: 0, discount: 0, gstRate: 18, unit: 'pcs' }],
       notes: 'Thank you for your business. All payments are due within 30 days.',
     },
   });
@@ -353,6 +355,14 @@ export function InvoiceForm() {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Show/Hide Columns</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.unit}
+                  onCheckedChange={(checked) =>
+                    setColumnVisibility((prev) => ({ ...prev, unit: !!checked }))
+                  }
+                >
+                  Unit
+                </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
                   checked={columnVisibility.hsn}
                   onCheckedChange={(checked) =>
@@ -671,14 +681,15 @@ export function InvoiceForm() {
                         <Table>
                             <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[30%] min-w-[200px]">Item</TableHead>
-                                <TableHead className="text-right">Qty</TableHead>
-                                <TableHead className="text-right">Rate</TableHead>
-                                {columnVisibility.discount && <TableHead className="text-right">Discount(%)</TableHead>}
-                                <TableHead className="text-right">GST(%)</TableHead>
-                                <TableHead className="text-right">Taxable Amt.</TableHead>
-                                <TableHead className="text-right">Total</TableHead>
-                                <TableHead className="w-12"></TableHead>
+                                <TableHead className="w-[30%] min-w-[200px] h-12 p-2 text-xs">Item</TableHead>
+                                <TableHead className="text-right h-12 p-2 text-xs">Qty</TableHead>
+                                {columnVisibility.unit && <TableHead className="text-right h-12 p-2 text-xs">Unit</TableHead>}
+                                <TableHead className="text-right h-12 p-2 text-xs">Rate</TableHead>
+                                {columnVisibility.discount && <TableHead className="text-right h-12 p-2 text-xs">Discount(%)</TableHead>}
+                                <TableHead className="text-right h-12 p-2 text-xs">GST(%)</TableHead>
+                                <TableHead className="text-right h-12 p-2 text-xs">Taxable Amt.</TableHead>
+                                <TableHead className="text-right h-12 p-2 text-xs">Total</TableHead>
+                                <TableHead className="w-12 h-12 p-2 text-xs"></TableHead>
                             </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -740,6 +751,20 @@ export function InvoiceForm() {
                                             )}
                                         />
                                     </TableCell>
+                                    {columnVisibility.unit && <TableCell>
+                                         <FormField
+                                            control={form.control}
+                                            name={`items.${index}.unit`}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormControl>
+                                                        <Input placeholder="pcs" className="text-right min-w-[70px]" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </TableCell>}
                                     <TableCell>
                                          <FormField
                                             control={form.control}
@@ -876,6 +901,17 @@ export function InvoiceForm() {
                                                     </FormItem>
                                                 )}
                                             />
+                                            {columnVisibility.unit && <FormField
+                                                control={form.control}
+                                                name={`items.${index}.unit`}
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Unit</FormLabel>
+                                                        <FormControl><Input placeholder="pcs" {...field} /></FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />}
                                             <FormField
                                                 control={form.control}
                                                 name={`items.${index}.rate`}
@@ -937,7 +973,7 @@ export function InvoiceForm() {
                     <Button
                         type="button"
                         variant="outline"
-                        onClick={() => append({ itemName: '', hsnCode: '', quantity: 1, rate: 0, discount: 0, gstRate: 18 })}
+                        onClick={() => append({ itemName: '', hsnCode: '', quantity: 1, rate: 0, discount: 0, gstRate: 18, unit: 'pcs' })}
                     >
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Add Another Item
