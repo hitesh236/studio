@@ -82,7 +82,6 @@ const JournalEntryCard = ({ entry, density }: { entry: JournalEntry, density: 'n
 }
 
 export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
-  const [view, setView] = React.useState<'table' | 'card'>('table');
   const [filter, setFilter] = React.useState('');
   const [density, setDensity] = React.useState<'normal' | 'compact'>('normal');
   const [page, setPage] = React.useState(0);
@@ -219,16 +218,6 @@ export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
                             <DropdownMenuItem>CSV</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
-                    <div className="flex items-center rounded-md bg-muted p-1">
-                        <Button variant={view === 'table' ? 'secondary' : 'ghost'} size="sm" onClick={() => setView('table')}>
-                            <List className="h-4 w-4"/>
-                            <span className="sr-only">Table View</span>
-                        </Button>
-                        <Button variant={view === 'card' ? 'secondary' : 'ghost'} size="sm" onClick={() => setView('card')}>
-                            <LayoutGrid className="h-4 w-4"/>
-                            <span className="sr-only">Card View</span>
-                        </Button>
-                    </div>
                     <Link href="/journal-entries/new" passHref>
                         <Button>
                             <PlusCircle className="mr-2 h-4 w-4"/>
@@ -240,8 +229,8 @@ export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
         </div>
       </CardHeader>
       <CardContent>
-        {view === 'table' ? (
-            <div className="rounded-md border">
+        {/* Desktop Table View */}
+        <div className="hidden rounded-md border md:block">
             <Table className={cn("text-xs", density === 'compact' ? "text-[11px]" : "")}>
                 <TableHeader>
                 <TableRow>
@@ -258,7 +247,7 @@ export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
                 {paginatedData.map((entry, entryIndex) => (
                     <React.Fragment key={entry.id}>
                     {entry.lines.map((line, lineIndex) => (
-                        <TableRow key={line.id} className={cn('h-auto', lineIndex === entry.lines.length - 1 && entryIndex !== paginatedData.length-1 ? 'border-b-4 border-double' : '')}>
+                        <TableRow key={line.id} className={cn('h-auto', lineIndex === entry.lines.length - 1 && entryIndex !== paginatedData.length-1 ? 'border-b-4 border-double' : '', entryIndex % 2 !== 0 && 'bg-muted/50')}>
                         {lineIndex === 0 ? (
                             <TableCell rowSpan={entry.lines.length + 1} className={cn("align-top font-medium border-r p-2", density === 'compact' && 'p-1')}>
                             {format(entry.date, 'dd-MMM-yy')}
@@ -304,7 +293,7 @@ export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
                         ) : null}
                         </TableRow>
                     ))}
-                    <TableRow className={cn('h-auto', entryIndex !== paginatedData.length-1 ? 'border-b-4 border-double' : '')}>
+                    <TableRow className={cn('h-auto', entryIndex !== paginatedData.length-1 ? 'border-b-4 border-double' : '', entryIndex % 2 !== 0 && 'bg-muted/50')}>
                         <TableCell colSpan={3} className={cn("p-2 pl-6 text-sm text-muted-foreground italic", density === 'compact' && 'p-1 pl-4 text-xs')}>
                             {entry.description}
                         </TableCell>
@@ -314,13 +303,13 @@ export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
                 </TableBody>
             </Table>
             </div>
-        ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {paginatedData.map(entry => (
-                    <JournalEntryCard key={entry.id} entry={entry} density={density} />
-                ))}
-            </div>
-        )}
+        
+        {/* Mobile Card View */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:hidden">
+            {paginatedData.map(entry => (
+                <JournalEntryCard key={entry.id} entry={entry} density={density} />
+            ))}
+        </div>
       </CardContent>
       <CardFooter>
         <div className="flex items-center justify-between flex-wrap gap-4 w-full">
