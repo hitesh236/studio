@@ -207,9 +207,11 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
             <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Settings">
-                    <Settings />
-                    Settings
+                <SidebarMenuButton tooltip="Settings" isActive={pathname.startsWith('/settings')} asChild>
+                    <Link href="/settings" onClick={handleLinkClick}>
+                        <Settings />
+                        Settings
+                    </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
         </SidebarMenu>
