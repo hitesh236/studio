@@ -47,6 +47,7 @@ import { cn } from '@/lib/utils';
 import { CalendarIcon, Settings as SettingsIcon, Upload, Save, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { GstSettingsForm } from './gst-settings-form';
 
 
 const settingsTabs = [
@@ -401,7 +402,7 @@ export default function SettingsPage() {
       case 'company':
         return <CompanySettingForm />;
       case 'gst':
-        return <div><h2 className="text-xl font-semibold">GST Type</h2></div>;
+        return <GstSettingsForm />;
       case 'payment':
         return <div><h2 className="text-xl font-semibold">Payment Terms</h2></div>;
       case 'integration':
