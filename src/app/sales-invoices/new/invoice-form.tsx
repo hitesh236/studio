@@ -83,6 +83,7 @@ import {
 } from "@/components/ui/command";
 import { generateData, Person } from '@/lib/data';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Label } from '@/components/ui/label';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -681,15 +682,15 @@ export function InvoiceForm() {
                         <Table>
                             <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[30%] min-w-[200px] h-12 p-2 text-xs">Item</TableHead>
-                                <TableHead className="text-right h-12 p-2 text-xs">Qty</TableHead>
-                                {columnVisibility.unit && <TableHead className="text-right h-12 p-2 text-xs">Unit</TableHead>}
-                                <TableHead className="text-right h-12 p-2 text-xs">Rate</TableHead>
-                                {columnVisibility.discount && <TableHead className="text-right h-12 p-2 text-xs">Discount(%)</TableHead>}
-                                <TableHead className="text-right h-12 p-2 text-xs">GST(%)</TableHead>
-                                <TableHead className="text-right h-12 p-2 text-xs">Taxable Amt.</TableHead>
-                                <TableHead className="text-right h-12 p-2 text-xs">Total</TableHead>
-                                <TableHead className="w-12 h-12 p-2 text-xs"></TableHead>
+                                <TableHead className="w-[30%] min-w-[200px] h-12 p-2 text-xs whitespace-nowrap">Item</TableHead>
+                                <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">Qty</TableHead>
+                                {columnVisibility.unit && <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">Unit</TableHead>}
+                                <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">Rate</TableHead>
+                                {columnVisibility.discount && <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">Discount(%)</TableHead>}
+                                <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">GST(%)</TableHead>
+                                <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">Taxable Amt.</TableHead>
+                                <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">Total</TableHead>
+                                <TableHead className="w-12 h-12 p-2 text-xs whitespace-nowrap"></TableHead>
                             </TableRow>
                             </TableHeader>
                             <TableBody>
