@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -155,7 +154,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Accounts & Books</SidebarGroupLabel>
+          <SidebarGroupLabel>Accounts &amp; Books</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton tooltip="My Accounts" isActive={pathname.startsWith('/my-accounts')} asChild>
@@ -173,6 +172,14 @@ export function AppSidebar() {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="View All Transactions" isActive={pathname.startsWith('/all-transactions')} asChild>
+                <Link href="/all-transactions" onClick={handleLinkClick}>
+                    <History />
+                    View All Transactions
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
 
@@ -180,9 +187,9 @@ export function AppSidebar() {
           <SidebarGroupLabel>Reports</SidebarGroupLabel>
           <SidebarMenu>
              <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Profit & Loss">
+              <SidebarMenuButton tooltip="Profit &amp; Loss">
                 <TrendingUp />
-                Profit & Loss
+                Profit &amp; Loss
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -18,6 +17,7 @@ const pathToTitle: { [key: string]: string } = {
   '/my-accounts': 'My Accounts',
   '/settings': 'Settings',
   '/journal-entries': 'Journal Entries',
+  '/all-transactions': 'View All Transactions',
 };
 
 export function Header() {
