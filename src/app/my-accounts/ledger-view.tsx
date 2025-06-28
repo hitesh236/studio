@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -55,9 +56,9 @@ const LedgerEntry = ({ ledger, level, onEdit, reportType }: { ledger: Ledger; le
         style={{ paddingLeft: `${level * 1 + 0.5}rem` }}
         onClick={() => hasChildren && setIsOpen(!isOpen)}
       >
-        <div className="flex items-center gap-2 flex-1">
+        <div className="flex items-center gap-2 flex-1 truncate">
           {hasChildren ? (
-            <span className="w-4 h-4">
+            <span className="w-4 h-4 shrink-0">
                 {isOpen ? (
                     <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 ) : (
@@ -65,24 +66,27 @@ const LedgerEntry = ({ ledger, level, onEdit, reportType }: { ledger: Ledger; le
                 )}
             </span>
           ) : (
-            <div className="w-4 h-4" />
+            <div className="w-4 h-4 shrink-0" />
           )}
-          <span className={cn("font-medium text-sm", level === 0 && "font-semibold")}>{ledger.name}</span>
-          {ledger.type === 'group' && reportType && (
-            <Badge variant="outline" className="font-normal text-xs">{reportType}</Badge>
-          )}
+          <span className={cn("font-medium text-sm truncate", level === 0 && "font-semibold")}>{ledger.name}</span>
         </div>
-        <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-7 w-7 opacity-0 group-hover:opacity-100"
-            onClick={(e) => {
-                e.stopPropagation();
-                onEdit(ledger);
-            }}
-        >
-            <Pencil className="h-4 w-4" />
-        </Button>
+        
+        <div className="flex items-center gap-4 shrink-0 ml-4">
+            {ledger.type === 'group' && reportType && (
+                <Badge variant="secondary" className="font-normal text-xs">{reportType}</Badge>
+            )}
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(ledger);
+                }}
+            >
+                <Pencil className="h-4 w-4" />
+            </Button>
+        </div>
       </div>
       {hasChildren && isOpen && (
         <div>
