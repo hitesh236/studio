@@ -48,6 +48,7 @@ import { CalendarIcon, Settings as SettingsIcon, Upload, Save, Loader2 } from 'l
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { GstSettingsForm } from './gst-settings-form';
+import { PaymentTermsForm } from './payment-terms-form';
 
 
 const settingsTabs = [
@@ -404,7 +405,7 @@ export default function SettingsPage() {
       case 'gst':
         return <GstSettingsForm />;
       case 'payment':
-        return <div><h2 className="text-xl font-semibold">Payment Terms</h2></div>;
+        return <PaymentTermsForm />;
       case 'integration':
         return <div><h2 className="text-xl font-semibold">Integration</h2></div>;
       default:
@@ -445,3 +446,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+    
