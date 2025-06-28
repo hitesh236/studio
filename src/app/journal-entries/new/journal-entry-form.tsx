@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -20,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -59,6 +61,7 @@ import {
 } from '@/components/ui/command';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const chartOfAccounts = [
   { value: '1010', label: 'Cash' },
@@ -86,6 +89,7 @@ const journalLineSchema = z.object({
 
 const journalEntryFormSchema = z.object({
   date: z.date(),
+  autoApprove: z.boolean().default(false),
   description: z.string().min(3, "Description is required."),
   lines: z.array(journalLineSchema).min(2, "At least two lines are required."),
 }).refine(data => {
@@ -107,6 +111,7 @@ export function JournalEntryForm() {
     resolver: zodResolver(journalEntryFormSchema),
     defaultValues: {
       date: new Date(),
+      autoApprove: false,
       description: '',
       lines: [
         { accountId: '', debit: 0, credit: 0 },
@@ -139,6 +144,7 @@ export function JournalEntryForm() {
     setIsSubmitting(false);
     form.reset({
       date: new Date(),
+      autoApprove: false,
       description: '',
       lines: [
         { accountId: '', debit: 0, credit: 0 },
@@ -201,19 +207,28 @@ export function JournalEntryForm() {
                   </FormItem>
                 )}
               />
-               <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description / Narration</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="e.g., Paid monthly office rent" {...field} />
-                      </FormControl>
-                      <FormMessage />
+              <FormField
+                control={form.control}
+                name="autoApprove"
+                render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-start space-x-3 space-y-0 rounded-md border p-4 h-full">
+                        <FormControl>
+                            <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                            />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                            <FormLabel>
+                                Auto-Approve this Entry
+                            </FormLabel>
+                            <FormDescription>
+                                This entry will be approved automatically.
+                            </FormDescription>
+                        </div>
                     </FormItem>
-                  )}
-                />
+                )}
+            />
             </div>
             
             <div className="space-y-2">
@@ -368,6 +383,20 @@ export function JournalEntryForm() {
                 </div>
               </div>
             </div>
+
+            <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Description / Narration</FormLabel>
+                    <FormControl>
+                    <Textarea placeholder="e.g., Paid monthly office rent" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
 
             <div className="flex justify-end pt-4">
               <Button type="submit" disabled={isSubmitting}>
