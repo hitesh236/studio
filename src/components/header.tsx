@@ -17,6 +17,7 @@ const pathToTitle: { [key: string]: string } = {
   '/sales-invoices/new': 'Create Invoice',
   '/my-accounts': 'My Accounts',
   '/settings': 'Settings',
+  '/journal-entries': 'Journal Entries',
 };
 
 export function Header() {

@@ -166,9 +166,11 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="View All Transactions">
-                <History />
-                View All Transactions
+              <SidebarMenuButton tooltip="Journal Entries" isActive={pathname.startsWith('/journal-entries')} asChild>
+                <Link href="/journal-entries" onClick={handleLinkClick}>
+                    <BookOpen />
+                    Journal Entries
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
