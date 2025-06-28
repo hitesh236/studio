@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -12,15 +13,22 @@ import {
 } from "@/components/ui/table";
 import { format } from 'date-fns';
 import { formatCurrency, cn } from '@/lib/utils';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, PlusCircle, List, LayoutGrid, Search, Filter, Download } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, List, LayoutGrid, Search, Filter, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface JournalEntriesTableProps {
   data: JournalEntry[];
@@ -77,6 +85,8 @@ export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
   const [view, setView] = React.useState<'table' | 'card'>('table');
   const [filter, setFilter] = React.useState('');
   const [density, setDensity] = React.useState<'normal' | 'compact'>('normal');
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPageSelection, setRowsPerPageSelection] = React.useState("20");
 
   const filteredData = React.useMemo(() => {
     if (!filter) return data;
@@ -93,13 +103,84 @@ export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
     });
   }, [data, filter]);
 
+  const totalPages = React.useMemo(() => {
+    if (rowsPerPageSelection === "all" || filteredData.length === 0) {
+      return 1;
+    }
+    return Math.ceil(filteredData.length / Number(rowsPerPageSelection));
+  }, [filteredData.length, rowsPerPageSelection]);
+
+  const paginatedData = React.useMemo(() => {
+    if (rowsPerPageSelection === "all") {
+      return filteredData;
+    }
+    const rpp = Number(rowsPerPageSelection);
+    const start = page * rpp;
+    const end = start + rpp;
+    return filteredData.slice(start, end);
+  }, [filteredData, page, rowsPerPageSelection]);
+  
+  const handleRowsPerPageChange = (value: string) => {
+    setRowsPerPageSelection(value);
+    setPage(0);
+  };
+
+  const getPaginationButtons = () => {
+    if (totalPages <= 1) return null;
+
+    const pageNumbers: (number | string)[] = [];
+    if (totalPages <= 7) {
+      for (let i = 0; i < totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      pageNumbers.push(0);
+      if (page > 2) {
+        pageNumbers.push('...');
+      }
+      
+      const startPage = Math.max(1, page - 1);
+      const endPage = Math.min(totalPages - 2, page + 1);
+
+      for (let i = startPage; i <= endPage; i++) {
+        pageNumbers.push(i);
+      }
+
+      if (page < totalPages - 3) {
+        pageNumbers.push('...');
+      }
+      pageNumbers.push(totalPages - 1);
+    }
+
+    const uniquePageNumbers = [...new Set(pageNumbers)];
+
+    return uniquePageNumbers.map((p, index) =>
+      typeof p === 'number' ? (
+        <Button
+          key={`${p}-${index}`}
+          variant={page === p ? 'default' : 'outline'}
+          size="icon"
+          onClick={() => setPage(p)}
+          className="h-9 w-9"
+        >
+          {p + 1}
+        </Button>
+      ) : (
+        <span key={`dots-${index}`} className="flex h-9 w-9 items-center justify-center">
+          ...
+        </span>
+      )
+    );
+  };
+
+
   return (
     <Card>
       <CardHeader>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
                 <CardTitle>Journal Entries</CardTitle>
-                <CardDescription>A record of all financial transactions.</CardDescription>
+                <CardDescription>A record of all financial transactions. Showing {filteredData.length} entries.</CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 w-full sm:w-auto">
                 <div className="relative w-full sm:w-64">
@@ -174,10 +255,10 @@ export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                {filteredData.map((entry, entryIndex) => (
+                {paginatedData.map((entry, entryIndex) => (
                     <React.Fragment key={entry.id}>
                     {entry.lines.map((line, lineIndex) => (
-                        <TableRow key={line.id} className={cn('h-auto', lineIndex === entry.lines.length - 1 && entryIndex !== filteredData.length-1 ? 'border-b-4 border-double' : '')}>
+                        <TableRow key={line.id} className={cn('h-auto', lineIndex === entry.lines.length - 1 && entryIndex !== paginatedData.length-1 ? 'border-b-4 border-double' : '')}>
                         {lineIndex === 0 ? (
                             <TableCell rowSpan={entry.lines.length + 1} className={cn("align-top font-medium border-r p-2", density === 'compact' && 'p-1')}>
                             {format(entry.date, 'dd-MMM-yy')}
@@ -223,7 +304,7 @@ export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
                         ) : null}
                         </TableRow>
                     ))}
-                    <TableRow className={cn('h-auto', entryIndex !== filteredData.length-1 ? 'border-b-4 border-double' : '')}>
+                    <TableRow className={cn('h-auto', entryIndex !== paginatedData.length-1 ? 'border-b-4 border-double' : '')}>
                         <TableCell colSpan={3} className={cn("p-2 pl-6 text-sm text-muted-foreground italic", density === 'compact' && 'p-1 pl-4 text-xs')}>
                             {entry.description}
                         </TableCell>
@@ -235,12 +316,61 @@ export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
             </div>
         ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredData.map(entry => (
+                {paginatedData.map(entry => (
                     <JournalEntryCard key={entry.id} entry={entry} density={density} />
                 ))}
             </div>
         )}
       </CardContent>
+      <CardFooter>
+        <div className="flex items-center justify-between flex-wrap gap-4 w-full">
+            <div className="flex items-center gap-4">
+                <p className="text-sm text-muted-foreground">
+                Page {page + 1} of {totalPages}
+                </p>
+                <div className="flex items-center space-x-2">
+                <p className="text-sm text-muted-foreground">Rows per page:</p>
+                <Select
+                    value={rowsPerPageSelection}
+                    onValueChange={handleRowsPerPageChange}
+                >
+                    <SelectTrigger className="w-[80px]">
+                    <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="all">All</SelectItem>
+                    </SelectContent>
+                </Select>
+                </div>
+            </div>
+            {totalPages > 1 && (
+                <div className="flex items-center space-x-1">
+                <Button variant="outline" size="icon" onClick={() => setPage(0)} disabled={page === 0}>
+                    <span className="sr-only">Go to first page</span>
+                    <ChevronsLeft className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>
+                    <span className="sr-only">Go to previous page</span>
+                    <ChevronLeft className="h-4 w-4" />
+                </Button>
+                
+                {getPaginationButtons()}
+
+                <Button variant="outline" size="icon" onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>
+                    <span className="sr-only">Go to next page</span>
+                    <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" onClick={() => setPage(totalPages - 1)} disabled={page >= totalPages - 1}>
+                    <span className="sr-only">Go to last page</span>
+                    <ChevronsRight className="h-4 w-4" />
+                </Button>
+                </div>
+            )}
+        </div>
+      </CardFooter>
     </Card>
   );
 }

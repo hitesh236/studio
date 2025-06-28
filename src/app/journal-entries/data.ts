@@ -15,60 +15,56 @@ export type JournalEntry = {
     createdBy: string;
 };
 
-export const journalEntries: JournalEntry[] = [
-    {
-        id: 'JE-001',
-        date: new Date('2024-07-01'),
-        entryNumber: 'JRNL-2024-001',
-        description: 'Initial capital contribution',
-        lines: [
-            { id: '1-1', account: 'Cash', debit: 50000, credit: 0 },
-            { id: '1-2', account: "Owner's Equity", debit: 0, credit: 50000 },
-        ],
-        createdBy: 'Admin'
-    },
-    {
-        id: 'JE-002',
-        date: new Date('2024-07-05'),
-        entryNumber: 'JRNL-2024-002',
-        description: 'Purchase of office supplies on credit',
-        lines: [
-            { id: '2-1', account: 'Office Supplies', debit: 2500, credit: 0 },
-            { id: '2-2', account: 'Accounts Payable', debit: 0, credit: 2500 },
-        ],
-        createdBy: 'Jane Doe'
-    },
-    {
-        id: 'JE-003',
-        date: new Date('2024-07-10'),
-        entryNumber: 'JRNL-2024-003',
-        description: 'Payment of rent',
-        lines: [
-            { id: '3-1', account: 'Rent Expense', debit: 10000, credit: 0 },
-            { id: '3-2', account: 'Cash', debit: 0, credit: 10000 },
-        ],
-        createdBy: 'John Smith'
-    },
-    {
-        id: 'JE-004',
-        date: new Date('2024-07-15'),
-        entryNumber: 'JRNL-2024-004',
-        description: 'Sales revenue on account',
-        lines: [
-            { id: '4-1', account: 'Accounts Receivable', debit: 15000, credit: 0 },
-            { id: '4-2', account: 'Sales Revenue', debit: 0, credit: 15000 },
-        ],
-        createdBy: 'Jane Doe'
-    },
-    {
-        id: 'JE-005',
-        date: new Date('2024-07-20'),
-        entryNumber: 'JRNL-2024-005',
-        description: 'Collection from customer',
-        lines: [
-            { id: '5-1', account: 'Cash', debit: 7500, credit: 0 },
-            { id: '5-2', account: 'Accounts Receivable', debit: 0, credit: 7500 },
-        ],
-        createdBy: 'Admin'
-    }
+const accounts = ['Cash', "Owner's Equity", 'Office Supplies', 'Accounts Payable', 'Rent Expense', 'Accounts Receivable', 'Sales Revenue', 'Salaries', 'Inventory', 'Prepaid Insurance', 'Equipment', 'Accumulated Depreciation', 'Wages Payable', 'Unearned Revenue', 'Common Stock', 'Service Revenue', 'Advertising Expense', 'Utilities Expense'];
+const descriptions = [
+    'Initial capital contribution',
+    'Purchase of office supplies on credit',
+    'Payment of rent for the month',
+    'Sales revenue on account to a customer',
+    'Received cash from a customer on account',
+    'Paid bi-weekly employee salaries',
+    'Purchased inventory for cash',
+    'Sold goods for cash',
+    'Paid for a one-year insurance policy',
+    'Purchased new office equipment on account',
+    'Recorded monthly depreciation on equipment',
+    'Paid for advertising campaign',
+    'Utility bill payment for the month'
 ];
+const users = ['Admin', 'Jane Doe', 'John Smith', 'Alice Cooper', 'Bob Vance'];
+
+const getRandomElement = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+const getRandomDate = (start: Date, end: Date): Date => new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+
+export const generateJournalEntries = (count: number): JournalEntry[] => {
+    const entries: JournalEntry[] = [];
+    const now = new Date();
+
+    for (let i = 0; i < count; i++) {
+        const amount = Math.floor(Math.random() * 49001) + 1000;
+        
+        let debitAccount = getRandomElement(accounts);
+        let creditAccount = getRandomElement(accounts);
+        // Ensure debit and credit accounts are not the same
+        while (debitAccount === creditAccount) {
+            creditAccount = getRandomElement(accounts);
+        }
+
+        const entry: JournalEntry = {
+            id: `JE-${1001 + i}`,
+            date: getRandomDate(new Date(now.getFullYear(), now.getMonth() - 3, 1), now),
+            entryNumber: `JRNL-${now.getFullYear()}-${1001 + i}`,
+            description: getRandomElement(descriptions),
+            lines: [
+                { id: `${i}-1`, account: debitAccount, debit: amount, credit: 0 },
+                { id: `${i}-2`, account: creditAccount, debit: 0, credit: amount },
+            ],
+            createdBy: getRandomElement(users)
+        };
+        entries.push(entry);
+    }
+    return entries;
+};
+
+
+export const journalEntries: JournalEntry[] = generateJournalEntries(50);
