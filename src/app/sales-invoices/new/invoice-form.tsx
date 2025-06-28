@@ -373,20 +373,10 @@ export function InvoiceForm() {
             </DropdownMenu>
           </CardHeader>
           <CardContent className="space-y-4 p-4 pt-0">
-                {/* Seller & Customer Details */}
+                {/* Customer Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Seller Details */}
-                    <div className="space-y-1 text-sm">
-                        <h3 className="font-semibold text-base">From:</h3>
-                        <p className="font-bold text-primary">{sellerDetails.name}</p>
-                        <p>{sellerDetails.address}</p>
-                        <p>{sellerDetails.cityStateZip}</p>
-                        <p><span className="font-medium text-muted-foreground">GSTIN:</span> {sellerDetails.gstin}</p>
-                    </div>
-
-                    {/* Customer Details */}
                     <div className="space-y-4">
-                       <FormField
+                        <FormField
                             control={form.control}
                             name="customerId"
                             render={({ field }) => (
@@ -454,49 +444,49 @@ export function InvoiceForm() {
                                 <FormItem>
                                 <FormLabel>Billing Address</FormLabel>
                                 <FormControl>
-                                    <Textarea placeholder="Customer's Billing Address" {...field} rows={2} />
+                                    <Textarea placeholder="Customer's Billing Address" {...field} rows={3} />
                                 </FormControl>
                                 <FormMessage />
                                 </FormItem>
                             )}
                         />
-                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                             <FormField
-                                control={form.control}
-                                name="customerGstin"
-                                render={({ field }) => (
-                                    <FormItem>
-                                    <FormLabel>Customer GSTIN</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="15-digit GSTIN (Optional)" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                             <FormField
-                                control={form.control}
-                                name="placeOfSupply"
-                                render={({ field }) => (
+                    </div>
+                    <div className="space-y-4">
+                         <FormField
+                            control={form.control}
+                            name="customerGstin"
+                            render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Place of Supply</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                        <SelectValue placeholder="Select state" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {indianStates.map(state => (
-                                            <SelectItem key={state} value={state}>{state}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                    </Select>
-                                    <FormMessage />
+                                <FormLabel>Customer GSTIN</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="15-digit GSTIN (Optional)" {...field} />
+                                </FormControl>
+                                <FormMessage />
                                 </FormItem>
-                                )}
-                            />
-                         </div>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="placeOfSupply"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Place of Supply</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                    <SelectValue placeholder="Select state" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {indianStates.map(state => (
+                                        <SelectItem key={state} value={state}>{state}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
                     </div>
                 </div>
 
