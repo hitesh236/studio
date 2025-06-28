@@ -58,6 +58,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { useToast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
 
 const chartOfAccounts = [
   { value: '1010', label: 'Cash' },
