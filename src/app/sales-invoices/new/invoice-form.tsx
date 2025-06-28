@@ -713,7 +713,7 @@ export function InvoiceForm() {
                                                         <Textarea
                                                             placeholder="Item name and description"
                                                             {...field}
-                                                            rows={2}
+                                                            rows={1}
                                                         />
                                                     </FormControl>
                                                     <FormMessage />
@@ -870,7 +870,7 @@ export function InvoiceForm() {
                                                 <FormItem>
                                                     <FormLabel>Item Name / Description</FormLabel>
                                                     <FormControl>
-                                                        <Textarea placeholder="Item name..." {...field} rows={2} />
+                                                        <Textarea placeholder="Item name..." {...field} rows={1} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
