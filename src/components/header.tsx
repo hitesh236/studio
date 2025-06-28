@@ -1,3 +1,4 @@
+
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -9,6 +10,7 @@ const pathToTitle: { [key: string]: string } = {
   '/': 'Dashboard',
   '/table': 'Table',
   '/invoice-preview': 'Invoice Preview',
+  '/invoice-preview-fc': 'Invoice Preview FC',
   '/customers': 'Customers',
   '/customers/new': 'Add Customer',
   '/sales-invoices': 'Sales Invoices',

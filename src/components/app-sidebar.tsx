@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -17,6 +18,7 @@ import {
     BookOpen,
     Eye,
     FileText,
+    Globe,
     History,
     LayoutDashboard,
     Percent,
@@ -85,6 +87,14 @@ export function AppSidebar() {
                     <Link href="/invoice-preview" onClick={handleLinkClick}>
                         <Eye />
                         Invoice Preview
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Invoice Preview FC" isActive={pathname.startsWith('/invoice-preview-fc')} asChild>
+                    <Link href="/invoice-preview-fc" onClick={handleLinkClick}>
+                        <Globe />
+                        Invoice Preview FC
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
