@@ -12,6 +12,7 @@ export type JournalEntry = {
     entryNumber: string;
     description: string;
     lines: JournalEntryLine[];
+    createdBy: string;
 };
 
 export const journalEntries: JournalEntry[] = [
@@ -23,7 +24,8 @@ export const journalEntries: JournalEntry[] = [
         lines: [
             { id: '1-1', account: 'Cash', debit: 50000, credit: 0 },
             { id: '1-2', account: "Owner's Equity", debit: 0, credit: 50000 },
-        ]
+        ],
+        createdBy: 'Admin'
     },
     {
         id: 'JE-002',
@@ -33,7 +35,8 @@ export const journalEntries: JournalEntry[] = [
         lines: [
             { id: '2-1', account: 'Office Supplies', debit: 2500, credit: 0 },
             { id: '2-2', account: 'Accounts Payable', debit: 0, credit: 2500 },
-        ]
+        ],
+        createdBy: 'Jane Doe'
     },
     {
         id: 'JE-003',
@@ -43,7 +46,8 @@ export const journalEntries: JournalEntry[] = [
         lines: [
             { id: '3-1', account: 'Rent Expense', debit: 10000, credit: 0 },
             { id: '3-2', account: 'Cash', debit: 0, credit: 10000 },
-        ]
+        ],
+        createdBy: 'John Smith'
     },
     {
         id: 'JE-004',
@@ -53,7 +57,8 @@ export const journalEntries: JournalEntry[] = [
         lines: [
             { id: '4-1', account: 'Accounts Receivable', debit: 15000, credit: 0 },
             { id: '4-2', account: 'Sales Revenue', debit: 0, credit: 15000 },
-        ]
+        ],
+        createdBy: 'Jane Doe'
     },
     {
         id: 'JE-005',
@@ -63,6 +68,7 @@ export const journalEntries: JournalEntry[] = [
         lines: [
             { id: '5-1', account: 'Cash', debit: 7500, credit: 0 },
             { id: '5-2', account: 'Accounts Receivable', debit: 0, credit: 7500 },
-        ]
+        ],
+        createdBy: 'Admin'
     }
 ];
