@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -80,5 +81,17 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@media print {
+  body {
+    background: white;
+  }
+  header, [data-sidebar="sidebar"] {
+    display: none;
+  }
+  main {
+    padding: 0 !important;
   }
 }
