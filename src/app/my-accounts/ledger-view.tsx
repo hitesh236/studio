@@ -40,7 +40,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ChevronRight, ChevronDown, PlusCircle, Pencil, MoreHorizontal, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -69,6 +68,7 @@ const LedgerEntry = ({ ledger, level, onEdit, onDelete, reportType }: {
 }) => {
   const [isOpen, setIsOpen] = useState(level < 2);
   const hasChildren = ledger.children && ledger.children.length > 0;
+  const isDeletable = ledger.type === 'group' && !nonDeletableGroupIds.has(ledger.id);
 
   return (
     <div>
@@ -96,7 +96,7 @@ const LedgerEntry = ({ ledger, level, onEdit, onDelete, reportType }: {
         </div>
         
         <div className="flex items-center gap-2 shrink-0 ml-4">
-            {ledger.type === 'group' && (
+             {ledger.type === 'group' && (
                <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button
@@ -118,7 +118,7 @@ const LedgerEntry = ({ ledger, level, onEdit, onDelete, reportType }: {
                         <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
                             onClick={() => onDelete(ledger)}
-                            disabled={nonDeletableGroupIds.has(ledger.id)}
+                            disabled={!isDeletable}
                         >
                             <Trash2 className="mr-2 h-4 w-4" />
                             <span>Delete</span>
@@ -157,8 +157,6 @@ export function LedgerView({ data }: LedgerViewProps) {
   // State for Create Dialog
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newAccountName, setNewAccountName] = useState('');
-  const [newAccountPosition, setNewAccountPosition] = useState('');
-  const [newAccountType, setNewAccountType] = useState<'primary' | 'subgroup'>('primary');
   const [newSelectedParent, setNewSelectedParent] = useState<string | null>(null);
   
   // State for Edit Dialog
@@ -221,39 +219,37 @@ export function LedgerView({ data }: LedgerViewProps) {
 
   const resetCreateForm = () => {
     setNewAccountName('');
-    setNewAccountPosition('');
-    setNewAccountType('primary');
     setNewSelectedParent(null);
   };
   
-  const handleCreateAccount = () => {
-    if (!newAccountName.trim()) return;
-    if (newAccountType === 'subgroup' && !newSelectedParent) return;
+  const handleCreateLedger = () => {
+    if (!newAccountName.trim() || !newSelectedParent) {
+        toast({
+            title: "Missing Information",
+            description: "Ledger name and parent group are required.",
+            variant: "destructive"
+        });
+        return;
+    }
 
-    const newGroup: Ledger = {
+    const newLedger: Ledger = {
       id: `ledger-${Date.now()}`,
       name: newAccountName.trim(),
-      type: 'group',
-      position: newAccountPosition ? parseInt(newAccountPosition, 10) : undefined,
-      children: [],
+      type: 'ledger',
     };
 
-    if (newAccountType === 'primary') {
-      setLedgers(prev => [...prev, newGroup]);
-    } else if (newSelectedParent) {
-        const addGroupToParent = (nodes: Ledger[], parentId: string, newGroup: Ledger): Ledger[] => {
-            return nodes.map(node => {
-                if (node.id === parentId) {
-                    return { ...node, children: [...(node.children || []), newGroup] };
-                }
-                if (node.children) {
-                    return { ...node, children: addGroupToParent(node.children, parentId, newGroup) };
-                }
-                return node;
-            });
-        };
-        setLedgers(prevLedgers => addGroupToParent(prevLedgers, newSelectedParent, newGroup));
-    }
+    const addLedgerToParent = (nodes: Ledger[], parentId: string, newLedger: Ledger): Ledger[] => {
+        return nodes.map(node => {
+            if (node.id === parentId) {
+                return { ...node, children: [...(node.children || []), newLedger] };
+            }
+            if (node.children) {
+                return { ...node, children: addLedgerToParent(node.children, parentId, newLedger) };
+            }
+            return node;
+        });
+    };
+    setLedgers(prevLedgers => addLedgerToParent(prevLedgers, newSelectedParent, newLedger));
 
     resetCreateForm();
     setIsCreateDialogOpen(false);
@@ -377,7 +373,7 @@ export function LedgerView({ data }: LedgerViewProps) {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Chart of Accounts</CardTitle>
-          <CardDescription>Create and manage your ledger groups.</CardDescription>
+          <CardDescription>Create and manage your ledger accounts and groups.</CardDescription>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
           setIsCreateDialogOpen(open);
@@ -386,14 +382,14 @@ export function LedgerView({ data }: LedgerViewProps) {
           <DialogTrigger asChild>
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" />
-              New Group
+              Add Ledger
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Create New Group</DialogTitle>
+              <DialogTitle>Add New Ledger</DialogTitle>
               <DialogDescription>
-                Add a new primary or sub-group to your chart of accounts.
+                Add a new ledger to an existing group in your chart of accounts.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -410,42 +406,8 @@ export function LedgerView({ data }: LedgerViewProps) {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="position" className="text-right">
-                  Position
-                </Label>
-                <Input
-                  id="position"
-                  type="number"
-                  value={newAccountPosition}
-                  onChange={(e) => setNewAccountPosition(e.target.value)}
-                  className="col-span-3"
-                  placeholder="e.g. 1"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">Type</Label>
-                <RadioGroup
-                  value={newAccountType}
-                  onValueChange={(value: 'primary' | 'subgroup') => {
-                    setNewAccountType(value);
-                    setNewSelectedParent(null);
-                  }}
-                  className="col-span-3 flex gap-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="primary" id="r1" />
-                    <Label htmlFor="r1">Primary Group</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="subgroup" id="r2" />
-                    <Label htmlFor="r2">Sub Group</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-              {newAccountType === 'subgroup' && (
-                <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="parent" className="text-right">
-                    Parent
+                    Parent Group
                   </Label>
                   <Select onValueChange={setNewSelectedParent} value={newSelectedParent || undefined}>
                     <SelectTrigger className="col-span-3">
@@ -460,13 +422,12 @@ export function LedgerView({ data }: LedgerViewProps) {
                     </SelectContent>
                   </Select>
                 </div>
-              )}
             </div>
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline">Cancel</Button>
               </DialogClose>
-              <Button onClick={handleCreateAccount}>Create</Button>
+              <Button onClick={handleCreateLedger}>Create</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -505,47 +466,6 @@ export function LedgerView({ data }: LedgerViewProps) {
                   className="col-span-3"
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">Type</Label>
-                <RadioGroup
-                  value={editAccountType}
-                  onValueChange={(value: 'primary' | 'subgroup') => {
-                    setEditAccountType(value);
-                    if (value === 'primary') {
-                        setEditSelectedParent(null);
-                    }
-                  }}
-                  className="col-span-3 flex gap-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="primary" id="er1" />
-                    <Label htmlFor="er1">Primary Group</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="subgroup" id="er2" />
-                    <Label htmlFor="er2">Sub Group</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-              {editAccountType === 'subgroup' && (
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="edit-parent" className="text-right">
-                    Parent
-                  </Label>
-                  <Select onValueChange={setEditSelectedParent} value={editSelectedParent || undefined}>
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Select a parent group" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {validParentGroupsForEdit.map((group) => (
-                        <SelectItem key={group.id} value={group.id}>
-                          {group.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
             </div>
             <DialogFooter>
                <DialogClose asChild>

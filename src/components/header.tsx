@@ -20,7 +20,7 @@ const pathToTitle: { [key: string]: string } = {
   '/journal-entries': 'Journal Entries',
   '/journal-entries/new': 'New Journal Entry',
   '/all-transactions': 'View All Transactions',
-  '/ledgers': 'Ledgers',
+  '/ledgers': 'Ledgers List',
 };
 
 export function Header() {
