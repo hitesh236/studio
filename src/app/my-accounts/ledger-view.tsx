@@ -15,6 +15,22 @@ import {
   DialogTrigger,
   DialogClose,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -25,9 +41,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ChevronRight, ChevronDown, PlusCircle, Pencil } from 'lucide-react';
+import { ChevronRight, ChevronDown, PlusCircle, Pencil, MoreHorizontal, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 export type Ledger = {
   id: string;
@@ -42,7 +59,22 @@ interface LedgerViewProps {
   data: Ledger[];
 }
 
-const LedgerEntry = ({ ledger, level, onEdit, reportType }: { ledger: Ledger; level: number; onEdit: (ledger: Ledger) => void; reportType: 'Balance Sheet' | 'Profit & Loss' | null }) => {
+const nonDeletableGroupIds = new Set([
+  'assets', 'current-assets', 'fixed-assets',
+  'liabilities', 'current-liabilities', 'long-term-liabilities',
+  'equity',
+  'income',
+  'expenses', 'cogs', 'operating-expenses'
+]);
+
+
+const LedgerEntry = ({ ledger, level, onEdit, onDelete, reportType }: { 
+    ledger: Ledger; 
+    level: number; 
+    onEdit: (ledger: Ledger) => void; 
+    onDelete: (ledger: Ledger) => void;
+    reportType: 'Balance Sheet' | 'Profit & Loss' | null 
+}) => {
   const [isOpen, setIsOpen] = useState(level < 2);
   const hasChildren = ledger.children && ledger.children.length > 0;
 
@@ -73,22 +105,42 @@ const LedgerEntry = ({ ledger, level, onEdit, reportType }: { ledger: Ledger; le
         
         <div className="flex items-center gap-2 shrink-0 ml-4">
             {ledger.type === 'group' && (
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-7 w-7 opacity-0 group-hover:opacity-100"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit(ledger);
-                    }}
-                >
-                    <Pencil className="h-4 w-4" />
-                </Button>
+               <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                            }}
+                        >
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={() => onEdit(ledger)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            <span>Edit</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => onDelete(ledger)}
+                            disabled={nonDeletableGroupIds.has(ledger.id)}
+                        >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            <span>Delete</span>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             )}
             {reportType && (
-                <Badge 
-                    variant={reportType === 'Balance Sheet' ? 'secondary' : 'default'}
-                    className="font-normal text-xs"
+                <Badge
+                    variant="outline"
+                    className={cn(
+                        "font-normal text-xs",
+                        reportType === 'Balance Sheet' ? 'border-secondary text-secondary' : 'border-primary text-primary'
+                    )}
                 >
                     {reportType}
                 </Badge>
@@ -98,7 +150,7 @@ const LedgerEntry = ({ ledger, level, onEdit, reportType }: { ledger: Ledger; le
       {hasChildren && isOpen && (
         <div>
           {ledger.children?.sort((a, b) => (a.position ?? Number.MAX_SAFE_INTEGER) - (b.position ?? Number.MAX_SAFE_INTEGER)).map((child) => (
-            <LedgerEntry key={child.id} ledger={child} level={level + 1} onEdit={onEdit} reportType={reportType} />
+            <LedgerEntry key={child.id} ledger={child} level={level + 1} onEdit={onEdit} onDelete={onDelete} reportType={reportType} />
           ))}
         </div>
       )}
@@ -108,6 +160,7 @@ const LedgerEntry = ({ ledger, level, onEdit, reportType }: { ledger: Ledger; le
 
 export function LedgerView({ data }: LedgerViewProps) {
   const [ledgers, setLedgers] = useState<Ledger[]>(data);
+  const { toast } = useToast();
 
   // State for Create Dialog
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -123,6 +176,10 @@ export function LedgerView({ data }: LedgerViewProps) {
   const [editAccountPosition, setEditAccountPosition] = useState('');
   const [editAccountType, setEditAccountType] = useState<'primary' | 'subgroup'>('primary');
   const [editSelectedParent, setEditSelectedParent] = useState<string | null>(null);
+  
+  // State for Delete Dialog
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [ledgerToDelete, setLedgerToDelete] = useState<Ledger | null>(null);
 
   const getFlattenedGroups = (nodes: Ledger[], level = 0): { id: string; name: string }[] => {
     let groups: { id: string; name: string }[] = [];
@@ -292,6 +349,36 @@ export function LedgerView({ data }: LedgerViewProps) {
     setEditingLedger(null);
   };
 
+  const handleOpenDeleteDialog = (ledger: Ledger) => {
+    setLedgerToDelete(ledger);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!ledgerToDelete) return;
+
+    const removeNodeRecursively = (nodes: Ledger[], id: string): Ledger[] => {
+      return nodes.filter(node => {
+        if (node.id === id) {
+          return false;
+        }
+        if (node.children) {
+          node.children = removeNodeRecursively(node.children, id);
+        }
+        return true;
+      });
+    };
+    
+    setLedgers(currentLedgers => removeNodeRecursively(currentLedgers, ledgerToDelete.id));
+
+    toast({
+        title: "Group Deleted",
+        description: `The group "${ledgerToDelete.name}" and its subgroups have been removed.`,
+    });
+
+    setIsDeleteDialogOpen(false);
+    setLedgerToDelete(null);
+  };
 
   return (
     <Card>
@@ -477,18 +564,42 @@ export function LedgerView({ data }: LedgerViewProps) {
           </DialogContent>
         </Dialog>
 
+        {/* Delete Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the 
+                <span className="font-semibold text-foreground"> {ledgerToDelete?.name} </span> 
+                group and all of its subgroups.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setLedgerToDelete(null)}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfirmDelete}>Continue</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         <div className="rounded-md border p-2">
           {ledgers.sort((a, b) => (a.position ?? Number.MAX_SAFE_INTEGER) - (b.position ?? Number.MAX_SAFE_INTEGER)).map((group) => {
             let reportType: 'Balance Sheet' | 'Profit & Loss' | null = null;
             const balanceSheetIds = ['assets', 'liabilities', 'equity'];
             const profitAndLossIds = ['income', 'expenses'];
 
-            if (balanceSheetIds.includes(group.id)) {
-                reportType = 'Balance Sheet';
-            } else if (profitAndLossIds.includes(group.id)) {
-                reportType = 'Profit & Loss';
+            const checkGroupType = (node: Ledger): 'Balance Sheet' | 'Profit & Loss' | null => {
+                if(balanceSheetIds.includes(node.id)) return 'Balance Sheet';
+                if(profitAndLossIds.includes(node.id)) return 'Profit & Loss';
+                
+                const parent = findParent(ledgers, node.id);
+                if (parent) return checkGroupType(parent);
+
+                return null;
             }
-            return <LedgerEntry key={group.id} ledger={group} level={0} onEdit={handleOpenEditDialog} reportType={reportType} />;
+            reportType = checkGroupType(group);
+
+            return <LedgerEntry key={group.id} ledger={group} level={0} onEdit={handleOpenEditDialog} onDelete={handleOpenDeleteDialog} reportType={reportType} />;
           })}
         </div>
       </CardContent>
