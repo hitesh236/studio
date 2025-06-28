@@ -13,9 +13,6 @@ import {
   Save,
   Send,
   Loader2,
-  Check,
-  ChevronsUpDown,
-  UserPlus,
   Settings,
 } from 'lucide-react';
 
@@ -63,27 +60,7 @@ import {
 } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from '@/components/ui/dialog';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { generateData, Person } from '@/lib/data';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Label } from '@/components/ui/label';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -115,7 +92,6 @@ const invoiceItemSchema = z.object({
 });
 
 const invoiceFormSchema = z.object({
-  customerId: z.string().min(1, 'Please select a customer.'),
   customerName: z.string().min(1, 'Customer name is required.'),
   customerGstin: z.string().optional(),
   billingAddress: z.string().min(1, 'Billing address is required.'),
@@ -133,84 +109,9 @@ const invoiceFormSchema = z.object({
 
 type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;
 
-const NewCustomerForm = ({ onCustomerAdd }: { onCustomerAdd: (customer: Person) => void }) => {
-    const [name, setName] = React.useState('');
-    const [gstin, setGstin] = React.useState('');
-    const [address, setAddress] = React.useState('');
-    const [city, setCity] = React.useState('');
-    const [state, setState] = React.useState('');
-    const [zip, setZip] = React.useState('');
-
-    const handleSave = () => {
-        if (!name || !address || !city || !state || !zip) {
-            alert('Please fill all required fields.');
-            return;
-        }
-
-        const newCustomer: Person = {
-            id: `cust-${Date.now()}`,
-            firstName: name.split(' ')[0],
-            lastName: name.split(' ').slice(1).join(' ') || '',
-            email: `${name.toLowerCase().replace(' ', '.')}@new-customer.com`,
-            company: name,
-            phone: 'N/A',
-            saleAmount: 0,
-            rating: 0,
-            status: 'Active',
-            gstin,
-            address: { street: address, city, state, zip },
-            bio: 'Newly added customer.',
-        };
-        onCustomerAdd(newCustomer);
-    };
-
-    return (
-        <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="cust-name" className="text-right">Name</Label>
-                <Input id="cust-name" value={name} onChange={(e) => setName(e.target.value)} className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="cust-gstin" className="text-right">GSTIN</Label>
-                <Input id="cust-gstin" value={gstin} onChange={(e) => setGstin(e.target.value)} className="col-span-3" />
-            </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="cust-address" className="text-right">Address</Label>
-                <Input id="cust-address" value={address} onChange={(e) => setAddress(e.target.value)} className="col-span-3" />
-            </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="cust-city" className="text-right">City</Label>
-                <Input id="cust-city" value={city} onChange={(e) => setCity(e.target.value)} className="col-span-3" />
-            </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="cust-state" className="text-right">State</Label>
-                <Select onValueChange={setState} value={state}>
-                    <SelectTrigger className="col-span-3"><SelectValue placeholder="Select state" /></SelectTrigger>
-                    <SelectContent>
-                        {indianStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                    </SelectContent>
-                </Select>
-            </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="cust-zip" className="text-right">Zip Code</Label>
-                <Input id="cust-zip" value={zip} onChange={(e) => setZip(e.target.value)} className="col-span-3" />
-            </div>
-            <DialogFooter>
-                <DialogClose asChild>
-                    <Button type="button" variant="outline">Cancel</Button>
-                </DialogClose>
-                <Button type="button" onClick={handleSave}>Save Customer</Button>
-            </DialogFooter>
-        </div>
-    );
-}
-
 export function InvoiceForm() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [customers, setCustomers] = React.useState<Person[]>([]);
-  const [isAddCustomerOpen, setIsAddCustomerOpen] = React.useState(false);
-  const [isCustomerPopoverOpen, setIsCustomerPopoverOpen] = React.useState(false);
   const [columnVisibility, setColumnVisibility] = React.useState({
     unit: true,
     hsn: true,
@@ -218,15 +119,9 @@ export function InvoiceForm() {
   });
   const [roundOff, setRoundOff] = React.useState<number>(0);
 
-  React.useEffect(() => {
-    // In a real app, you'd fetch this from an API
-    setCustomers(generateData(25));
-  }, []);
-
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
     defaultValues: {
-      customerId: '',
       customerName: '',
       billingAddress: '',
       isShippingSameAsBilling: true,
@@ -245,16 +140,6 @@ export function InvoiceForm() {
     name: 'items',
   });
   
-  const uniqueCustomers = React.useMemo(() => {
-    const unique = new Map<string, Person>();
-    customers.forEach(customer => {
-      if (!unique.has(customer.company)) {
-        unique.set(customer.company, customer);
-      }
-    });
-    return Array.from(unique.values());
-  }, [customers]);
-
   const watchedItems = form.watch('items');
   const watchedPlaceOfSupply = form.watch('placeOfSupply');
   const watchedCurrency = form.watch('currency');
@@ -308,24 +193,6 @@ export function InvoiceForm() {
     return { subtotal, totalDiscount, totalTaxableValue, grandTotal, totalGst, isIntraState, totalCgst, totalSgst, totalIgst, singleGstRate };
   }, [watchedItems, watchedPlaceOfSupply, roundOff]);
   
-  const handleCustomerSelect = (customer: Person) => {
-    const fullAddress = `${customer.address.street}, ${customer.address.city}, ${customer.address.state} ${customer.address.zip}`;
-    form.setValue('customerName', `${customer.company}`);
-    form.setValue('customerGstin', customer.gstin || '');
-    form.setValue('billingAddress', fullAddress);
-    form.setValue('shippingAddress', fullAddress);
-    form.setValue('placeOfSupply', customer.address.state);
-    form.setValue('isShippingSameAsBilling', true);
-    setIsCustomerPopoverOpen(false);
-  };
-  
-  const handleAddNewCustomer = (customer: Person) => {
-      setCustomers(prev => [customer, ...prev]);
-      form.setValue('customerId', customer.id);
-      handleCustomerSelect(customer);
-      setIsAddCustomerOpen(false);
-  };
-
   async function onSubmit(data: InvoiceFormValues) {
     setIsSubmitting(true);
     // Simulate API call
@@ -390,61 +257,13 @@ export function InvoiceForm() {
                     <div className="space-y-4">
                         <FormField
                             control={form.control}
-                            name="customerId"
+                            name="customerName"
                             render={({ field }) => (
-                                <FormItem className="flex flex-col">
+                                <FormItem>
                                 <FormLabel>Bill To</FormLabel>
-                                <Popover open={isCustomerPopoverOpen} onOpenChange={setIsCustomerPopoverOpen}>
-                                    <PopoverTrigger asChild>
-                                        <FormControl>
-                                            <Button
-                                                variant="outline"
-                                                role="combobox"
-                                                className={cn(
-                                                    "w-full justify-between",
-                                                    !field.value && "text-muted-foreground"
-                                                )}
-                                            >
-                                                {field.value
-                                                    ? uniqueCustomers.find((customer) => customer.id === field.value)?.company
-                                                    : "Select customer"}
-                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                            </Button>
-                                        </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                                        <Command>
-                                            <CommandInput placeholder="Search customer..." />
-                                            <CommandList>
-                                                <CommandEmpty>No customer found.</CommandEmpty>
-                                                <CommandGroup>
-                                                    {uniqueCustomers.map((customer) => (
-                                                        <CommandItem
-                                                            value={customer.company}
-                                                            key={customer.id}
-                                                            onSelect={() => {
-                                                                field.onChange(customer.id);
-                                                                handleCustomerSelect(customer);
-                                                            }}
-                                                        >
-                                                            <Check className={cn("mr-2 h-4 w-4",
-                                                                  field.value === customer.id ? "opacity-100" : "opacity-0"
-                                                            )} />
-                                                            {customer.company}
-                                                        </CommandItem>
-                                                    ))}
-                                                    <CommandItem onSelect={() => {
-                                                        setIsCustomerPopoverOpen(false);
-                                                        setIsAddCustomerOpen(true);
-                                                    }}>
-                                                        <UserPlus className="mr-2 h-4 w-4" />
-                                                        Add New Customer
-                                                    </CommandItem>
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                </Popover>
+                                <FormControl>
+                                    <Input placeholder="Customer Name" {...field} />
+                                </FormControl>
                                 <FormMessage />
                                 </FormItem>
                             )}
@@ -1079,18 +898,6 @@ export function InvoiceForm() {
             </CardContent>
         </Card>
 
-        <Dialog open={isAddCustomerOpen} onOpenChange={setIsAddCustomerOpen}>
-            <DialogContent>
-                <DialogHeader>
-                <DialogTitle>Add New Customer</DialogTitle>
-                <DialogDescription>
-                    Enter the details for the new customer.
-                </DialogDescription>
-                </DialogHeader>
-                <NewCustomerForm onCustomerAdd={handleAddNewCustomer} />
-            </DialogContent>
-        </Dialog>
-
         <div className="flex flex-col sm:flex-row justify-end gap-4">
             <Button type="button" variant="outline" disabled={isSubmitting}>
                 <Save className="mr-2 h-4 w-4" /> Save as Draft
@@ -1104,4 +911,3 @@ export function InvoiceForm() {
     </Form>
   );
 }
-
