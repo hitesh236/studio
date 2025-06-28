@@ -26,6 +26,7 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ChevronRight, ChevronDown, PlusCircle, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 export type Ledger = {
   id: string;
@@ -40,7 +41,7 @@ interface LedgerViewProps {
   data: Ledger[];
 }
 
-const LedgerEntry = ({ ledger, level, onEdit }: { ledger: Ledger; level: number; onEdit: (ledger: Ledger) => void }) => {
+const LedgerEntry = ({ ledger, level, onEdit, reportType }: { ledger: Ledger; level: number; onEdit: (ledger: Ledger) => void; reportType: 'Balance Sheet' | 'Profit & Loss' | null }) => {
   const [isOpen, setIsOpen] = useState(level < 2);
   const hasChildren = ledger.children && ledger.children.length > 0;
 
@@ -67,6 +68,9 @@ const LedgerEntry = ({ ledger, level, onEdit }: { ledger: Ledger; level: number;
             <div className="w-4 h-4" />
           )}
           <span className={cn("font-medium text-sm", level === 0 && "font-semibold")}>{ledger.name}</span>
+          {ledger.type === 'group' && reportType && (
+            <Badge variant="outline" className="font-normal text-xs">{reportType}</Badge>
+          )}
         </div>
         <Button 
             variant="ghost" 
@@ -83,7 +87,7 @@ const LedgerEntry = ({ ledger, level, onEdit }: { ledger: Ledger; level: number;
       {hasChildren && isOpen && (
         <div>
           {ledger.children?.sort((a, b) => (a.position ?? Number.MAX_SAFE_INTEGER) - (b.position ?? Number.MAX_SAFE_INTEGER)).map((child) => (
-            <LedgerEntry key={child.id} ledger={child} level={level + 1} onEdit={onEdit} />
+            <LedgerEntry key={child.id} ledger={child} level={level + 1} onEdit={onEdit} reportType={reportType} />
           ))}
         </div>
       )}
@@ -463,9 +467,18 @@ export function LedgerView({ data }: LedgerViewProps) {
         </Dialog>
 
         <div className="rounded-md border p-2">
-          {ledgers.sort((a, b) => (a.position ?? Number.MAX_SAFE_INTEGER) - (b.position ?? Number.MAX_SAFE_INTEGER)).map((group) => (
-            <LedgerEntry key={group.id} ledger={group} level={0} onEdit={handleOpenEditDialog} />
-          ))}
+          {ledgers.sort((a, b) => (a.position ?? Number.MAX_SAFE_INTEGER) - (b.position ?? Number.MAX_SAFE_INTEGER)).map((group) => {
+            let reportType: 'Balance Sheet' | 'Profit & Loss' | null = null;
+            const balanceSheetIds = ['assets', 'liabilities', 'equity'];
+            const profitAndLossIds = ['income', 'expenses'];
+
+            if (balanceSheetIds.includes(group.id)) {
+                reportType = 'Balance Sheet';
+            } else if (profitAndLossIds.includes(group.id)) {
+                reportType = 'Profit & Loss';
+            }
+            return <LedgerEntry key={group.id} ledger={group} level={0} onEdit={handleOpenEditDialog} reportType={reportType} />;
+          })}
         </div>
       </CardContent>
     </Card>
