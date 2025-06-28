@@ -45,15 +45,7 @@ import { ChevronRight, ChevronDown, PlusCircle, Pencil, MoreHorizontal, Trash2 }
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-
-export type Ledger = {
-  id: string;
-  name: string;
-  type: 'group' | 'ledger';
-  balance?: number;
-  position?: number;
-  children?: Ledger[];
-};
+import type { Ledger } from '@/lib/ledger-data';
 
 interface LedgerViewProps {
   data: Ledger[];

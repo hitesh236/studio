@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -169,6 +170,14 @@ export function AppSidebar() {
                 <Link href="/journal-entries" onClick={handleLinkClick}>
                     <BookOpen />
                     Journal Entries
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Ledgers" isActive={pathname.startsWith('/ledgers')} asChild>
+                <Link href="/ledgers" onClick={handleLinkClick}>
+                    <Scale />
+                    Ledgers
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
