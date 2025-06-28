@@ -17,6 +17,7 @@ const pathToTitle: { [key: string]: string } = {
   '/my-accounts': 'My Accounts',
   '/settings': 'Settings',
   '/journal-entries': 'Journal Entries',
+  '/journal-entries/new': 'New Journal Entry',
   '/all-transactions': 'View All Transactions',
 };
 
