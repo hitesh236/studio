@@ -16,6 +16,7 @@ import {
   Check,
   ChevronsUpDown,
   UserPlus,
+  Settings,
 } from 'lucide-react';
 
 import { cn, formatCurrency } from '@/lib/utils';
@@ -81,6 +82,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { generateData, Person } from '@/lib/data';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -207,7 +209,10 @@ export function InvoiceForm() {
   const [customers, setCustomers] = React.useState<Person[]>([]);
   const [isAddCustomerOpen, setIsAddCustomerOpen] = React.useState(false);
   const [isCustomerPopoverOpen, setIsCustomerPopoverOpen] = React.useState(false);
-
+  const [columnVisibility, setColumnVisibility] = React.useState({
+    hsn: true,
+    discount: true,
+  });
 
   React.useEffect(() => {
     // In a real app, you'd fetch this from an API
@@ -645,16 +650,48 @@ export function InvoiceForm() {
                 <Separator />
                 
                 {/* Invoice Items Section */}
-                <div>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Line Items</h3>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <Settings className="h-5 w-5" />
+                          <span className="sr-only">Toggle Columns</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Show/Hide Columns</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuCheckboxItem
+                          checked={columnVisibility.hsn}
+                          onCheckedChange={(checked) =>
+                            setColumnVisibility((prev) => ({ ...prev, hsn: !!checked }))
+                          }
+                        >
+                          HSN/SAC Code
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={columnVisibility.discount}
+                          onCheckedChange={(checked) =>
+                            setColumnVisibility((prev) => ({ ...prev, discount: !!checked }))
+                          }
+                        >
+                          Discount (%)
+                        </DropdownMenuCheckboxItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
                     {/* Desktop Table View */}
                     <div className="hidden md:block">
                         <Table>
                             <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[30%] min-w-[200px]">Item / HSN</TableHead>
+                                <TableHead className="w-[30%] min-w-[200px]">Item</TableHead>
                                 <TableHead className="text-right">Qty</TableHead>
                                 <TableHead className="text-right">Rate</TableHead>
-                                <TableHead className="text-right">Discount(%)</TableHead>
+                                {columnVisibility.discount && <TableHead className="text-right">Discount(%)</TableHead>}
                                 <TableHead className="text-right">GST(%)</TableHead>
                                 <TableHead className="text-right">Taxable Amt.</TableHead>
                                 <TableHead className="text-right">Total</TableHead>
@@ -689,7 +726,7 @@ export function InvoiceForm() {
                                                 </FormItem>
                                             )}
                                         />
-                                        <FormField
+                                        {columnVisibility.hsn && <FormField
                                             control={form.control}
                                             name={`items.${index}.hsnCode`}
                                             render={({ field }) => (
@@ -704,7 +741,7 @@ export function InvoiceForm() {
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
-                                        />
+                                        />}
                                     </TableCell>
                                     <TableCell>
                                          <FormField
@@ -734,7 +771,7 @@ export function InvoiceForm() {
                                             )}
                                         />
                                     </TableCell>
-                                    <TableCell>
+                                    {columnVisibility.discount && <TableCell>
                                          <FormField
                                             control={form.control}
                                             name={`items.${index}.discount`}
@@ -747,7 +784,7 @@ export function InvoiceForm() {
                                                 </FormItem>
                                             )}
                                         />
-                                    </TableCell>
+                                    </TableCell>}
                                     <TableCell>
                                         <FormField
                                             control={form.control}
@@ -831,7 +868,7 @@ export function InvoiceForm() {
                                                 </FormItem>
                                             )}
                                         />
-                                         <FormField
+                                         {columnVisibility.hsn && <FormField
                                             control={form.control}
                                             name={`items.${index}.hsnCode`}
                                             render={({ field }) => (
@@ -843,7 +880,7 @@ export function InvoiceForm() {
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
-                                        />
+                                        />}
                                         <div className="grid grid-cols-2 gap-4">
                                             <FormField
                                                 control={form.control}
@@ -867,7 +904,7 @@ export function InvoiceForm() {
                                                     </FormItem>
                                                 )}
                                             />
-                                            <FormField
+                                            {columnVisibility.discount && <FormField
                                                 control={form.control}
                                                 name={`items.${index}.discount`}
                                                 render={({ field }) => (
@@ -877,7 +914,7 @@ export function InvoiceForm() {
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
-                                            />
+                                            />}
                                              <FormField
                                                 control={form.control}
                                                 name={`items.${index}.gstRate`}
@@ -913,17 +950,17 @@ export function InvoiceForm() {
                             )
                         })}
                     </div>
+                
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => append({ itemName: '', hsnCode: '', quantity: 1, rate: 0, discount: 0, gstRate: 18 })}
+                    >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Another Item
+                    </Button>
                 </div>
 
-
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => append({ itemName: '', hsnCode: '', quantity: 1, rate: 0, discount: 0, gstRate: 18 })}
-                >
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Another Item
-                </Button>
 
                 <Separator />
                 
