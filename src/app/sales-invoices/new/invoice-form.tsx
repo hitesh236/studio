@@ -629,22 +629,156 @@ export function InvoiceForm() {
 
                 <Separator />
                 
-                {/* Invoice Items Table */}
-                <div className="overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-[30%] min-w-[200px]">Item / HSN</TableHead>
-                            <TableHead className="text-right">Qty</TableHead>
-                            <TableHead className="text-right">Rate</TableHead>
-                            <TableHead className="text-right">Discount(%)</TableHead>
-                            <TableHead className="text-right">GST(%)</TableHead>
-                            <TableHead className="text-right">Taxable Amt.</TableHead>
-                            <TableHead className="text-right">Total</TableHead>
-                            <TableHead className="w-12"></TableHead>
-                        </TableRow>
-                        </TableHeader>
-                        <TableBody>
+                {/* Invoice Items Section */}
+                <div>
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block">
+                        <Table>
+                            <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[30%] min-w-[200px]">Item / HSN</TableHead>
+                                <TableHead className="text-right">Qty</TableHead>
+                                <TableHead className="text-right">Rate</TableHead>
+                                <TableHead className="text-right">Discount(%)</TableHead>
+                                <TableHead className="text-right">GST(%)</TableHead>
+                                <TableHead className="text-right">Taxable Amt.</TableHead>
+                                <TableHead className="text-right">Total</TableHead>
+                                <TableHead className="w-12"></TableHead>
+                            </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                            {fields.map((field, index) => {
+                                const item = watchedItems[index];
+                                const itemAmount = (item.quantity || 0) * (item.rate || 0);
+                                const itemDiscount = itemAmount * ((item.discount || 0) / 100);
+                                const taxableAmount = itemAmount - itemDiscount;
+                                const gstAmount = taxableAmount * ((item.gstRate || 0) / 100);
+                                const totalAmount = taxableAmount + gstAmount;
+
+                                return (
+                                    <TableRow key={field.id} className="align-top">
+                                    <TableCell>
+                                        <FormField
+                                            control={form.control}
+                                            name={`items.${index}.itemName`}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormControl>
+                                                        <Textarea
+                                                            placeholder="Item name and description"
+                                                            {...field}
+                                                            rows={2}
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name={`items.${index}.hsnCode`}
+                                            render={({ field }) => (
+                                                <FormItem className="mt-1">
+                                                    <FormControl>
+                                                        <Input
+                                                            placeholder="HSN/SAC Code"
+                                                            {...field}
+                                                            className="h-8 text-xs"
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                         <FormField
+                                            control={form.control}
+                                            name={`items.${index}.quantity`}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormControl>
+                                                        <Input type="number" className="text-right min-w-[60px]" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                         <FormField
+                                            control={form.control}
+                                            name={`items.${index}.rate`}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormControl>
+                                                        <Input type="number" className="text-right min-w-[80px]" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                         <FormField
+                                            control={form.control}
+                                            name={`items.${index}.discount`}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormControl>
+                                                        <Input type="number" className="text-right min-w-[70px]" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <FormField
+                                            control={form.control}
+                                            name={`items.${index}.gstRate`}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <Select onValueChange={(v) => field.onChange(Number(v))} value={String(field.value)}>
+                                                        <FormControl>
+                                                            <SelectTrigger className="min-w-[80px]">
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {[0, 5, 12, 18, 28].map(rate => (
+                                                                <SelectItem key={rate} value={String(rate)}>{rate}%</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </TableCell>
+                                    <TableCell className="text-right font-mono">{formatCurrency(taxableAmount, watchedCurrency)}</TableCell>
+                                    <TableCell className="text-right font-mono">{formatCurrency(totalAmount, watchedCurrency)}</TableCell>
+                                    <TableCell>
+                                        <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-destructive hover:text-destructive"
+                                        onClick={() => remove(index)}
+                                        disabled={fields.length <= 1}
+                                        >
+                                        <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </TableCell>
+                                    </TableRow>
+                                );
+                            })}
+                            </TableBody>
+                        </Table>
+                    </div>
+
+                     {/* Mobile Card View */}
+                    <div className="md:hidden space-y-4">
                         {fields.map((field, index) => {
                             const item = watchedItems[index];
                             const itemAmount = (item.quantity || 0) * (item.rate || 0);
@@ -654,126 +788,119 @@ export function InvoiceForm() {
                             const totalAmount = taxableAmount + gstAmount;
 
                             return (
-                                <TableRow key={field.id} className="align-top">
-                                <TableCell>
-                                    <FormField
-                                        control={form.control}
-                                        name={`items.${index}.itemName`}
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormControl>
-                                                    <Textarea
-                                                        placeholder="Item name and description"
-                                                        {...field}
-                                                        rows={2}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name={`items.${index}.hsnCode`}
-                                        render={({ field }) => (
-                                            <FormItem className="mt-1">
-                                                <FormControl>
-                                                    <Input
-                                                        placeholder="HSN/SAC Code"
-                                                        {...field}
-                                                        className="h-8 text-xs"
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </TableCell>
-                                <TableCell>
-                                     <FormField
-                                        control={form.control}
-                                        name={`items.${index}.quantity`}
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormControl>
-                                                    <Input type="number" className="text-right min-w-[60px]" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </TableCell>
-                                <TableCell>
-                                     <FormField
-                                        control={form.control}
-                                        name={`items.${index}.rate`}
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormControl>
-                                                    <Input type="number" className="text-right min-w-[80px]" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </TableCell>
-                                <TableCell>
-                                     <FormField
-                                        control={form.control}
-                                        name={`items.${index}.discount`}
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormControl>
-                                                    <Input type="number" className="text-right min-w-[70px]" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </TableCell>
-                                <TableCell>
-                                    <FormField
-                                        control={form.control}
-                                        name={`items.${index}.gstRate`}
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <Select onValueChange={(v) => field.onChange(Number(v))} value={String(field.value)}>
+                                <Card key={field.id} className="p-4">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <h4 className="font-semibold pt-1">Item #{index + 1}</h4>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="text-destructive hover:text-destructive -mt-1 -mr-1 h-8 w-8"
+                                            onClick={() => remove(index)}
+                                            disabled={fields.length <= 1}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <FormField
+                                            control={form.control}
+                                            name={`items.${index}.itemName`}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Item Name / Description</FormLabel>
                                                     <FormControl>
-                                                        <SelectTrigger className="min-w-[80px]">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
+                                                        <Textarea placeholder="Item name..." {...field} rows={2} />
                                                     </FormControl>
-                                                    <SelectContent>
-                                                        {[0, 5, 12, 18, 28].map(rate => (
-                                                            <SelectItem key={rate} value={String(rate)}>{rate}%</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </TableCell>
-                                <TableCell className="text-right font-mono">{formatCurrency(taxableAmount, watchedCurrency)}</TableCell>
-                                <TableCell className="text-right font-mono">{formatCurrency(totalAmount, watchedCurrency)}</TableCell>
-                                <TableCell>
-                                    <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="text-destructive hover:text-destructive"
-                                    onClick={() => remove(index)}
-                                    disabled={fields.length <= 1}
-                                    >
-                                    <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </TableCell>
-                                </TableRow>
-                            );
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                         <FormField
+                                            control={form.control}
+                                            name={`items.${index}.hsnCode`}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>HSN/SAC Code</FormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="HSN/SAC Code" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <FormField
+                                                control={form.control}
+                                                name={`items.${index}.quantity`}
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Quantity</FormLabel>
+                                                        <FormControl><Input type="number" {...field} /></FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name={`items.${index}.rate`}
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Rate</FormLabel>
+                                                        <FormControl><Input type="number" {...field} /></FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name={`items.${index}.discount`}
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Discount (%)</FormLabel>
+                                                        <FormControl><Input type="number" {...field} /></FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                             <FormField
+                                                control={form.control}
+                                                name={`items.${index}.gstRate`}
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>GST (%)</FormLabel>
+                                                        <Select onValueChange={(v) => field.onChange(Number(v))} value={String(field.value)}>
+                                                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                            <SelectContent>
+                                                                {[0, 5, 12, 18, 28].map(rate => (
+                                                                    <SelectItem key={rate} value={String(rate)}>{rate}%</SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+                                        <Separator/>
+                                        <div className="space-y-1 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground">Taxable Amt.</span>
+                                                <span className="font-mono">{formatCurrency(taxableAmount, watchedCurrency)}</span>
+                                            </div>
+                                            <div className="flex justify-between font-medium">
+                                                <span>Total</span>
+                                                <span className="font-mono">{formatCurrency(totalAmount, watchedCurrency)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Card>
+                            )
                         })}
-                        </TableBody>
-                    </Table>
+                    </div>
                 </div>
+
+
                 <Button
                     type="button"
                     variant="outline"
@@ -870,7 +997,7 @@ export function InvoiceForm() {
             </DialogContent>
         </Dialog>
 
-        <div className="flex justify-end gap-4">
+        <div className="flex flex-col sm:flex-row justify-end gap-4">
             <Button type="button" variant="outline" disabled={isSubmitting}>
                 <Save className="mr-2 h-4 w-4" /> Save as Draft
             </Button>
