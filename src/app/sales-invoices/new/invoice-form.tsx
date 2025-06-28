@@ -276,9 +276,27 @@ export function InvoiceForm() {
     const totalGst = Object.values(gstSummary).reduce((acc, { gst }) => acc + gst, 0);
     const isIntraState = watchedPlaceOfSupply === sellerDetails.state;
 
-    const grandTotal = totalTaxableValue + totalGst;
+    let totalCgst = 0;
+    let totalSgst = 0;
+    let totalIgst = 0;
 
-    return { subtotal, totalDiscount, totalTaxableValue, grandTotal, totalGst, gstSummary, isIntraState };
+    if (totalGst > 0) {
+      if (isIntraState) {
+          Object.values(gstSummary).forEach(({ gst }) => {
+              totalCgst += gst / 2;
+              totalSgst += gst / 2;
+          });
+      } else {
+          Object.values(gstSummary).forEach(({ gst }) => {
+              totalIgst += gst;
+          });
+      }
+    }
+
+    const grandTotal = totalTaxableValue + totalGst;
+    const singleGstRate = Object.keys(gstSummary).length === 1 ? Object.keys(gstSummary)[0] : null;
+
+    return { subtotal, totalDiscount, totalTaxableValue, grandTotal, totalGst, isIntraState, totalCgst, totalSgst, totalIgst, singleGstRate };
   }, [watchedItems, watchedPlaceOfSupply]);
   
   const handleCustomerSelect = (customer: Person) => {
@@ -315,10 +333,7 @@ export function InvoiceForm() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <Card>
-            <CardHeader>
-                <CardTitle>Create New Invoice</CardTitle>
-                <CardDescription>Fill out the form below to create a new sales invoice.</CardDescription>
-            </CardHeader>
+         
             <CardContent className="space-y-4 p-4">
                 {/* Seller & Customer Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -913,55 +928,63 @@ export function InvoiceForm() {
                 <Separator />
                 
                 {/* Totals Section */}
-                <div className="flex justify-end">
-                    <div className="w-full max-w-sm space-y-2">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Summary & Totals</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    <Card>
+                      <CardContent className="p-4 space-y-2 text-sm">
                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">Subtotal</span>
-                            <span className="font-mono">{formatCurrency(totals.subtotal, watchedCurrency)}</span>
+                          <span className="text-muted-foreground">Subtotal</span>
+                          <span className="font-mono">{formatCurrency(totals.subtotal, watchedCurrency)}</span>
                         </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Total Discount</span>
+                          <span className="font-mono text-destructive">
+                            - {formatCurrency(totals.totalDiscount, watchedCurrency)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between font-medium">
+                          <span>Taxable Value</span>
+                          <span className="font-mono">{formatCurrency(totals.totalTaxableValue, watchedCurrency)}</span>
+                        </div>
+                        <Separator className="my-2" />
+                        <div className="flex justify-between">
+                           <span className="text-muted-foreground">
+                              {totals.singleGstRate ? `GST (${totals.singleGstRate}%)` : 'Total GST'}
+                            </span>
+                          <span className="font-mono">{formatCurrency(totals.totalGst, watchedCurrency)}</span>
+                        </div>
+                        <Separator className="my-2" />
+                        <div className="flex justify-between text-base font-bold">
+                          <span>Grand Total</span>
+                          <span className="font-mono">{formatCurrency(totals.grandTotal, watchedCurrency)}</span>
+                        </div>
+                         <div className="flex justify-end text-xs text-muted-foreground">
+                            <span>Base Currency (INR) {formatCurrency(totals.grandTotal * (form.getValues('exchangeRate') || 1), 'INR')}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                       <CardHeader className="p-4 pb-2">
+                        <CardTitle className="text-base font-semibold">GST Breakdown</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0 space-y-2 text-sm">
                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Discount</span>
-                            <span className="font-mono text-destructive">- {formatCurrency(totals.totalDiscount, watchedCurrency)}</span>
+                            <span className="text-muted-foreground">CGST</span>
+                            <span className="font-mono">{formatCurrency(totals.totalCgst, watchedCurrency)}</span>
                         </div>
-                        <Separator />
-                         <div className="flex justify-between font-medium">
-                            <span>Taxable Value</span>
-                            <span className="font-mono">{formatCurrency(totals.totalTaxableValue, watchedCurrency)}</span>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">SGST</span>
+                            <span className="font-mono">{formatCurrency(totals.totalSgst, watchedCurrency)}</span>
                         </div>
-                        
-                        {Object.entries(totals.gstSummary).map(([rate, { gst }]) => (
-                            <React.Fragment key={rate}>
-                                {totals.isIntraState ? (
-                                    <>
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">CGST ({Number(rate)/2}%)</span>
-                                            <span className="font-mono">{formatCurrency(gst/2, watchedCurrency)}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">SGST ({Number(rate)/2}%)</span>
-                                            <span className="font-mono">{formatCurrency(gst/2, watchedCurrency)}</span>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="flex justify-between">
-                                        <span className="text-muted-foreground">IGST ({rate}%)</span>
-                                        <span className="font-mono">{formatCurrency(gst, watchedCurrency)}</span>
-                                    </div>
-                                )}
-                            </React.Fragment>
-                        ))}
-                        
-                        <Separator />
-                        <div className="flex justify-between text-lg font-bold">
-                            <span>Grand Total ({watchedCurrency})</span>
-                            <span className="font-mono">{formatCurrency(totals.grandTotal, watchedCurrency)}</span>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">IGST</span>
+                            <span className="font-mono">{formatCurrency(totals.totalIgst, watchedCurrency)}</span>
                         </div>
-                        {watchedCurrency !== 'INR' && (
-                             <div className="flex justify-between text-sm text-muted-foreground text-right">
-                                <span>(Total in INR: {formatCurrency(totals.grandTotal * form.getValues('exchangeRate'), 'INR')})</span>
-                            </div>
-                        )}
-                    </div>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
 
                 <Separator />
