@@ -16,7 +16,9 @@ export default function TablePage() {
       <HicksTableContainer data={data} />
 
       <motion.div
-        className="fixed bottom-8 right-8 z-10"
+        drag
+        dragMomentum={false}
+        className="fixed bottom-8 right-8 z-50 cursor-grab active:cursor-grabbing"
         initial={{ opacity: 0, y: 100 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{
@@ -26,9 +28,9 @@ export default function TablePage() {
           delay: 0.3,
         }}
       >
-        <Button asChild size="lg" className="rounded-full shadow-lg h-14 px-5">
+        <Button asChild className="rounded-full shadow-lg">
           <Link href="/customers/new">
-            <PlusCircle className="mr-2 h-5 w-5" />
+            <PlusCircle className="mr-2 h-4 w-4" />
             Add Customer
           </Link>
         </Button>
