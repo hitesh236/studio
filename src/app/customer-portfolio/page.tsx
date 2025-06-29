@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import {
-  UserCircle, Mail, Phone, MapPin, ChevronDown, ChevronRight, Plus, CreditCard, FileText, FileWarning, TrendingUp, CircleDollarSign, Scale, Download, Calendar as CalendarIcon, MoreHorizontal
+  Mail, Phone, MapPin, ChevronDown, ChevronRight, Plus, CreditCard, FileText, FileWarning, TrendingUp, CircleDollarSign, Scale, Download, Calendar as CalendarIcon, MoreHorizontal
 } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 
@@ -37,6 +37,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
 import Loading from '../loading';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 // --- Reusable Dialog Component ---
 const AddPaymentDialog = ({ invoice, onPaymentAdd }: { invoice: SalesInvoice | null, onPaymentAdd: () => void }) => {
@@ -489,7 +490,10 @@ const CustomerPortfolioContent = () => {
             <Card>
                 <CardHeader>
                 <div className="flex items-center gap-4">
-                    <UserCircle className="h-12 w-12 text-muted-foreground" />
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src="https://placehold.co/64x64.png" alt={`${customer.firstName} ${customer.lastName}`} data-ai-hint="person avatar" />
+                      <AvatarFallback>{customer.firstName.charAt(0)}{customer.lastName.charAt(0)}</AvatarFallback>
+                    </Avatar>
                     <div>
                     <CardTitle className="text-2xl">{`${customer.firstName} ${customer.lastName}`}</CardTitle>
                     <CardDescription>{customer.company}</CardDescription>
@@ -514,7 +518,7 @@ const CustomerPortfolioContent = () => {
                 </CardContent>
             </Card>
 
-            <Tabs defaultValue="ledger" className="w-full">
+            <Tabs defaultValue="ledger">
                 <TabsList>
                     <TabsTrigger value="ledger">Ledger</TabsTrigger>
                     <TabsTrigger value="invoice">Invoices</TabsTrigger>
