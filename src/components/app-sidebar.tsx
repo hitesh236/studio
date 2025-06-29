@@ -29,6 +29,7 @@ import {
     Store,
     TrendingUp,
     Undo2,
+    UserCircle,
     Users,
     Wallet
 } from 'lucide-react';
@@ -95,6 +96,14 @@ export function AppSidebar() {
                     <Link href="/invoice-preview-fc" onClick={handleLinkClick}>
                         <Globe />
                         Invoice Preview FC
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Customer Portfolio" isActive={pathname.startsWith('/customer-portfolio')} asChild>
+                    <Link href="/customer-portfolio" onClick={handleLinkClick}>
+                        <UserCircle />
+                        Customer Portfolio
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>

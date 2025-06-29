@@ -8,19 +8,20 @@ import { useMemo } from 'react';
 
 const pathToTitle: { [key: string]: string } = {
   '/': 'Dashboard',
-  '/table': 'Table',
-  '/invoice-preview': 'Invoice Preview',
-  '/invoice-preview-fc': 'Invoice Preview FC',
+  '/all-transactions': 'View All Transactions',
+  '/customer-portfolio': 'Customer Portfolio',
   '/customers': 'Customers',
   '/customers/new': 'Add Customer',
-  '/sales-invoices': 'Sales Invoices',
-  '/sales-invoices/new': 'Create Invoice',
-  '/my-accounts': 'My Accounts',
-  '/settings': 'Settings',
+  '/invoice-preview': 'Invoice Preview',
+  '/invoice-preview-fc': 'Invoice Preview FC',
   '/journal-entries': 'Journal Entries',
   '/journal-entries/new': 'New Journal Entry',
-  '/all-transactions': 'View All Transactions',
   '/ledgers': 'Ledgers List',
+  '/my-accounts': 'My Accounts',
+  '/sales-invoices': 'Sales Invoices',
+  '/sales-invoices/new': 'Create Invoice',
+  '/settings': 'Settings',
+  '/table': 'Table',
 };
 
 export function Header() {
