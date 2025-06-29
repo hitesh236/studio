@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import {
-  UserCircle, Mail, Phone, MapPin, ChevronDown, ChevronRight, Plus, CreditCard, FileText, FileWarning, TrendingUp, CircleDollarSign, Scale, Download, Calendar as CalendarIcon
+  UserCircle, Mail, Phone, MapPin, ChevronDown, ChevronRight, Plus, CreditCard, FileText, FileWarning, TrendingUp, CircleDollarSign, Scale, Download, Calendar as CalendarIcon, MoreHorizontal
 } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 
@@ -33,6 +33,7 @@ import { SummaryCard } from '@/app/sales-invoices/summary-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { Separator } from '@/components/ui/separator';
 
 // --- Data Generation ---
 const customer: Person = { ...generateData(1)[0], company: "Solutions Corp." };
@@ -100,6 +101,39 @@ const AddPaymentDialog = ({ invoice, onPaymentAdd }: { invoice: SalesInvoice | n
     );
 };
 
+// --- Mobile Ledger Card ---
+const MobileLedgerCard = ({ entry }: { entry: { id: string; date: Date; description: string; ref: string; debit: number; credit: number; balance: number } }) => {
+    const balanceType = entry.balance >= 0 ? 'Dr' : 'Cr';
+    return (
+        <Card>
+            <CardHeader className="p-4">
+                <div className="flex justify-between items-start">
+                    <CardTitle className="text-base">{entry.description}</CardTitle>
+                    <span className="text-sm font-mono text-muted-foreground">{format(entry.date, 'dd-MMM-yy')}</span>
+                </div>
+                <CardDescription>Ref: {entry.ref}</CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+                <Separator className="mb-4" />
+                <div className="flex justify-between items-center text-sm">
+                    <div className="space-y-1">
+                        <p className="text-muted-foreground">Debit</p>
+                        <p className="font-mono text-primary">{entry.debit > 0 ? formatCurrency(entry.debit, 'INR') : '-'}</p>
+                    </div>
+                    <div className="space-y-1 text-right">
+                        <p className="text-muted-foreground">Credit</p>
+                        <p className="font-mono text-destructive">{entry.credit > 0 ? formatCurrency(entry.credit, 'INR') : '-'}</p>
+                    </div>
+                    <div className="space-y-1 text-right">
+                        <p className="text-muted-foreground">Balance</p>
+                        <p className="font-mono">{formatCurrency(Math.abs(entry.balance), 'INR')} {balanceType}</p>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
+
 // --- Ledger Tab Component ---
 const CustomerLedgerView = () => {
     const [filter, setFilter] = React.useState('');
@@ -114,19 +148,25 @@ const CustomerLedgerView = () => {
             return matchesFilter && matchesDate;
         });
     }, [filter, date]);
+    
+    const processedLedgerData = React.useMemo(() => {
+        let runningBalance = 0;
+        return filteredLedgerData.map(entry => {
+            runningBalance += entry.debit - entry.credit;
+            return { ...entry, balance: runningBalance };
+        });
+    }, [filteredLedgerData]);
 
     const ledgerSummary = React.useMemo(() => {
         let totalDebit = 0;
         let totalCredit = 0;
-        filteredLedgerData.forEach(entry => {
+        processedLedgerData.forEach(entry => {
             totalDebit += entry.debit;
             totalCredit += entry.credit;
         });
         const closingBalance = totalDebit - totalCredit;
         return { totalDebit, totalCredit, closingBalance };
-    }, [filteredLedgerData]);
-
-    let runningBalance = 0;
+    }, [processedLedgerData]);
 
     return (
         <div className="space-y-6 mt-4">
@@ -143,7 +183,7 @@ const CustomerLedgerView = () => {
                             <CardTitle>Customer Ledger</CardTitle>
                             <CardDescription>A detailed view of all transactions.</CardDescription>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                              <Input
                                 placeholder="Filter description..."
                                 value={filter}
@@ -152,7 +192,7 @@ const CustomerLedgerView = () => {
                             />
                             <Popover>
                                 <PopoverTrigger asChild>
-                                <Button id="date" variant={"outline"} className={cn("w-full sm:w-[300px] justify-start text-left font-normal", !date && "text-muted-foreground")}>
+                                <Button id="date" variant={"outline"} className={cn("w-full sm:w-auto justify-start text-left font-normal", !date && "text-muted-foreground")}>
                                     <CalendarIcon className="mr-2 h-4 w-4" />
                                     {date?.from ? (date.to ? <>{format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}</> : format(date.from, "LLL dd, y")) : <span>Pick a date</span>}
                                 </Button>
@@ -166,7 +206,8 @@ const CustomerLedgerView = () => {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="rounded-md border">
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block rounded-md border">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -179,9 +220,8 @@ const CustomerLedgerView = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredLedgerData.map(entry => {
-                                    runningBalance += entry.debit - entry.credit;
-                                    const balanceType = runningBalance >= 0 ? 'Dr' : 'Cr';
+                                {processedLedgerData.map(entry => {
+                                    const balanceType = entry.balance >= 0 ? 'Dr' : 'Cr';
                                     return (
                                         <TableRow key={entry.id}>
                                             <TableCell>{format(entry.date, 'dd-MMM-yy')}</TableCell>
@@ -189,7 +229,7 @@ const CustomerLedgerView = () => {
                                             <TableCell>{entry.ref}</TableCell>
                                             <TableCell className="text-right font-mono text-primary">{entry.debit > 0 ? formatCurrency(entry.debit, 'INR') : '-'}</TableCell>
                                             <TableCell className="text-right font-mono text-destructive">{entry.credit > 0 ? formatCurrency(entry.credit, 'INR') : '-'}</TableCell>
-                                            <TableCell className="text-right font-mono">{formatCurrency(Math.abs(runningBalance), 'INR')} {balanceType}</TableCell>
+                                            <TableCell className="text-right font-mono">{formatCurrency(Math.abs(entry.balance), 'INR')} {balanceType}</TableCell>
                                         </TableRow>
                                     );
                                 })}
@@ -204,11 +244,80 @@ const CustomerLedgerView = () => {
                             </TableFooter>
                         </Table>
                     </div>
+                    {/* Mobile Card View */}
+                    <div className="md:hidden space-y-4">
+                        {processedLedgerData.length > 0 ? processedLedgerData.map(entry => (
+                            <MobileLedgerCard key={entry.id} entry={entry} />
+                        )) : (
+                             <div className="text-center text-muted-foreground py-12">No ledger entries found.</div>
+                        )}
+                    </div>
                 </CardContent>
             </Card>
         </div>
     );
 };
+
+// --- Mobile Invoice Card ---
+const MobileInvoiceCard = ({ invoice, isExpanded, onExpand, onAddPaymentClick }: {
+    invoice: SalesInvoice;
+    isExpanded: boolean;
+    onExpand: () => void;
+    onAddPaymentClick: (invoice: SalesInvoice) => void;
+}) => {
+    const getStatusVariant = (status: SalesInvoice['paymentStatus']) => {
+        switch (status) {
+            case 'Paid': return 'default';
+            case 'Partially Paid': return 'secondary';
+            case 'Overdue': return 'destructive';
+            default: return 'outline';
+        }
+    };
+    return (
+        <Card onClick={onExpand} className="cursor-pointer">
+            <CardContent className="p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <p className="font-semibold">{invoice.invoiceNumber}</p>
+                        <p className="text-sm text-muted-foreground">{format(invoice.invoiceDate, 'dd-MMM-yyyy')}</p>
+                    </div>
+                     <Badge variant={getStatusVariant(invoice.paymentStatus)}>{invoice.paymentStatus}</Badge>
+                </div>
+                <div className="flex justify-between items-baseline">
+                    <p className="text-sm text-muted-foreground">Amount Due</p>
+                    <p className="text-lg font-mono text-destructive">{formatCurrency(invoice.amountDue, invoice.currencyCode)}</p>
+                </div>
+                {isExpanded && (
+                    <div className="space-y-4 pt-4">
+                        <Separator />
+                        <h4 className="font-semibold text-sm">Invoice Items</h4>
+                        <div className="space-y-2">
+                             {invoice.items.map(item => (
+                                <div key={item.id} className="flex justify-between text-sm">
+                                    <p className="text-muted-foreground">{item.name} (x{item.quantity})</p>
+                                    <p className="font-mono">{formatCurrency(item.quantity * item.rate, invoice.currencyCode)}</p>
+                                </div>
+                            ))}
+                        </div>
+                        <Separator />
+                        <Button
+                            className="w-full"
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onAddPaymentClick(invoice);
+                            }}
+                            disabled={invoice.paymentStatus === 'Paid'}
+                        >
+                            <Plus className="mr-2 h-4 w-4" /> Add Payment
+                        </Button>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    )
+}
 
 // --- Invoice Tab Component ---
 const CustomerInvoiceView = ({ onAddPaymentClick }: { onAddPaymentClick: (invoice: SalesInvoice) => void }) => {
@@ -253,7 +362,8 @@ const CustomerInvoiceView = ({ onAddPaymentClick }: { onAddPaymentClick: (invoic
                     <CardDescription>A list of all invoices for this customer.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="rounded-md border">
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block rounded-md border">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -337,6 +447,20 @@ const CustomerInvoiceView = ({ onAddPaymentClick }: { onAddPaymentClick: (invoic
                                 )}
                             </TableBody>
                         </Table>
+                    </div>
+                     {/* Mobile Card View */}
+                    <div className="md:hidden space-y-4">
+                        {customerInvoices.length > 0 ? customerInvoices.map(invoice => (
+                            <MobileInvoiceCard 
+                                key={invoice.id} 
+                                invoice={invoice}
+                                isExpanded={expandedRows.has(invoice.id)}
+                                onExpand={() => toggleRowExpansion(invoice.id)}
+                                onAddPaymentClick={onAddPaymentClick}
+                            />
+                        )) : (
+                             <div className="text-center text-muted-foreground py-12">No invoices found.</div>
+                        )}
                     </div>
                 </CardContent>
             </Card>
