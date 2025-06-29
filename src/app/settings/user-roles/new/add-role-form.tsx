@@ -26,18 +26,26 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Save } from 'lucide-react';
 import Link from 'next/link';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-const permissionsList = [
-  { id: 'dashboard', label: 'Dashboard Access' },
-  { id: 'customer_management', label: 'Customer Management' },
-  { id: 'sales_invoices', label: 'Sales Invoices' },
-  { id: 'purchase_bills', label: 'Purchase Bills' },
-  { id: 'journal_entries', label: 'Journal Entries' },
-  { id: 'view_reports', label: 'View Reports' },
-  { id: 'export_data', label: 'Export Data' },
-  { id: 'user_management', label: 'User Management' },
-  { id: 'company_settings', label: 'Company Settings' },
-] as const;
+const permissionsByCategory = {
+  General: [
+    { id: 'dashboard', label: 'Dashboard Access' },
+    { id: 'view_reports', label: 'View Reports' },
+    { id: 'export_data', label: 'Export Data' },
+  ],
+  Transactions: [
+    { id: 'customer_management', label: 'Customer Management' },
+    { id: 'sales_invoices', label: 'Sales Invoices' },
+    { id: 'purchase_bills', label: 'Purchase Bills' },
+    { id: 'journal_entries', label: 'Journal Entries' },
+  ],
+  Administration: [
+    { id: 'user_management', label: 'User Management' },
+    { id: 'company_settings', label: 'Company Settings' },
+  ],
+};
+
 
 const addRoleFormSchema = z.object({
   roleName: z.string().min(1, 'Role name is required.'),
@@ -108,41 +116,54 @@ export function AddRoleForm() {
                       Select the permissions this role should have.
                     </FormDescription>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {permissionsList.map((permission) => (
-                      <FormField
-                        key={permission.id}
-                        control={form.control}
-                        name="permissions"
-                        render={({ field }) => {
-                          return (
-                            <FormItem
+                  <Tabs defaultValue="General" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                      {Object.keys(permissionsByCategory).map((category) => (
+                        <TabsTrigger key={category} value={category}>
+                          {category}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                    {Object.entries(permissionsByCategory).map(([category, permissions]) => (
+                      <TabsContent key={category} value={category}>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 border rounded-md mt-2">
+                          {permissions.map((permission) => (
+                            <FormField
                               key={permission.id}
-                              className="flex flex-row items-start space-x-3 space-y-0"
-                            >
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(permission.id)}
-                                  onCheckedChange={(checked) => {
-                                    return checked
-                                      ? field.onChange([...(field.value || []), permission.id])
-                                      : field.onChange(
-                                          field.value?.filter(
-                                            (value) => value !== permission.id
-                                          )
-                                        );
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                {permission.label}
-                              </FormLabel>
-                            </FormItem>
-                          );
-                        }}
-                      />
+                              control={form.control}
+                              name="permissions"
+                              render={({ field }) => {
+                                return (
+                                  <FormItem
+                                    key={permission.id}
+                                    className="flex flex-row items-start space-x-3 space-y-0"
+                                  >
+                                    <FormControl>
+                                      <Checkbox
+                                        checked={field.value?.includes(permission.id)}
+                                        onCheckedChange={(checked) => {
+                                          return checked
+                                            ? field.onChange([...(field.value || []), permission.id])
+                                            : field.onChange(
+                                                field.value?.filter(
+                                                  (value) => value !== permission.id
+                                                )
+                                              );
+                                        }}
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">
+                                      {permission.label}
+                                    </FormLabel>
+                                  </FormItem>
+                                );
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </TabsContent>
                     ))}
-                  </div>
+                  </Tabs>
                   <FormMessage />
                 </FormItem>
               )}
