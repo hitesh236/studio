@@ -17,6 +17,7 @@ import {
 import {
     BookOpen,
     Eye,
+    FileSpreadsheet,
     FileText,
     Globe,
     History,
@@ -226,6 +227,14 @@ export function AppSidebar() {
                 </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
+                <SidebarMenuButton tooltip="GST Reports" isActive={pathname.startsWith('/gst-reports')} asChild>
+                    <Link href="/gst-reports" onClick={handleLinkClick}>
+                        <FileSpreadsheet />
+                        GST Reports
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
               <SidebarMenuButton tooltip="Invoice Overviews">
                 <BookOpen />
                 Invoice Overviews
@@ -235,11 +244,10 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-         <SidebarGroup>
-          <SidebarGroupLabel>Settings</SidebarGroupLabel>
+        <SidebarGroup>
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Company Settings" isActive={pathname === '/settings'} asChild>
+                    <SidebarMenuButton tooltip="Company Settings" isActive={pathname.startsWith('/settings')} asChild>
                         <Link href="/settings" onClick={handleLinkClick}>
                             <Settings />
                             Company Settings

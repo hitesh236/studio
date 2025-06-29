@@ -25,6 +25,7 @@ const pathToTitle: { [key: string]: string } = {
   '/settings/user-roles/new': 'Add New Role',
   '/table': 'Table',
   '/gst-summary': 'GST Summary',
+  '/gst-reports': 'GST Reports',
 };
 
 export function Header() {
