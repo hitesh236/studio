@@ -26,6 +26,7 @@ import {
     Receipt,
     Redo2,
     Scale,
+    Send,
     Settings,
     Shield,
     Store,
@@ -242,6 +243,21 @@ export function AppSidebar() {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>GST Filing</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton tooltip="GSTR-1 Filing" isActive={pathname.startsWith('/gst-filing/gstr1')} asChild>
+                    <Link href="/gst-filing/gstr1" onClick={handleLinkClick}>
+                        <Send />
+                        GSTR-1 Filing
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+
       </SidebarContent>
       <SidebarFooter>
         <SidebarGroup>
