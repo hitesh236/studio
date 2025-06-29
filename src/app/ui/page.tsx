@@ -1,0 +1,230 @@
+
+'use client';
+
+import * as React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { format } from 'date-fns';
+import {
+  Mail,
+  PlusCircle,
+  Save,
+  Check,
+  ChevronsUpDown,
+  Calendar as CalendarIcon,
+  Loader2,
+} from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+
+const FormSchema = z.object({
+  textInput: z.string().min(1, 'This field is required.'),
+  emailInput: z.string().email(),
+  datePicker: z.date(),
+  select: z.string().min(1, 'Please make a selection.'),
+  combobox: z.string().min(1, 'Please select a language.'),
+  checkbox: z.boolean(),
+  radioGroup: z.enum(['option-one', 'option-two']),
+  switch: z.boolean(),
+  slider: z.array(z.number()).min(1),
+  textarea: z.string().min(10, 'Please enter at least 10 characters.'),
+});
+
+type FormValues = z.infer<typeof FormSchema>;
+
+const languages = [
+    { label: "English", value: "en" },
+    { label: "French", value: "fr" },
+    { label: "German", value: "de" },
+    { label: "Spanish", value: "es" },
+    { label: "Portuguese", value: "pt" },
+    { label: "Russian", value: "ru" },
+    { label: "Japanese", value: "ja" },
+    { label: "Korean", value: "ko" },
+    { label: "Chinese", value: "zh" },
+] as const
+
+export default function UiPage() {
+    const { toast } = useToast();
+
+    const form = useForm<FormValues>({
+        resolver: zodResolver(FormSchema),
+        defaultValues: {
+            textInput: '',
+            emailInput: '',
+            datePicker: new Date(),
+            select: '',
+            combobox: '',
+            checkbox: false,
+            radioGroup: 'option-one',
+            switch: false,
+            slider: [50],
+            textarea: '',
+        },
+    });
+
+    function onSubmit(data: FormValues) {
+        toast({
+            title: "Form Submitted!",
+            description: (
+                <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                    <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+                </pre>
+            ),
+        });
+    }
+
+    return (
+        <div className="p-4 sm:p-6 lg:p-8 space-y-8">
+            {/* Buttons Showcase */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Buttons</CardTitle>
+                    <CardDescription>A showcase of all button variants and sizes.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    {(['default', 'destructive', 'outline', 'secondary', 'ghost', 'link'] as const).map(variant => (
+                        <div key={variant} className="flex items-center gap-4">
+                            <span className="w-24 text-sm font-medium capitalize text-muted-foreground">{variant}</span>
+                            <Button variant={variant} size="lg">Large Button</Button>
+                            <Button variant={variant}>Default Button</Button>
+                            <Button variant={variant} size="sm">Small Button</Button>
+                            <Button variant={variant} size="icon"><Mail /></Button>
+                            <Button variant={variant} disabled><Loader2 className="animate-spin mr-2" /> Disabled</Button>
+                        </div>
+                    ))}
+                </CardContent>
+            </Card>
+
+            {/* Badges Showcase */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Badges</CardTitle>
+                    <CardDescription>A showcase of all badge variants.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex items-center gap-4">
+                    <Badge variant="default">Default</Badge>
+                    <Badge variant="secondary">Secondary</Badge>
+                    <Badge variant="outline">Outline</Badge>
+                    <Badge variant="destructive">Destructive</Badge>
+                </CardContent>
+            </Card>
+
+            {/* Form Showcase */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Form Elements</CardTitle>
+                    <CardDescription>A comprehensive form showcasing various input types.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <FormField control={form.control} name="textInput" render={({ field }) => (
+                                    <FormItem><FormLabel>Text Input</FormLabel><FormControl><Input placeholder="Your name" {...field} /></FormControl><FormMessage /></FormItem>
+                                )}/>
+                                <FormField control={form.control} name="emailInput" render={({ field }) => (
+                                    <FormItem><FormLabel>Email Input</FormLabel><FormControl><Input type="email" placeholder="your.email@example.com" {...field} /></FormControl><FormMessage /></FormItem>
+                                )}/>
+                                <FormField control={form.control} name="datePicker" render={({ field }) => (
+                                    <FormItem className="flex flex-col"><FormLabel>Date Picker</FormLabel><Popover><PopoverTrigger asChild><FormControl>
+                                        <Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                        </Button>
+                                    </FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus /></PopoverContent></Popover><FormMessage /></FormItem>
+                                )}/>
+                                <FormField control={form.control} name="select" render={({ field }) => (
+                                    <FormItem><FormLabel>Select</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select a fruit" /></SelectTrigger></FormControl><SelectContent>
+                                        <SelectItem value="apple">Apple</SelectItem><SelectItem value="banana">Banana</SelectItem><SelectItem value="blueberry">Blueberry</SelectItem>
+                                    </SelectContent></Select><FormMessage /></FormItem>
+                                )}/>
+                                <FormField control={form.control} name="combobox" render={({ field }) => (
+                                    <FormItem className="flex flex-col"><FormLabel>Combobox</FormLabel><Popover><PopoverTrigger asChild>
+                                        <FormControl><Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
+                                            {field.value ? languages.find((lang) => lang.value === field.value)?.label : "Select language"}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button></FormControl>
+                                    </PopoverTrigger><PopoverContent className="w-full p-0"><Command><CommandInput placeholder="Search language..." /><CommandEmpty>No language found.</CommandEmpty><CommandList><CommandGroup>
+                                        {languages.map((lang) => (
+                                            <CommandItem value={lang.label} key={lang.value} onSelect={() => form.setValue("combobox", lang.value)}>
+                                                <Check className={cn("mr-2 h-4 w-4", lang.value === field.value ? "opacity-100" : "opacity-0")}/>
+                                                {lang.label}
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup></CommandList></Command></PopoverContent></Popover><FormMessage /></FormItem>
+                                )}/>
+                                <FormField control={form.control} name="textarea" render={({ field }) => (
+                                    <FormItem><FormLabel>Textarea</FormLabel><FormControl><Textarea placeholder="Tell us a little bit about yourself" {...field} /></FormControl><FormMessage /></FormItem>
+                                )}/>
+                                <FormField control={form.control} name="checkbox" render={({ field }) => (
+                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl>
+                                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                                    </FormControl><div className="space-y-1 leading-none"><FormLabel>I agree to the terms and conditions</FormLabel></div></FormItem>
+                                )}/>
+                                <FormField control={form.control} name="radioGroup" render={({ field }) => (
+                                    <FormItem className="space-y-3"><FormLabel>Radio Group</FormLabel><FormControl>
+                                        <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex flex-col space-y-1">
+                                            <FormItem className="flex items-center space-x-3 space-y-0"><FormControl><RadioGroupItem value="option-one" /></FormControl><FormLabel className="font-normal">Option One</FormLabel></FormItem>
+                                            <FormItem className="flex items-center space-x-3 space-y-0"><FormControl><RadioGroupItem value="option-two" /></FormControl><FormLabel className="font-normal">Option Two</FormLabel></FormItem>
+                                        </RadioGroup>
+                                    </FormControl><FormMessage /></FormItem>
+                                )}/>
+                                 <FormField control={form.control} name="switch" render={({ field }) => (
+                                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4"><div className="space-y-0.5">
+                                        <FormLabel className="text-base">Marketing emails</FormLabel>
+                                        <FormDescription>Receive emails about new products, features, and more.</FormDescription>
+                                    </div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>
+                                )}/>
+                                <FormField control={form.control} name="slider" render={({ field }) => (
+                                    <FormItem><FormLabel>Slider</FormLabel><FormControl><Slider defaultValue={[50]} max={100} step={1} onValueChange={field.onChange} /></FormControl><FormMessage /></FormItem>
+                                )}/>
+                            </div>
+                            <div className="flex justify-end">
+                                <Button type="submit"><Save className="mr-2 h-4 w-4"/> Submit Form</Button>
+                            </div>
+                        </form>
+                    </Form>
+                </CardContent>
+            </Card>
+        </div>
+    );
+}

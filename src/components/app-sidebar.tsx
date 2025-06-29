@@ -22,6 +22,7 @@ import {
     Globe,
     History,
     LayoutDashboard,
+    Palette,
     Percent,
     Receipt,
     Redo2,
@@ -107,6 +108,14 @@ export function AppSidebar() {
                     <Link href="/customer-portfolio" onClick={handleLinkClick}>
                         <UserCircle />
                         Customer Portfolio
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton tooltip="UI Components" isActive={pathname.startsWith('/ui')} asChild>
+                    <Link href="/ui" onClick={handleLinkClick}>
+                        <Palette />
+                        UI
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>

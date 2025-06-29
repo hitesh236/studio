@@ -27,6 +27,7 @@ const pathToTitle: { [key: string]: string } = {
   '/gst-summary': 'GST Summary',
   '/gst-reports': 'GST Reports',
   '/gst-filing/gstr1': 'GSTR-1 B2B Filing',
+  '/ui': 'UI Components',
 };
 
 export function Header() {
