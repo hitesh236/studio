@@ -87,8 +87,8 @@ export function GstSummaryTable({ data }: GstSummaryTableProps) {
             <CardHeader>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
-                        <CardTitle>Generated Report</CardTitle>
-                        <CardDescription>A detailed view of the generated report data.</CardDescription>
+                        <CardTitle>GST Filing Summary</CardTitle>
+                        <CardDescription>A monthly overview of your GSTR-1 and GSTR-3B filings.</CardDescription>
                     </div>
                     <Button variant="outline"><Download className="mr-2 h-4 w-4" /> Export Report</Button>
                 </div>
@@ -99,31 +99,41 @@ export function GstSummaryTable({ data }: GstSummaryTableProps) {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Month</TableHead>
+                                <TableHead rowSpan={2} className="text-center align-middle">Month</TableHead>
+                                <TableHead colSpan={4} className="text-center border-b">GSTR-1</TableHead>
+                                <TableHead colSpan={5} className="text-center border-l">GSTR-3B</TableHead>
+                            </TableRow>
+                            <TableRow>
                                 <TableHead className="text-right">Taxable Value</TableHead>
-                                <TableHead className="text-right">CGST</TableHead>
-                                <TableHead className="text-right">SGST</TableHead>
-                                <TableHead className="text-right">IGST</TableHead>
                                 <TableHead className="text-right">Total Tax</TableHead>
+                                <TableHead className="text-center">Status</TableHead>
+                                <TableHead className="text-center border-r">Filing Date</TableHead>
+
+                                <TableHead className="text-right">Taxable Value</TableHead>
+                                <TableHead className="text-right">Total Tax</TableHead>
+                                <TableHead className="text-right">ITC</TableHead>
                                 <TableHead className="text-center">Status</TableHead>
                                 <TableHead className="text-center">Filing Date</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {data.map(summary => {
-                                // For simplicity, we'll use GSTR-1 data as the basis for the "single report"
-                                const reportData = summary.gstr1; 
-                                const totalTax = reportData.cgst + reportData.sgst + reportData.igst;
+                                const gstr1TotalTax = summary.gstr1.cgst + summary.gstr1.sgst + summary.gstr1.igst;
+                                const gstr3bTotalTax = summary.gstr3b.cgst + summary.gstr3b.sgst + summary.gstr3b.igst;
                                 return (
                                     <TableRow key={summary.id}>
-                                        <TableCell className="font-medium">{summary.month} {summary.year}</TableCell>
-                                        <TableCell className="text-right font-mono">{formatCurrency(reportData.taxableValue, 'INR')}</TableCell>
-                                        <TableCell className="text-right font-mono">{formatCurrency(reportData.cgst, 'INR')}</TableCell>
-                                        <TableCell className="text-right font-mono">{formatCurrency(reportData.sgst, 'INR')}</TableCell>
-                                        <TableCell className="text-right font-mono">{formatCurrency(reportData.igst, 'INR')}</TableCell>
-                                        <TableCell className="text-right font-mono font-bold">{formatCurrency(totalTax, 'INR')}</TableCell>
-                                        <TableCell className="text-center"><Badge variant={reportData.status === 'Filed' ? 'default' : 'destructive'}>{reportData.status}</Badge></TableCell>
-                                        <TableCell className="text-center">{format(reportData.filingDate, 'dd-MMM-yy')}</TableCell>
+                                        <TableCell className="font-medium text-center">{summary.month} {summary.year}</TableCell>
+                                        
+                                        <TableCell className="text-right font-mono">{formatCurrency(summary.gstr1.taxableValue, 'INR')}</TableCell>
+                                        <TableCell className="text-right font-mono">{formatCurrency(gstr1TotalTax, 'INR')}</TableCell>
+                                        <TableCell className="text-center"><Badge variant={summary.gstr1.status === 'Filed' ? 'default' : 'destructive'}>{summary.gstr1.status}</Badge></TableCell>
+                                        <TableCell className="text-center border-r">{format(summary.gstr1.filingDate, 'dd-MMM-yy')}</TableCell>
+
+                                        <TableCell className="text-right font-mono">{formatCurrency(summary.gstr3b.taxableValue, 'INR')}</TableCell>
+                                        <TableCell className="text-right font-mono">{formatCurrency(gstr3bTotalTax, 'INR')}</TableCell>
+                                        <TableCell className="text-right font-mono">{formatCurrency(summary.gstr3b.itc, 'INR')}</TableCell>
+                                        <TableCell className="text-center"><Badge variant={summary.gstr3b.status === 'Filed' ? 'default' : 'destructive'}>{summary.gstr3b.status}</Badge></TableCell>
+                                        <TableCell className="text-center">{format(summary.gstr3b.filingDate, 'dd-MMM-yy')}</TableCell>
                                     </TableRow>
                                 );
                             })}

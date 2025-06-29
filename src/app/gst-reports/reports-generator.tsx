@@ -4,7 +4,7 @@
 import * as React from 'react';
 import type { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, FileSpreadsheet, Download } from 'lucide-react';
+import { Calendar as CalendarIcon, FileSpreadsheet, Download, AlertTriangle } from 'lucide-react';
 
 import {
   Card,
@@ -21,14 +21,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { GstSummaryTable } from '../gst-summary/gst-summary-table';
-import { gstSummaryData } from '../gst-summary/data';
+import { generateGstr1Data, generateGstr3bData, type Gstr1Data, type Gstr3bData } from '../gst-summary/data';
+import { Gstr1Table } from './gstr1-table';
+import { Gstr3bTable } from './gstr3b-table';
 import { Separator } from '@/components/ui/separator';
 
 const gstReports = [
@@ -49,6 +51,7 @@ export function ReportsGenerator() {
   const [period, setPeriod] = React.useState<string>('monthly');
   const [date, setDate] = React.useState<DateRange | undefined>();
   const [showReport, setShowReport] = React.useState(false);
+  const [reportData, setReportData] = React.useState<Gstr1Data | Gstr3bData | null>(null);
   const [reportTitle, setReportTitle] = React.useState('');
 
   const handleGenerateReport = () => {
@@ -60,15 +63,61 @@ export function ReportsGenerator() {
         });
         return;
     }
-    const reportLabel = gstReports.find(r => r.value === selectedReport)?.label;
-    setReportTitle(`${reportLabel} Report`);
+    const reportInfo = gstReports.find(r => r.value === selectedReport);
+    if (!reportInfo) return;
+
+    setReportTitle(`${reportInfo.label} Report`);
+    
+    let generatedData;
+    switch(selectedReport) {
+        case 'gstr-1':
+            generatedData = generateGstr1Data();
+            break;
+        case 'gstr-3b':
+            generatedData = generateGstr3bData();
+            break;
+        default:
+            generatedData = null;
+    }
+    setReportData(generatedData);
 
     toast({
         title: 'Report Generation Started',
-        description: `Generating ${reportLabel} for the period ${format(date.from, 'LLL dd, y')} to ${format(date.to, 'LLL dd, y')}.`,
+        description: `Generating ${reportInfo.label} for the period ${format(date.from, 'LLL dd, y')} to ${format(date.to, 'LLL dd, y')}.`,
     });
     setShowReport(true);
   };
+  
+  const renderReportTable = () => {
+      if (!reportData) {
+        const reportInfo = gstReports.find(r => r.value === selectedReport);
+          return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>{reportInfo?.label} Report</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>Not Implemented</AlertTitle>
+                        <AlertDescription>
+                            The view for the {reportInfo?.label} report has not been implemented yet.
+                        </AlertDescription>
+                    </Alert>
+                </CardContent>
+            </Card>
+          );
+      }
+
+      switch(selectedReport) {
+          case 'gstr-1':
+              return <Gstr1Table data={reportData as Gstr1Data} />;
+          case 'gstr-3b':
+              return <Gstr3bTable data={reportData as Gstr3bData} />;
+          default:
+              return null;
+      }
+  }
 
   return (
     <div className="space-y-8">
@@ -170,7 +219,7 @@ export function ReportsGenerator() {
           <Separator />
           <div className="mt-8">
             <h2 className="text-2xl font-bold mb-4">{reportTitle}</h2>
-            <GstSummaryTable data={gstSummaryData} />
+            {renderReportTable()}
           </div>
         </>
       )}
