@@ -1,12 +1,14 @@
+
 "use client";
 
 import type { Person } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronDown, ChevronRight, Star, Eye, Edit, Trash2, ArrowUp, ArrowDown } from "lucide-react";
+import { ChevronDown, ChevronRight, Star, Eye, Edit, Trash2, ArrowUp, ArrowDown, ExternalLink } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 type ColumnProps = {
   expandedRows: Set<string>;
@@ -81,9 +83,17 @@ export const columns = ({
       accessor: "name",
       header: getSortableHeader("User", "name"),
       cell: (row: Person) => (
-        <div className={cn(density === 'compact' && 'py-1 px-2 text-sm')}>
-          <div className="font-medium whitespace-nowrap">{`${row.firstName} ${row.lastName}`}</div>
-          <div className="text-xs text-muted-foreground whitespace-nowrap">{row.email}</div>
+        <div className={cn("flex items-center gap-2", density === 'compact' && 'py-1 px-2 text-sm')}>
+          <div>
+            <div className="font-medium whitespace-nowrap">{`${row.firstName} ${row.lastName}`}</div>
+            <div className="text-xs text-muted-foreground whitespace-nowrap">{row.email}</div>
+          </div>
+          <Button asChild variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
+            <Link href={`/customer-portfolio?id=${row.id}`}>
+                <ExternalLink className="h-4 w-4" />
+                <span className="sr-only">View Customer Portfolio</span>
+            </Link>
+          </Button>
         </div>
       ),
     },

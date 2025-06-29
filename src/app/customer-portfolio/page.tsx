@@ -2,6 +2,8 @@
 'use client';
 
 import * as React from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import {
   UserCircle, Mail, Phone, MapPin, ChevronDown, ChevronRight, Plus, CreditCard, FileText, FileWarning, TrendingUp, CircleDollarSign, Scale, Download, Calendar as CalendarIcon, MoreHorizontal
 } from 'lucide-react';
@@ -34,13 +36,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
-
-// --- Data Generation ---
-const customer: Person = { ...generateData(1)[0], company: "Solutions Corp." };
-const allInvoices = generateSalesInvoices(50);
-const customerInvoices = allInvoices.filter(inv => inv.customerName === customer.company);
-const customerLedgerData = generateCustomerLedger(25);
-
+import Loading from '../loading';
 
 // --- Reusable Dialog Component ---
 const AddPaymentDialog = ({ invoice, onPaymentAdd }: { invoice: SalesInvoice | null, onPaymentAdd: () => void }) => {
@@ -135,7 +131,7 @@ const MobileLedgerCard = ({ entry }: { entry: { id: string; date: Date; descript
 };
 
 // --- Ledger Tab Component ---
-const CustomerLedgerView = () => {
+const CustomerLedgerView = ({ customerLedgerData }: { customerLedgerData: CustomerLedgerEntry[] }) => {
     const [filter, setFilter] = React.useState('');
     const [date, setDate] = React.useState<DateRange | undefined>({ from: undefined, to: undefined });
 
@@ -147,7 +143,7 @@ const CustomerLedgerView = () => {
                 (!date?.to || new Date(entry.date.setHours(23, 59, 59, 999)) >= date.to);
             return matchesFilter && matchesDate;
         });
-    }, [filter, date]);
+    }, [filter, date, customerLedgerData]);
     
     const processedLedgerData = React.useMemo(() => {
         let runningBalance = 0;
@@ -320,7 +316,7 @@ const MobileInvoiceCard = ({ invoice, isExpanded, onExpand, onAddPaymentClick }:
 }
 
 // --- Invoice Tab Component ---
-const CustomerInvoiceView = ({ onAddPaymentClick }: { onAddPaymentClick: (invoice: SalesInvoice) => void }) => {
+const CustomerInvoiceView = ({ customerInvoices, onAddPaymentClick }: { customerInvoices: SalesInvoice[], onAddPaymentClick: (invoice: SalesInvoice) => void }) => {
     const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set());
 
     const toggleRowExpansion = (id: string) => {
@@ -337,7 +333,7 @@ const CustomerInvoiceView = ({ onAddPaymentClick }: { onAddPaymentClick: (invoic
         const totalPaid = customerInvoices.reduce((acc, inv) => acc + inv.amountPaid, 0);
         const totalDue = totalBilled - totalPaid;
         return { totalBilled, totalPaid, totalDue };
-    }, []);
+    }, [customerInvoices]);
 
     const getStatusVariant = (status: SalesInvoice['paymentStatus']) => {
         switch (status) {
@@ -468,8 +464,24 @@ const CustomerInvoiceView = ({ onAddPaymentClick }: { onAddPaymentClick: (invoic
     );
 }
 
-// --- Main Page Component ---
-export default function CustomerPortfolioPage() {
+// --- Content Component ---
+const CustomerPortfolioContent = () => {
+    const searchParams = useSearchParams();
+    const customerId = searchParams.get('id');
+
+    const allCustomers = React.useMemo(() => generateData(50), []);
+    const allInvoices = React.useMemo(() => generateSalesInvoices(50), []);
+    const allLedgerData = React.useMemo(() => generateCustomerLedger(25), []);
+
+    const customer = React.useMemo(() => {
+        if (customerId) {
+            return allCustomers.find(c => c.id === customerId) || allCustomers[0];
+        }
+        return allCustomers[0];
+    }, [customerId, allCustomers]);
+    
+    const customerInvoices = React.useMemo(() => allInvoices.filter(inv => inv.customerName === customer.company), [allInvoices, customer.company]);
+
     const [paymentInvoice, setPaymentInvoice] = React.useState<SalesInvoice | null>(null);
 
     return (
@@ -508,14 +520,24 @@ export default function CustomerPortfolioPage() {
                     <TabsTrigger value="invoice">Invoices</TabsTrigger>
                 </TabsList>
                 <TabsContent value="ledger">
-                    <CustomerLedgerView />
+                    <CustomerLedgerView customerLedgerData={allLedgerData} />
                 </TabsContent>
                 <TabsContent value="invoice">
-                    <CustomerInvoiceView onAddPaymentClick={setPaymentInvoice} />
+                    <CustomerInvoiceView customerInvoices={customerInvoices} onAddPaymentClick={setPaymentInvoice} />
                 </TabsContent>
             </Tabs>
             
             <AddPaymentDialog invoice={paymentInvoice} onPaymentAdd={() => setPaymentInvoice(null)} />
         </div>
+    );
+}
+
+
+// --- Main Page Component ---
+export default function CustomerPortfolioPage() {
+    return (
+        <Suspense fallback={<Loading />}>
+            <CustomerPortfolioContent />
+        </Suspense>
     );
 }
