@@ -18,10 +18,41 @@ import { Button } from '@/components/ui/button';
 import { Download, FileText, CheckCircle, Landmark, FileWarning } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { SummaryCard } from '@/app/sales-invoices/summary-card';
+import { Separator } from '@/components/ui/separator';
 
 interface GstSummaryTableProps {
   data: GstSummary[];
 }
+
+const MobileGstSummaryCard = ({ summary }: { summary: GstSummary }) => {
+    const reportData = summary.gstr1;
+    const totalTax = reportData.cgst + reportData.sgst + reportData.igst;
+
+    return (
+        <Card>
+            <CardHeader className="p-4 flex flex-row items-start justify-between">
+                <div>
+                    <CardTitle className="text-base">{summary.month} {summary.year}</CardTitle>
+                    <CardDescription>Filing Date: {format(reportData.filingDate, 'dd-MMM-yy')}</CardDescription>
+                </div>
+                <Badge variant={reportData.status === 'Filed' ? 'default' : 'destructive'}>{reportData.status}</Badge>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+                <Separator className="mb-4" />
+                <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">Taxable Value</span>
+                        <span className="font-mono">{formatCurrency(reportData.taxableValue, 'INR')}</span>
+                    </div>
+                     <div className="flex justify-between">
+                        <span className="text-muted-foreground">Total Tax</span>
+                        <span className="font-mono font-semibold">{formatCurrency(totalTax, 'INR')}</span>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
 
 export function GstSummaryTable({ data }: GstSummaryTableProps) {
     
@@ -63,7 +94,8 @@ export function GstSummaryTable({ data }: GstSummaryTableProps) {
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="rounded-md border">
+                {/* Desktop Table View */}
+                <div className="hidden md:block rounded-md border">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -97,6 +129,14 @@ export function GstSummaryTable({ data }: GstSummaryTableProps) {
                             })}
                         </TableBody>
                     </Table>
+                </div>
+                {/* Mobile Card View */}
+                 <div className="md:hidden space-y-4">
+                    {data.length > 0 ? data.map(summary => (
+                        <MobileGstSummaryCard key={summary.id} summary={summary} />
+                    )) : (
+                        <div className="text-center text-muted-foreground py-12">No data found.</div>
+                    )}
                 </div>
             </CardContent>
         </Card>
