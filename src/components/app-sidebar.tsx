@@ -218,10 +218,12 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <SidebarMenuButton tooltip="GST Summary">
-                <Percent />
-                GST Summary
-              </SidebarMenuButton>
+                <SidebarMenuButton tooltip="GST Summary" isActive={pathname.startsWith('/gst-summary')} asChild>
+                    <Link href="/gst-summary" onClick={handleLinkClick}>
+                        <Percent />
+                        GST Summary
+                    </Link>
+                </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
               <SidebarMenuButton tooltip="Invoice Overviews">
