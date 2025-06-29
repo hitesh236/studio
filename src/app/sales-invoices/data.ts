@@ -1,3 +1,11 @@
+
+export type SalesInvoiceItem = {
+  id: number;
+  name: string;
+  quantity: number;
+  rate: number;
+};
+
 export type SalesInvoice = {
   id: string;
   invoiceNumber: string;
@@ -16,6 +24,7 @@ export type SalesInvoice = {
   amountPaid: number;
   amountDue: number;
   createdBy: string;
+  items: SalesInvoiceItem[];
 };
 
 const customerNames = ["Innovate Inc.", "Solutions Corp.", "Quantum Tech", "Synergy LLC", "Apex Industries", "Starlight Co."];
@@ -23,6 +32,7 @@ const gstTypes = ['CGST&SGST', 'IGST', 'UTGST', 'N/A'] as const;
 const currencyCodes = ['USD', 'INR', 'EUR'] as const;
 const createdByUsers = ['Admin', 'John Doe', 'Jane Smith', 'Peter Jones'];
 const placesOfSupply = ['Maharashtra', 'Delhi', 'Karnataka', 'Tamil Nadu', 'Uttar Pradesh', 'Gujarat'];
+const itemNames = ['Cloud Hosting', 'Domain Registration', 'SSL Certificate', 'Consulting Hours', 'Support Retainer'];
 
 const getRandomElement = <T>(arr: T[] | readonly T[]): T => arr[Math.floor(Math.random() * arr.length)];
 const getRandomDate = (start: Date, end: Date) => new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
@@ -32,7 +42,6 @@ export function generateSalesInvoices(count: number): SalesInvoice[] {
   const now = new Date();
 
   for (let i = 0; i < count; i++) {
-    const amountForeign = Math.floor(Math.random() * 4901) + 100;
     const currencyCode = getRandomElement(currencyCodes);
     
     let exchangeRate: number;
@@ -47,6 +56,22 @@ export function generateSalesInvoices(count: number): SalesInvoice[] {
         default:
             exchangeRate = 1;
             break;
+    }
+
+    // Generate items for the invoice
+    const items: SalesInvoiceItem[] = [];
+    const itemCount = Math.floor(Math.random() * 3) + 1; // 1 to 3 items
+    let amountForeign = 0;
+    for (let j = 0; j < itemCount; j++) {
+        const quantity = Math.floor(Math.random() * 5) + 1;
+        const rate = (Math.floor(Math.random() * 20) + 1) * 50; // Multiple of 50
+        items.push({
+            id: j + 1,
+            name: getRandomElement(itemNames),
+            quantity,
+            rate,
+        });
+        amountForeign += quantity * rate;
     }
 
     const amountBase = amountForeign * exchangeRate;
@@ -92,14 +117,15 @@ export function generateSalesInvoices(count: number): SalesInvoice[] {
       exchangeRate,
       amountForeign: amountForeign,
       amountBase: amountBase,
-      totalTaxableValue: amountBase * 0.9,
-      totalGstAmount: amountBase * 0.1,
+      totalTaxableValue: amountBase * 0.9, // simplified
+      totalGstAmount: amountBase * 0.1, // simplified
       gstType: getRandomElement(gstTypes),
       placeOfSupply: getRandomElement(placesOfSupply),
       paymentStatus: paymentStatus,
       amountPaid: amountPaid,
       amountDue: amountDue,
       createdBy: getRandomElement(createdByUsers),
+      items: items,
     };
     invoices.push(invoice);
   }
