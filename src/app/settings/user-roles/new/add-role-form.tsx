@@ -118,7 +118,7 @@ export function AddRoleForm() {
                     </FormDescription>
                   </div>
                   <Tabs defaultValue={Object.keys(permissionsByCategory)[0]} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
+                    <TabsList className="h-auto w-full flex-wrap justify-start gap-1">
                       {Object.keys(permissionsByCategory).map((category) => (
                         <TabsTrigger
                           key={category}
