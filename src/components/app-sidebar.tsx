@@ -26,6 +26,7 @@ import {
     Redo2,
     Scale,
     Settings,
+    Shield,
     Store,
     TrendingUp,
     Undo2,
@@ -232,16 +233,27 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <SidebarMenu>
-            <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Settings" isActive={pathname.startsWith('/settings')} asChild>
-                    <Link href="/settings" onClick={handleLinkClick}>
-                        <Settings />
-                        Settings
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-        </SidebarMenu>
+         <SidebarGroup>
+          <SidebarGroupLabel>Settings</SidebarGroupLabel>
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton tooltip="Company Settings" isActive={pathname === '/settings'} asChild>
+                        <Link href="/settings" onClick={handleLinkClick}>
+                            <Settings />
+                            Company Settings
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton tooltip="User Roles" isActive={pathname.startsWith('/settings/user-roles')} asChild>
+                        <Link href="/settings/user-roles" onClick={handleLinkClick}>
+                            <Shield />
+                            User Roles
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </SidebarGroup>
         <SidebarSeparator />
         <div className="flex items-center gap-2 p-2">
             <Avatar className="h-8 w-8">

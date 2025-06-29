@@ -21,6 +21,7 @@ const pathToTitle: { [key: string]: string } = {
   '/sales-invoices': 'Sales Invoices',
   '/sales-invoices/new': 'Create Invoice',
   '/settings': 'Settings',
+  '/settings/user-roles': 'User Roles & Permissions',
   '/table': 'Table',
 };
 
