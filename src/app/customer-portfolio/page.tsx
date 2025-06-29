@@ -503,8 +503,8 @@ const CustomerPortfolioContent = () => {
                 <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 text-sm">
                     <div className="flex items-start gap-3">
-                    <Mail className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
-                    <p className="text-muted-foreground">{customer.email}</p>
+                    <FileText className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                    <p className="text-muted-foreground">GSTIN: {customer.gstin}</p>
                     </div>
                     <div className="flex items-start gap-3">
                     <Phone className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
