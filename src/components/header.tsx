@@ -1,4 +1,3 @@
-
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -22,6 +21,7 @@ const pathToTitle: { [key: string]: string } = {
   '/sales-invoices/new': 'Create Invoice',
   '/settings': 'Settings',
   '/settings/user-roles': 'User Roles & Permissions',
+  '/settings/user-roles/new': 'Add New Role',
   '/table': 'Table',
 };
 

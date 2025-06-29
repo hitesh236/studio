@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -19,6 +18,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Check, X, PlusCircle, Edit, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 
 type Role = 'Admin' | 'Accountant' | 'Auditor';
 
@@ -83,8 +83,10 @@ export default function UserRolesPage() {
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">User Roles & Permissions</h1>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" /> Add New Role
+        <Button asChild>
+          <Link href="/settings/user-roles/new">
+            <PlusCircle className="mr-2 h-4 w-4" /> Add New Role
+          </Link>
         </Button>
       </div>
       <Card>
