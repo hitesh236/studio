@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -29,17 +30,17 @@ import Link from 'next/link';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const permissionsByCategory = {
-  General: [
-    { id: 'dashboard', label: 'Dashboard Access' },
+  Dashboard: [{ id: 'dashboard', label: 'Dashboard Access' }],
+  Reporting: [
     { id: 'view_reports', label: 'View Reports' },
     { id: 'export_data', label: 'Export Data' },
   ],
-  Transactions: [
+  Sales: [
     { id: 'customer_management', label: 'Customer Management' },
     { id: 'sales_invoices', label: 'Sales Invoices' },
-    { id: 'purchase_bills', label: 'Purchase Bills' },
-    { id: 'journal_entries', label: 'Journal Entries' },
   ],
+  Purchases: [{ id: 'purchase_bills', label: 'Purchase Bills' }],
+  Accounting: [{ id: 'journal_entries', label: 'Journal Entries' }],
   Administration: [
     { id: 'user_management', label: 'User Management' },
     { id: 'company_settings', label: 'Company Settings' },
@@ -116,10 +117,14 @@ export function AddRoleForm() {
                       Select the permissions this role should have.
                     </FormDescription>
                   </div>
-                  <Tabs defaultValue="General" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
+                  <Tabs defaultValue={Object.keys(permissionsByCategory)[0]} className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
                       {Object.keys(permissionsByCategory).map((category) => (
-                        <TabsTrigger key={category} value={category}>
+                        <TabsTrigger
+                          key={category}
+                          value={category}
+                          className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                        >
                           {category}
                         </TabsTrigger>
                       ))}
