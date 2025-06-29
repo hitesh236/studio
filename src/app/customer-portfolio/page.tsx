@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import {
-  Mail, Phone, MapPin, ChevronDown, ChevronRight, Plus, CreditCard, FileText, FileWarning, TrendingUp, CircleDollarSign, Scale, Download, Calendar as CalendarIcon, MoreHorizontal
+  Mail, Phone, MapPin, ChevronDown, ChevronUp, ChevronRight, Plus, CreditCard, FileText, FileWarning, TrendingUp, CircleDollarSign, Scale, Download, Calendar as CalendarIcon, MoreHorizontal
 } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 
@@ -469,6 +469,7 @@ const CustomerInvoiceView = ({ customerInvoices, onAddPaymentClick }: { customer
 const CustomerPortfolioContent = () => {
     const searchParams = useSearchParams();
     const customerId = searchParams.get('id');
+    const [isDetailsExpanded, setIsDetailsExpanded] = React.useState(false);
 
     const allCustomers = React.useMemo(() => generateData(50), []);
     const allInvoices = React.useMemo(() => generateSalesInvoices(50), []);
@@ -489,32 +490,53 @@ const CustomerPortfolioContent = () => {
         <div className="p-4 sm:p-6 lg:p-8 space-y-6">
             <Card>
                 <CardHeader>
-                <div className="flex items-center gap-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage src="https://placehold.co/64x64.png" alt={`${customer.firstName} ${customer.lastName}`} data-ai-hint="person avatar" />
-                      <AvatarFallback>{customer.firstName.charAt(0)}{customer.lastName.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                    <CardTitle className="text-2xl">{`${customer.firstName} ${customer.lastName}`}</CardTitle>
-                    <CardDescription>{customer.company}</CardDescription>
+                    <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-4">
+                            <Avatar className="h-16 w-16">
+                            <AvatarImage src="https://placehold.co/64x64.png" alt={`${customer.firstName} ${customer.lastName}`} data-ai-hint="person avatar" />
+                            <AvatarFallback>{customer.firstName.charAt(0)}{customer.lastName.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                            <CardTitle className="text-2xl">{`${customer.firstName} ${customer.lastName}`}</CardTitle>
+                            <CardDescription>{customer.company}</CardDescription>
+                            </div>
+                        </div>
+                        <Button variant="ghost" size="icon" onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}>
+                            {isDetailsExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                            <span className="sr-only">{isDetailsExpanded ? 'Collapse' : 'Expand'} details</span>
+                        </Button>
                     </div>
-                </div>
                 </CardHeader>
                 <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 text-sm">
-                    <div className="flex items-start gap-3">
-                    <FileText className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
-                    <p className="text-muted-foreground">GSTIN: {customer.gstin}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 text-sm">
+                        <div className="flex items-start gap-3">
+                        <FileText className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                        <p className="text-muted-foreground">GSTIN: {customer.gstin}</p>
+                        </div>
+                        <div className="flex items-start gap-3">
+                        <Phone className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                        <p className="text-muted-foreground">{customer.phone}</p>
+                        </div>
+                        <div className="flex items-start gap-3">
+                        <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                        <p className="text-muted-foreground">{customer.address.city}, {customer.address.state}</p>
+                        </div>
                     </div>
-                    <div className="flex items-start gap-3">
-                    <Phone className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
-                    <p className="text-muted-foreground">{customer.phone}</p>
-                    </div>
-                    <div className="flex items-start gap-3">
-                    <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
-                    <p className="text-muted-foreground">{customer.address.city}, {customer.address.state}</p>
-                    </div>
-                </div>
+                    {isDetailsExpanded && (
+                        <>
+                            <Separator className="my-4" />
+                            <div className="space-y-4 text-sm">
+                                <div>
+                                    <h4 className="font-semibold mb-1">Full Address</h4>
+                                    <p className="text-muted-foreground">{`${customer.address.street}, ${customer.address.city}, ${customer.address.state} - ${customer.address.zip}`}</p>
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold mb-1">Bio</h4>
+                                    <p className="text-muted-foreground italic">{customer.bio}</p>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </CardContent>
             </Card>
 
