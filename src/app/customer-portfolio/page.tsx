@@ -503,7 +503,7 @@ export default function CustomerPortfolioPage() {
             </Card>
 
             <Tabs defaultValue="ledger" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList>
                     <TabsTrigger value="ledger">Ledger</TabsTrigger>
                     <TabsTrigger value="invoice">Invoices</TabsTrigger>
                 </TabsList>
