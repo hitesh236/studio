@@ -59,6 +59,15 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
@@ -69,6 +78,7 @@ const FormSchema = z.object({
   datePicker: z.date(),
   select: z.string().min(1, 'Please make a selection.'),
   combobox: z.string().min(1, 'Please select a language.'),
+  itemSelect: z.string().min(1, 'Please select an item.'),
   checkbox: z.boolean(),
   radioGroup: z.enum(['option-one', 'option-two']),
   switch: z.boolean(),
@@ -171,7 +181,7 @@ const WizardForm = () => {
             <Label>Profile Color</Label>
             <RadioGroup value={formData.color} onValueChange={handleRadioChange} className="grid grid-cols-3 gap-4">
                 {(['Blue', 'Green', 'Red'] as const).map(color => (
-                    <div>
+                    <div key={color}>
                         <RadioGroupItem value={color.toLowerCase()} id={color.toLowerCase()} className="peer sr-only" />
                         <Label htmlFor={color.toLowerCase()} className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
                            {color}
@@ -246,6 +256,13 @@ const WizardForm = () => {
 export default function UiPage() {
     const { toast } = useToast();
 
+    const [items, setItems] = React.useState([
+        { id: 'item1', name: 'Sample Item 1' },
+        { id: 'item2', name: 'Sample Item 2' },
+    ]);
+    const [isItemDialogOpen, setIsItemDialogOpen] = React.useState(false);
+    const [newItem, setNewItem] = React.useState({ name: '' });
+
     const form = useForm<FormValues>({
         resolver: zodResolver(FormSchema),
         defaultValues: {
@@ -254,6 +271,7 @@ export default function UiPage() {
             datePicker: new Date(),
             select: '',
             combobox: '',
+            itemSelect: '',
             checkbox: false,
             radioGroup: 'option-one',
             switch: false,
@@ -261,6 +279,19 @@ export default function UiPage() {
             textarea: '',
         },
     });
+
+    const handleAddItem = () => {
+        if (newItem.name) {
+            const newItemData = { ...newItem, id: `item-${Date.now()}` };
+            setItems(prev => [...prev, newItemData]);
+            form.setValue('itemSelect', newItemData.name);
+            toast({ title: 'Item Added', description: `${newItemData.name} has been added.` });
+            setIsItemDialogOpen(false);
+            setNewItem({ name: '' });
+        } else {
+            toast({ title: 'Error', description: 'Item Name is required.', variant: 'destructive' });
+        }
+    }
 
     function onSubmit(data: FormValues) {
         toast({
@@ -394,6 +425,59 @@ export default function UiPage() {
                                         ))}
                                     </CommandGroup></CommandList></Command></PopoverContent></Popover><FormMessage /></FormItem>
                                 )}/>
+                                <FormField
+                                    control={form.control}
+                                    name="itemSelect"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Group Input</FormLabel>
+                                            <div className="flex items-start gap-2">
+                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select an item" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        {items.map(item => (
+                                                            <SelectItem key={item.id} value={item.name}>
+                                                                {item.name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <Dialog open={isItemDialogOpen} onOpenChange={setIsItemDialogOpen}>
+                                                    <DialogTrigger asChild>
+                                                        <Button type="button" variant="outline" size="icon" className="shrink-0">
+                                                            <PlusCircle className="h-4 w-4" />
+                                                            <span className="sr-only">Add New Item</span>
+                                                        </Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent>
+                                                        <DialogHeader>
+                                                            <DialogTitle>Add New Item</DialogTitle>
+                                                            <DialogDescription>
+                                                                Quickly add a new item to the list.
+                                                            </DialogDescription>
+                                                        </DialogHeader>
+                                                        <div className="grid gap-4 py-4">
+                                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                                <Label htmlFor="new-item-name" className="text-right">Name</Label>
+                                                                <Input id="new-item-name" value={newItem.name} onChange={(e) => setNewItem({ name: e.target.value })} className="col-span-3" />
+                                                            </div>
+                                                        </div>
+                                                        <DialogFooter>
+                                                            <Button variant="outline" onClick={() => setIsItemDialogOpen(false)}>Cancel</Button>
+                                                            <Button onClick={handleAddItem}>Add Item</Button>
+                                                        </DialogFooter>
+                                                    </DialogContent>
+                                                </Dialog>
+                                            </div>
+                                            <FormDescription>This is a group input field with a popup to add new items.</FormDescription>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
                                 <FormField control={form.control} name="textarea" render={({ field }) => (
                                     <FormItem><FormLabel>Textarea</FormLabel><FormControl><Textarea placeholder="Tell us a little bit about yourself" {...field} /></FormControl><FormMessage /></FormItem>
                                 )}/>
