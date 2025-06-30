@@ -406,7 +406,7 @@ export default function UiPage() {
                                     </FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus /></PopoverContent></Popover><FormMessage /></FormItem>
                                 )}/>
                                 <FormField control={form.control} name="select" render={({ field }) => (
-                                    <FormItem><FormLabel>Select</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select a fruit" /></SelectTrigger></FormControl><SelectContent>
+                                    <FormItem><FormLabel>Select</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select a fruit" /></SelectTrigger></FormControl><SelectContent>
                                         <SelectItem value="apple">Apple</SelectItem><SelectItem value="banana">Banana</SelectItem><SelectItem value="blueberry">Blueberry</SelectItem>
                                     </SelectContent></Select><FormMessage /></FormItem>
                                 )}/>
@@ -488,7 +488,7 @@ export default function UiPage() {
                                 )}/>
                                 <FormField control={form.control} name="radioGroup" render={({ field }) => (
                                     <FormItem className="space-y-3"><FormLabel>Radio Group</FormLabel><FormControl>
-                                        <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex flex-col space-y-1">
+                                        <RadioGroup onValueChange={field.onChange} value={field.value} className="flex flex-col space-y-1">
                                             <FormItem className="flex items-center space-x-3 space-y-0"><FormControl><RadioGroupItem value="option-one" /></FormControl><FormLabel className="font-normal">Option One</FormLabel></FormItem>
                                             <FormItem className="flex items-center space-x-3 space-y-0"><FormControl><RadioGroupItem value="option-two" /></FormControl><FormLabel className="font-normal">Option Two</FormLabel></FormItem>
                                         </RadioGroup>
@@ -501,7 +501,7 @@ export default function UiPage() {
                                     </div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>
                                 )}/>
                                 <FormField control={form.control} name="slider" render={({ field }) => (
-                                    <FormItem><FormLabel>Slider</FormLabel><FormControl><Slider defaultValue={[50]} max={100} step={1} onValueChange={field.onChange} /></FormControl><FormMessage /></FormItem>
+                                    <FormItem><FormLabel>Slider</FormLabel><FormControl><Slider value={field.value} max={100} step={1} onValueChange={field.onChange} /></FormControl><FormMessage /></FormItem>
                                 )}/>
                             </div>
                             <div className="flex justify-end">
