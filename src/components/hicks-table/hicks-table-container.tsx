@@ -669,7 +669,7 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
         </div>
       )}
 
-      <div className="rounded-lg border overflow-hidden bg-card">
+      <div className="rounded-lg border bg-card">
         <DataTable
             columns={tableColumns}
             data={paginatedData}

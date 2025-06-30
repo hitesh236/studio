@@ -17,7 +17,7 @@ export default function VendorsPage() {
 
       <motion.div
         drag
-        className="fixed bottom-8 right-8 z-10 cursor-grab active:cursor-grabbing"
+        className="fixed bottom-8 right-8 z-50 cursor-grab active:cursor-grabbing"
         initial={{ opacity: 0, y: 100 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{
