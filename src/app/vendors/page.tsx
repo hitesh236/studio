@@ -24,15 +24,26 @@ export default function VendorsPage() {
           type: "spring",
           stiffness: 260,
           damping: 20,
-          delay: 3,
         }}
       >
-        <Link href="/vendors/new" passHref>
-          <Button className="rounded-full shadow-lg">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Vendor
-          </Button>
-        </Link>
+        <motion.div
+            animate={{
+              scale: [1, 1.05, 1],
+            }}
+            transition={{
+              duration: 2,
+              ease: "easeInOut",
+              repeat: Infinity,
+              repeatType: "loop",
+            }}
+          >
+          <Link href="/vendors/new" passHref>
+            <Button className="rounded-full shadow-lg">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add Vendor
+            </Button>
+          </Link>
+        </motion.div>
       </motion.div>
     </div>
   );
