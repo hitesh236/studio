@@ -61,7 +61,8 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import Link from 'next/link';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -120,6 +121,14 @@ export function InvoiceForm() {
   });
   const [roundOff, setRoundOff] = React.useState<number>(0);
 
+  const [customers, setCustomers] = React.useState([
+    { id: 'cust1', name: 'Innovate Inc.', gstin: '27ABCDE1234F1Z5', address: '123 Tech Park, Mumbai, Maharashtra' },
+    { id: 'cust2', name: 'Solutions Corp.', gstin: '29AABCS1234A1Z5', address: '456 Business Hub, Bengaluru, Karnataka' },
+    { id: 'cust3', name: 'Quantum Tech', gstin: '36AAAAA0000A1Z0', address: '789 Science City, Hyderabad, Telangana' },
+  ]);
+  const [isCustomerDialogOpen, setIsCustomerDialogOpen] = React.useState(false);
+  const [newCustomer, setNewCustomer] = React.useState({ name: '', gstin: '', address: '' });
+
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
     defaultValues: {
@@ -145,6 +154,28 @@ export function InvoiceForm() {
   const watchedPlaceOfSupply = form.watch('placeOfSupply');
   const watchedCurrency = form.watch('currency');
   
+  const handleAddCustomer = () => {
+    if (newCustomer.name && newCustomer.address) {
+        const newCustomerData = { ...newCustomer, id: `cust-${Date.now()}` };
+        const updatedCustomers = [...customers, newCustomerData];
+        setCustomers(updatedCustomers);
+        form.setValue('customerName', newCustomerData.name);
+        form.setValue('customerGstin', newCustomerData.gstin);
+        form.setValue('billingAddress', newCustomerData.address);
+        
+        const stateMatch = indianStates.find(state => newCustomerData.address.toLowerCase().includes(state.toLowerCase()));
+        if(stateMatch) {
+            form.setValue('placeOfSupply', stateMatch);
+        }
+
+        toast({ title: 'Customer Added', description: `${newCustomerData.name} has been added.` });
+        setIsCustomerDialogOpen(false);
+        setNewCustomer({ name: '', gstin: '', address: '' });
+    } else {
+        toast({ title: 'Error', description: 'Customer Name and Address are required.', variant: 'destructive' });
+    }
+  }
+
   const totals = React.useMemo(() => {
     let subtotal = 0;
     let totalDiscount = 0;
@@ -261,18 +292,73 @@ export function InvoiceForm() {
                             name="customerName"
                             render={({ field }) => (
                                 <FormItem>
-                                    <div className="flex items-center justify-between">
-                                        <FormLabel>Bill To</FormLabel>
-                                        <Button asChild variant="outline" size="sm">
-                                            <Link href="/customers/new">
-                                                <PlusCircle className="mr-2 h-4 w-4" />
-                                                Add New Customer
-                                            </Link>
-                                        </Button>
+                                    <FormLabel>Bill To</FormLabel>
+                                    <div className="flex items-start gap-2">
+                                        <Select
+                                            onValueChange={(value) => {
+                                                const selectedCustomer = customers.find(c => c.name === value);
+                                                if (selectedCustomer) {
+                                                    form.setValue('customerName', selectedCustomer.name);
+                                                    form.setValue('customerGstin', selectedCustomer.gstin);
+                                                    form.setValue('billingAddress', selectedCustomer.address);
+                                                    const stateMatch = indianStates.find(state => selectedCustomer.address.toLowerCase().includes(state.toLowerCase()));
+                                                    if(stateMatch) {
+                                                        form.setValue('placeOfSupply', stateMatch);
+                                                    }
+                                                } else {
+                                                    field.onChange(value);
+                                                }
+                                            }}
+                                            value={field.value}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select a customer" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {customers.map(customer => (
+                                                    <SelectItem key={customer.id} value={customer.name}>
+                                                        {customer.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <Dialog open={isCustomerDialogOpen} onOpenChange={setIsCustomerDialogOpen}>
+                                            <DialogTrigger asChild>
+                                                <Button type="button" variant="outline" size="icon" className="shrink-0">
+                                                    <PlusCircle className="h-4 w-4" />
+                                                    <span className="sr-only">Add New Customer</span>
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>Add New Customer</DialogTitle>
+                                                    <DialogDescription>
+                                                        Quickly add a new customer. You can add more details later.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="grid gap-4 py-4">
+                                                    <div className="grid grid-cols-4 items-center gap-4">
+                                                        <Label htmlFor="new-customer-name" className="text-right">Name</Label>
+                                                        <Input id="new-customer-name" value={newCustomer.name} onChange={(e) => setNewCustomer(p => ({...p, name: e.target.value}))} className="col-span-3" />
+                                                    </div>
+                                                    <div className="grid grid-cols-4 items-center gap-4">
+                                                        <Label htmlFor="new-customer-gstin" className="text-right">GSTIN</Label>
+                                                        <Input id="new-customer-gstin" value={newCustomer.gstin} onChange={(e) => setNewCustomer(p => ({...p, gstin: e.target.value}))} className="col-span-3" />
+                                                    </div>
+                                                    <div className="grid grid-cols-4 items-center gap-4">
+                                                        <Label htmlFor="new-customer-address" className="text-right">Address</Label>
+                                                        <Textarea id="new-customer-address" value={newCustomer.address} onChange={(e) => setNewCustomer(p => ({...p, address: e.target.value}))} className="col-span-3" placeholder="Full Address including State" />
+                                                    </div>
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button variant="outline" onClick={() => setIsCustomerDialogOpen(false)}>Cancel</Button>
+                                                    <Button onClick={handleAddCustomer}>Add Customer</Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
                                     </div>
-                                    <FormControl>
-                                        <Input placeholder="Enter Customer Name" {...field} />
-                                    </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
