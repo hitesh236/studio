@@ -40,6 +40,7 @@ const pathToTitle: { [key: string]: string } = {
   '/gst-reports': 'GST Reports',
   '/gst-filing/gstr1': 'GSTR-1 B2B Filing',
   '/ui': 'UI Components',
+  '/profile': 'My Profile',
 };
 
 export function Header() {
@@ -76,7 +77,7 @@ export function Header() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/settings">
+              <Link href="/profile">
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </Link>
