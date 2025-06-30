@@ -14,11 +14,18 @@ import {
   ChevronsUpDown,
   Calendar as CalendarIcon,
   Loader2,
+  User,
+  AtSign,
+  KeyRound,
+  Bell,
+  Palette,
+  ThumbsUp,
 } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -54,6 +61,7 @@ import {
 } from '@/components/ui/command';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
 
 const FormSchema = z.object({
   textInput: z.string().min(1, 'This field is required.'),
@@ -81,6 +89,159 @@ const languages = [
     { label: "Korean", value: "ko" },
     { label: "Chinese", value: "zh" },
 ] as const
+
+const WizardForm = () => {
+    const { toast } = useToast();
+    const [step, setStep] = React.useState(1);
+    const [direction, setDirection] = React.useState(1);
+
+    const [formData, setFormData] = React.useState({
+        name: '',
+        email: '',
+        username: '',
+        notifications: true,
+        color: 'blue'
+    });
+  
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target;
+      setFormData(prev => ({ ...prev, [name]: value }));
+    };
+    
+    const handleSwitchChange = (checked: boolean) => {
+        setFormData(prev => ({...prev, notifications: checked }));
+    }
+  
+    const handleRadioChange = (value: string) => {
+         setFormData(prev => ({...prev, color: value }));
+    }
+  
+    const nextStep = () => {
+      setDirection(1);
+      setStep((prev) => Math.min(prev + 1, 4));
+    }
+    const prevStep = () => {
+      setDirection(-1);
+      setStep((prev) => Math.max(prev - 1, 1));
+    }
+  
+    const handleSubmit = () => {
+      toast({
+        title: 'Wizard Submitted!',
+        description: 'Your account has been created.',
+      });
+      setStep(1); // Reset to first step
+    };
+  
+    const STEPS = [
+      <div className="space-y-4" key="step1">
+        <h3 className="text-lg font-medium">Personal Information</h3>
+        <div className="space-y-2">
+            <Label htmlFor="name">Full Name</Label>
+            <Input id="name" name="name" placeholder="John Doe" value={formData.name} onChange={handleChange} />
+        </div>
+         <div className="space-y-2">
+            <Label htmlFor="email">Email Address</Label>
+            <Input id="email" name="email" type="email" placeholder="john.doe@example.com" value={formData.email} onChange={handleChange} />
+        </div>
+      </div>,
+      <div className="space-y-4" key="step2">
+         <h3 className="text-lg font-medium">Account Details</h3>
+         <div className="space-y-2">
+            <Label htmlFor="username">Choose Username</Label>
+            <Input id="username" name="username" placeholder="johndoe" value={formData.username} onChange={handleChange} />
+        </div>
+         <div className="space-y-2">
+            <Label htmlFor="password">Create Password</Label>
+            <Input id="password" name="password" type="password" />
+        </div>
+      </div>,
+      <div className="space-y-4" key="step3">
+        <h3 className="text-lg font-medium">Preferences</h3>
+         <div className="flex items-center justify-between rounded-lg border p-4">
+            <Label htmlFor="notifications" className="flex flex-col space-y-1">
+                <span>Email Notifications</span>
+                <span className="font-normal leading-snug text-muted-foreground">
+                    Receive important updates via email.
+                </span>
+            </Label>
+            <Switch id="notifications" checked={formData.notifications} onCheckedChange={handleSwitchChange} />
+        </div>
+        <div className="space-y-2">
+            <Label>Profile Color</Label>
+            <RadioGroup value={formData.color} onValueChange={handleRadioChange} className="grid grid-cols-3 gap-4">
+                {(['Blue', 'Green', 'Red'] as const).map(color => (
+                    <div>
+                        <RadioGroupItem value={color.toLowerCase()} id={color.toLowerCase()} className="peer sr-only" />
+                        <Label htmlFor={color.toLowerCase()} className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                           {color}
+                        </Label>
+                    </div>
+                ))}
+            </RadioGroup>
+        </div>
+      </div>,
+      <div className="text-center space-y-4 flex flex-col items-center justify-center h-[200px]" key="step4">
+         <ThumbsUp className="h-12 w-12 text-primary" />
+        <h3 className="text-xl font-semibold">You're all set!</h3>
+        <p className="text-muted-foreground">
+            Thank you for setting up your account. Click submit to finalize.
+        </p>
+      </div>,
+    ];
+  
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Wizard Form</CardTitle>
+          <CardDescription>A multi-step form with animated transitions.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4 mb-4">
+            <div className="text-sm font-medium">Step {step} of 4</div>
+            <Progress value={step * 25} className="flex-1" />
+          </div>
+          <div className="relative overflow-x-hidden min-h-[250px]">
+             <AnimatePresence custom={direction} mode="wait">
+                <motion.div
+                    key={step}
+                    custom={direction}
+                    variants={{
+                        enter: (direction: number) => ({ x: direction > 0 ? 300 : -300, opacity: 0 }),
+                        center: { x: 0, opacity: 1 },
+                        exit: (direction: number) => ({ x: direction < 0 ? 300 : -300, opacity: 0 }),
+                    }}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{
+                        x: { type: "spring", stiffness: 300, damping: 30 },
+                        opacity: { duration: 0.2 }
+                    }}
+                >
+                    {STEPS[step - 1]}
+                </motion.div>
+             </AnimatePresence>
+          </div>
+          <div className="flex justify-between mt-8">
+            <Button variant="outline" onClick={prevStep} disabled={step === 1}>
+              Previous
+            </Button>
+            {step < 4 && (
+              <Button onClick={nextStep}>
+                Next
+              </Button>
+            )}
+            {step === 4 && (
+              <Button onClick={handleSubmit}>
+                Submit
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+};
 
 export default function UiPage() {
     const { toast } = useToast();
@@ -147,6 +308,47 @@ export default function UiPage() {
                     <Badge variant="destructive">Destructive</Badge>
                 </CardContent>
             </Card>
+
+             {/* Cards Showcase */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Cards</CardTitle>
+                    <CardDescription>A showcase of different card styles.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Basic Card</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p>This is the content of a basic card. It's simple and clean.</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Full Card</CardTitle>
+                            <CardDescription>With header, content, and footer.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p>This card demonstrates all available sections for more complex content.</p>
+                        </CardContent>
+                        <CardFooter className="flex justify-end">
+                            <Button>Action</Button>
+                        </CardFooter>
+                    </Card>
+                    <Card className="bg-primary text-primary-foreground">
+                        <CardHeader>
+                            <CardTitle>Primary Card</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p>This card uses the primary theme color to draw attention.</p>
+                        </CardContent>
+                    </Card>
+                </CardContent>
+            </Card>
+            
+             {/* Wizard Form Showcase */}
+            <WizardForm />
 
             {/* Form Showcase */}
             <Card>
