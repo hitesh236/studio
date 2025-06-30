@@ -12,6 +12,9 @@ interface SummaryCardProps {
 }
 
 export function SummaryCard({ title, value, icon: Icon, description, className, variant = 'default' }: SummaryCardProps) {
+  const isPositive = description?.startsWith('+');
+  const isNegative = description?.startsWith('-');
+
   return (
     <Card className={cn(
       "shadow-sm hover:shadow-primary/20 transition-shadow",
@@ -35,7 +38,9 @@ export function SummaryCard({ title, value, icon: Icon, description, className, 
         {description && (
           <p className={cn(
             "text-xs",
-             variant === 'primary' ? "text-primary-foreground/80" : "text-muted-foreground"
+            variant === 'primary' ? "text-primary-foreground/80" : "text-muted-foreground",
+            isPositive && (variant === 'primary' ? "text-green-300" : "text-green-600"),
+            isNegative && (variant === 'primary' ? "text-red-300" : "text-red-600"),
           )}>
             {description}
           </p>

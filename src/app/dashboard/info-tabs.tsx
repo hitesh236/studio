@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Badge } from "@/components/ui/badge";
@@ -26,10 +27,10 @@ export function InfoTabs() {
         </CardHeader>
         <CardContent>
             <Tabs defaultValue="invoices">
-                <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="invoices">Recent Invoices</TabsTrigger>
-                    <TabsTrigger value="bills">Upcoming Bills</TabsTrigger>
-                    <TabsTrigger value="banks">Bank Accounts</TabsTrigger>
+                <TabsList>
+                    <TabsTrigger value="invoices" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Recent Invoices</TabsTrigger>
+                    <TabsTrigger value="bills" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Upcoming Bills</TabsTrigger>
+                    <TabsTrigger value="banks" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Bank Accounts</TabsTrigger>
                 </TabsList>
                 <TabsContent value="invoices">
                     <Table>
