@@ -11,7 +11,7 @@ export function QuickActions() {
             <CardHeader>
                 <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-4">
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 gap-4">
                 <Button asChild variant="outline">
                     <Link href="/sales-invoices/new">
                         <PlusCircle className="mr-2 h-4 w-4" /> New Invoice

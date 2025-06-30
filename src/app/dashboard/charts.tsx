@@ -43,7 +43,7 @@ export function DashboardCharts() {
             </CardHeader>
             <CardContent>
                 <Tabs defaultValue="income-expense">
-                    <TabsList className="bg-transparent p-0 justify-start gap-2">
+                    <TabsList className="bg-transparent p-0 justify-start gap-2 h-auto flex-wrap">
                         <TabsTrigger value="income-expense" className={triggerClasses}>Income & Expense</TabsTrigger>
                         <TabsTrigger value="cash-flow" className={triggerClasses}>Cash Flow</TabsTrigger>
                     </TabsList>

@@ -29,7 +29,7 @@ export function InfoTabs() {
         </CardHeader>
         <CardContent>
             <Tabs defaultValue="invoices">
-                <TabsList className="bg-transparent p-0 justify-start gap-2">
+                <TabsList className="bg-transparent p-0 justify-start gap-2 h-auto flex-wrap">
                     <TabsTrigger value="invoices" className={triggerClasses}>Recent Invoices</TabsTrigger>
                     <TabsTrigger value="bills" className={triggerClasses}>Upcoming Bills</TabsTrigger>
                     <TabsTrigger value="banks" className={triggerClasses}>Bank Accounts</TabsTrigger>
