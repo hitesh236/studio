@@ -6,11 +6,12 @@ interface SummaryCardProps {
   title: string;
   value: string;
   icon: LucideIcon;
+  description?: string;
   className?: string;
   variant?: 'default' | 'primary';
 }
 
-export function SummaryCard({ title, value, icon: Icon, className, variant = 'default' }: SummaryCardProps) {
+export function SummaryCard({ title, value, icon: Icon, description, className, variant = 'default' }: SummaryCardProps) {
   return (
     <Card className={cn(
       "shadow-sm hover:shadow-primary/20 transition-shadow",
@@ -30,7 +31,15 @@ export function SummaryCard({ title, value, icon: Icon, className, variant = 'de
         )} />
       </CardHeader>
       <CardContent className="p-3 pt-1">
-        <div className="text-[1.1rem] font-bold">{value}</div>
+        <div className="text-xl font-bold">{value}</div>
+        {description && (
+          <p className={cn(
+            "text-xs",
+             variant === 'primary' ? "text-primary-foreground/80" : "text-muted-foreground"
+          )}>
+            {description}
+          </p>
+        )}
       </CardContent>
     </Card>
   );

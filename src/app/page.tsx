@@ -14,6 +14,7 @@ export default function Home() {
                 title={kpi.title}
                 value={kpi.value}
                 icon={kpi.icon}
+                description={kpi.description}
                 variant={kpi.variant as any}
             />
         ))}
