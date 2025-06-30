@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 import { bankAccounts, recentInvoices, upcomingBills } from "./data";
 import { format, parseISO } from 'date-fns';
 
@@ -18,6 +18,8 @@ export function InfoTabs() {
       default: return 'outline';
     }
   };
+  
+  const triggerClasses = "rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:border data-[state=inactive]:border-border data-[state=inactive]:bg-transparent";
 
   return (
     <Card>
@@ -27,10 +29,10 @@ export function InfoTabs() {
         </CardHeader>
         <CardContent>
             <Tabs defaultValue="invoices">
-                <TabsList>
-                    <TabsTrigger value="invoices" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Recent Invoices</TabsTrigger>
-                    <TabsTrigger value="bills" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Upcoming Bills</TabsTrigger>
-                    <TabsTrigger value="banks" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Bank Accounts</TabsTrigger>
+                <TabsList className="bg-transparent p-0 justify-start gap-2">
+                    <TabsTrigger value="invoices" className={triggerClasses}>Recent Invoices</TabsTrigger>
+                    <TabsTrigger value="bills" className={triggerClasses}>Upcoming Bills</TabsTrigger>
+                    <TabsTrigger value="banks" className={triggerClasses}>Bank Accounts</TabsTrigger>
                 </TabsList>
                 <TabsContent value="invoices">
                     <Table>

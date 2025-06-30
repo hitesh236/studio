@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Bar, BarChart, Line, LineChart, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer } from 'recharts';
@@ -32,6 +33,8 @@ const chartConfig = {
 
 
 export function DashboardCharts() {
+    const triggerClasses = "rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:border data-[state=inactive]:border-border data-[state=inactive]:bg-transparent";
+
     return (
         <Card>
             <CardHeader>
@@ -40,9 +43,9 @@ export function DashboardCharts() {
             </CardHeader>
             <CardContent>
                 <Tabs defaultValue="income-expense">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="income-expense">Income & Expense</TabsTrigger>
-                        <TabsTrigger value="cash-flow">Cash Flow</TabsTrigger>
+                    <TabsList className="bg-transparent p-0 justify-start gap-2">
+                        <TabsTrigger value="income-expense" className={triggerClasses}>Income & Expense</TabsTrigger>
+                        <TabsTrigger value="cash-flow" className={triggerClasses}>Cash Flow</TabsTrigger>
                     </TabsList>
                     <TabsContent value="income-expense">
                         <ChartContainer config={chartConfig} className="h-[300px] w-full">
