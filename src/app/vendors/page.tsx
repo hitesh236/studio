@@ -16,19 +16,20 @@ export default function VendorsPage() {
       <HicksTableContainer data={data} />
 
       <motion.div
-        className="fixed bottom-8 right-8 z-10"
+        drag
+        className="fixed bottom-8 right-8 z-10 cursor-grab active:cursor-grabbing"
         initial={{ opacity: 0, y: 100 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{
           type: "spring",
           stiffness: 260,
           damping: 20,
-          delay: 0.3,
+          delay: 3,
         }}
       >
         <Link href="/vendors/new" passHref>
-          <Button size="lg" className="rounded-full shadow-lg h-14 px-5">
-            <PlusCircle className="mr-2 h-5 w-5" />
+          <Button className="rounded-full shadow-lg">
+            <PlusCircle className="mr-2 h-4 w-4" />
             Add Vendor
           </Button>
         </Link>
