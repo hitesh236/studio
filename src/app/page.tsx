@@ -7,7 +7,7 @@ import { InfoTabs } from './dashboard/info-tabs';
 export default function Home() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {kpiData.map(kpi => (
             <SummaryCard 
                 key={kpi.title}
