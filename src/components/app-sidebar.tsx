@@ -155,10 +155,12 @@ export function AppSidebar() {
           <SidebarGroupLabel>Money Out</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Vendors">
-                <Store />
-                Vendors
-              </SidebarMenuButton>
+                <SidebarMenuButton tooltip="Vendors" isActive={pathname.startsWith('/vendors')} asChild>
+                    <Link href="/vendors" onClick={handleLinkClick}>
+                        <Store />
+                        Vendors
+                    </Link>
+                </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton tooltip="Purchase Bills">

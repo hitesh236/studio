@@ -115,6 +115,11 @@ export const columns = ({
       )
     },
     {
+      accessor: "gstin",
+      header: getSortableHeader("GSTIN", "gstin"),
+      cell: (row: Person) => <div className={cn("font-mono whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.gstin}</div>,
+    },
+    {
       accessor: "state",
       header: "State",
       cell: (row: Person) => <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.address.state}</div>,

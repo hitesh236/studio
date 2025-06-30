@@ -69,6 +69,7 @@ const ALL_COLUMNS = [
     { id: 'select', label: 'Select' },
     { id: 'name', label: 'User' },
     { id: 'company', label: 'Company' },
+    { id: 'gstin', label: 'GSTIN' },
     { id: 'state', label: 'State' },
     { id: 'city', label: 'City' },
     { id: 'phone', label: 'Phone' },
