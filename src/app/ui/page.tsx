@@ -20,6 +20,10 @@ import {
   Bell,
   Palette,
   ThumbsUp,
+  CreditCard,
+  FileText,
+  FileSpreadsheet,
+  Settings,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -99,6 +103,39 @@ const languages = [
     { label: "Korean", value: "ko" },
     { label: "Chinese", value: "zh" },
 ] as const
+
+const timelineEvents = [
+  {
+    icon: User,
+    title: 'New User Registration',
+    description: 'John Doe created an account and was assigned the "Accountant" role.',
+    time: '2 days ago',
+  },
+  {
+    icon: FileText,
+    title: 'Invoice #INV-001 Created',
+    description: 'An invoice for $2,500 was sent to Solutions Corp.',
+    time: 'Yesterday at 4:30 PM',
+  },
+  {
+    icon: CreditCard,
+    title: 'Payment Received',
+    description: 'Received a partial payment of $1,250 for invoice #INV-001.',
+    time: 'Today at 9:15 AM',
+  },
+  {
+    icon: FileSpreadsheet,
+    title: 'GSTR-1 Report Generated',
+    description: 'The report for Q3 2024 is ready for review and filing.',
+    time: 'Today at 11:00 AM',
+  },
+  {
+    icon: Settings,
+    title: 'Company Settings Updated',
+    description: 'Jane Smith updated the primary business address.',
+    time: 'Today at 11:45 AM',
+  },
+];
 
 const WizardForm = () => {
     const { toast } = useToast();
@@ -511,6 +548,37 @@ export default function UiPage() {
                     </Form>
                 </CardContent>
             </Card>
+
+            {/* Timeline Showcase */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Timeline</CardTitle>
+                    <CardDescription>A vertical timeline to display a sequence of events.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="relative pl-4">
+                        {/* The vertical line */}
+                        <div className="absolute left-6 top-0 h-full w-0.5 -translate-x-1/2 bg-border" />
+                        
+                        {timelineEvents.map((event, index) => (
+                            <div key={index} className="relative mb-10 flex items-start">
+                                {/* The dot and icon */}
+                                <div className="absolute left-6 top-0 flex h-12 w-12 -translate-x-1/2 items-center justify-center">
+                                    <div className="z-10 flex h-8 w-8 items-center justify-center rounded-full bg-primary ring-8 ring-background">
+                                        <event.icon className="h-4 w-4 text-primary-foreground" />
+                                    </div>
+                                </div>
+                                <div className="flex-1 pl-16 pt-2.5">
+                                    <p className="font-semibold">{event.title}</p>
+                                    <p className="text-sm text-muted-foreground">{event.description}</p>
+                                    <p className="text-xs text-muted-foreground mt-1">{event.time}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+
         </div>
     );
 }
