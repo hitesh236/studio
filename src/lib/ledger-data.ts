@@ -130,26 +130,29 @@ export const ledgerData: Ledger[] = [
       children: [
         {
             id: 'direct-incomes',
-            name: 'Direct Incomes',
+            name: 'Income (Direct)',
             type: 'group',
-            children: []
+            children: [
+                {
+                    id: 'revenue-from-operations',
+                    name: 'Revenue from Operations',
+                    type: 'group',
+                    children: [
+                        { id: 'ledger-domestic-sales', name: 'Domestic Sales', type: 'ledger', balance: 1250000 },
+                        { id: 'ledger-export-sales', name: 'Export Sales', type: 'ledger', balance: 350000 },
+                    ]
+                }
+            ]
         },
         {
             id: 'indirect-incomes',
-            name: 'Indirect Incomes',
+            name: 'Income (Indirect)',
             type: 'group',
             children: [
                 { id: 'ledger-interest-received', name: 'Interest Received', type: 'ledger', balance: 15000 },
                 { id: 'ledger-commission', name: 'Commission Received', type: 'ledger', balance: 45000 },
-            ]
-        },
-        {
-            id: 'sales-accounts',
-            name: 'Sales Accounts',
-            type: 'group',
-            children: [
-                { id: 'ledger-domestic-sales', name: 'Domestic Sales', type: 'ledger', balance: 1250000 },
-                { id: 'ledger-export-sales', name: 'Export Sales', type: 'ledger', balance: 350000 },
+                { id: 'ledger-dividend', name: 'Dividend Received', type: 'ledger', balance: 20000 },
+                { id: 'ledger-gain-sale-asset', name: 'Gain on Sale of Asset', type: 'ledger', balance: 5000 },
             ]
         },
       ]
@@ -162,27 +165,74 @@ export const ledgerData: Ledger[] = [
       children: [
         {
             id: 'direct-expenses',
-            name: 'Direct Expenses',
-            type: 'group',
-            children: []
-        },
-        {
-            id: 'indirect-expenses',
-            name: 'Indirect Expenses',
+            name: 'Expenses (Direct)',
             type: 'group',
             children: [
-                { id: 'ledger-rent', name: 'Rent Expense', type: 'ledger', balance: 120000 },
-                { id: 'ledger-salaries', name: 'Salaries Expense', type: 'ledger', balance: 450000 },
-                { id: 'ledger-office-supplies', name: 'Office Supplies', type: 'ledger', balance: 35000 },
-                { id: 'ledger-advertising', name: 'Advertising', type: 'ledger', balance: 75000 },
+                {
+                    id: 'cogs',
+                    name: 'Cost of Goods Sold',
+                    type: 'group',
+                    children: [
+                         { id: 'ledger-opening-stock', name: 'Opening Stock', type: 'ledger', balance: 150000 },
+                         { id: 'ledger-purchases', name: 'Purchases', type: 'ledger', balance: 650000 },
+                         { id: 'ledger-closing-stock', name: 'Closing Stock', type: 'ledger', balance: -200000 },
+                    ]
+                },
+                {
+                    id: 'factory-overheads',
+                    name: 'Factory Overheads',
+                    type: 'group',
+                    children: [
+                        { id: 'ledger-factory-rent', name: 'Factory Rent', type: 'ledger', balance: 50000 },
+                        { id: 'ledger-wages', name: 'Wages', type: 'ledger', balance: 100000 },
+                    ]
+                }
             ]
         },
         {
-            id: 'purchase-accounts',
-            name: 'Purchase Accounts',
+            id: 'indirect-expenses',
+            name: 'Expenses (Indirect)',
             type: 'group',
             children: [
-                { id: 'ledger-domestic-purchases', name: 'Domestic Purchases', type: 'ledger', balance: 650000 },
+                {
+                    id: 'operating-expenses',
+                    name: 'Operating Expenses',
+                    type: 'group',
+                    children: [
+                        { id: 'ledger-salaries', name: 'Salaries & Wages', type: 'ledger', balance: 450000 },
+                        { id: 'ledger-rent', name: 'Rent & Rates', type: 'ledger', balance: 120000 },
+                        { id: 'ledger-office-supplies', name: 'Printing & Stationery', type: 'ledger', balance: 35000 },
+                        { id: 'ledger-internet', name: 'Telephone & Internet', type: 'ledger', balance: 25000 },
+                    ]
+                },
+                {
+                    id: 'financial-expenses',
+                    name: 'Financial Expenses',
+                    type: 'group',
+                    children: [
+                        { id: 'ledger-bank-charges', name: 'Bank Charges', type: 'ledger', balance: 5000 },
+                        { id: 'ledger-interest-loans', name: 'Interest on Loans', type: 'ledger', balance: 60000 },
+                    ]
+                },
+                {
+                    id: 'selling-expenses',
+                    name: 'Selling & Distribution',
+                    type: 'group',
+                    children: [
+                        { id: 'ledger-advertising', name: 'Advertising & Marketing', type: 'ledger', balance: 75000 },
+                        { id: 'ledger-freight-outward', name: 'Freight Outward', type: 'ledger', balance: 30000 },
+                        { id: 'ledger-sales-commission', name: 'Sales Commission', type: 'ledger', balance: 50000 },
+                    ]
+                },
+                {
+                    id: 'depreciation',
+                    name: 'Depreciation & Amortization',
+                    type: 'group',
+                    children: [
+                        { id: 'ledger-dep-computers', name: 'Depreciation on Computers', type: 'ledger', balance: 40000 },
+                        { id: 'ledger-dep-furniture', name: 'Depreciation on Furniture', type: 'ledger', balance: 20000 },
+                    ]
+                }
             ]
         },
       ]

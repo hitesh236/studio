@@ -17,6 +17,10 @@ import { motion } from 'framer-motion';
 // Helper function to recursively calculate group totals
 const calculateTotal = (node: Ledger): number => {
     if (node.type === 'ledger') {
+        // For COGS, closing stock is a credit, hence negative to reduce expense
+        if (node.id === 'ledger-closing-stock') {
+            return node.balance || 0;
+        }
         return node.balance || 0;
     }
     if (node.children) {
@@ -31,6 +35,10 @@ const ReportRow = ({ node, level, baseValue, showPercentages }: { node: Ledger; 
     const total = calculateTotal(node);
     const percentage = baseValue && baseValue !== 0 ? (Math.abs(total) / Math.abs(baseValue)) * 100 : 0;
 
+    // A special case for Closing Stock in P&L
+    const displayTotal = node.id === 'ledger-closing-stock' ? Math.abs(total) : total;
+
+
     return (
         <div>
             <div className={cn(
@@ -39,12 +47,12 @@ const ReportRow = ({ node, level, baseValue, showPercentages }: { node: Ledger; 
             )} style={{ paddingLeft: `${level * 1.5}rem` }}>
                 <span className="pr-4">
                     {node.name}
-                    {showPercentages && percentage > 0.01 && (
+                    {showPercentages && (
                         <span className="font-normal text-muted-foreground ml-2">({percentage.toFixed(0)}%)</span>
                     )}
                 </span>
                 <div className="flex items-center gap-4 flex-shrink-0">
-                    <span className="w-32 text-right font-mono">{formatCurrency(total, 'INR')}</span>
+                    <span className="w-32 text-right font-mono">{formatCurrency(displayTotal, 'INR')}</span>
                 </div>
             </div>
             {node.children && node.children.map(child => (
@@ -83,14 +91,14 @@ const AnimatedToggleButton = ({ show, onToggle }: { show: boolean, onToggle: () 
     <div
       onClick={onToggle}
       className={cn(
-        "flex h-9 w-[110px] cursor-pointer items-center rounded-full bg-muted p-1 transition-colors",
+        "flex h-8 w-[100px] cursor-pointer items-center rounded-full bg-muted p-1 transition-colors",
         show ? "justify-end" : "justify-start"
       )}
     >
       <motion.div
         layout
         transition={{ type: "spring", stiffness: 700, damping: 30 }}
-        className="flex h-7 items-center justify-center rounded-full bg-primary px-3 text-sm font-medium text-primary-foreground"
+        className="flex h-6 items-center justify-center rounded-full bg-primary px-3 text-xs font-medium text-primary-foreground"
       >
         {show ? 'Hide %' : 'Show %'}
       </motion.div>
@@ -123,7 +131,7 @@ export default function ProfitAndLossPage() {
             <CardHeader>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
-                        <CardTitle className="text-2xl">Profit & Loss Statement</CardTitle>
+                        <CardTitle className="text-2xl">Profit &amp; Loss Statement</CardTitle>
                         <CardDescription>
                             For the period of {date?.from ? format(date.from, 'LLL dd, y') : ''} to {date?.to ? format(date.to, 'LLL dd, y') : ''}
                         </CardDescription>
