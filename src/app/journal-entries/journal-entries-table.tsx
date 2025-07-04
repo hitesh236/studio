@@ -74,8 +74,8 @@ const JournalEntryVoucherDialog = ({ entry, onOpenChange }: { entry: JournalEntr
                                 {entry.lines.map(line => (
                                     <TableRow key={line.id}>
                                         <TableCell className={cn(line.credit > 0 && "pl-8")}>{line.account}</TableCell>
-                                        <TableCell className="text-right font-mono">{line.debit > 0 ? formatCurrency(line.debit, 'INR') : null}</TableCell>
-                                        <TableCell className="text-right font-mono">{line.credit > 0 ? formatCurrency(line.credit, 'INR') : null}</TableCell>
+                                        <TableCell className="text-right font-mono text-primary">{line.debit > 0 ? formatCurrency(line.debit, 'INR') : null}</TableCell>
+                                        <TableCell className="text-right font-mono text-destructive">{line.credit > 0 ? formatCurrency(line.credit, 'INR') : null}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -154,7 +154,7 @@ const JournalEntryCard = ({ entry, density, onViewClick }: { entry: JournalEntry
     )
 }
 
-export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
+export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
   const [filter, setFilter] = React.useState('');
   const [density, setDensity] = React.useState<'normal' | 'compact'>('normal');
   const [page, setPage] = React.useState(0);
@@ -162,6 +162,7 @@ export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
   const [viewingEntry, setViewingEntry] = React.useState<JournalEntry | null>(null);
 
   const filteredData = React.useMemo(() => {
+    if (!data) return [];
     if (!filter) return data;
     
     const lowercasedFilter = filter.toLowerCase();
@@ -322,7 +323,7 @@ export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
                   {paginatedData.map((entry, entryIndex) => (
                       <React.Fragment key={entry.id}>
                       {entry.lines.map((line, lineIndex) => (
-                          <TableRow key={line.id} className={cn('h-auto', lineIndex === entry.lines.length - 1 && entryIndex !== paginatedData.length-1 ? 'border-b-2' : '', entryIndex % 2 !== 0 && 'bg-muted/50')}>
+                          <TableRow key={line.id} className={cn('h-auto border-b-0', entryIndex % 2 !== 0 && 'bg-muted/50')}>
                           {lineIndex === 0 ? (
                               <TableCell rowSpan={entry.lines.length + 1} className={cn("align-top font-medium border-r p-2", density === 'compact' && 'p-1')}>
                               {format(entry.date, 'dd-MMM-yy')}
@@ -373,8 +374,8 @@ export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
                           ) : null}
                           </TableRow>
                       ))}
-                      <TableRow className={cn('h-auto', entryIndex !== paginatedData.length-1 ? 'border-b-2' : '', entryIndex % 2 !== 0 && 'bg-muted/50')}>
-                          <TableCell colSpan={3} className={cn("py-2 px-2 text-xs text-muted-foreground", density === 'compact' && 'p-1')}>
+                      <TableRow className={cn('h-auto border-b-0 text-muted-foreground', entryIndex % 2 !== 0 && 'bg-muted/50')}>
+                          <TableCell colSpan={3} className={cn("py-2 px-2 text-xs", density === 'compact' && 'p-1')}>
                               {entry.description}
                           </TableCell>
                       </TableRow>
