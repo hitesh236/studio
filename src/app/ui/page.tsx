@@ -377,6 +377,43 @@ export default function UiPage() {
                 </CardContent>
             </Card>
 
+            {/* Text Colors Showcase */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Text Colors</CardTitle>
+                    <CardDescription>
+                        A showcase of theme colors and standard Tailwind colors. Theme colors (e.g., primary, destructive) do not have numeric variants. Standard colors (e.g., blue, green) have shades from 50 to 950.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="space-y-2">
+                        <p className="font-semibold">General</p>
+                        <p className="text-foreground">text-foreground</p>
+                        <p className="text-muted-foreground">text-muted-foreground</p>
+                        <p className="text-card-foreground">text-card-foreground</p>
+                    </div>
+                    <div className="space-y-2">
+                         <p className="font-semibold">Primary & Secondary</p>
+                        <p className="text-primary">text-primary</p>
+                        <p className="text-primary-foreground bg-primary p-1 rounded">text-primary-foreground</p>
+                        <p className="text-secondary">text-secondary</p>
+                    </div>
+                    <div className="space-y-2">
+                        <p className="font-semibold">Accent & Destructive</p>
+                        <p className="text-accent">text-accent</p>
+                        <p className="text-destructive">text-destructive</p>
+                        <p className="text-destructive-foreground bg-destructive p-1 rounded">text-destructive-foreground</p>
+                    </div>
+                    <div className="space-y-2">
+                        <p className="font-semibold">Standard Palette</p>
+                        <p className="text-blue-500">text-blue-500</p>
+                        <p className="text-green-600">text-green-600</p>
+                        <p className="text-yellow-700">text-yellow-700</p>
+                        <p className="text-slate-800">text-slate-800</p>
+                    </div>
+                </CardContent>
+            </Card>
+
              {/* Cards Showcase */}
             <Card>
                 <CardHeader>
