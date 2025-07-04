@@ -103,7 +103,7 @@ export function JournalEntryForm() {
     const form = useForm<JournalEntryFormValues>({
       resolver: zodResolver(journalEntryFormSchema),
       defaultValues: {
-        date: new Date(),
+        date: undefined,
         voucherType: 'Sales Voucher',
         description: '',
         debitLines: [{ accountId: '', amount: 0 }],
@@ -112,6 +112,10 @@ export function JournalEntryForm() {
       },
       mode: 'onChange',
     });
+
+    React.useEffect(() => {
+        form.setValue('date', new Date());
+    }, []);
 
     const { fields: debitFields, append: appendDebit, remove: removeDebit } = useFieldArray({
         control: form.control,

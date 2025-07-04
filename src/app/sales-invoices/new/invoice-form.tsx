@@ -135,15 +135,25 @@ export function InvoiceForm() {
       customerName: '',
       billingAddress: '',
       isShippingSameAsBilling: true,
-      invoiceNumber: `INV-${Math.floor(Math.random() * 9000) + 1000}`,
-      invoiceDate: new Date(),
-      dueDate: new Date(new Date().setDate(new Date().getDate() + 30)),
+      invoiceNumber: '',
+      invoiceDate: undefined,
+      dueDate: undefined,
       currency: 'INR',
       exchangeRate: 1,
       items: [{ itemName: '', hsnCode: '', quantity: 1, rate: 0, discount: 0, gstRate: 18, unit: 'pcs' }],
       notes: 'Thank you for your business. All payments are due within 30 days.',
     },
   });
+
+  React.useEffect(() => {
+    const today = new Date();
+    const futureDate = new Date();
+    futureDate.setDate(today.getDate() + 30);
+    
+    form.setValue('invoiceNumber', `INV-${Math.floor(Math.random() * 9000) + 1000}`);
+    form.setValue('invoiceDate', today);
+    form.setValue('dueDate', futureDate);
+  }, []);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
