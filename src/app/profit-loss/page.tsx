@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -170,7 +171,7 @@ export default function ProfitAndLossPage() {
             </CardHeader>
             <CardContent className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-                    <ReportSection title="Income" data={incomeData} titleClassName="text-primary-foreground bg-primary px-3 py-1 rounded-md" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-primary" />
+                    <ReportSection title="Income" data={incomeData} titleClassName="flex-grow text-primary-foreground bg-primary px-3 py-1 rounded-md" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-primary" />
                     <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-destructive" />
                 </div>
                 <Separator className="my-4" />
