@@ -54,7 +54,7 @@ import {
 } from '@/components/ui/command';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -494,33 +494,37 @@ export function JournalEntryForm() {
                                 </div>
                             </div>
                             
-                            <div className="flex items-center justify-between mt-12">
-                                <FormField
-                                    control={form.control}
-                                    name="autoApprove"
-                                    render={({ field }) => (
-                                        <FormItem className="flex flex-row items-center justify-start space-x-2 space-y-0">
-                                            <Label>Auto Approve</Label>
-                                             <Tooltip><TooltipTrigger asChild>
-                                                <button type="button"><Info className="h-4 w-4 text-muted-foreground" /></button>
-                                            </TooltipTrigger><TooltipContent>
-                                                <p>This entry will be approved automatically.</p>
-                                            </TooltipContent></Tooltip>
-                                            <FormControl>
-                                                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-                                <div className="flex items-center gap-4">
-                                    <Button type="button" variant="outline" size="lg" onClick={handleFormReset}>
-                                        Cancel
-                                    </Button>
-                                    <Button type="submit" disabled={isSubmitting} size="lg">
-                                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                                        Save Voucher
-                                    </Button>
-                                </div>
+                            <FormField
+                                control={form.control}
+                                name="autoApprove"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                        <div className="space-y-0.5">
+                                            <FormLabel className="text-base">
+                                                Auto-Approve Entry
+                                            </FormLabel>
+                                            <FormDescription>
+                                                This entry will be approved automatically and will immediately affect your books.
+                                            </FormDescription>
+                                        </div>
+                                        <FormControl>
+                                            <Switch
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+
+                            <div className="flex items-center justify-end gap-4 mt-8">
+                                <Button type="button" variant="outline" size="lg" onClick={handleFormReset}>
+                                    Cancel
+                                </Button>
+                                <Button type="submit" disabled={isSubmitting} size="lg">
+                                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                                    Save Voucher
+                                </Button>
                             </div>
 
                         </form>
