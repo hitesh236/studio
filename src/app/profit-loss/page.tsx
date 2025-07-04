@@ -25,7 +25,7 @@ const calculateTotal = (node: Ledger): number => {
 };
 
 // Component to render a single row in the report
-const ReportRow = ({ node, level, baseValue }: { node: Ledger; level: number; baseValue?: number }) => {
+const ReportRow = ({ node, level, baseValue, showPercentages }: { node: Ledger; level: number; baseValue?: number; showPercentages: boolean }) => {
     const isGroup = node.type === 'group';
     const total = calculateTotal(node);
     const percentage = baseValue && baseValue !== 0 ? (Math.abs(total) / Math.abs(baseValue)) * 100 : 0;
@@ -36,38 +36,40 @@ const ReportRow = ({ node, level, baseValue }: { node: Ledger; level: number; ba
                 "flex items-center justify-between py-2 text-sm",
                 isGroup && "font-semibold"
             )} style={{ paddingLeft: `${level * 1.5}rem` }}>
-                <span className="pr-4">{node.name}</span>
+                <span className="pr-4">
+                    {node.name}
+                    {showPercentages && percentage > 0.01 && (
+                        <span className="font-normal text-muted-foreground ml-2">({percentage.toFixed(0)}%)</span>
+                    )}
+                </span>
                 <div className="flex items-center gap-4 flex-shrink-0">
-                    {baseValue && <span className="w-16 text-right font-mono text-muted-foreground text-xs">{percentage > 0.01 ? `${percentage.toFixed(2)}%` : ''}</span>}
                     <span className="w-32 text-right font-mono">{formatCurrency(total, 'INR')}</span>
                 </div>
             </div>
             {node.children && node.children.map(child => (
-                <ReportRow key={child.id} node={child} level={level + 1} baseValue={baseValue} />
+                <ReportRow key={child.id} node={child} level={level + 1} baseValue={baseValue} showPercentages={showPercentages} />
             ))}
         </div>
     );
 };
 
 // Component for a major section (Income or Expenses)
-const ReportSection = ({ title, data, className, titleClassName }: { title: string; data: Ledger; className?: string; titleClassName?: string }) => {
+const ReportSection = ({ title, data, className, titleClassName, showPercentages }: { title: string; data: Ledger; className?: string; titleClassName?: string, showPercentages: boolean }) => {
     const sectionTotal = calculateTotal(data);
     
     return (
         <div className={cn("space-y-2", className)}>
              <div className="flex justify-between items-baseline">
                 <h3 className={cn("text-lg font-semibold mb-2", titleClassName)}>{title}</h3>
-                <span className="text-xs text-muted-foreground font-semibold">% of Total {title}</span>
             </div>
 
             {data.children?.map(node => (
-                <ReportRow key={node.id} node={node} level={0} baseValue={sectionTotal} />
+                <ReportRow key={node.id} node={node} level={0} baseValue={sectionTotal} showPercentages={showPercentages} />
             ))}
             <Separator className="my-2" />
             <div className="flex justify-between font-bold text-base py-2">
                 <span>Total {title}</span>
                  <div className="flex items-center gap-4">
-                    <span className="w-16 text-right font-mono text-base">{sectionTotal !== 0 ? '100.00%' : '0.00%'}</span>
                     <span className="w-32 text-right font-mono">{formatCurrency(sectionTotal, 'INR')}</span>
                 </div>
             </div>
@@ -81,6 +83,7 @@ export default function ProfitAndLossPage() {
     from: new Date(new Date().getFullYear(), 0, 1),
     to: new Date(),
   });
+  const [showPercentages, setShowPercentages] = React.useState(true);
 
   const incomeData = ledgerData.find(group => group.id === 'income');
   const expenseData = ledgerData.find(group => group.id === 'expenses');
@@ -105,6 +108,9 @@ export default function ProfitAndLossPage() {
                         </CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
+                        <Button variant="outline" onClick={() => setShowPercentages(prev => !prev)} className="w-[110px]">
+                            {showPercentages ? 'Hide %' : 'Show %'}
+                        </Button>
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button id="date" variant="outline" className={cn("w-[260px] justify-start text-left font-normal", !date && "text-muted-foreground")}>
@@ -123,8 +129,8 @@ export default function ProfitAndLossPage() {
             </CardHeader>
             <CardContent className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-                    <ReportSection title="Income" data={incomeData} titleClassName="text-primary" />
-                    <ReportSection title="Expenses" data={expenseData} className="md:border-l md:pl-12" titleClassName="text-destructive" />
+                    <ReportSection title="Income" data={incomeData} titleClassName="text-primary" showPercentages={showPercentages} />
+                    <ReportSection title="Expenses" data={expenseData} className="md:border-l md:pl-12" titleClassName="text-destructive" showPercentages={showPercentages} />
                 </div>
                 <Separator className="my-4" />
                 <div className={cn(
