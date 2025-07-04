@@ -139,7 +139,8 @@ export const ledgerData: Ledger[] = [
             name: 'Indirect Incomes',
             type: 'group',
             children: [
-                { id: 'ledger-interest-received', name: 'Interest Received', type: 'ledger' },
+                { id: 'ledger-interest-received', name: 'Interest Received', type: 'ledger', balance: 15000 },
+                { id: 'ledger-commission', name: 'Commission Received', type: 'ledger', balance: 45000 },
             ]
         },
         {
@@ -147,8 +148,8 @@ export const ledgerData: Ledger[] = [
             name: 'Sales Accounts',
             type: 'group',
             children: [
-                { id: 'ledger-domestic-sales', name: 'Domestic Sales', type: 'ledger' },
-                { id: 'ledger-export-sales', name: 'Export Sales', type: 'ledger' },
+                { id: 'ledger-domestic-sales', name: 'Domestic Sales', type: 'ledger', balance: 1250000 },
+                { id: 'ledger-export-sales', name: 'Export Sales', type: 'ledger', balance: 350000 },
             ]
         },
       ]
@@ -170,16 +171,19 @@ export const ledgerData: Ledger[] = [
             name: 'Indirect Expenses',
             type: 'group',
             children: [
-                { id: 'ledger-rent', name: 'Rent Expense', type: 'ledger' },
-                { id: 'ledger-salaries', name: 'Salaries Expense', type: 'ledger' },
-                { id: 'ledger-office-supplies', name: 'Office Supplies', type: 'ledger' },
+                { id: 'ledger-rent', name: 'Rent Expense', type: 'ledger', balance: 120000 },
+                { id: 'ledger-salaries', name: 'Salaries Expense', type: 'ledger', balance: 450000 },
+                { id: 'ledger-office-supplies', name: 'Office Supplies', type: 'ledger', balance: 35000 },
+                { id: 'ledger-advertising', name: 'Advertising', type: 'ledger', balance: 75000 },
             ]
         },
         {
             id: 'purchase-accounts',
             name: 'Purchase Accounts',
             type: 'group',
-            children: []
+            children: [
+                { id: 'ledger-domestic-purchases', name: 'Domestic Purchases', type: 'ledger', balance: 650000 },
+            ]
         },
       ]
   }

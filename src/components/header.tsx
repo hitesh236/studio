@@ -20,7 +20,6 @@ import { LogOut, User } from 'lucide-react';
 
 const pathToTitle: { [key: string]: string } = {
   '/': 'Dashboard',
-  '/all-transactions': 'View All Transactions',
   '/customer-portfolio': 'Customer Portfolio',
   '/customers': 'Customers',
   '/customers/new': 'Add Customer',
@@ -28,8 +27,8 @@ const pathToTitle: { [key: string]: string } = {
   '/invoice-preview-fc': 'Invoice Preview FC',
   '/journal-entries': 'Journal Entries',
   '/journal-entries/new': 'New Journal Entry',
-  '/ledgers': 'Ledgers List',
   '/my-accounts': 'Groups & Ledgers',
+  '/profit-loss': 'Profit & Loss Statement',
   '/sales-invoices': 'Sales Invoices',
   '/sales-invoices/new': 'Create Invoice',
   '/settings': 'Settings',

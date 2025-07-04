@@ -184,7 +184,7 @@ export function AppSidebar() {
               <SidebarMenuButton tooltip="Groups & Ledgers" isActive={pathname.startsWith('/my-accounts')} asChild>
                 <Link href="/my-accounts" onClick={handleLinkClick}>
                     <Wallet />
-                    <span>Groups & Ledgers</span>
+                    <span>Groups &amp; Ledgers</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -203,9 +203,11 @@ export function AppSidebar() {
           <SidebarGroupLabel>Reports</SidebarGroupLabel>
           <SidebarMenu>
              <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Profit &amp; Loss">
-                <TrendingUp />
-                <span>Profit &amp; Loss</span>
+              <SidebarMenuButton tooltip="Profit &amp; Loss" isActive={pathname.startsWith('/profit-loss')} asChild>
+                <Link href="/profit-loss" onClick={handleLinkClick}>
+                    <TrendingUp />
+                    <span>Profit &amp; Loss</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
