@@ -69,13 +69,20 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 
+// Import from lib/ledger-data
+import type { Ledger as Account } from '@/lib/ledger-data';
+import { ledgerData as initialChartOfAccounts } from '@/lib/ledger-data';
+
+
 const debitCreditLineSchema = z.object({
   accountId: z.string().min(1, { message: "Account is required" }),
   amount: z.coerce.number().min(0.01, { message: "Amount must be positive" }),
 });
 
 const journalEntryFormSchema = z.object({
-  date: z.date(),
+  date: z.date({
+    required_error: "A date is required.",
+  }),
   voucherType: z.string().min(1, { message: 'Voucher type is required' }),
   description: z.string().min(3, "Description is required."),
   debitLines: z.array(debitCreditLineSchema).min(1, "At least one debit line is required."),
@@ -91,45 +98,6 @@ const journalEntryFormSchema = z.object({
 });
 
 type JournalEntryFormValues = z.infer<typeof journalEntryFormSchema>;
-
-type Account = {
-  id: string;
-  name: string;
-  type: 'group' | 'ledger';
-  children?: Account[];
-};
-
-const initialChartOfAccounts: Account[] = [
-    { 
-        id: 'assets', name: 'Assets', type: 'group', children: [
-            { id: '1010-cash', name: 'Cash Book', type: 'ledger' },
-            { id: '1010-bank', name: 'Bank Book', type: 'ledger' },
-            { id: '1200', name: 'Accounts Receivable', type: 'ledger' },
-            { id: '1510', name: 'Inventory', type: 'ledger' },
-        ]
-    },
-    {
-        id: 'liabilities', name: 'Liabilities', type: 'group', children: [
-            { id: '2010', name: 'Accounts Payable', type: 'ledger' },
-        ]
-    },
-    {
-        id: 'equity', name: 'Equity', type: 'group', children: [
-            { id: '3010', name: "Capital", type: 'ledger'},
-        ]
-    },
-    {
-        id: 'income', name: 'Income', type: 'group', children: [
-             { id: '4010', name: 'Sales Revenue', type: 'ledger' },
-        ]
-    },
-    {
-        id: 'expenses', name: 'Expenses', type: 'group', children: [
-            { id: '5010', name: 'Rent Expense', type: 'ledger' },
-            { id: '5020', name: 'Salaries Expense', type: 'ledger' },
-        ]
-    }
-];
 
 const voucherTypes = [
     'Sales Voucher', 'Purchase Voucher', 'Journal Voucher', 'Payment Voucher', 'Receipt Voucher'
@@ -147,8 +115,8 @@ export function JournalEntryForm() {
     const form = useForm<JournalEntryFormValues>({
       resolver: zodResolver(journalEntryFormSchema),
       defaultValues: {
-        date: undefined,
-        voucherType: 'Sales Voucher',
+        // date will be set by useEffect
+        voucherType: 'Journal Voucher',
         description: '',
         debitLines: [{ accountId: '', amount: 0 }],
         creditLines: [{ accountId: '', amount: 0 }],
@@ -156,9 +124,12 @@ export function JournalEntryForm() {
       },
       mode: 'onChange',
     });
-
+    
+    // Client-side date initialization to avoid hydration errors
     React.useEffect(() => {
-        form.setValue('date', new Date());
+        if (!form.getValues('date')) {
+            form.setValue('date', new Date());
+        }
     }, [form]);
 
     const { fields: debitFields, append: appendDebit, remove: removeDebit } = useFieldArray({
@@ -217,7 +188,7 @@ export function JournalEntryForm() {
     const handleFormReset = () => {
         form.reset({
             date: new Date(),
-            voucherType: 'Sales Voucher',
+            voucherType: 'Journal Voucher',
             description: '',
             debitLines: [{ accountId: '', amount: 0 }],
             creditLines: [{ accountId: '', amount: 0 }],
