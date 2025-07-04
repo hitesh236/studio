@@ -40,15 +40,15 @@ const ReportRow = ({ node, showPercentages, totalRevenue }: { node: Ledger; show
         <div>
              <div className={cn(
                 "flex items-start justify-between py-1.5",
-                isGroup ? 'font-semibold bg-muted/50' : 'font-normal'
+                isGroup ? 'font-bold' : 'font-normal'
             )}>
-                <span className="flex flex-1 items-center gap-2 pr-4">
+                <span className="flex flex-1 items-center gap-2 pr-4 break-words">
                     {isGroup ? (
                         <Folder className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     ) : (
                         <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     )}
-                    <span className="flex-1 break-words">
+                    <span className="flex-1">
                         {node.name}
                         {!isGroup && showPercentages && <span className="font-normal text-muted-foreground ml-2">({percentage.toFixed(2)}%)</span>}
                     </span>
