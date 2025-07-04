@@ -39,7 +39,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName 
     return (
         <div
             className={cn(
-                "flex items-start justify-between py-1.5",
+                "flex items-start justify-between py-1.5 text-sm",
                 isGroup ? 'font-bold' : 'font-normal',
                 isGroup ? groupClassName : ''
             )}
