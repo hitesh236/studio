@@ -9,119 +9,126 @@ export type Ledger = {
 };
 
 export const ledgerData: Ledger[] = [
-    {
-        id: 'assets',
-        name: 'Assets',
-        type: 'group',
-        position: 1,
-        balance: 177500.00,
-        children: [
-            {
-                id: 'current-assets',
-                name: 'Current Assets',
-                type: 'group',
-                position: 1,
-                balance: 77500.00,
-                children: [
-                    { id: 'cash', name: 'Cash', type: 'ledger', position: 1, balance: 15000.00 },
-                    { id: 'bank-accounts', name: 'Bank Accounts', type: 'ledger', position: 2, balance: 50000.00 },
-                    { id: 'accounts-receivable', name: 'Accounts Receivable', type: 'ledger', position: 3, balance: 12500.00 },
-                ],
-            },
-            {
-                id: 'fixed-assets',
-                name: 'Fixed Assets',
-                type: 'group',
-                position: 2,
-                balance: 100000.00,
-                children: [
-                    { id: 'property', name: 'Property & Equipment', type: 'ledger', position: 1, balance: 85000.00 },
-                    { id: 'vehicles', name: 'Vehicles', type: 'ledger', position: 2, balance: 15000.00 },
-                ],
-            },
-        ],
-    },
-    {
-        id: 'liabilities',
-        name: 'Liabilities',
-        type: 'group',
-        position: 2,
-        balance: 55000.00,
-        children: [
-            {
-                id: 'current-liabilities',
-                name: 'Current Liabilities',
-                type: 'group',
-                position: 1,
-                balance: 30000.00,
-                children: [
-                    { id: 'accounts-payable', name: 'Accounts Payable', type: 'ledger', position: 1, balance: 20000.00 },
-                    { id: 'credit-card', name: 'Credit Card Payable', type: 'ledger', position: 2, balance: 10000.00 },
-                ],
-            },
-            {
-                id: 'long-term-liabilities',
-                name: 'Long-Term Liabilities',
-                type: 'group',
-                position: 2,
-                balance: 25000.00,
-                children: [
-                    { id: 'bank-loan', name: 'Bank Loan', type: 'ledger', position: 1, balance: 25000.00 },
-                ],
-            },
-        ],
-    },
-    {
-        id: 'equity',
-        name: 'Equity',
-        type: 'group',
-        position: 3,
-        balance: 122500.00,
-        children: [
-            { id: 'owners-equity', name: 'Owner\'s Equity', type: 'ledger', position: 1, balance: 100000.00 },
-            { id: 'retained-earnings', name: 'Retained Earnings', type: 'ledger', position: 2, balance: 22500.00 },
-        ],
-    },
-    {
-        id: 'income',
-        name: 'Income',
-        type: 'group',
-        position: 4,
-        balance: 95000.00,
-        children: [
-            { id: 'sales', name: 'Sales Revenue', type: 'ledger', position: 1, balance: 90000.00 },
-            { id: 'interest-income', name: 'Interest Income', type: 'ledger', position: 2, balance: 5000.00 },
-        ],
-    },
-    {
-        id: 'expenses',
-        name: 'Expenses',
-        type: 'group',
-        position: 5,
-        balance: 45000.00,
-        children: [
-            {
-                id: 'cogs',
-                name: 'Cost of Goods Sold',
-                type: 'group',
-                position: 1,
-                balance: 20000.00,
-                children: [
-                    { id: 'purchases', name: 'Purchases', type: 'ledger', position: 1, balance: 20000.00 },
-                ]
-            },
-            {
-                id: 'operating-expenses',
-                name: 'Operating Expenses',
-                type: 'group',
-                position: 2,
-                balance: 25000.00,
-                children: [
-                    { id: 'rent', name: 'Rent Expense', type: 'ledger', position: 1, balance: 10000.00 },
-                    { id: 'salaries', name: 'Salaries & Wages', type: 'ledger', position: 2, balance: 12000.00 },
-                    { id: 'utilities', name: 'Utilities Expense', type: 'ledger', position: 3, balance: 3000.00 },
-                ],
-            },
-        ],
-    },
+  {
+    id: 'branch-divisions',
+    name: 'Branch / Divisions',
+    type: 'group',
+    position: 1,
+    children: []
+  },
+  {
+    id: 'capital-account',
+    name: 'Capital Account',
+    type: 'group',
+    position: 2,
+    children: [
+        { id: 'reserves-surplus', name: 'Reserves & Surplus', type: 'group', children: [] }
+    ]
+  },
+  {
+    id: 'current-assets',
+    name: 'Current Assets',
+    type: 'group',
+    position: 3,
+    children: [
+      { id: 'bank-accounts', name: 'Bank Accounts', type: 'group', children: [] },
+      { id: 'cash-in-hand', name: 'Cash-in-hand', type: 'group', children: [] },
+      { id: 'deposits-asset', name: 'Deposits (Asset)', type: 'group', children: [] },
+      { id: 'loans-advances-asset', name: 'Loans & Advances (Asset)', type: 'group', children: [] },
+      { id: 'stock-in-hand', name: 'Stock-in-hand', type: 'group', children: [] },
+      { id: 'sundry-debtors', name: 'Sundry Debtors', type: 'group', children: [] },
+    ]
+  },
+  {
+    id: 'current-liabilities',
+    name: 'Current Liabilities',
+    type: 'group',
+    position: 4,
+    children: [
+      { id: 'duties-taxes', name: 'Duties & Taxes', type: 'group', children: [] },
+      { id: 'provisions', name: 'Provisions', type: 'group', children: [] },
+      { id: 'sundry-creditors', name: 'Sundry Creditors', type: 'group', children: [] },
+    ]
+  },
+  {
+    id: 'direct-expenses',
+    name: 'Direct Expenses',
+    type: 'group',
+    position: 5,
+    children: []
+  },
+  {
+    id: 'direct-incomes',
+    name: 'Direct Incomes',
+    type: 'group',
+    position: 6,
+    children: []
+  },
+  {
+    id: 'fixed-assets',
+    name: 'Fixed Assets',
+    type: 'group',
+    position: 7,
+    children: []
+  },
+  {
+    id: 'indirect-expenses',
+    name: 'Indirect Expenses',
+    type: 'group',
+    position: 8,
+    children: []
+  },
+  {
+    id: 'indirect-incomes',
+    name: 'Indirect Incomes',
+    type: 'group',
+    position: 9,
+    children: []
+  },
+  {
+    id: 'investments',
+    name: 'Investments',
+    type: 'group',
+    position: 10,
+    children: []
+  },
+  {
+    id: 'loans-liability',
+    name: 'Loans (Liability)',
+    type: 'group',
+    position: 11,
+    children: [
+      { id: 'bank-od-ac', name: 'Bank OD A/c', type: 'group', children: [] },
+      { id: 'secured-loans', name: 'Secured Loans', type: 'group', children: [] },
+      { id: 'unsecured-loans', name: 'Unsecured Loans', type: 'group', children: [] },
+    ]
+  },
+  {
+    id: 'misc-expenses-asset',
+    name: 'Misc. Expenses (ASSET)',
+    type: 'group',
+    position: 12,
+    children: []
+  },
+  {
+    id: 'purchase-accounts',
+    name: 'Purchase Accounts',
+    type: 'group',
+    position: 13,
+    children: []
+  },
+  {
+    id: 'sales-accounts',
+    name: 'Sales Accounts',
+    type: 'group',
+    position: 14,
+    children: []
+  },
+  {
+    id: 'suspense-ac',
+    name: 'Suspense A/c',
+    type: 'group',
+    position: 15,
+    children: []
+  },
 ];
