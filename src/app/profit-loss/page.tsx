@@ -173,7 +173,7 @@ export default function ProfitAndLossPage() {
             <CardContent className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
                     <ReportSection title="Income" data={incomeData} titleClassName="text-primary-foreground bg-primary" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-primary" />
-                    <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-destructive" />
+                    <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive-foreground bg-destructive" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-destructive" />
                 </div>
                 <Separator className="my-4" />
                 <div className={cn(
