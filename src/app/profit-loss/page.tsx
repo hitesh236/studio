@@ -39,7 +39,7 @@ const ReportRow = ({ node, showPercentages, totalRevenue }: { node: Ledger; show
     return (
         <div>
              <div className={cn(
-                "flex items-start justify-between py-1.5 text-sm",
+                "flex items-start justify-between py-1.5",
                 isGroup ? 'font-semibold bg-muted/50' : 'font-normal'
             )}>
                 <span className="flex flex-1 items-center gap-2 pr-4">
@@ -48,18 +48,15 @@ const ReportRow = ({ node, showPercentages, totalRevenue }: { node: Ledger; show
                     ) : (
                         <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     )}
-                    <span>
+                    <span className="flex-1 break-words">
                         {node.name}
-                        {showPercentages && <span className="font-normal text-muted-foreground ml-2">({percentage.toFixed(2)}%)</span>}
+                        {!isGroup && showPercentages && <span className="font-normal text-muted-foreground ml-2">({percentage.toFixed(2)}%)</span>}
                     </span>
                 </span>
                 
-                <div className="flex items-center gap-x-4 flex-shrink-0 ml-4">
-                    <span className="w-28 text-right font-mono">
+                <div className="flex items-center flex-shrink-0 ml-4">
+                    <span className="w-32 text-right font-mono">
                         {!isGroup ? formatCurrency(displayTotal, 'INR') : ''}
-                    </span>
-                    <span className="w-28 text-right font-mono">
-                        {isGroup ? formatCurrency(displayTotal, 'INR') : ''}
                     </span>
                 </div>
             </div>
@@ -71,16 +68,15 @@ const ReportRow = ({ node, showPercentages, totalRevenue }: { node: Ledger; show
 // Component for a major section (Income or Expenses)
 const ReportSection = ({ title, data, className, titleClassName, showPercentages, totalRevenue }: { title: string; data: Ledger; className?: string; titleClassName?: string, showPercentages: boolean, totalRevenue: number }) => {
     const sectionTotal = calculateTotal(data);
-    const sectionPercentage = totalRevenue > 0 ? (sectionTotal / totalRevenue) * 100 : 0;
-
+    
     const allNodes: Ledger[] = [];
-    const collectNodes = (node: Ledger, isTopLevel = true) => {
+    const collectNodes = (node: Ledger) => {
         allNodes.push(node);
         if (node.children) {
-            node.children.forEach(child => collectNodes(child, false));
+            node.children.forEach(child => collectNodes(child));
         }
     };
-    collectNodes(data, true);
+    collectNodes(data);
     // remove the top level group itself from the list
     allNodes.shift();
     
@@ -88,9 +84,8 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
         <div className={cn("space-y-2 border rounded-lg p-4", className)}>
              <div className="flex justify-between items-baseline mb-2">
                 <h3 className={cn("text-lg font-semibold", titleClassName)}>{title}</h3>
-                <div className="flex items-center gap-x-4 text-sm font-semibold text-muted-foreground flex-shrink-0">
-                    <span className="w-28 text-right">Amount</span>
-                    <span className="w-28 text-right">Total</span>
+                <div className="flex items-center text-sm font-semibold text-muted-foreground flex-shrink-0">
+                    <span className="w-32 text-right">Amount</span>
                 </div>
             </div>
 
@@ -99,13 +94,9 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
             ))}
             <Separator className="my-2" />
             <div className="flex justify-between font-bold text-base py-2">
-                <span>
-                    Total {title}
-                     {showPercentages && <span className="font-normal text-muted-foreground ml-2">({sectionPercentage.toFixed(2)}%)</span>}
-                </span>
-                 <div className="flex items-center gap-x-4 flex-shrink-0">
-                    <span className="w-28 text-right font-mono"></span>
-                    <span className="w-28 text-right font-mono">{formatCurrency(sectionTotal, 'INR')}</span>
+                <span>Total {title}</span>
+                 <div className="flex items-center flex-shrink-0">
+                    <span className="w-32 text-right font-mono">{formatCurrency(sectionTotal, 'INR')}</span>
                 </div>
             </div>
         </div>
