@@ -39,20 +39,20 @@ const ReportRow = ({ node, level, baseValue, showPercentages }: { node: Ledger; 
     return (
         <div>
             <div className={cn(
-                "flex items-center justify-between py-1.5 text-sm",
-                isGroup ? 'font-semibold' : 'font-normal'
-            )} style={{ paddingLeft: `${level * 1}rem` }}>
-                <span className="pr-4">
+                "flex items-center justify-between py-1.5 text-sm rounded-md px-2 -mx-2 hover:bg-muted/50",
+                isGroup ? 'font-semibold bg-muted/50' : 'font-normal'
+            )} style={{ paddingLeft: `${level * 1 + 0.5}rem` }}>
+                <span className="pr-4 truncate" title={node.name}>
                     {node.name}
                     {showPercentages && percentage > 0.1 && (
                         <span className="font-normal text-muted-foreground ml-2">({percentage.toFixed(0)}%)</span>
                     )}
                 </span>
                 <div className="flex items-center gap-4 flex-shrink-0">
-                    <span className="w-32 text-right font-mono">
+                    <span className="w-24 sm:w-32 text-right font-mono">
                         {!isGroup ? formatCurrency(displayTotal, 'INR') : ''}
                     </span>
-                    <span className="w-32 text-right font-mono">
+                    <span className="w-24 sm:w-32 text-right font-mono">
                         {isGroup ? formatCurrency(displayTotal, 'INR') : ''}
                     </span>
                 </div>
@@ -73,8 +73,8 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
              <div className="flex justify-between items-baseline mb-2">
                 <h3 className={cn("text-lg font-semibold", titleClassName)}>{title}</h3>
                 <div className="flex items-center gap-4 text-sm font-semibold text-muted-foreground">
-                    <span className="w-32 text-right">Amount</span>
-                    <span className="w-32 text-right">Total</span>
+                    <span className="w-24 sm:w-32 text-right">Amount</span>
+                    <span className="w-24 sm:w-32 text-right">Total</span>
                 </div>
             </div>
 
@@ -85,8 +85,8 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
             <div className="flex justify-between font-bold text-base py-2">
                 <span>Total {title}</span>
                  <div className="flex items-center gap-4">
-                    <span className="w-32 text-right font-mono"></span>
-                    <span className="w-32 text-right font-mono">{formatCurrency(sectionTotal, 'INR')}</span>
+                    <span className="w-24 sm:w-32 text-right font-mono"></span>
+                    <span className="w-24 sm:w-32 text-right font-mono">{formatCurrency(sectionTotal, 'INR')}</span>
                 </div>
             </div>
         </div>
