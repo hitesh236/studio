@@ -37,7 +37,8 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName 
     const percentage = totalRevenue > 0 ? (total / totalRevenue) * 100 : 0;
 
     return (
-        <div
+        <motion.div
+            layout
             className={cn(
                 "flex items-start justify-between py-1.5",
                 isGroup ? 'font-bold' : 'font-normal',
@@ -57,10 +58,13 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName 
                 </span>
             </span>
             
-            <span className="font-mono text-sm text-right">
-                {formatCurrency(displayTotal, 'INR')}
+            <span className={cn(
+                "font-mono text-sm text-right shrink-0",
+                !isGroup && "pr-[10px]"
+            )}>
+                {isGroup || node.balance !== undefined ? formatCurrency(displayTotal, 'INR') : null}
             </span>
-        </div>
+        </motion.div>
     );
 };
 
