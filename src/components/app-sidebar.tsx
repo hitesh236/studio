@@ -70,7 +70,7 @@ export function AppSidebar() {
             <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/'} asChild>
                 <Link href="/" onClick={handleLinkClick}>
                     <LayoutDashboard />
-                    Dashboard
+                    <span>Dashboard</span>
                 </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -83,7 +83,7 @@ export function AppSidebar() {
                 <SidebarMenuButton tooltip="Table" isActive={pathname.startsWith('/table')} asChild>
                     <Link href="/table" onClick={handleLinkClick}>
                         <FileText />
-                        Table
+                        <span>Table</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
@@ -91,7 +91,7 @@ export function AppSidebar() {
                 <SidebarMenuButton tooltip="Invoice Preview" isActive={pathname.startsWith('/invoice-preview')} asChild>
                     <Link href="/invoice-preview" onClick={handleLinkClick}>
                         <Eye />
-                        Invoice Preview
+                        <span>Invoice Preview</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
@@ -99,7 +99,7 @@ export function AppSidebar() {
                 <SidebarMenuButton tooltip="Invoice Preview FC" isActive={pathname.startsWith('/invoice-preview-fc')} asChild>
                     <Link href="/invoice-preview-fc" onClick={handleLinkClick}>
                         <Globe />
-                        Invoice Preview FC
+                        <span>Invoice Preview FC</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
@@ -107,7 +107,7 @@ export function AppSidebar() {
                 <SidebarMenuButton tooltip="Customer Portfolio" isActive={pathname.startsWith('/customer-portfolio')} asChild>
                     <Link href="/customer-portfolio" onClick={handleLinkClick}>
                         <UserCircle />
-                        Customer Portfolio
+                        <span>Customer Portfolio</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
@@ -115,7 +115,7 @@ export function AppSidebar() {
                 <SidebarMenuButton tooltip="UI Components" isActive={pathname.startsWith('/ui')} asChild>
                     <Link href="/ui" onClick={handleLinkClick}>
                         <Palette />
-                        UI
+                        <span>UI</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
@@ -130,7 +130,7 @@ export function AppSidebar() {
                 <SidebarMenuButton tooltip="Customers" isActive={pathname.startsWith('/customers')} asChild>
                     <Link href="/customers" onClick={handleLinkClick}>
                         <Users />
-                        Customers
+                        <span>Customers</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
@@ -138,14 +138,14 @@ export function AppSidebar() {
                 <SidebarMenuButton tooltip="Sales Invoices" isActive={pathname.startsWith('/sales-invoices')} asChild>
                     <Link href="/sales-invoices" onClick={handleLinkClick}>
                         <FileText />
-                        Sales Invoices
+                        <span>Sales Invoices</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton tooltip="Invoice Returns (Sales)">
                 <Undo2 />
-                Invoice Returns (Sales)
+                <span>Invoice Returns (Sales)</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -158,20 +158,20 @@ export function AppSidebar() {
                 <SidebarMenuButton tooltip="Vendors" isActive={pathname.startsWith('/vendors')} asChild>
                     <Link href="/vendors" onClick={handleLinkClick}>
                         <Store />
-                        Vendors
+                        <span>Vendors</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton tooltip="Purchase Bills">
                 <Receipt />
-                Purchase Bills
+                <span>Purchase Bills</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton tooltip="Invoice Returns (Purchase)">
                 <Redo2 />
-                Invoice Returns (Purchase)
+                <span>Invoice Returns (Purchase)</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -184,7 +184,7 @@ export function AppSidebar() {
               <SidebarMenuButton tooltip="Groups & Ledgers" isActive={pathname.startsWith('/my-accounts')} asChild>
                 <Link href="/my-accounts" onClick={handleLinkClick}>
                     <Wallet />
-                    Groups & Ledgers
+                    <span>Groups & Ledgers</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -192,7 +192,7 @@ export function AppSidebar() {
               <SidebarMenuButton tooltip="Journal Entries" isActive={pathname.startsWith('/journal-entries')} asChild>
                 <Link href="/journal-entries" onClick={handleLinkClick}>
                     <BookOpen />
-                    Journal Entries
+                    <span>Journal Entries</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -200,7 +200,7 @@ export function AppSidebar() {
               <SidebarMenuButton tooltip="Ledgers" isActive={pathname.startsWith('/ledgers')} asChild>
                 <Link href="/ledgers" onClick={handleLinkClick}>
                     <Scale />
-                    Ledgers
+                    <span>Ledgers</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -208,7 +208,7 @@ export function AppSidebar() {
               <SidebarMenuButton tooltip="View All Transactions" isActive={pathname.startsWith('/all-transactions')} asChild>
                 <Link href="/all-transactions" onClick={handleLinkClick}>
                     <History />
-                    View All Transactions
+                    <span>View All Transactions</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -221,20 +221,20 @@ export function AppSidebar() {
              <SidebarMenuItem>
               <SidebarMenuButton tooltip="Profit &amp; Loss">
                 <TrendingUp />
-                Profit &amp; Loss
+                <span>Profit &amp; Loss</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
               <SidebarMenuButton tooltip="What I Own / Owe">
                 <Scale />
-                What I Own / Owe
+                <span>What I Own / Owe</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
                 <SidebarMenuButton tooltip="GST Summary" isActive={pathname.startsWith('/gst-summary')} asChild>
                     <Link href="/gst-summary" onClick={handleLinkClick}>
                         <Percent />
-                        GST Summary
+                        <span>GST Summary</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
@@ -242,14 +242,14 @@ export function AppSidebar() {
                 <SidebarMenuButton tooltip="GST Reports" isActive={pathname.startsWith('/gst-reports')} asChild>
                     <Link href="/gst-reports" onClick={handleLinkClick}>
                         <FileSpreadsheet />
-                        GST Reports
+                        <span>GST Reports</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
               <SidebarMenuButton tooltip="Invoice Overviews">
                 <BookOpen />
-                Invoice Overviews
+                <span>Invoice Overviews</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -262,7 +262,7 @@ export function AppSidebar() {
                 <SidebarMenuButton tooltip="GSTR-1 Filing" isActive={pathname.startsWith('/gst-filing/gstr1')} asChild>
                     <Link href="/gst-filing/gstr1" onClick={handleLinkClick}>
                         <Send />
-                        GSTR-1 Filing
+                        <span>GSTR-1 Filing</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
@@ -277,7 +277,7 @@ export function AppSidebar() {
                     <SidebarMenuButton tooltip="Company Settings" isActive={pathname.startsWith('/settings')} asChild>
                         <Link href="/settings" onClick={handleLinkClick}>
                             <Settings />
-                            Company Settings
+                            <span>Company Settings</span>
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -285,7 +285,7 @@ export function AppSidebar() {
                     <SidebarMenuButton tooltip="User Roles" isActive={pathname.startsWith('/settings/user-roles')} asChild>
                         <Link href="/settings/user-roles" onClick={handleLinkClick}>
                             <Shield />
-                            User Roles
+                            <span>User Roles</span>
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
