@@ -65,6 +65,3 @@ export const generateJournalEntries = (count: number): JournalEntry[] => {
     }
     return entries;
 };
-
-
-export const journalEntries: JournalEntry[] = generateJournalEntries(50);
