@@ -103,7 +103,7 @@ const LedgerEntry = ({
   onEdit: (ledger: Ledger) => void;
   onDelete: (ledger: Ledger) => void;
 }) => {
-  const [isOpen, setIsOpen] = useState(level < 2);
+  const [isOpen, setIsOpen] = useState(true);
   const hasChildren = ledger.children && ledger.children.length > 0;
   const isDeletable =
     ledger.type === 'group' && !nonDeletableGroupIds.has(ledger.id);
@@ -145,6 +145,19 @@ const LedgerEntry = ({
         </div>
 
         <div className="flex items-center gap-2 shrink-0 ml-4">
+          {reportType && ledger.type === 'group' && (
+            <Badge
+              variant="outline"
+              className={cn(
+                'font-normal text-xs',
+                reportType === 'Balance Sheet'
+                  ? 'border-secondary text-secondary'
+                  : 'border-primary text-primary'
+              )}
+            >
+              {reportType}
+            </Badge>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -173,19 +186,6 @@ const LedgerEntry = ({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          {reportType && ledger.type === 'group' && (
-            <Badge
-              variant="outline"
-              className={cn(
-                'font-normal text-xs',
-                reportType === 'Balance Sheet'
-                  ? 'border-secondary text-secondary'
-                  : 'border-primary text-primary'
-              )}
-            >
-              {reportType}
-            </Badge>
-          )}
         </div>
       </div>
       {hasChildren && isOpen && (
@@ -212,7 +212,7 @@ const LedgerEntry = ({
   );
 };
 
-export function LedgerView({ data }: LedgerViewProps) {
+export function LedgerView({ data }: { data: Ledger[] }) {
   const [ledgers, setLedgers] = useState<Ledger[]>(data);
   const { toast } = useToast();
 

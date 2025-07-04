@@ -20,19 +20,30 @@ export const ledgerData: Ledger[] = [
             name: 'Current Assets',
             type: 'group',
             children: [
-              { id: 'bank-accounts', name: 'Bank Accounts', type: 'group', children: [] },
-              { id: 'cash-in-hand', name: 'Cash-in-hand', type: 'group', children: [] },
+              { id: 'bank-accounts', name: 'Bank Accounts', type: 'group', children: [
+                { id: 'ledger-hdfc', name: 'HDFC Bank', type: 'ledger' },
+                { id: 'ledger-icici', name: 'ICICI Bank', type: 'ledger' },
+              ] },
+              { id: 'cash-in-hand', name: 'Cash-in-hand', type: 'group', children: [
+                { id: 'ledger-cash', name: 'Cash', type: 'ledger' },
+              ] },
               { id: 'deposits-asset', name: 'Deposits (Asset)', type: 'group', children: [] },
               { id: 'loans-advances-asset', name: 'Loans & Advances (Asset)', type: 'group', children: [] },
               { id: 'stock-in-hand', name: 'Stock-in-hand', type: 'group', children: [] },
-              { id: 'sundry-debtors', name: 'Sundry Debtors', type: 'group', children: [] },
+              { id: 'sundry-debtors', name: 'Sundry Debtors', type: 'group', children: [
+                { id: 'ledger-customer-a', name: 'Innovate Inc.', type: 'ledger' },
+                { id: 'ledger-customer-b', name: 'Solutions Corp.', type: 'ledger' },
+              ] },
             ]
         },
         {
             id: 'fixed-assets',
             name: 'Fixed Assets',
             type: 'group',
-            children: []
+            children: [
+                { id: 'ledger-furniture', name: 'Furniture & Fixtures', type: 'ledger' },
+                { id: 'ledger-computers', name: 'Computers', type: 'ledger' },
+            ]
         },
         {
             id: 'investments',
@@ -59,9 +70,14 @@ export const ledgerData: Ledger[] = [
             name: 'Current Liabilities',
             type: 'group',
             children: [
-              { id: 'duties-taxes', name: 'Duties & Taxes', type: 'group', children: [] },
+              { id: 'duties-taxes', name: 'Duties & Taxes', type: 'group', children: [
+                 { id: 'ledger-gst', name: 'GST Payable', type: 'ledger' },
+              ] },
               { id: 'provisions', name: 'Provisions', type: 'group', children: [] },
-              { id: 'sundry-creditors', name: 'Sundry Creditors', type: 'group', children: [] },
+              { id: 'sundry-creditors', name: 'Sundry Creditors', type: 'group', children: [
+                { id: 'ledger-vendor-a', name: 'Cloud Services LLC', type: 'ledger' },
+                { id: 'ledger-vendor-b', name: 'Office Supplies R Us', type: 'ledger' },
+              ] },
             ]
         },
         {
@@ -99,7 +115,9 @@ export const ledgerData: Ledger[] = [
             name: 'Capital Account',
             type: 'group',
             children: [
-                { id: 'reserves-surplus', name: 'Reserves & Surplus', type: 'group', children: [] }
+                { id: 'reserves-surplus', name: 'Reserves & Surplus', type: 'group', children: [
+                    { id: 'ledger-retained-earnings', name: 'Retained Earnings', type: 'ledger' },
+                ] }
             ]
           }
       ]
@@ -120,13 +138,18 @@ export const ledgerData: Ledger[] = [
             id: 'indirect-incomes',
             name: 'Indirect Incomes',
             type: 'group',
-            children: []
+            children: [
+                { id: 'ledger-interest-received', name: 'Interest Received', type: 'ledger' },
+            ]
         },
         {
             id: 'sales-accounts',
             name: 'Sales Accounts',
             type: 'group',
-            children: []
+            children: [
+                { id: 'ledger-domestic-sales', name: 'Domestic Sales', type: 'ledger' },
+                { id: 'ledger-export-sales', name: 'Export Sales', type: 'ledger' },
+            ]
         },
       ]
   },
@@ -146,7 +169,11 @@ export const ledgerData: Ledger[] = [
             id: 'indirect-expenses',
             name: 'Indirect Expenses',
             type: 'group',
-            children: []
+            children: [
+                { id: 'ledger-rent', name: 'Rent Expense', type: 'ledger' },
+                { id: 'ledger-salaries', name: 'Salaries Expense', type: 'ledger' },
+                { id: 'ledger-office-supplies', name: 'Office Supplies', type: 'ledger' },
+            ]
         },
         {
             id: 'purchase-accounts',
