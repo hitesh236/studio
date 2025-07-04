@@ -67,7 +67,7 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
     const sectionTotal = calculateTotal(data);
     
     return (
-        <div className={cn("space-y-2", className)}>
+        <div className={cn("space-y-2 border-t pt-4", className)}>
              <div className="flex justify-between items-baseline">
                 <h3 className={cn("text-lg font-semibold mb-2", titleClassName)}>{title}</h3>
             </div>
