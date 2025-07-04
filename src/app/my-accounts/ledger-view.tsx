@@ -604,16 +604,11 @@ export function LedgerView({ data }: LedgerViewProps) {
             const balanceSheetIds = ['assets', 'liabilities', 'equity'];
             const profitAndLossIds = ['income', 'expenses'];
 
-            const checkGroupType = (node: Ledger): 'Balance Sheet' | 'Profit & Loss' | null => {
-                if(balanceSheetIds.includes(node.id)) return 'Balance Sheet';
-                if(profitAndLossIds.includes(node.id)) return 'Profit & Loss';
-                
-                const parent = findParent(ledgers, node.id);
-                if (parent) return checkGroupType(parent);
-
-                return null;
+            if (balanceSheetIds.includes(group.id)) {
+                reportType = 'Balance Sheet';
+            } else if (profitAndLossIds.includes(group.id)) {
+                reportType = 'Profit & Loss';
             }
-            reportType = checkGroupType(group);
 
             return <LedgerEntry key={group.id} ledger={group} level={0} onEdit={handleOpenEditDialog} onDelete={handleOpenDeleteDialog} reportType={reportType} />;
           })}
