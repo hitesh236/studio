@@ -30,7 +30,7 @@ const calculateTotal = (node: Ledger): number => {
 };
 
 // Component to render a single row in the report
-const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledger; level: number; showPercentages: boolean; totalRevenue: number }) => {
+const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName }: { node: Ledger; level: number; showPercentages: boolean; totalRevenue: number, groupClassName: string }) => {
     const isGroup = node.type === 'group';
     const total = calculateTotal(node);
     const displayTotal = node.id === 'ledger-closing-stock' ? Math.abs(total) : total;
@@ -39,14 +39,15 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledge
     return (
         <div
             className={cn(
-                "flex items-start justify-between py-1.5 text-sm",
-                isGroup ? 'font-bold text-primary' : 'font-normal'
+                "flex items-start justify-between py-1.5",
+                isGroup ? 'font-bold' : 'font-normal text-sm',
+                isGroup ? groupClassName : ''
             )}
             style={{ paddingLeft: `${level * 10}px` }}
         >
             <span className="flex items-center gap-1 pr-4 break-words">
                 {isGroup ? (
-                    <Folder className="h-3.5 w-3.5 shrink-0 text-primary" />
+                    <Folder className={cn("h-3.5 w-3.5 shrink-0", groupClassName)} />
                 ) : (
                     <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 )}
@@ -67,13 +68,13 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledge
 
 
 // Component for a major section (Income or Expenses)
-const ReportSection = ({ title, data, className, titleClassName, showPercentages, totalRevenue }: { title: string; data: Ledger; className?: string; titleClassName?: string, showPercentages: boolean, totalRevenue: number }) => {
+const ReportSection = ({ title, data, className, titleClassName, showPercentages, totalRevenue, groupClassName }: { title: string; data: Ledger; className?: string; titleClassName?: string, showPercentages: boolean, totalRevenue: number, groupClassName: string }) => {
     const sectionTotal = calculateTotal(data);
     
     const renderRowsRecursive = (nodes: Ledger[], level: number) => {
         return nodes.map(node => (
             <React.Fragment key={node.id}>
-                <ReportRow node={node} level={level} showPercentages={showPercentages} totalRevenue={totalRevenue} />
+                <ReportRow node={node} level={level} showPercentages={showPercentages} totalRevenue={totalRevenue} groupClassName={groupClassName} />
                 {node.children && node.children.length > 0 && renderRowsRecursive(node.children, level + 1)}
             </React.Fragment>
         ));
@@ -170,8 +171,8 @@ export default function ProfitAndLossPage() {
             </CardHeader>
             <CardContent className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-                    <ReportSection title="Income" data={incomeData} titleClassName="text-primary" showPercentages={showPercentages} totalRevenue={totalIncome} />
-                    <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive" showPercentages={showPercentages} totalRevenue={totalIncome} />
+                    <ReportSection title="Income" data={incomeData} titleClassName="text-primary" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-primary" />
+                    <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-destructive" />
                 </div>
                 <Separator className="my-4" />
                 <div className={cn(
