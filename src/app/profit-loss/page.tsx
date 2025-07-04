@@ -57,11 +57,9 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName 
                 </span>
             </span>
             
-            {!isGroup && (
-                <span className="font-mono text-sm text-right">
-                    {formatCurrency(displayTotal, 'INR')}
-                </span>
-            )}
+            <span className="font-mono text-sm text-right">
+                {formatCurrency(displayTotal, 'INR')}
+            </span>
         </div>
     );
 };
