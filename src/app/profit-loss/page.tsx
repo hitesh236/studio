@@ -30,27 +30,22 @@ const calculateTotal = (node: Ledger): number => {
 };
 
 // Component to render a single row in the report
-const ReportRow = ({ node, level, baseValue, showPercentages }: { node: Ledger; level: number; baseValue?: number; showPercentages: boolean }) => {
+const ReportRow = ({ node, level, showPercentages }: { node: Ledger; level: number; showPercentages: boolean }) => {
     const isGroup = node.type === 'group';
     const total = calculateTotal(node);
-    const percentage = baseValue && baseValue !== 0 ? (Math.abs(total) / Math.abs(baseValue)) * 100 : 0;
     const displayTotal = node.id === 'ledger-closing-stock' ? Math.abs(total) : total;
 
+    // Use a wrapper div for the main row content to handle alignment
     return (
         <div>
             <div className={cn(
                 "flex items-start justify-between py-1.5 text-sm",
-                isGroup && 'font-semibold bg-muted/50 -mx-4 px-4 rounded-md' // Full-width background for groups
+                isGroup ? 'font-semibold bg-muted/50 -mx-4 px-4 rounded-md' : 'font-normal',
             )}>
-                <span style={{ paddingLeft: `${level * 1.25}rem` }}>
+                <span style={{ paddingLeft: `${level * 1.25}rem` }} className="flex-1 pr-4">
                     {node.name}
-                    {showPercentages && percentage > 0.1 && (
-                        <span className="font-normal text-muted-foreground ml-2">({percentage.toFixed(0)}%)</span>
-                    )}
+                    {showPercentages && <span className="font-normal text-muted-foreground ml-2">(xx%)</span>}
                 </span>
-                
-                {/* This span pushes the amounts to the right */}
-                <span className="flex-grow"></span>
 
                 <div className="flex items-center gap-x-4 flex-shrink-0 ml-4">
                     <span className="w-28 text-right font-mono">
@@ -62,11 +57,12 @@ const ReportRow = ({ node, level, baseValue, showPercentages }: { node: Ledger; 
                 </div>
             </div>
             {node.children && node.children.map(child => (
-                <ReportRow key={child.id} node={child} level={level + 1} baseValue={baseValue} showPercentages={showPercentages} />
+                <ReportRow key={child.id} node={child} level={level + 1} showPercentages={showPercentages} />
             ))}
         </div>
     );
 };
+
 
 // Component for a major section (Income or Expenses)
 const ReportSection = ({ title, data, className, titleClassName, showPercentages }: { title: string; data: Ledger; className?: string; titleClassName?: string, showPercentages: boolean }) => {
@@ -83,7 +79,7 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
             </div>
 
             {data.children?.map(node => (
-                <ReportRow key={node.id} node={node} level={0} baseValue={sectionTotal} showPercentages={showPercentages} />
+                <ReportRow key={node.id} node={node} level={0} showPercentages={showPercentages} />
             ))}
             <Separator className="my-2" />
             <div className="flex justify-between font-bold text-base py-2">
@@ -138,7 +134,7 @@ export default function ProfitAndLossPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-        <Card className="max-w-7xl mx-auto">
+        <Card className="w-[90%] mx-auto">
             <CardHeader>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
