@@ -323,7 +323,7 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                   {paginatedData.map((entry, entryIndex) => (
                       <React.Fragment key={entry.id}>
                       {entry.lines.map((line, lineIndex) => (
-                          <TableRow key={line.id} className={cn('h-auto border-b-0', entryIndex % 2 !== 0 && 'bg-muted/50')}>
+                          <TableRow key={line.id} className={cn('h-auto', entryIndex % 2 !== 0 && 'bg-muted/50')}>
                           {lineIndex === 0 ? (
                               <TableCell rowSpan={entry.lines.length + 1} className={cn("align-top font-medium border-r p-2", density === 'compact' && 'p-1')}>
                               {format(entry.date, 'dd-MMM-yy')}
@@ -374,8 +374,8 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                           ) : null}
                           </TableRow>
                       ))}
-                      <TableRow className={cn('h-auto border-b-0 text-muted-foreground', entryIndex % 2 !== 0 && 'bg-muted/50')}>
-                          <TableCell colSpan={3} className={cn("py-2 px-2 text-xs", density === 'compact' && 'p-1')}>
+                      <TableRow className={cn('h-auto text-muted-foreground', entryIndex % 2 !== 0 && 'bg-muted/50')}>
+                          <TableCell colSpan={3} className={cn("py-2 px-2 text-xs border-r", density === 'compact' && 'p-1')}>
                               {entry.description}
                           </TableCell>
                       </TableRow>
@@ -446,3 +446,5 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
     </TooltipProvider>
   );
 }
+
+    
