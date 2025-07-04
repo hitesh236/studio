@@ -30,21 +30,21 @@ const calculateTotal = (node: Ledger): number => {
 };
 
 // Component to render a single row in the report
-const ReportRow = ({ node, showPercentages }: { node: Ledger; showPercentages: boolean }) => {
+const ReportRow = ({ node, showPercentages, totalRevenue }: { node: Ledger; showPercentages: boolean; totalRevenue: number }) => {
     const isGroup = node.type === 'group';
     const total = calculateTotal(node);
     const displayTotal = node.id === 'ledger-closing-stock' ? Math.abs(total) : total;
+    const percentage = totalRevenue > 0 ? (total / totalRevenue) * 100 : 0;
 
-    // Use a wrapper div for the main row content to handle alignment
     return (
         <div>
-            <div className={cn(
+             <div className={cn(
                 "flex items-start justify-between py-1.5 text-sm",
-                isGroup ? 'font-semibold bg-muted/50 -mx-4 px-4 rounded-md' : 'font-normal',
+                isGroup ? 'font-semibold' : 'font-normal'
             )}>
                 <span className="flex-1 pr-4">
                     {node.name}
-                    {showPercentages && <span className="font-normal text-muted-foreground ml-2">(xx%)</span>}
+                    {showPercentages && <span className="font-normal text-muted-foreground ml-2">({percentage.toFixed(2)}%)</span>}
                 </span>
 
                 <div className="flex items-center gap-x-4 flex-shrink-0 ml-4">
@@ -56,17 +56,26 @@ const ReportRow = ({ node, showPercentages }: { node: Ledger; showPercentages: b
                     </span>
                 </div>
             </div>
-            {node.children && node.children.map(child => (
-                <ReportRow key={child.id} node={child} showPercentages={showPercentages} />
-            ))}
         </div>
     );
 };
 
 
 // Component for a major section (Income or Expenses)
-const ReportSection = ({ title, data, className, titleClassName, showPercentages }: { title: string; data: Ledger; className?: string; titleClassName?: string, showPercentages: boolean }) => {
+const ReportSection = ({ title, data, className, titleClassName, showPercentages, totalRevenue }: { title: string; data: Ledger; className?: string; titleClassName?: string, showPercentages: boolean, totalRevenue: number }) => {
     const sectionTotal = calculateTotal(data);
+    const sectionPercentage = totalRevenue > 0 ? (sectionTotal / totalRevenue) * 100 : 0;
+
+    const allNodes: Ledger[] = [];
+    const collectNodes = (node: Ledger, isTopLevel = true) => {
+        if (!isTopLevel) {
+            allNodes.push(node);
+        }
+        if (node.children) {
+            node.children.forEach(child => collectNodes(child, false));
+        }
+    };
+    collectNodes(data);
     
     return (
         <div className={cn("space-y-2 border rounded-lg p-4", className)}>
@@ -78,12 +87,15 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
                 </div>
             </div>
 
-            {data.children?.map(node => (
-                <ReportRow key={node.id} node={node} showPercentages={showPercentages} />
+            {allNodes.map(node => (
+                <ReportRow key={node.id} node={node} showPercentages={showPercentages} totalRevenue={totalRevenue} />
             ))}
             <Separator className="my-2" />
             <div className="flex justify-between font-bold text-base py-2">
-                <span>Total {title}</span>
+                <span>
+                    Total {title}
+                     {showPercentages && <span className="font-normal text-muted-foreground ml-2">({sectionPercentage.toFixed(2)}%)</span>}
+                </span>
                  <div className="flex items-center gap-x-4 flex-shrink-0">
                     <span className="w-28 text-right font-mono"></span>
                     <span className="w-28 text-right font-mono">{formatCurrency(sectionTotal, 'INR')}</span>
@@ -131,6 +143,7 @@ export default function ProfitAndLossPage() {
   const totalIncome = calculateTotal(incomeData);
   const totalExpenses = calculateTotal(expenseData);
   const netProfit = totalIncome - totalExpenses;
+  const netProfitPercentage = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -163,15 +176,18 @@ export default function ProfitAndLossPage() {
             </CardHeader>
             <CardContent className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-                    <ReportSection title="Income" data={incomeData} titleClassName="text-primary" showPercentages={showPercentages} />
-                    <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive" showPercentages={showPercentages} />
+                    <ReportSection title="Income" data={incomeData} titleClassName="text-primary" showPercentages={showPercentages} totalRevenue={totalIncome} />
+                    <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive" showPercentages={showPercentages} totalRevenue={totalIncome} />
                 </div>
                 <Separator className="my-4" />
                 <div className={cn(
                     "flex justify-between font-bold text-xl p-4 rounded-md",
                     netProfit >= 0 ? "bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300" : "bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300"
                 )}>
-                    <span>{netProfit >= 0 ? 'Net Profit' : 'Net Loss'}</span>
+                    <span>
+                        {netProfit >= 0 ? 'Net Profit' : 'Net Loss'}
+                        {showPercentages && <span className="font-normal text-muted-foreground ml-2">({netProfitPercentage.toFixed(2)}%)</span>}
+                    </span>
                     <span className="font-mono">{formatCurrency(netProfit, 'INR')}</span>
                 </div>
             </CardContent>
