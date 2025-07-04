@@ -271,6 +271,66 @@ export function JournalEntryForm() {
         );
     };
 
+    const ParentGroupCombobox = ({
+        value,
+        onChange,
+        placeholder,
+        groups,
+    }: {
+        value: string | null;
+        onChange: (value: string | null) => void;
+        placeholder: string;
+        groups: { value: string; label: string }[];
+    }) => {
+        const [open, setOpen] = React.useState(false);
+
+        return (
+            <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                    <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={open}
+                        className="w-full justify-between"
+                    >
+                        {value
+                            ? groups.find((group) => group.value === value)?.label
+                            : placeholder}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                    <Command>
+                        <CommandInput placeholder="Search group..." />
+                        <CommandList>
+                            <CommandEmpty>No group found.</CommandEmpty>
+                            <CommandGroup>
+                                {groups.map((group) => (
+                                <CommandItem
+                                    key={group.value}
+                                    value={group.label}
+                                    onSelect={() => {
+                                    onChange(group.value === value ? null : group.value);
+                                    setOpen(false);
+                                    }}
+                                >
+                                    <Check
+                                    className={cn(
+                                        'mr-2 h-4 w-4',
+                                        value === group.value ? 'opacity-100' : 'opacity-0'
+                                    )}
+                                    />
+                                    {group.label}
+                                </CommandItem>
+                                ))}
+                            </CommandGroup>
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
+        );
+    };
+
     return (
         <Card className="max-w-5xl mx-auto">
             <CardHeader>
@@ -292,14 +352,14 @@ export function JournalEntryForm() {
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="parent-group" className="text-right">Parent Group</Label>
-                                    <Select onValueChange={setNewLedgerParent} value={newLedgerParent || undefined}>
-                                        <SelectTrigger className="col-span-3"><SelectValue placeholder="Select group" /></SelectTrigger>
-                                        <SelectContent>
-                                            {allGroups.map(group => (
-                                                <SelectItem key={group.value} value={group.value}>{group.label}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="col-span-3">
+                                        <ParentGroupCombobox
+                                            value={newLedgerParent}
+                                            onChange={setNewLedgerParent}
+                                            placeholder="Select a parent group"
+                                            groups={allGroups}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                             <DialogFooter>
