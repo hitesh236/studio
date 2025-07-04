@@ -15,6 +15,7 @@ import {
   Check,
   Info,
   AlertTriangle,
+  PlusCircle,
 } from 'lucide-react';
 
 import { cn, numberToWords } from '@/lib/utils';
@@ -35,6 +36,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription
 } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -56,6 +58,16 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+  DialogClose,
+} from '@/components/ui/dialog';
 
 const debitCreditLineSchema = z.object({
   accountId: z.string().min(1, { message: "Account is required" }),
@@ -80,16 +92,43 @@ const journalEntryFormSchema = z.object({
 
 type JournalEntryFormValues = z.infer<typeof journalEntryFormSchema>;
 
-const chartOfAccounts = [
-    { value: '1010-cash', label: 'Cash Book - Cash Book (Asset)' },
-    { value: '1010-bank', label: 'Bank Book - Bank Book (Asset)' },
-    { value: '1200', label: 'Accounts Receivable' },
-    { value: '1510', label: 'Inventory' },
-    { value: '2010', label: 'Accounts Payable' },
-    { value: '3010', label: "Capital - Capital (Equity)" },
-    { value: '4010', label: 'Sales Revenue' },
-    { value: '5010', label: 'Rent Expense' },
-    { value: '5020', label: 'Salaries Expense' },
+type Account = {
+  id: string;
+  name: string;
+  type: 'group' | 'ledger';
+  children?: Account[];
+};
+
+const initialChartOfAccounts: Account[] = [
+    { 
+        id: 'assets', name: 'Assets', type: 'group', children: [
+            { id: '1010-cash', name: 'Cash Book', type: 'ledger' },
+            { id: '1010-bank', name: 'Bank Book', type: 'ledger' },
+            { id: '1200', name: 'Accounts Receivable', type: 'ledger' },
+            { id: '1510', name: 'Inventory', type: 'ledger' },
+        ]
+    },
+    {
+        id: 'liabilities', name: 'Liabilities', type: 'group', children: [
+            { id: '2010', name: 'Accounts Payable', type: 'ledger' },
+        ]
+    },
+    {
+        id: 'equity', name: 'Equity', type: 'group', children: [
+            { id: '3010', name: "Capital", type: 'ledger'},
+        ]
+    },
+    {
+        id: 'income', name: 'Income', type: 'group', children: [
+             { id: '4010', name: 'Sales Revenue', type: 'ledger' },
+        ]
+    },
+    {
+        id: 'expenses', name: 'Expenses', type: 'group', children: [
+            { id: '5010', name: 'Rent Expense', type: 'ledger' },
+            { id: '5020', name: 'Salaries Expense', type: 'ledger' },
+        ]
+    }
 ];
 
 const voucherTypes = [
@@ -99,6 +138,11 @@ const voucherTypes = [
 export function JournalEntryForm() {
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [chartOfAccounts, setChartOfAccounts] = React.useState<Account[]>(initialChartOfAccounts);
+
+    const [isLedgerDialogOpen, setIsLedgerDialogOpen] = React.useState(false);
+    const [newLedgerName, setNewLedgerName] = React.useState('');
+    const [newLedgerParent, setNewLedgerParent] = React.useState<string | null>(null);
   
     const form = useForm<JournalEntryFormValues>({
       resolver: zodResolver(journalEntryFormSchema),
@@ -115,7 +159,7 @@ export function JournalEntryForm() {
 
     React.useEffect(() => {
         form.setValue('date', new Date());
-    }, []);
+    }, [form]);
 
     const { fields: debitFields, append: appendDebit, remove: removeDebit } = useFieldArray({
         control: form.control,
@@ -135,6 +179,40 @@ export function JournalEntryForm() {
         const totalCredits = watchedCreditLines.reduce((sum, line) => sum + (Number(line.amount) || 0), 0);
         return { totalDebits, totalCredits, difference: totalDebits - totalCredits };
     }, [watchedDebitLines, watchedCreditLines]);
+
+    const allLedgers = React.useMemo(() => {
+        const flatten = (accounts: Account[], parentName = ''): { value: string, label: string }[] => {
+            let list: { value: string, label: string }[] = [];
+            accounts.forEach(acc => {
+                const label = parentName ? `${acc.name} (${parentName})` : acc.name;
+                if (acc.type === 'ledger') {
+                    list.push({ value: acc.id, label: label });
+                }
+                if (acc.children) {
+                    list = [...list, ...flatten(acc.children, acc.name)];
+                }
+            });
+            return list;
+        };
+        return flatten(chartOfAccounts);
+    }, [chartOfAccounts]);
+
+    const allGroups = React.useMemo(() => {
+        const flatten = (accounts: Account[], level = 0): { value: string, label: string }[] => {
+            let list: { value: string, label: string }[] = [];
+            accounts.forEach(acc => {
+                if (acc.type === 'group') {
+                    list.push({ value: acc.id, label: `${'— '.repeat(level)}${acc.name}` });
+                    if (acc.children) {
+                        list = [...list, ...flatten(acc.children, level + 1)];
+                    }
+                }
+            });
+            return list;
+        };
+        return flatten(chartOfAccounts);
+    }, [chartOfAccounts]);
+
 
     const handleFormReset = () => {
         form.reset({
@@ -159,10 +237,107 @@ export function JournalEntryForm() {
         handleFormReset();
     }
     
+    const handleAddLedger = () => {
+      if (!newLedgerName.trim() || !newLedgerParent) {
+          toast({
+              variant: 'destructive',
+              title: "Validation Error",
+              description: "Ledger name and parent group are required."
+          });
+          return;
+      }
+
+      const newLedger: Account = {
+          id: `ledger-${Date.now()}`,
+          name: newLedgerName.trim(),
+          type: 'ledger',
+      };
+
+      const addLedgerToParent = (nodes: Account[], parentId: string, ledgerToAdd: Account): Account[] => {
+          return nodes.map(node => {
+              if (node.id === parentId) {
+                  return { ...node, children: [...(node.children || []), ledgerToAdd] };
+              }
+              if (node.children) {
+                  return { ...node, children: addLedgerToParent(node.children, parentId, ledgerToAdd) };
+              }
+              return node;
+          });
+      };
+      
+      setChartOfAccounts(prev => addLedgerToParent(prev, newLedgerParent, newLedger));
+      toast({ title: 'Ledger Added', description: `Successfully added ${newLedger.name}` });
+      setIsLedgerDialogOpen(false);
+      setNewLedgerName('');
+      setNewLedgerParent(null);
+    };
+
+    const AccountCombobox = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
+        const [open, setOpen] = React.useState(false);
+        return (
+            <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild><FormControl>
+                    <Button variant="outline" role="combobox" className={cn("w-full justify-between", !value && "text-muted-foreground")}>
+                    {value ? allLedgers.find(acc => acc.value === value)?.label : "Select account"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                </FormControl></PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0"><Command>
+                    <CommandInput placeholder="Search accounts..." />
+                    <CommandList>
+                        <CommandEmpty>No account found.</CommandEmpty>
+                        <CommandGroup>
+                            {allLedgers.map(acc => (
+                                <CommandItem value={acc.label} key={acc.value} onSelect={() => { onChange(acc.value); setOpen(false); }}>
+                                    <Check className={cn("mr-2 h-4 w-4", acc.value === value ? "opacity-100" : "opacity-0")} />
+                                    {acc.label}
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    </CommandList>
+                </Command></PopoverContent>
+            </Popover>
+        );
+    };
+
     return (
         <Card className="max-w-5xl mx-auto">
             <CardHeader>
-                <CardTitle>New Journal Entry</CardTitle>
+                <div className="flex justify-between items-center">
+                    <CardTitle>New Journal Entry</CardTitle>
+                    <Dialog open={isLedgerDialogOpen} onOpenChange={setIsLedgerDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Add Ledger</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Add New Ledger</DialogTitle>
+                                <DialogDescription>Create a new ledger account under a specified group.</DialogDescription>
+                            </DialogHeader>
+                             <div className="grid gap-4 py-4">
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="ledger-name" className="text-right">Name</Label>
+                                    <Input id="ledger-name" value={newLedgerName} onChange={(e) => setNewLedgerName(e.target.value)} className="col-span-3" />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="parent-group" className="text-right">Parent Group</Label>
+                                    <Select onValueChange={setNewLedgerParent} value={newLedgerParent || undefined}>
+                                        <SelectTrigger className="col-span-3"><SelectValue placeholder="Select group" /></SelectTrigger>
+                                        <SelectContent>
+                                            {allGroups.map(group => (
+                                                <SelectItem key={group.value} value={group.value}>{group.label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+                                <Button onClick={handleAddLedger}>Create Ledger</Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                </div>
             </CardHeader>
             <CardContent>
                 <TooltipProvider>
@@ -209,28 +384,7 @@ export function JournalEntryForm() {
                                                 name={`debitLines.${index}.accountId`}
                                                 render={({ field: accountField }) => (
                                                     <FormItem>
-                                                        <Popover>
-                                                            <PopoverTrigger asChild><FormControl>
-                                                                <Button variant="outline" role="combobox" className={cn("w-full justify-between", !accountField.value && "text-muted-foreground")}>
-                                                                {accountField.value ? chartOfAccounts.find(acc => acc.value === accountField.value)?.label : "Select account"}
-                                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                                                </Button>
-                                                            </FormControl></PopoverTrigger>
-                                                            <PopoverContent className="w-[300px] p-0"><Command>
-                                                                <CommandInput placeholder="Search accounts..." />
-                                                                <CommandList>
-                                                                    <CommandEmpty>No account found.</CommandEmpty>
-                                                                    <CommandGroup>
-                                                                        {chartOfAccounts.map(acc => (
-                                                                            <CommandItem value={acc.label} key={acc.value} onSelect={() => { form.setValue(`debitLines.${index}.accountId`, acc.value); }}>
-                                                                                <Check className={cn("mr-2 h-4 w-4", acc.value === accountField.value ? "opacity-100" : "opacity-0")} />
-                                                                                {acc.label}
-                                                                            </CommandItem>
-                                                                        ))}
-                                                                    </CommandGroup>
-                                                                </CommandList>
-                                                            </Command></PopoverContent>
-                                                        </Popover>
+                                                        <AccountCombobox value={accountField.value} onChange={accountField.onChange} />
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
@@ -273,28 +427,7 @@ export function JournalEntryForm() {
                                                 name={`creditLines.${index}.accountId`}
                                                 render={({ field: accountField }) => (
                                                     <FormItem>
-                                                        <Popover>
-                                                            <PopoverTrigger asChild><FormControl>
-                                                                <Button variant="outline" role="combobox" className={cn("w-full justify-between", !accountField.value && "text-muted-foreground")}>
-                                                                {accountField.value ? chartOfAccounts.find(acc => acc.value === accountField.value)?.label : "Select account"}
-                                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                                                </Button>
-                                                            </FormControl></PopoverTrigger>
-                                                            <PopoverContent className="w-[300px] p-0"><Command>
-                                                                <CommandInput placeholder="Search accounts..." />
-                                                                <CommandList>
-                                                                    <CommandEmpty>No account found.</CommandEmpty>
-                                                                    <CommandGroup>
-                                                                        {chartOfAccounts.map(acc => (
-                                                                            <CommandItem value={acc.label} key={acc.value} onSelect={() => { form.setValue(`creditLines.${index}.accountId`, acc.value); }}>
-                                                                                <Check className={cn("mr-2 h-4 w-4", acc.value === accountField.value ? "opacity-100" : "opacity-0")} />
-                                                                                {acc.label}
-                                                                            </CommandItem>
-                                                                        ))}
-                                                                    </CommandGroup>
-                                                                </CommandList>
-                                                            </Command></PopoverContent>
-                                                        </Popover>
+                                                       <AccountCombobox value={accountField.value} onChange={accountField.onChange} />
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
