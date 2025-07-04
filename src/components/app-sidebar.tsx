@@ -196,22 +196,6 @@ export function AppSidebar() {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Ledgers" isActive={pathname.startsWith('/ledgers')} asChild>
-                <Link href="/ledgers" onClick={handleLinkClick}>
-                    <Scale />
-                    <span>Ledgers</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="View All Transactions" isActive={pathname.startsWith('/all-transactions')} asChild>
-                <Link href="/all-transactions" onClick={handleLinkClick}>
-                    <History />
-                    <span>View All Transactions</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
 
