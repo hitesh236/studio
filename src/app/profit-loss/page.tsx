@@ -12,6 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
 import { ledgerData, type Ledger } from '@/lib/ledger-data';
 import { cn, formatCurrency } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 // Helper function to recursively calculate group totals
 const calculateTotal = (node: Ledger): number => {
@@ -77,6 +78,26 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
     );
 };
 
+const AnimatedToggleButton = ({ show, onToggle }: { show: boolean, onToggle: () => void }) => {
+  return (
+    <div
+      onClick={onToggle}
+      className={cn(
+        "flex h-9 w-[110px] cursor-pointer items-center rounded-full bg-muted p-1 transition-colors",
+        show ? "justify-end" : "justify-start"
+      )}
+    >
+      <motion.div
+        layout
+        transition={{ type: "spring", stiffness: 700, damping: 30 }}
+        className="flex h-7 items-center justify-center rounded-full bg-primary px-3 text-sm font-medium text-primary-foreground"
+      >
+        {show ? 'Hide %' : 'Show %'}
+      </motion.div>
+    </div>
+  );
+};
+
 
 export default function ProfitAndLossPage() {
   const [date, setDate] = React.useState<DateRange | undefined>({
@@ -108,9 +129,7 @@ export default function ProfitAndLossPage() {
                         </CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button variant="outline" onClick={() => setShowPercentages(prev => !prev)} className="w-[110px]">
-                            {showPercentages ? 'Hide %' : 'Show %'}
-                        </Button>
+                        <AnimatedToggleButton show={showPercentages} onToggle={() => setShowPercentages(prev => !prev)} />
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button id="date" variant="outline" className={cn("w-[260px] justify-start text-left font-normal", !date && "text-muted-foreground")}>
