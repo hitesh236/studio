@@ -4,7 +4,7 @@
 import * as React from 'react';
 import type { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Download, Printer } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, Printer, Folder, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -40,13 +40,20 @@ const ReportRow = ({ node, showPercentages, totalRevenue }: { node: Ledger; show
         <div>
              <div className={cn(
                 "flex items-start justify-between py-1.5 text-sm",
-                isGroup ? 'font-semibold' : 'font-normal'
+                isGroup ? 'font-semibold bg-muted/50' : 'font-normal'
             )}>
-                <span className="flex-1 pr-4">
-                    {node.name}
-                    {showPercentages && <span className="font-normal text-muted-foreground ml-2">({percentage.toFixed(2)}%)</span>}
+                <span className="flex flex-1 items-center gap-2 pr-4">
+                    {isGroup ? (
+                        <Folder className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    ) : (
+                        <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    )}
+                    <span>
+                        {node.name}
+                        {showPercentages && <span className="font-normal text-muted-foreground ml-2">({percentage.toFixed(2)}%)</span>}
+                    </span>
                 </span>
-
+                
                 <div className="flex items-center gap-x-4 flex-shrink-0 ml-4">
                     <span className="w-28 text-right font-mono">
                         {!isGroup ? formatCurrency(displayTotal, 'INR') : ''}
@@ -68,14 +75,14 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
 
     const allNodes: Ledger[] = [];
     const collectNodes = (node: Ledger, isTopLevel = true) => {
-        if (!isTopLevel) {
-            allNodes.push(node);
-        }
+        allNodes.push(node);
         if (node.children) {
             node.children.forEach(child => collectNodes(child, false));
         }
     };
-    collectNodes(data);
+    collectNodes(data, true);
+    // remove the top level group itself from the list
+    allNodes.shift();
     
     return (
         <div className={cn("space-y-2 border rounded-lg p-4", className)}>
