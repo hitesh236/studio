@@ -46,12 +46,12 @@ const ReportRow = ({ node, level }: { node: Ledger; level: number }) => {
 };
 
 // Component for a major section (Income or Expenses)
-const ReportSection = ({ title, data, className }: { title: string; data: Ledger; className?: string }) => {
+const ReportSection = ({ title, data, className, titleClassName }: { title: string; data: Ledger; className?: string; titleClassName?: string }) => {
     const total = calculateTotal(data);
     
     return (
         <div className={cn("space-y-2", className)}>
-            <h3 className="text-lg font-semibold text-primary mb-2">{title}</h3>
+            <h3 className={cn("text-lg font-semibold mb-2", titleClassName)}>{title}</h3>
             {data.children?.map(node => (
                 <ReportRow key={node.id} node={node} level={0} />
             ))}
@@ -112,8 +112,8 @@ export default function ProfitAndLossPage() {
             </CardHeader>
             <CardContent className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-                    <ReportSection title="Income" data={incomeData} />
-                    <ReportSection title="Expenses" data={expenseData} className="md:border-l md:pl-12" />
+                    <ReportSection title="Income" data={incomeData} titleClassName="text-primary" />
+                    <ReportSection title="Expenses" data={expenseData} className="md:border-l md:pl-12" titleClassName="text-destructive" />
                 </div>
                 <Separator className="my-4" />
                 <div className={cn(
