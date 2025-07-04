@@ -15,7 +15,7 @@ import { format } from 'date-fns';
 import { formatCurrency, cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, PlusCircle, List, LayoutGrid, Search, Filter, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { Edit, Undo2, Trash2, PlusCircle, List, LayoutGrid, Search, Filter, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
@@ -38,29 +38,17 @@ const JournalEntryCard = ({ entry, density }: { entry: JournalEntry, density: 'n
     const totalDebits = entry.lines.reduce((acc, line) => acc + line.debit, 0);
 
     return (
-        <Card>
-            <CardHeader className={cn("p-4", density === 'compact' && 'p-3')}>
+        <Card className="flex h-full flex-col">
+            <CardHeader className={cn("p-4 pb-2", density === 'compact' && 'p-3 pb-1')}>
                 <div className="flex justify-between items-start">
                     <div>
                         <CardTitle className={cn("text-base", density === 'compact' && 'text-sm')}>{entry.entryNumber}</CardTitle>
                         <CardDescription className={cn(density === 'compact' && 'text-xs')}>{format(entry.date, 'MMM d, yyyy')} &bull; {entry.createdBy}</CardDescription>
                     </div>
-                     <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 -mt-2 -mr-2">
-                                <MoreHorizontal className="h-4 w-4"/>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuItem>Edit</DropdownMenuItem>
-                            <DropdownMenuItem>Reverse</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
                 </div>
                  <p className={cn("text-sm text-muted-foreground pt-2", density === 'compact' && 'text-xs pt-1')}>{entry.description}</p>
             </CardHeader>
-            <CardContent className={cn("p-4 pt-0", density === 'compact' && 'p-3 pt-0')}>
+            <CardContent className={cn("flex-grow p-4 pt-2", density === 'compact' && 'p-3 pt-1')}>
                 <div className={cn("space-y-2 text-sm", density === 'compact' && 'space-y-1 text-xs')}>
                     {entry.lines.map(line => (
                         <div key={line.id} className="flex justify-between items-center">
@@ -77,6 +65,13 @@ const JournalEntryCard = ({ entry, density }: { entry: JournalEntry, density: 'n
                     <span className="font-mono">{formatCurrency(totalDebits, 'INR')}</span>
                  </div>
             </CardContent>
+            <CardFooter className={cn("mt-auto border-t p-2", density === 'compact' && 'p-1')}>
+                <div className="flex w-full items-center justify-end gap-1">
+                    <Button variant="ghost" size="sm"><Edit className="mr-1 h-4 w-4" />Edit</Button>
+                    <Button variant="ghost" size="sm"><Undo2 className="mr-1 h-4 w-4" />Reverse</Button>
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive"><Trash2 className="mr-1 h-4 w-4" />Delete</Button>
+                </div>
+            </CardFooter>
         </Card>
     )
 }
@@ -277,18 +272,11 @@ export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
 
                         {lineIndex === 0 ? (
                             <TableCell rowSpan={entry.lines.length + 1} className={cn("text-center align-top p-2", density === 'compact' && 'p-1')}>
-                              <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7">
-                                          <MoreHorizontal className="h-4 w-4"/>
-                                      </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent>
-                                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                                      <DropdownMenuItem>Reverse</DropdownMenuItem>
-                                      <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                                  </DropdownMenuContent>
-                              </DropdownMenu>
+                              <div className="flex items-center justify-center gap-0">
+                                  <Button variant="ghost" size="icon" className="h-7 w-7"><Edit className="h-4 w-4" /></Button>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7"><Undo2 className="h-4 w-4" /></Button>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                              </div>
                             </TableCell>
                         ) : null}
                         </TableRow>
