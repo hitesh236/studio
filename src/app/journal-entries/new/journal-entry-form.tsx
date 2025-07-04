@@ -370,12 +370,12 @@ export function JournalEntryForm() {
                                     )}
                                 />
                                 <div className="flex items-center gap-4">
-                                    <Button type="submit" disabled={isSubmitting} size="lg" className="bg-green-600 text-white hover:bg-green-700">
-                                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                                        SAVE VOUCHER
+                                    <Button type="button" variant="outline" size="lg" onClick={handleFormReset}>
+                                        Cancel
                                     </Button>
-                                    <Button type="button" variant="destructive" size="lg" onClick={handleFormReset}>
-                                        CANCEL
+                                    <Button type="submit" disabled={isSubmitting} size="lg">
+                                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                                        Save Voucher
                                     </Button>
                                 </div>
                             </div>
