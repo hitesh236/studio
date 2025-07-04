@@ -28,7 +28,7 @@ const calculateTotal = (node: Ledger): number => {
 const ReportRow = ({ node, level, baseValue }: { node: Ledger; level: number; baseValue?: number }) => {
     const isGroup = node.type === 'group';
     const total = calculateTotal(node);
-    const percentage = baseValue && baseValue > 0 ? (Math.abs(total) / baseValue) * 100 : 0;
+    const percentage = baseValue && baseValue !== 0 ? (Math.abs(total) / Math.abs(baseValue)) * 100 : 0;
 
     return (
         <div>
@@ -36,7 +36,7 @@ const ReportRow = ({ node, level, baseValue }: { node: Ledger; level: number; ba
                 "flex items-center justify-between py-2 text-sm",
                 isGroup && "font-semibold"
             )} style={{ paddingLeft: `${level * 1.5}rem` }}>
-                <span className="truncate pr-4">{node.name}</span>
+                <span className="pr-4">{node.name}</span>
                 <div className="flex items-center gap-4 flex-shrink-0">
                     {baseValue && <span className="w-16 text-right font-mono text-muted-foreground text-xs">{percentage > 0.01 ? `${percentage.toFixed(2)}%` : ''}</span>}
                     <span className="w-32 text-right font-mono">{formatCurrency(total, 'INR')}</span>
@@ -50,26 +50,25 @@ const ReportRow = ({ node, level, baseValue }: { node: Ledger; level: number; ba
 };
 
 // Component for a major section (Income or Expenses)
-const ReportSection = ({ title, data, baseValue, className, titleClassName }: { title: string; data: Ledger; baseValue?: number; className?: string; titleClassName?: string }) => {
-    const total = calculateTotal(data);
-    const totalPercentage = baseValue && baseValue > 0 ? (Math.abs(total) / baseValue) * 100 : 0;
+const ReportSection = ({ title, data, className, titleClassName }: { title: string; data: Ledger; className?: string; titleClassName?: string }) => {
+    const sectionTotal = calculateTotal(data);
     
     return (
         <div className={cn("space-y-2", className)}>
              <div className="flex justify-between items-baseline">
                 <h3 className={cn("text-lg font-semibold mb-2", titleClassName)}>{title}</h3>
-                {baseValue && <span className="text-xs text-muted-foreground font-semibold">of Total Income</span>}
+                <span className="text-xs text-muted-foreground font-semibold">% of Total {title}</span>
             </div>
 
             {data.children?.map(node => (
-                <ReportRow key={node.id} node={node} level={0} baseValue={baseValue} />
+                <ReportRow key={node.id} node={node} level={0} baseValue={sectionTotal} />
             ))}
             <Separator className="my-2" />
             <div className="flex justify-between font-bold text-base py-2">
                 <span>Total {title}</span>
                  <div className="flex items-center gap-4">
-                    {baseValue && <span className="w-16 text-right font-mono text-base">{totalPercentage > 0.01 ? `${totalPercentage.toFixed(2)}%` : ''}</span>}
-                    <span className="w-32 text-right font-mono">{formatCurrency(total, 'INR')}</span>
+                    <span className="w-16 text-right font-mono text-base">{sectionTotal !== 0 ? '100.00%' : '0.00%'}</span>
+                    <span className="w-32 text-right font-mono">{formatCurrency(sectionTotal, 'INR')}</span>
                 </div>
             </div>
         </div>
@@ -125,7 +124,7 @@ export default function ProfitAndLossPage() {
             <CardContent className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
                     <ReportSection title="Income" data={incomeData} titleClassName="text-primary" />
-                    <ReportSection title="Expenses" data={expenseData} baseValue={totalIncome} className="md:border-l md:pl-12" titleClassName="text-destructive" />
+                    <ReportSection title="Expenses" data={expenseData} className="md:border-l md:pl-12" titleClassName="text-destructive" />
                 </div>
                 <Separator className="my-4" />
                 <div className={cn(
