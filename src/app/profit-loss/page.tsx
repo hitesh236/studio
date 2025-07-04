@@ -44,7 +44,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledge
             )}
             style={{ paddingLeft: `${level * 10}px` }}
         >
-            <span className="flex items-center gap-2 pr-4 break-words">
+            <span className="flex items-center gap-1 pr-4 break-words">
                 {isGroup ? (
                     <Folder className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 ) : (
@@ -52,7 +52,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledge
                 )}
                 <span>
                     {node.name}
-                    {showPercentages && <span className="font-normal text-muted-foreground ml-2">({percentage.toFixed(2)}%)</span>}
+                    {showPercentages && !isGroup && <span className="font-normal text-muted-foreground ml-2">({percentage.toFixed(2)}%)</span>}
                 </span>
             </span>
             
