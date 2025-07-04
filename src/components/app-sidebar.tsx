@@ -181,10 +181,10 @@ export function AppSidebar() {
           <SidebarGroupLabel>Accounts &amp; Books</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="My Accounts" isActive={pathname.startsWith('/my-accounts')} asChild>
+              <SidebarMenuButton tooltip="Groups & Ledgers" isActive={pathname.startsWith('/my-accounts')} asChild>
                 <Link href="/my-accounts" onClick={handleLinkClick}>
                     <Wallet />
-                    My Accounts
+                    Groups & Ledgers
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

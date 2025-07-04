@@ -29,7 +29,7 @@ const pathToTitle: { [key: string]: string } = {
   '/journal-entries': 'Journal Entries',
   '/journal-entries/new': 'New Journal Entry',
   '/ledgers': 'Ledgers List',
-  '/my-accounts': 'My Accounts',
+  '/my-accounts': 'Groups & Ledgers',
   '/sales-invoices': 'Sales Invoices',
   '/sales-invoices/new': 'Create Invoice',
   '/settings': 'Settings',
