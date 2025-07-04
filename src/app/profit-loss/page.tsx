@@ -39,7 +39,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName 
     return (
         <div
             className={cn(
-                "flex items-start justify-between py-1.5 text-sm",
+                "flex items-start justify-between py-1.5",
                 isGroup ? 'font-bold' : 'font-normal',
                 isGroup ? groupClassName : ''
             )}
@@ -51,14 +51,14 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName 
                 ) : (
                     <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 )}
-                <span>
+                <span className="text-sm">
                     {node.name}
                     {showPercentages && !isGroup && <span className="font-normal text-muted-foreground ml-2">({percentage.toFixed(2)}%)</span>}
                 </span>
             </span>
             
             {!isGroup && (
-                <span className="font-mono text-right">
+                <span className="font-mono text-sm text-right">
                     {formatCurrency(displayTotal, 'INR')}
                 </span>
             )}
@@ -80,21 +80,22 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
         ));
     };
     
-    return (
-        <div className={cn("space-y-2 border rounded-lg p-4", className)}>
-             <div className="flex justify-between items-baseline mb-2">
-                <h3 className={cn("text-lg font-semibold", titleClassName)}>{title}</h3>
-                <div className="text-sm font-semibold text-muted-foreground">
-                    Amount
-                </div>
-            </div>
+    const hasTitleBackground = titleClassName?.includes('bg-');
 
-            {data.children && renderRowsRecursive(data.children, 0)}
+    return (
+        <div className={cn("border rounded-lg", hasTitleBackground ? "overflow-hidden" : "p-4 space-y-2", className)}>
+             <div className="flex justify-between items-baseline">
+                <h3 className={cn("text-lg font-semibold", titleClassName, hasTitleBackground && "flex-grow px-4 py-2")}>{title}</h3>
+            </div>
             
-            <Separator className="my-2" />
-            <div className="flex justify-between font-bold text-sm py-2">
-                <span>Total {title}</span>
-                <span className="font-mono">{formatCurrency(sectionTotal, 'INR')}</span>
+            <div className={cn(hasTitleBackground && "p-4 space-y-2")}>
+                {data.children && renderRowsRecursive(data.children, 0)}
+                
+                <Separator className="my-2" />
+                <div className="flex justify-between font-bold text-sm py-2">
+                    <span>Total {title}</span>
+                    <span className="font-mono">{formatCurrency(sectionTotal, 'INR')}</span>
+                </div>
             </div>
         </div>
     );
@@ -171,7 +172,7 @@ export default function ProfitAndLossPage() {
             </CardHeader>
             <CardContent className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-                    <ReportSection title="Income" data={incomeData} titleClassName="flex-grow text-primary-foreground bg-primary px-3 py-1 rounded-md" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-primary" />
+                    <ReportSection title="Income" data={incomeData} titleClassName="text-primary-foreground bg-primary" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-primary" />
                     <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-destructive" />
                 </div>
                 <Separator className="my-4" />
