@@ -799,7 +799,7 @@ export function LedgerView({ data }: { data: Ledger[] }) {
           </AlertDialogContent>
         </AlertDialog>
 
-        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
             <div className="flex items-center gap-1.5">
                 <Folder className="h-4 w-4 text-amber-500" />
                 <span>Group</span>
