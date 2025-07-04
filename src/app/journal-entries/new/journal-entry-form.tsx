@@ -511,6 +511,7 @@ export function JournalEntryForm() {
                                             <Switch
                                                 checked={field.value}
                                                 onCheckedChange={field.onChange}
+                                                className="h-5 w-9 data-[state=checked]:translate-x-4 data-[state=unchecked]:translate-x-0 [&_span]:h-4 [&_span]:w-4"
                                             />
                                         </FormControl>
                                     </FormItem>
