@@ -214,14 +214,17 @@ export function JournalEntryForm() {
                                                             </FormControl></PopoverTrigger>
                                                             <PopoverContent className="w-[300px] p-0"><Command>
                                                                 <CommandInput placeholder="Search accounts..." />
-                                                                <CommandList><CommandEmpty>No account found.</CommandEmpty><CommandGroup>
-                                                                {chartOfAccounts.map(acc => (
-                                                                    <CommandItem value={acc.label} key={acc.value} onSelect={() => { form.setValue(`debitLines.${index}.accountId`, acc.value); }}>
-                                                                        <Check className={cn("mr-2 h-4 w-4", acc.value === accountField.value ? "opacity-100" : "opacity-0")} />
-                                                                        {acc.label}
-                                                                    </CommandItem>
-                                                                ))}
-                                                                </CommandGroup></CommandList>
+                                                                <CommandList>
+                                                                    <CommandEmpty>No account found.</CommandEmpty>
+                                                                    <CommandGroup>
+                                                                        {chartOfAccounts.map(acc => (
+                                                                            <CommandItem value={acc.label} key={acc.value} onSelect={() => { form.setValue(`debitLines.${index}.accountId`, acc.value); }}>
+                                                                                <Check className={cn("mr-2 h-4 w-4", acc.value === accountField.value ? "opacity-100" : "opacity-0")} />
+                                                                                {acc.label}
+                                                                            </CommandItem>
+                                                                        ))}
+                                                                    </CommandGroup>
+                                                                </CommandList>
                                                             </Command></PopoverContent>
                                                         </Popover>
                                                         <FormMessage />
@@ -275,14 +278,17 @@ export function JournalEntryForm() {
                                                             </FormControl></PopoverTrigger>
                                                             <PopoverContent className="w-[300px] p-0"><Command>
                                                                 <CommandInput placeholder="Search accounts..." />
-                                                                <CommandList><CommandEmpty>No account found.</CommandEmpty><CommandGroup>
-                                                                {chartOfAccounts.map(acc => (
-                                                                    <CommandItem value={acc.label} key={acc.value} onSelect={() => { form.setValue(`creditLines.${index}.accountId`, acc.value); }}>
-                                                                        <Check className={cn("mr-2 h-4 w-4", acc.value === accountField.value ? "opacity-100" : "opacity-0")} />
-                                                                        {acc.label}
-                                                                    </CommandItem>
-                                                                ))}
-                                                                </CommandGroup></CommandList>
+                                                                <CommandList>
+                                                                    <CommandEmpty>No account found.</CommandEmpty>
+                                                                    <CommandGroup>
+                                                                        {chartOfAccounts.map(acc => (
+                                                                            <CommandItem value={acc.label} key={acc.value} onSelect={() => { form.setValue(`creditLines.${index}.accountId`, acc.value); }}>
+                                                                                <Check className={cn("mr-2 h-4 w-4", acc.value === accountField.value ? "opacity-100" : "opacity-0")} />
+                                                                                {acc.label}
+                                                                            </CommandItem>
+                                                                        ))}
+                                                                    </CommandGroup>
+                                                                </CommandList>
                                                             </Command></PopoverContent>
                                                         </Popover>
                                                         <FormMessage />
