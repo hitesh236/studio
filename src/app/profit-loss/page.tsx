@@ -30,17 +30,20 @@ const calculateTotal = (node: Ledger): number => {
 };
 
 // Component to render a single row in the report
-const ReportRow = ({ node, showPercentages, totalRevenue }: { node: Ledger; showPercentages: boolean; totalRevenue: number }) => {
+const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledger; level: number; showPercentages: boolean; totalRevenue: number }) => {
     const isGroup = node.type === 'group';
     const total = calculateTotal(node);
     const displayTotal = node.id === 'ledger-closing-stock' ? Math.abs(total) : total;
     const percentage = totalRevenue > 0 ? (total / totalRevenue) * 100 : 0;
 
     return (
-        <div className={cn(
-            "flex items-start justify-between py-1.5 text-sm",
-            isGroup ? 'font-bold' : 'font-normal'
-        )}>
+        <div
+            className={cn(
+                "flex items-start justify-between py-1.5 text-sm",
+                isGroup ? 'font-bold' : 'font-normal'
+            )}
+            style={{ paddingLeft: `${level * 10}px` }}
+        >
             <span className="flex items-center gap-2 pr-4 break-words">
                 {isGroup ? (
                     <Folder className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -67,16 +70,14 @@ const ReportRow = ({ node, showPercentages, totalRevenue }: { node: Ledger; show
 const ReportSection = ({ title, data, className, titleClassName, showPercentages, totalRevenue }: { title: string; data: Ledger; className?: string; titleClassName?: string, showPercentages: boolean, totalRevenue: number }) => {
     const sectionTotal = calculateTotal(data);
     
-    const allNodes: Ledger[] = [];
-    const collectNodes = (node: Ledger) => {
-        allNodes.push(node);
-        if (node.children) {
-            node.children.forEach(child => collectNodes(child));
-        }
+    const renderRowsRecursive = (nodes: Ledger[], level: number) => {
+        return nodes.map(node => (
+            <React.Fragment key={node.id}>
+                <ReportRow node={node} level={level} showPercentages={showPercentages} totalRevenue={totalRevenue} />
+                {node.children && node.children.length > 0 && renderRowsRecursive(node.children, level + 1)}
+            </React.Fragment>
+        ));
     };
-    collectNodes(data);
-    // remove the top level group itself from the list
-    allNodes.shift();
     
     return (
         <div className={cn("space-y-2 border rounded-lg p-4", className)}>
@@ -87,9 +88,8 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
                 </div>
             </div>
 
-            {allNodes.map(node => (
-                <ReportRow key={node.id} node={node} showPercentages={showPercentages} totalRevenue={totalRevenue} />
-            ))}
+            {data.children && renderRowsRecursive(data.children, 0)}
+            
             <Separator className="my-2" />
             <div className="flex justify-between font-bold text-sm py-2">
                 <span>Total {title}</span>
