@@ -40,13 +40,13 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledge
         <div
             className={cn(
                 "flex items-start justify-between py-1.5 text-sm",
-                isGroup ? 'font-bold' : 'font-normal'
+                isGroup ? 'font-bold text-primary' : 'font-normal'
             )}
             style={{ paddingLeft: `${level * 10}px` }}
         >
             <span className="flex items-center gap-1 pr-4 break-words">
                 {isGroup ? (
-                    <Folder className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <Folder className="h-3.5 w-3.5 shrink-0 text-primary" />
                 ) : (
                     <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 )}
