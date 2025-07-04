@@ -41,7 +41,7 @@ const ReportRow = ({ node, level, baseValue, showPercentages }: { node: Ledger; 
             <div className={cn(
                 "flex items-center justify-between py-1.5 text-sm",
                 isGroup ? 'font-semibold' : 'font-normal'
-            )} style={{ paddingLeft: `${level * 1.25}rem` }}>
+            )} style={{ paddingLeft: `${level * 1}rem` }}>
                 <span className="pr-4">
                     {node.name}
                     {showPercentages && percentage > 0.1 && (
@@ -69,7 +69,7 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
     const sectionTotal = calculateTotal(data);
     
     return (
-        <div className={cn("space-y-2 border-t pt-4", className)}>
+        <div className={cn("space-y-2 border rounded-lg p-4", className)}>
              <div className="flex justify-between items-baseline mb-2">
                 <h3 className={cn("text-lg font-semibold", titleClassName)}>{title}</h3>
                 <div className="flex items-center gap-4 text-sm font-semibold text-muted-foreground">
@@ -164,7 +164,7 @@ export default function ProfitAndLossPage() {
             <CardContent className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
                     <ReportSection title="Income" data={incomeData} titleClassName="text-primary" showPercentages={showPercentages} />
-                    <ReportSection title="Expenses" data={expenseData} className="md:border-l md:pl-12" titleClassName="text-destructive" showPercentages={showPercentages} />
+                    <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive" showPercentages={showPercentages} />
                 </div>
                 <Separator className="my-4" />
                 <div className={cn(
