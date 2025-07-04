@@ -40,7 +40,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName 
         <div
             className={cn(
                 "flex items-start justify-between py-1.5",
-                isGroup ? 'font-bold' : 'font-normal text-sm',
+                isGroup ? 'font-bold' : 'font-normal',
                 isGroup ? groupClassName : ''
             )}
             style={{ paddingLeft: `${level * 10}px` }}
