@@ -259,7 +259,7 @@ export function JournalEntryForm() {
                         <CommandEmpty>No account found.</CommandEmpty>
                         <CommandGroup>
                             {allLedgers.map(acc => (
-                                <CommandItem value={acc.label} key={acc.value} onSelect={() => { onChange(acc.value); setOpen(false); }}>
+                                <CommandItem value={acc.value} key={acc.value} onSelect={(selectedValue) => { onChange(selectedValue); setOpen(false); }}>
                                     <Check className={cn("mr-2 h-4 w-4", acc.value === value ? "opacity-100" : "opacity-0")} />
                                     {acc.label}
                                 </CommandItem>
@@ -308,10 +308,10 @@ export function JournalEntryForm() {
                                 {groups.map((group) => (
                                 <CommandItem
                                     key={group.value}
-                                    value={group.label}
-                                    onSelect={() => {
-                                    onChange(group.value === value ? null : group.value);
-                                    setOpen(false);
+                                    value={group.value}
+                                    onSelect={(selectedValue) => {
+                                        onChange(selectedValue === value ? null : selectedValue);
+                                        setOpen(false);
                                     }}
                                 >
                                     <Check
