@@ -154,10 +154,16 @@ export function LedgerView({ data }: LedgerViewProps) {
   const [ledgers, setLedgers] = useState<Ledger[]>(data);
   const { toast } = useToast();
 
-  // State for Create Dialog
+  // State for Create Ledger Dialog
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newAccountName, setNewAccountName] = useState('');
   const [newSelectedParent, setNewSelectedParent] = useState<string | null>(null);
+
+  // State for Create Group Dialog
+  const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newGroupParent, setNewGroupParent] = useState<string | null>(null);
+  const [newGroupType, setNewGroupType] = useState<'primary' | 'subgroup'>('primary');
   
   // State for Edit Dialog
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -221,6 +227,12 @@ export function LedgerView({ data }: LedgerViewProps) {
     setNewAccountName('');
     setNewSelectedParent(null);
   };
+
+  const resetGroupForm = () => {
+      setNewGroupName('');
+      setNewGroupParent(null);
+      setNewGroupType('primary');
+  };
   
   const handleCreateLedger = () => {
     if (!newAccountName.trim() || !newSelectedParent) {
@@ -253,6 +265,46 @@ export function LedgerView({ data }: LedgerViewProps) {
 
     resetCreateForm();
     setIsCreateDialogOpen(false);
+  };
+
+  const handleCreateGroup = () => {
+      if (!newGroupName.trim()) {
+          toast({ title: "Missing Information", description: "Group name is required.", variant: "destructive" });
+          return;
+      }
+      if (newGroupType === 'subgroup' && !newGroupParent) {
+          toast({ title: "Missing Information", description: "Parent group is required for a subgroup.", variant: "destructive" });
+          return;
+      }
+
+      const newGroup: Ledger = {
+          id: `group-${Date.now()}`,
+          name: newGroupName.trim(),
+          type: 'group',
+          children: []
+      };
+
+      if (newGroupType === 'primary' || !newGroupParent) {
+          setLedgers(prevLedgers => [...prevLedgers, newGroup]);
+      } else {
+          const addGroupToParent = (nodes: Ledger[], parentId: string, newGroup: Ledger): Ledger[] => {
+              return nodes.map(node => {
+                  if (node.id === parentId) {
+                      return { ...node, children: [...(node.children || []), newGroup] };
+                  }
+                  if (node.children) {
+                      return { ...node, children: addGroupToParent(node.children, parentId, newGroup) };
+                  }
+                  return node;
+              });
+          };
+          setLedgers(prevLedgers => addGroupToParent(prevLedgers, newGroupParent!, newGroup));
+      }
+      
+      toast({ title: "Group Created", description: `Successfully created the group "${newGroup.name}".`});
+
+      resetGroupForm();
+      setIsGroupDialogOpen(false);
   };
 
   const findParent = (nodes: Ledger[], childId: string, parent: Ledger | null = null): Ledger | null => {
@@ -375,62 +427,116 @@ export function LedgerView({ data }: LedgerViewProps) {
           <CardTitle>Chart of Accounts</CardTitle>
           <CardDescription>Create and manage your ledger accounts and groups.</CardDescription>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
-          setIsCreateDialogOpen(open);
-          if (!open) resetCreateForm();
-        }}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Ledger
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Add New Ledger</DialogTitle>
-              <DialogDescription>
-                Add a new ledger to an existing group in your chart of accounts.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Name
-                </Label>
-                <Input
-                  id="name"
-                  value={newAccountName}
-                  onChange={(e) => setNewAccountName(e.target.value)}
-                  className="col-span-3"
-                  placeholder="e.g. Office Supplies"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="parent" className="text-right">
-                    Parent Group
-                  </Label>
-                  <Select onValueChange={setNewSelectedParent} value={newSelectedParent || undefined}>
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Select a parent group" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allGroups.map((group) => (
-                        <SelectItem key={group.id} value={group.id}>
-                          {group.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+        <div className="flex items-center gap-2">
+            <Dialog open={isGroupDialogOpen} onOpenChange={(open) => {
+                setIsGroupDialogOpen(open);
+                if (!open) resetGroupForm();
+            }}>
+                <DialogTrigger asChild>
+                    <Button variant="outline">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Group
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Add New Group</DialogTitle>
+                        <DialogDescription>Create a new group to organize your ledgers.</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="group-name" className="text-right">Name</Label>
+                            <Input id="group-name" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label className="text-right">Type</Label>
+                            <Select onValueChange={(value) => setNewGroupType(value as any)} value={newGroupType}>
+                                <SelectTrigger className="col-span-3">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="primary">Primary Group</SelectItem>
+                                    <SelectItem value="subgroup">Subgroup of...</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {newGroupType === 'subgroup' && (
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="parent-group" className="text-right">Parent Group</Label>
+                                <Select onValueChange={setNewGroupParent} value={newGroupParent || undefined}>
+                                    <SelectTrigger className="col-span-3"><SelectValue placeholder="Select parent" /></SelectTrigger>
+                                    <SelectContent>
+                                        {allGroups.map(group => (
+                                            <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+                        <Button onClick={handleCreateGroup}>Create Group</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+            setIsCreateDialogOpen(open);
+            if (!open) resetCreateForm();
+            }}>
+            <DialogTrigger asChild>
+                <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Ledger
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                <DialogTitle>Add New Ledger</DialogTitle>
+                <DialogDescription>
+                    Add a new ledger to an existing group in your chart of accounts.
+                </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="name" className="text-right">
+                    Name
+                    </Label>
+                    <Input
+                    id="name"
+                    value={newAccountName}
+                    onChange={(e) => setNewAccountName(e.target.value)}
+                    className="col-span-3"
+                    placeholder="e.g. Office Supplies"
+                    />
                 </div>
-            </div>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
-              </DialogClose>
-              <Button onClick={handleCreateLedger}>Create</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="parent" className="text-right">
+                        Parent Group
+                    </Label>
+                    <Select onValueChange={setNewSelectedParent} value={newSelectedParent || undefined}>
+                        <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select a parent group" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        {allGroups.map((group) => (
+                            <SelectItem key={group.id} value={group.id}>
+                            {group.name}
+                            </SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
+                    </div>
+                </div>
+                <DialogFooter>
+                <DialogClose asChild>
+                    <Button variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button onClick={handleCreateLedger}>Create</Button>
+                </DialogFooter>
+            </DialogContent>
+            </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         {/* Edit Dialog */}
