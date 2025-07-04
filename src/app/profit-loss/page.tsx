@@ -34,25 +34,27 @@ const ReportRow = ({ node, level, baseValue, showPercentages }: { node: Ledger; 
     const isGroup = node.type === 'group';
     const total = calculateTotal(node);
     const percentage = baseValue && baseValue !== 0 ? (Math.abs(total) / Math.abs(baseValue)) * 100 : 0;
-
-    // A special case for Closing Stock in P&L
     const displayTotal = node.id === 'ledger-closing-stock' ? Math.abs(total) : total;
-
 
     return (
         <div>
             <div className={cn(
-                "flex items-center justify-between py-2 text-sm",
-                isGroup && "font-semibold"
-            )} style={{ paddingLeft: `${level * 1.5}rem` }}>
+                "flex items-center justify-between py-1.5 text-sm",
+                isGroup ? 'font-semibold' : 'font-normal'
+            )} style={{ paddingLeft: `${level * 1.25}rem` }}>
                 <span className="pr-4">
                     {node.name}
-                    {showPercentages && (
+                    {showPercentages && percentage > 0.1 && (
                         <span className="font-normal text-muted-foreground ml-2">({percentage.toFixed(0)}%)</span>
                     )}
                 </span>
                 <div className="flex items-center gap-4 flex-shrink-0">
-                    <span className="w-32 text-right font-mono">{formatCurrency(displayTotal, 'INR')}</span>
+                    <span className="w-32 text-right font-mono">
+                        {!isGroup ? formatCurrency(displayTotal, 'INR') : ''}
+                    </span>
+                    <span className="w-32 text-right font-mono">
+                        {isGroup ? formatCurrency(displayTotal, 'INR') : ''}
+                    </span>
                 </div>
             </div>
             {node.children && node.children.map(child => (
@@ -68,8 +70,12 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
     
     return (
         <div className={cn("space-y-2 border-t pt-4", className)}>
-             <div className="flex justify-between items-baseline">
-                <h3 className={cn("text-lg font-semibold mb-2", titleClassName)}>{title}</h3>
+             <div className="flex justify-between items-baseline mb-2">
+                <h3 className={cn("text-lg font-semibold", titleClassName)}>{title}</h3>
+                <div className="flex items-center gap-4 text-sm font-semibold text-muted-foreground">
+                    <span className="w-32 text-right">Amount</span>
+                    <span className="w-32 text-right">Total</span>
+                </div>
             </div>
 
             {data.children?.map(node => (
@@ -79,6 +85,7 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
             <div className="flex justify-between font-bold text-base py-2">
                 <span>Total {title}</span>
                  <div className="flex items-center gap-4">
+                    <span className="w-32 text-right font-mono"></span>
                     <span className="w-32 text-right font-mono">{formatCurrency(sectionTotal, 'INR')}</span>
                 </div>
             </div>
@@ -91,14 +98,14 @@ const AnimatedToggleButton = ({ show, onToggle }: { show: boolean, onToggle: () 
     <div
       onClick={onToggle}
       className={cn(
-        "flex h-8 w-[100px] cursor-pointer items-center rounded-full bg-muted p-1 transition-colors",
+        "flex h-7 w-[90px] cursor-pointer items-center rounded-full bg-muted p-1 transition-colors",
         show ? "justify-end" : "justify-start"
       )}
     >
       <motion.div
         layout
         transition={{ type: "spring", stiffness: 700, damping: 30 }}
-        className="flex h-6 items-center justify-center rounded-full bg-primary px-3 text-xs font-medium text-primary-foreground"
+        className="flex h-5 items-center justify-center rounded-full bg-primary px-3 text-xs font-medium text-primary-foreground"
       >
         {show ? 'Hide %' : 'Show %'}
       </motion.div>
