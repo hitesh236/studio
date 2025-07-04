@@ -119,7 +119,7 @@ const JournalEntryCard = ({ entry, density, onViewClick }: { entry: JournalEntry
                     {entry.lines.map(line => (
                         <div key={line.id} className="flex justify-between items-center">
                             <span className={cn(line.credit > 0 && 'pl-4')}>{line.account}</span>
-                            <span className="font-mono">
+                            <span className={cn("font-mono", line.debit > 0 ? "text-primary" : "text-destructive")}>
                                 {line.debit > 0 ? formatCurrency(line.debit, 'INR') : formatCurrency(line.credit, 'INR')}
                             </span>
                         </div>
@@ -322,7 +322,7 @@ export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
                   {paginatedData.map((entry, entryIndex) => (
                       <React.Fragment key={entry.id}>
                       {entry.lines.map((line, lineIndex) => (
-                          <TableRow key={line.id} className={cn('h-auto', lineIndex === entry.lines.length - 1 && entryIndex !== paginatedData.length-1 ? 'border-b-4 border-double' : '', entryIndex % 2 !== 0 && 'bg-muted/50')}>
+                          <TableRow key={line.id} className={cn('h-auto', lineIndex === entry.lines.length - 1 && entryIndex !== paginatedData.length-1 ? 'border-b-2' : '', entryIndex % 2 !== 0 && 'bg-muted/50')}>
                           {lineIndex === 0 ? (
                               <TableCell rowSpan={entry.lines.length + 1} className={cn("align-top font-medium border-r p-2", density === 'compact' && 'p-1')}>
                               {format(entry.date, 'dd-MMM-yy')}
@@ -337,10 +337,10 @@ export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
                           <TableCell className={cn('p-2', line.credit > 0 ? 'pl-6' : '', density === 'compact' && 'p-1', line.credit > 0 && density === 'compact' ? 'pl-4' : '')}>
                               {line.account}
                           </TableCell>
-                          <TableCell className={cn("text-right font-mono p-2", density === 'compact' && 'p-1')}>
+                          <TableCell className={cn("text-right font-mono p-2 text-primary", density === 'compact' && 'p-1')}>
                               {line.debit > 0 ? formatCurrency(line.debit, 'INR') : ''}
                           </TableCell>
-                          <TableCell className={cn("text-right font-mono p-2 border-r", density === 'compact' && 'p-1')}>
+                          <TableCell className={cn("text-right font-mono p-2 border-r text-destructive", density === 'compact' && 'p-1')}>
                             {line.credit > 0 ? formatCurrency(line.credit, 'INR') : ''}
                           </TableCell>
 
@@ -373,9 +373,9 @@ export function JournalEntriesTable({ data }: JournalEntriesTableProps) {
                           ) : null}
                           </TableRow>
                       ))}
-                      <TableRow className={cn('h-auto', entryIndex !== paginatedData.length-1 ? 'border-b-4 border-double' : '', entryIndex % 2 !== 0 && 'bg-muted/50')}>
-                          <TableCell colSpan={3} className={cn("p-2", density === 'compact' && 'p-1')}>
-                              <p className="text-xs text-muted-foreground border rounded-md p-1 bg-muted/20">{entry.description}</p>
+                      <TableRow className={cn('h-auto', entryIndex !== paginatedData.length-1 ? 'border-b-2' : '', entryIndex % 2 !== 0 && 'bg-muted/50')}>
+                          <TableCell colSpan={3} className={cn("py-2 px-2 text-xs text-muted-foreground", density === 'compact' && 'p-1')}>
+                              {entry.description}
                           </TableCell>
                       </TableRow>
                       </React.Fragment>
