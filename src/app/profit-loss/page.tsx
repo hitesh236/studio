@@ -30,7 +30,7 @@ const calculateTotal = (node: Ledger): number => {
 };
 
 // Component to render a single row in the report
-const ReportRow = ({ node, level, showPercentages }: { node: Ledger; level: number; showPercentages: boolean }) => {
+const ReportRow = ({ node, showPercentages }: { node: Ledger; showPercentages: boolean }) => {
     const isGroup = node.type === 'group';
     const total = calculateTotal(node);
     const displayTotal = node.id === 'ledger-closing-stock' ? Math.abs(total) : total;
@@ -42,7 +42,7 @@ const ReportRow = ({ node, level, showPercentages }: { node: Ledger; level: numb
                 "flex items-start justify-between py-1.5 text-sm",
                 isGroup ? 'font-semibold bg-muted/50 -mx-4 px-4 rounded-md' : 'font-normal',
             )}>
-                <span style={{ paddingLeft: `${level * 1.25}rem` }} className="flex-1 pr-4">
+                <span className="flex-1 pr-4">
                     {node.name}
                     {showPercentages && <span className="font-normal text-muted-foreground ml-2">(xx%)</span>}
                 </span>
@@ -57,7 +57,7 @@ const ReportRow = ({ node, level, showPercentages }: { node: Ledger; level: numb
                 </div>
             </div>
             {node.children && node.children.map(child => (
-                <ReportRow key={child.id} node={child} level={level + 1} showPercentages={showPercentages} />
+                <ReportRow key={child.id} node={child} showPercentages={showPercentages} />
             ))}
         </div>
     );
@@ -79,7 +79,7 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
             </div>
 
             {data.children?.map(node => (
-                <ReportRow key={node.id} node={node} level={0} showPercentages={showPercentages} />
+                <ReportRow key={node.id} node={node} showPercentages={showPercentages} />
             ))}
             <Separator className="my-2" />
             <div className="flex justify-between font-bold text-base py-2">
