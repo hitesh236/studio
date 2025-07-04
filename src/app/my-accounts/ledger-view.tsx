@@ -40,7 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ChevronRight, ChevronDown, PlusCircle, Pencil, MoreHorizontal, Trash2 } from 'lucide-react';
+import { ChevronRight, ChevronDown, PlusCircle, Pencil, MoreHorizontal, Trash2, Folder, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -81,18 +81,16 @@ const LedgerEntry = ({ ledger, level, onEdit, onDelete, reportType }: {
         onClick={() => hasChildren && setIsOpen(!isOpen)}
       >
         <div className="flex items-center gap-2 flex-1 truncate">
-          {hasChildren ? (
-            <span className="w-4 h-4 shrink-0">
-                {isOpen ? (
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                )}
-            </span>
-          ) : (
-            <div className="w-4 h-4 shrink-0" />
-          )}
-          <span className={cn("font-medium text-sm truncate", level === 0 && "font-semibold")}>{ledger.name}</span>
+          <span className="w-4 h-4 shrink-0 flex items-center justify-center">
+            {hasChildren && (isOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />)}
+          </span>
+
+          {ledger.type === 'group' 
+            ? <Folder className="h-4 w-4 shrink-0 text-amber-500" />
+            : <FileText className="h-4 w-4 shrink-0 text-sky-500" />
+          }
+          
+          <span className={cn("text-sm truncate", ledger.type === 'group' ? "font-semibold" : "font-normal")}>{ledger.name}</span>
         </div>
         
         <div className="flex items-center gap-2 shrink-0 ml-4">
