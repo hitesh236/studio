@@ -93,11 +93,13 @@ const nonDeletableGroupIds = new Set([
 const LedgerEntry = ({
   ledger,
   level,
+  reportType,
   onEdit,
   onDelete,
 }: {
   ledger: Ledger;
   level: number;
+  reportType: 'Balance Sheet' | 'Profit & Loss' | null;
   onEdit: (ledger: Ledger) => void;
   onDelete: (ledger: Ledger) => void;
 }) => {
@@ -105,18 +107,6 @@ const LedgerEntry = ({
   const hasChildren = ledger.children && ledger.children.length > 0;
   const isDeletable =
     ledger.type === 'group' && !nonDeletableGroupIds.has(ledger.id);
-
-  let reportType: 'Balance Sheet' | 'Profit & Loss' | null = null;
-  if (level === 0) {
-    const balanceSheetIds = ['assets', 'liabilities', 'equity'];
-    const profitAndLossIds = ['income', 'expenses'];
-
-    if (balanceSheetIds.includes(ledger.id)) {
-      reportType = 'Balance Sheet';
-    } else if (profitAndLossIds.includes(ledger.id)) {
-      reportType = 'Profit & Loss';
-    }
-  }
 
   return (
     <div>
@@ -183,7 +173,7 @@ const LedgerEntry = ({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          {reportType && (
+          {reportType && ledger.type === 'group' && (
             <Badge
               variant="outline"
               className={cn(
@@ -211,6 +201,7 @@ const LedgerEntry = ({
                 key={child.id}
                 ledger={child}
                 level={level + 1}
+                reportType={reportType}
                 onEdit={onEdit}
                 onDelete={onDelete}
               />
@@ -576,126 +567,150 @@ export function LedgerView({ data }: LedgerViewProps) {
     );
   };
 
+  const getReportType = (ledgerId: string): 'Balance Sheet' | 'Profit & Loss' | null => {
+    const balanceSheetIds = ['assets', 'liabilities', 'equity'];
+    const profitAndLossIds = ['income', 'expenses'];
+
+    if (balanceSheetIds.includes(ledgerId)) {
+        return 'Balance Sheet';
+    } else if (profitAndLossIds.includes(ledgerId)) {
+        return 'Profit & Loss';
+    }
+    return null;
+  };
+
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Chart of Accounts</CardTitle>
-          <CardDescription>
-            Create and manage your ledger accounts and groups.
-          </CardDescription>
-        </div>
-        <div className="flex items-center gap-2">
-          <Dialog
-            open={isGroupDialogOpen}
-            onOpenChange={(open) => {
-              setIsGroupDialogOpen(open);
-              if (!open) resetGroupForm();
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Group
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Group</DialogTitle>
-                <DialogDescription>
-                  Create a new group to organize your ledgers.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="group-name" className="text-right">
-                    Name
-                  </Label>
-                  <Input
-                    id="group-name"
-                    value={newGroupName}
-                    onChange={(e) => setNewGroupName(e.target.value)}
-                    className="col-span-3"
-                  />
+      <CardHeader>
+        <div className="flex flex-row items-start justify-between">
+            <div className="flex-1">
+                <CardTitle>Chart of Accounts</CardTitle>
+                <CardDescription>
+                    Create and manage your ledger accounts and groups.
+                </CardDescription>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
+                    <div className="flex items-center gap-1.5">
+                        <Folder className="h-4 w-4 text-amber-500" />
+                        <span>Group</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <FileText className="h-4 w-4 text-sky-500" />
+                        <span>Ledger</span>
+                    </div>
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="parent-group" className="text-right">
-                    Parent Group
-                  </Label>
-                  <div className="col-span-3">
-                    <ParentGroupCombobox
-                      value={newGroupParent}
-                      onChange={setNewGroupParent}
-                      placeholder="Select parent"
-                      groups={allGroups}
+            </div>
+            <div className="flex items-center gap-2">
+            <Dialog
+                open={isGroupDialogOpen}
+                onOpenChange={(open) => {
+                setIsGroupDialogOpen(open);
+                if (!open) resetGroupForm();
+                }}
+            >
+                <DialogTrigger asChild>
+                <Button variant="outline">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Group
+                </Button>
+                </DialogTrigger>
+                <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Add New Group</DialogTitle>
+                    <DialogDescription>
+                    Create a new group to organize your ledgers.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="group-name" className="text-right">
+                        Name
+                    </Label>
+                    <Input
+                        id="group-name"
+                        value={newGroupName}
+                        onChange={(e) => setNewGroupName(e.target.value)}
+                        className="col-span-3"
                     />
-                  </div>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="parent-group" className="text-right">
+                        Parent Group
+                    </Label>
+                    <div className="col-span-3">
+                        <ParentGroupCombobox
+                        value={newGroupParent}
+                        onChange={setNewGroupParent}
+                        placeholder="Select parent"
+                        groups={allGroups}
+                        />
+                    </div>
+                    </div>
                 </div>
-              </div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="outline">Cancel</Button>
-                </DialogClose>
-                <Button onClick={handleCreateGroup}>Create Group</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          <Dialog
-            open={isCreateDialogOpen}
-            onOpenChange={(open) => {
-              setIsCreateDialogOpen(open);
-              if (!open) resetCreateForm();
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Ledger
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Add New Ledger</DialogTitle>
-                <DialogDescription>
-                  Add a new ledger to an existing group in your chart of
-                  accounts.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Name
-                  </Label>
-                  <Input
-                    id="name"
-                    value={newAccountName}
-                    onChange={(e) => setNewAccountName(e.target.value)}
-                    className="col-span-3"
-                    placeholder="e.g. Office Supplies"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="parent" className="text-right">
-                    Parent Group
-                  </Label>
-                  <div className="col-span-3">
-                    <ParentGroupCombobox
-                      value={newSelectedParent}
-                      onChange={setNewSelectedParent}
-                      placeholder="Select a parent group"
-                      groups={allGroups}
+                <DialogFooter>
+                    <DialogClose asChild>
+                    <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button onClick={handleCreateGroup}>Create Group</Button>
+                </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <Dialog
+                open={isCreateDialogOpen}
+                onOpenChange={(open) => {
+                setIsCreateDialogOpen(open);
+                if (!open) resetCreateForm();
+                }}
+            >
+                <DialogTrigger asChild>
+                <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Ledger
+                </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Add New Ledger</DialogTitle>
+                    <DialogDescription>
+                    Add a new ledger to an existing group in your chart of
+                    accounts.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="name" className="text-right">
+                        Name
+                    </Label>
+                    <Input
+                        id="name"
+                        value={newAccountName}
+                        onChange={(e) => setNewAccountName(e.target.value)}
+                        className="col-span-3"
+                        placeholder="e.g. Office Supplies"
                     />
-                  </div>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="parent" className="text-right">
+                        Parent Group
+                    </Label>
+                    <div className="col-span-3">
+                        <ParentGroupCombobox
+                        value={newSelectedParent}
+                        onChange={setNewSelectedParent}
+                        placeholder="Select a parent group"
+                        groups={allGroups}
+                        />
+                    </div>
+                    </div>
                 </div>
-              </div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="outline">Cancel</Button>
-                </DialogClose>
-                <Button onClick={handleCreateLedger}>Create</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                <DialogFooter>
+                    <DialogClose asChild>
+                    <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button onClick={handleCreateLedger}>Create</Button>
+                </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -795,6 +810,7 @@ export function LedgerView({ data }: LedgerViewProps) {
                 key={group.id}
                 ledger={group}
                 level={0}
+                reportType={getReportType(group.id)}
                 onEdit={handleOpenEditDialog}
                 onDelete={handleOpenDeleteDialog}
               />
