@@ -80,14 +80,23 @@ const nonDeletableGroupIds = new Set([
   'assets',
   'current-assets',
   'fixed-assets',
+  'investments',
+  'misc-expenses-asset',
   'liabilities',
   'current-liabilities',
-  'long-term-liabilities',
+  'loans-liability',
+  'branch-divisions',
+  'suspense-ac',
   'equity',
+  'capital-account',
   'income',
+  'direct-incomes',
+  'indirect-incomes',
+  'sales-accounts',
   'expenses',
-  'cogs',
-  'operating-expenses',
+  'direct-expenses',
+  'indirect-expenses',
+  'purchase-accounts',
 ]);
 
 const LedgerEntry = ({
@@ -107,6 +116,8 @@ const LedgerEntry = ({
   const hasChildren = ledger.children && ledger.children.length > 0;
   const isDeletable =
     ledger.type === 'group' && !nonDeletableGroupIds.has(ledger.id);
+
+  const effectiveReportType = reportType || (ledger.reportType ?? null);
 
   return (
     <div>
@@ -145,17 +156,17 @@ const LedgerEntry = ({
         </div>
 
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          {reportType && ledger.type === 'group' && (
+          {effectiveReportType && ledger.type === 'group' && (
             <Badge
               variant="outline"
               className={cn(
                 'font-normal text-xs',
-                reportType === 'Balance Sheet'
+                effectiveReportType === 'Balance Sheet'
                   ? 'border-secondary text-secondary'
                   : 'border-primary text-primary'
               )}
             >
-              {reportType}
+              {effectiveReportType}
             </Badge>
           )}
           <DropdownMenu>
@@ -201,7 +212,7 @@ const LedgerEntry = ({
                 key={child.id}
                 ledger={child}
                 level={level + 1}
-                reportType={reportType}
+                reportType={effectiveReportType}
                 onEdit={onEdit}
                 onDelete={onDelete}
               />
@@ -566,7 +577,7 @@ export function LedgerView({ data }: { data: Ledger[] }) {
       </Popover>
     );
   };
-
+  
   const getReportType = (ledgerId: string): 'Balance Sheet' | 'Profit & Loss' | null => {
     const balanceSheetIds = ['assets', 'liabilities', 'equity'];
     const profitAndLossIds = ['income', 'expenses'];
@@ -588,16 +599,6 @@ export function LedgerView({ data }: { data: Ledger[] }) {
                 <CardDescription>
                     Create and manage your ledger accounts and groups.
                 </CardDescription>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
-                    <div className="flex items-center gap-1.5">
-                        <Folder className="h-4 w-4 text-amber-500" />
-                        <span>Group</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        <FileText className="h-4 w-4 text-sky-500" />
-                        <span>Ledger</span>
-                    </div>
-                </div>
             </div>
             <div className="flex items-center gap-2">
             <Dialog
@@ -798,6 +799,16 @@ export function LedgerView({ data }: { data: Ledger[] }) {
           </AlertDialogContent>
         </AlertDialog>
 
+        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+            <div className="flex items-center gap-1.5">
+                <Folder className="h-4 w-4 text-amber-500" />
+                <span>Group</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+                <FileText className="h-4 w-4 text-sky-500" />
+                <span>Ledger</span>
+            </div>
+        </div>
         <div className="rounded-md border p-2">
           {ledgers
             .sort(
