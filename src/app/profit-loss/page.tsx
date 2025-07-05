@@ -257,16 +257,22 @@ export default function ProfitAndLossPage() {
             )}
           >
             <span className="sr-only">Toggle Percentages</span>
+            
+            <div className="absolute inset-0 flex items-center justify-center">
+                <span className={cn(
+                    "text-xs font-semibold",
+                    checked ? 'text-primary-foreground' : 'text-muted-foreground'
+                )}>
+                    {checked ? 'Hide %' : 'Show %'}
+                </span>
+            </div>
+
             <motion.div
-              className={cn(
-                "h-6 w-[48px] rounded-full bg-background shadow-lg flex items-center justify-center text-xs font-semibold",
-                 checked ? 'text-primary' : 'text-muted-foreground'
-              )}
-              animate={{ x: checked ? '36px' : '0px' }}
+              className="h-6 w-6 rounded-full bg-background shadow-lg"
+              initial={false}
+              animate={{ x: checked ? '60px' : '0px' }}
               transition={{ type: "spring", stiffness: 700, damping: 30 }}
-            >
-              {checked ? 'Hide %' : 'Show %'}
-            </motion.div>
+            />
           </button>
         );
       };
@@ -435,3 +441,5 @@ export default function ProfitAndLossPage() {
     </div>
   );
 }
+
+    
