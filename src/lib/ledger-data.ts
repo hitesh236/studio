@@ -5,6 +5,7 @@ export type Ledger = {
   type: 'group' | 'ledger';
   balance?: number;
   position?: number;
+  reportType?: 'Income' | 'Expenses';
   children?: Ledger[];
 };
 
@@ -127,6 +128,7 @@ export const ledgerData: Ledger[] = [
       name: 'Income',
       type: 'group',
       position: 4,
+      reportType: 'Income',
       children: [
         {
             id: 'direct-incomes',
@@ -163,6 +165,7 @@ export const ledgerData: Ledger[] = [
       name: 'Expenses',
       type: 'group',
       position: 5,
+      reportType: 'Expenses',
       children: [
         {
             id: 'direct-expenses',
@@ -236,15 +239,7 @@ export const ledgerData: Ledger[] = [
                         { id: 'ledger-dep-furniture', name: 'Depreciation on Furniture', type: 'ledger', balance: 20000 },
                     ]
                 },
-                { id: 'ledger-other-indirect-expenses', name: 'Other Indirect Expenses', type: 'ledger', balance: 7500 },
-                {
-                    id: 'taxes',
-                    name: 'Taxes',
-                    type: 'group',
-                    children: [
-                        { id: 'ledger-income-tax', name: 'Income Tax', type: 'ledger', balance: 85000 },
-                    ]
-                }
+                { id: 'ledger-other-indirect-expenses', name: 'Other Indirect Expenses', type: 'ledger', balance: 7500 }
             ]
         },
       ]

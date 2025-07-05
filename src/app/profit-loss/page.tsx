@@ -39,8 +39,6 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledge
     const percentage = totalRevenue > 0 ? (total / totalRevenue) * 100 : 0;
     
     const textOpacityClass = level === 0 ? 'opacity-100' : level === 1 ? 'opacity-90' : 'opacity-80';
-    const bgOpacityClass = level === 0 ? 'bg-opacity-10' : level === 1 ? 'bg-opacity-5' : 'bg-opacity-0';
-
 
     return (
         <motion.div
@@ -64,7 +62,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledge
                 )}
                 <span className="text-sm flex items-center gap-2">
                     {node.name}
-                    {showPercentages && isGroup && (
+                     {showPercentages && isGroup && (
                         <Badge 
                             variant='secondary' 
                             className="text-[10px] font-normal leading-[1] py-[2px] px-[4px]"
@@ -166,24 +164,11 @@ export default function ProfitAndLossPage() {
       return <div>Error: Income or Expense group not found in ledger data.</div>;
   }
   
-    const findNode = (nodes: Ledger[], nodeId: string): Ledger | null => {
-        for (const node of nodes) {
-            if (node.id === nodeId) return node;
-            if (node.children) {
-                const found = findNode(node.children, nodeId);
-                if (found) return found;
-            }
-        }
-        return null;
-    };
-
-    const taxLedger = findNode(ledgerData, 'ledger-income-tax');
-    const incomeTaxAmount = taxLedger ? calculateTotal(taxLedger) : 0;
-    
     const totalIncome = calculateTotal(incomeData);
     const totalExpenses = calculateTotal(expenseData);
+    const incomeTaxAmount = 85000; // Assuming a fixed tax amount for this example
     
-    const profitBeforeTax = totalIncome - (totalExpenses - incomeTaxAmount);
+    const profitBeforeTax = totalIncome - totalExpenses;
     const netProfitAfterTax = profitBeforeTax - incomeTaxAmount;
     
     const totalRevenue = totalIncome;
