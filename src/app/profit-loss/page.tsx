@@ -27,8 +27,6 @@ import {
   DropdownMenuSubContent,
   DropdownMenuPortal
 } from '@/components/ui/dropdown-menu';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 
 
 // Helper function to recursively calculate group totals
@@ -240,7 +238,7 @@ export default function ProfitAndLossPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-        <Card className="w-full">
+        <Card>
             <CardHeader className="w-full">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
@@ -250,10 +248,9 @@ export default function ProfitAndLossPage() {
                         </CardDescription>
                     </div>
                     <div className="flex items-center gap-4">
-                        <div className="flex items-center space-x-2">
-                            <Switch id="percentage-mode" checked={showPercentages} onCheckedChange={setShowPercentages} className="h-5 w-9 data-[state=checked]:translate-x-4 data-[state=unchecked]:translate-x-0 [&_span]:h-4 [&_span]:w-4" />
-                            <Label htmlFor="percentage-mode" className="whitespace-nowrap">Show %</Label>
-                        </div>
+                        <Button variant="outline" size="sm" onClick={() => setShowPercentages(!showPercentages)} className="w-28">
+                            {showPercentages ? 'Hide %' : 'Show %'}
+                        </Button>
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button id="date" variant="outline" className={cn("w-full sm:w-[260px] justify-start text-left font-normal", !date && "text-muted-foreground")}>
