@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
-import { Mail, MoreVertical, Phone, Send, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download, Users, FileWarning, Landmark, ArrowUp, ArrowDown, Columns, GripVertical, Filter as FilterIcon, X, Tag, Calendar as CalendarIcon, CircleDollarSign, Activity, Building2 } from "lucide-react";
+import { Mail, MoreVertical, Phone, Send, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download, Users, FileWarning, Landmark, ArrowUp, ArrowDown, Columns, GripVertical, Filter as FilterIcon, X, Tag, Calendar as CalendarIcon, CircleDollarSign, Activity, Building2, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { cn, formatCurrency } from "@/lib/utils";
 import { Input } from '@/components/ui/input';
@@ -28,6 +28,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Slider } from '@/components/ui/slider';
+import Link from 'next/link';
 
 
 const ALL_COLUMNS = [
@@ -55,6 +56,7 @@ const MobileCustomerCard = ({ customer }: { customer: Customer }) => {
                     <div>
                         <CardTitle className="text-base">{customer.name}</CardTitle>
                         <CardDescription>{customer.gstin}</CardDescription>
+                        {customer.contact.email && <span className="text-xs text-muted-foreground">{customer.contact.email}</span>}
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -83,12 +85,6 @@ const MobileCustomerCard = ({ customer }: { customer: Customer }) => {
                         <span className="flex items-center gap-2 text-sm">
                           <Phone className="h-3 w-3 text-muted-foreground" />
                           {customer.contact.phone}
-                        </span>
-                      )}
-                      {customer.contact.email && (
-                        <span className="flex items-center gap-2 text-sm">
-                          <Mail className="h-3 w-3 text-muted-foreground" />
-                          {customer.contact.email}
                         </span>
                       )}
                     </div>
@@ -586,20 +582,32 @@ export function CustomerTable({ data }: { data: Customer[] }) {
                 </TableHeader>
                 <TableBody>
                 {paginatedData.map((customer) => (
-                    <TableRow key={customer.id} className={cn(density === 'compact' && 'h-10')}>
+                    <TableRow key={customer.id} className={cn(density === 'compact' && 'h-10', 'group/row')}>
                          {visibleColumns.map(column => (
                             <TableCell key={column.id}>
                                 {(() => {
                                     switch (column.id) {
-                                        case 'name': return <span className="font-medium">{customer.name}</span>;
+                                        case 'name': return (
+                                            <div className="flex items-center gap-2">
+                                                <div>
+                                                    <div className="font-medium">{customer.name}</div>
+                                                    {customer.contact.email && (
+                                                        <div className="text-xs text-muted-foreground">{customer.contact.email}</div>
+                                                    )}
+                                                </div>
+                                                <Button asChild variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground opacity-0 group-hover/row:opacity-100">
+                                                    <Link href={`/customer-portfolio?id=${customer.id}`}>
+                                                        <ExternalLink className="h-4 w-4" />
+                                                        <span className="sr-only">View Customer</span>
+                                                    </Link>
+                                                </Button>
+                                            </div>
+                                        );
                                         case 'gstin': return <span className="font-mono">{customer.gstin}</span>;
                                         case 'contact': return (
                                             <div className="flex flex-col gap-1">
                                                 {customer.contact.phone && (
                                                     <span className="flex items-center gap-2 text-sm"><Phone className="h-3 w-3 text-muted-foreground" />{customer.contact.phone}</span>
-                                                )}
-                                                {customer.contact.email && (
-                                                    <span className="flex items-center gap-2 text-sm"><Mail className="h-3 w-3 text-muted-foreground" />{customer.contact.email}</span>
                                                 )}
                                             </div>
                                         );
