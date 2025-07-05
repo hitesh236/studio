@@ -4,7 +4,7 @@
 import * as React from 'react';
 import type { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Download, Printer, Folder, FileText, ArrowUp, ArrowDown, Settings } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, Printer, Folder, FileText, ArrowUp, ArrowDown, Settings, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -12,7 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
 import { ledgerData, type Ledger } from '@/lib/ledger-data';
 import { cn, formatCurrency } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -27,6 +27,8 @@ import {
   DropdownMenuSubContent,
   DropdownMenuPortal
 } from '@/components/ui/dropdown-menu';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 
 // Helper function to recursively calculate group totals
@@ -247,7 +249,11 @@ export default function ProfitAndLossPage() {
                             For the period of {date?.from ? format(date.from, 'LLL dd, y') : ''} to {date?.to ? format(date.to, 'LLL dd, y') : ''}
                         </CardDescription>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center space-x-2">
+                            <Switch id="comparison-mode" checked={showComparison} onCheckedChange={setShowComparison} />
+                            <Label htmlFor="comparison-mode" className="whitespace-nowrap">Compare Periods</Label>
+                        </div>
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button id="date" variant="outline" className={cn("w-full sm:w-[260px] justify-start text-left font-normal", !date && "text-muted-foreground")}>
@@ -267,12 +273,6 @@ export default function ProfitAndLossPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuCheckboxItem
-                              checked={showComparison}
-                              onCheckedChange={setShowComparison}
-                            >
-                              Compare Periods
-                            </DropdownMenuCheckboxItem>
                             <DropdownMenuCheckboxItem
                               checked={showPercentages}
                               onCheckedChange={setShowPercentages}
@@ -300,6 +300,25 @@ export default function ProfitAndLossPage() {
                         </DropdownMenu>
                     </div>
                 </div>
+                 <AnimatePresence>
+                    {showComparison && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10, height: 0 }}
+                            animate={{ opacity: 1, y: 0, height: 'auto' }}
+                            exit={{ opacity: 0, y: -10, height: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="mt-4 flex items-center justify-between rounded-md border border-accent bg-accent/10 p-2.5 text-sm"
+                        >
+                            <div className="font-semibold text-accent-foreground">
+                                Comparison View is On. Comparing with previous period data.
+                            </div>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-accent-foreground" onClick={() => setShowComparison(false)}>
+                                <X className="h-4 w-4" />
+                                <span className="sr-only">Disable Comparison View</span>
+                            </Button>
+                        </motion.div>
+                    )}
+                 </AnimatePresence>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
