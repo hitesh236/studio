@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
-import { Mail, MoreVertical, Phone, Send, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download, Users, FileWarning, Landmark, ArrowUp, ArrowDown, Columns, GripVertical, Filter as FilterIcon, X, Tag, Calendar as CalendarIcon, CircleDollarSign } from "lucide-react";
+import { Mail, MoreVertical, Phone, Send, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download, Users, FileWarning, Landmark, ArrowUp, ArrowDown, Columns, GripVertical, Filter as FilterIcon, X, Tag, Calendar as CalendarIcon, CircleDollarSign, Activity, Building2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn, formatCurrency } from "@/lib/utils";
 import { Input } from '@/components/ui/input';
@@ -26,8 +26,8 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar } from '@/components/ui/calendar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Slider } from '@/components/ui/slider';
 
 
 const ALL_COLUMNS = [
@@ -42,8 +42,9 @@ const ALL_COLUMNS = [
 
 const availableFilters = [
   { id: "placeOfSupply", label: "Place of Supply" },
-  { id: "balanceStatus", label: "Balance Status" },
-  { id: "lastTransaction", label: "Last Transaction Date" },
+  { id: "customerType", label: "Customer Type" },
+  { id: "activityStatus", label: "Activity Status" },
+  { id: "balanceRange", label: "Balance Range" },
 ];
 
 const MobileCustomerCard = ({ customer }: { customer: Customer }) => {
@@ -133,17 +134,30 @@ export function CustomerTable({ data }: { data: Customer[] }) {
     const [dragOverColumn, setDragOverColumn] = React.useState<string | null>(null);
     
     const [activeFilters, setActiveFilters] = React.useState<Set<string>>(new Set());
+
+    const maxBalance = React.useMemo(() => data.length > 0 ? Math.ceil(Math.max(...data.map(c => c.balanceDue)) / 1000) * 1000 : 50000, [data]);
+    
     const [filterValues, setFilterValues] = React.useState<{
         placesOfSupply: string[];
-        balanceStatus: 'all' | 'due' | 'clear';
-        lastTransaction: { from: Date | undefined; to: Date | undefined };
+        customerType: 'all' | 'b2b' | 'b2c';
+        activityStatus: 'all' | 'active' | 'inactive';
+        balanceRange: [number, number];
     }>({
         placesOfSupply: [],
-        balanceStatus: 'all',
-        lastTransaction: { from: undefined, to: undefined },
+        customerType: 'all',
+        activityStatus: 'all',
+        balanceRange: [0, maxBalance],
     });
     
-    const uniqueStates = React.useMemo(() => Array.from(new Set(data.map((c) => c.placeOfSupply.state))).sort(), [data]);
+    const uniqueStates = React.useMemo(() => {
+        const statesMap = new Map<string, { code: string; name: string }>();
+        data.forEach(c => {
+            if (!statesMap.has(c.placeOfSupply.state)) {
+                statesMap.set(c.placeOfSupply.state, { code: c.placeOfSupply.code, name: c.placeOfSupply.state });
+            }
+        });
+        return Array.from(statesMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    }, [data]);
 
     const filteredData = React.useMemo(() => {
         let baseData = data;
@@ -162,20 +176,21 @@ export function CustomerTable({ data }: { data: Customer[] }) {
             baseData = baseData.filter(c => filterValues.placesOfSupply.includes(c.placeOfSupply.state));
         }
 
-        if (activeFilters.has("balanceStatus") && filterValues.balanceStatus !== 'all') {
-            baseData = baseData.filter(c => filterValues.balanceStatus === 'due' ? c.balanceDue > 0 : c.balanceDue <= 0);
+        if (activeFilters.has("customerType") && filterValues.customerType !== 'all') {
+            baseData = baseData.filter(c => filterValues.customerType === 'b2b' ? c.gstin !== '-' : c.gstin === '-');
         }
 
-        if (activeFilters.has("lastTransaction")) {
-            const { from, to } = filterValues.lastTransaction;
-            if (from) {
-                baseData = baseData.filter(c => c.lastTransaction >= from);
-            }
-            if (to) {
-                const toDate = new Date(to);
-                toDate.setHours(23, 59, 59, 999);
-                baseData = baseData.filter(c => c.lastTransaction <= toDate);
-            }
+        if (activeFilters.has("activityStatus") && filterValues.activityStatus !== 'all') {
+            const ninetyDaysAgo = new Date();
+            ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+            baseData = baseData.filter(c => {
+                return filterValues.activityStatus === 'active' ? c.lastTransaction >= ninetyDaysAgo : c.lastTransaction < ninetyDaysAgo;
+            });
+        }
+        
+        if (activeFilters.has("balanceRange")) {
+            const [min, max] = filterValues.balanceRange;
+            baseData = baseData.filter(c => c.balanceDue >= min && c.balanceDue <= max);
         }
 
         return baseData;
@@ -342,11 +357,14 @@ export function CustomerTable({ data }: { data: Customer[] }) {
             case 'placeOfSupply':
                 setFilterValues(prev => ({...prev, placesOfSupply: []}));
                 break;
-            case 'balanceStatus':
-                setFilterValues(prev => ({...prev, balanceStatus: 'all'}));
+            case 'customerType':
+                setFilterValues(prev => ({...prev, customerType: 'all'}));
                 break;
-            case 'lastTransaction':
-                setFilterValues(prev => ({...prev, lastTransaction: { from: undefined, to: undefined }}));
+            case 'activityStatus':
+                setFilterValues(prev => ({...prev, activityStatus: 'all'}));
+                break;
+            case 'balanceRange':
+                setFilterValues(prev => ({...prev, balanceRange: [0, maxBalance]}));
                 break;
         }
         setPage(0);
@@ -373,59 +391,64 @@ export function CustomerTable({ data }: { data: Customer[] }) {
                                         )}
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent className="w-56">
+                                <DropdownMenuContent className="w-64">
                                     <DropdownMenuLabel>Filter by State</DropdownMenuLabel>
                                     <DropdownMenuSeparator />
                                     {uniqueStates.map(state => (
-                                        <DropdownMenuCheckboxItem key={state} checked={filterValues.placesOfSupply.includes(state)} onCheckedChange={(checked) => {
-                                            setFilterValues(prev => ({ ...prev, placesOfSupply: checked ? [...prev.placesOfSupply, state] : prev.placesOfSupply.filter(s => s !== state) }));
-                                        }}>{state}</DropdownMenuCheckboxItem>
+                                        <DropdownMenuCheckboxItem key={state.name} checked={filterValues.placesOfSupply.includes(state.name)} onCheckedChange={(checked) => {
+                                            setFilterValues(prev => ({ ...prev, placesOfSupply: checked ? [...prev.placesOfSupply, state.name] : prev.placesOfSupply.filter(s => s !== state.name) }));
+                                        }}>{state.code} - {state.name}</DropdownMenuCheckboxItem>
                                     ))}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                             <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
                         </div>
                     );
-                case 'balanceStatus':
+                case 'customerType':
                     return (
                         <div key={filterId} className="flex items-center gap-2">
                             <div className="flex items-center rounded-md border h-10 px-3 text-sm">
-                                <CircleDollarSign className="mr-2 h-4 w-4" />
-                                <RadioGroup value={filterValues.balanceStatus} onValueChange={(value: 'all' | 'due' | 'clear') => setFilterValues(prev => ({...prev, balanceStatus: value}))} className="flex items-center gap-4">
-                                    <div className="flex items-center space-x-2"><RadioGroupItem value="all" id="all"/><Label htmlFor="all">All</Label></div>
-                                    <div className="flex items-center space-x-2"><RadioGroupItem value="due" id="due"/><Label htmlFor="due">Has Dues</Label></div>
-                                    <div className="flex items-center space-x-2"><RadioGroupItem value="clear" id="clear"/><Label htmlFor="clear">Clear</Label></div>
+                                <Building2 className="mr-2 h-4 w-4" />
+                                <RadioGroup value={filterValues.customerType} onValueChange={(value: 'all' | 'b2b' | 'b2c') => setFilterValues(prev => ({...prev, customerType: value}))} className="flex items-center gap-4">
+                                    <div className="flex items-center space-x-2"><RadioGroupItem value="all" id="all-type"/><Label htmlFor="all-type">All</Label></div>
+                                    <div className="flex items-center space-x-2"><RadioGroupItem value="b2b" id="b2b"/><Label htmlFor="b2b">B2B</Label></div>
+                                    <div className="flex items-center space-x-2"><RadioGroupItem value="b2c" id="b2c"/><Label htmlFor="b2c">B2C</Label></div>
                                 </RadioGroup>
                             </div>
                             <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
                         </div>
                     );
-                case 'lastTransaction':
+                case 'activityStatus':
                     return (
                         <div key={filterId} className="flex items-center gap-2">
-                           <Popover>
-                                <PopoverTrigger asChild>
-                                <Button variant={"outline"} className={cn("w-[240px] justify-start text-left font-normal", !filterValues.lastTransaction.from && "text-muted-foreground")}>
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {filterValues.lastTransaction.from ? (
-                                        filterValues.lastTransaction.to ? 
-                                        `${format(filterValues.lastTransaction.from, 'LLL dd, y')} - ${format(filterValues.lastTransaction.to, 'LLL dd, y')}` : 
-                                        format(filterValues.lastTransaction.from, 'LLL dd, y')
-                                    ) : 'Last Transaction Date'}
-                                </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                    initialFocus
-                                    mode="range"
-                                    defaultMonth={filterValues.lastTransaction.from}
-                                    selected={filterValues.lastTransaction}
-                                    onSelect={(range) => setFilterValues(prev => ({...prev, lastTransaction: range || {from: undefined, to: undefined}}))}
-                                    numberOfMonths={2}
-                                />
-                                </PopoverContent>
-                            </Popover>
-                             <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
+                            <div className="flex items-center rounded-md border h-10 px-3 text-sm">
+                                <Activity className="mr-2 h-4 w-4" />
+                                <RadioGroup value={filterValues.activityStatus} onValueChange={(value: 'all' | 'active' | 'inactive') => setFilterValues(prev => ({...prev, activityStatus: value}))} className="flex items-center gap-4">
+                                    <div className="flex items-center space-x-2"><RadioGroupItem value="all" id="all-activity"/><Label htmlFor="all-activity">All</Label></div>
+                                    <div className="flex items-center space-x-2"><RadioGroupItem value="active" id="active"/><Label htmlFor="active">Active</Label></div>
+                                    <div className="flex items-center space-x-2"><RadioGroupItem value="inactive" id="inactive"/><Label htmlFor="inactive">Inactive</Label></div>
+                                </RadioGroup>
+                            </div>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
+                        </div>
+                    );
+                 case 'balanceRange':
+                    return (
+                        <div key={filterId} className="flex items-center gap-2">
+                            <div className="flex items-center rounded-md border h-10 px-3 text-sm">
+                                <CircleDollarSign className="mr-2 h-4 w-4" />
+                                <div className="flex flex-col">
+                                    <span className="font-mono text-xs">{formatCurrency(filterValues.balanceRange[0], 'INR')} - {formatCurrency(filterValues.balanceRange[1], 'INR')}</span>
+                                    <Slider
+                                        value={filterValues.balanceRange}
+                                        onValueChange={(value) => setFilterValues(prev => ({ ...prev, balanceRange: value as [number, number] }))}
+                                        max={maxBalance}
+                                        step={1000}
+                                        className="w-36 mt-1"
+                                    />
+                                </div>
+                            </div>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
                         </div>
                     );
                 default:
