@@ -31,7 +31,7 @@ const calculateTotal = (node: Ledger): number => {
 };
 
 // Component to render a single row in the report
-const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName, groupTextColor }: { node: Ledger; level: number; showPercentages: boolean; totalRevenue: number, groupClassName?: string, groupTextColor?: string }) => {
+const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledger; level: number; showPercentages: boolean; totalRevenue: number }) => {
     const isGroup = node.type === 'group';
     const total = calculateTotal(node);
     const displayTotal = node.id === 'ledger-closing-stock' ? Math.abs(total) : total;
@@ -42,13 +42,13 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName,
             layout
             className={cn(
                 "flex items-start justify-between py-1.5",
-                 isGroup && 'rounded-md font-bold border-t mt-2 pt-2 pl-2'
+                 isGroup && 'rounded-md font-bold border-t mt-2 pt-2'
             )}
             style={{ paddingLeft: `${level * 10}px` }}
         >
             <span className={cn(
                 "flex items-center gap-1 pr-4 break-words",
-                isGroup && level === 0 ? groupTextColor : 'text-foreground',
+                isGroup && level === 0 ? (node.reportType === 'Income' ? 'text-primary' : 'text-destructive') : 'text-foreground',
                 !isGroup && "font-normal"
             )}>
                 {isGroup ? (
@@ -58,8 +58,19 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName,
                 )}
                 <span className="text-sm flex items-center gap-2">
                     {node.name}
-                    {showPercentages && (
-                        <Badge variant={isGroup ? 'secondary' : 'outline'} className="text-[10px] font-normal">
+                    {showPercentages && isGroup && (
+                        <Badge 
+                            variant='secondary' 
+                            className="text-[10px] font-normal p-0.5 leading-none"
+                        >
+                            {percentage.toFixed(2)}%
+                        </Badge>
+                    )}
+                     {showPercentages && !isGroup && (
+                        <Badge 
+                            variant='outline' 
+                            className="text-[10px] font-normal p-0.5 leading-none"
+                        >
                             {percentage.toFixed(2)}%
                         </Badge>
                     )}
@@ -68,7 +79,8 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName,
             
             <span className={cn(
                 "font-mono text-sm text-right shrink-0",
-                 !isGroup && "font-normal pr-[10px]"
+                 !isGroup && "font-normal pr-[10px]",
+                 isGroup && 'pl-2'
             )}>
                 {isGroup || node.balance !== undefined ? formatCurrency(displayTotal, 'INR') : null}
             </span>
@@ -78,14 +90,14 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName,
 
 
 // Component for a major section (Income or Expenses)
-const ReportSection = ({ title, data, className, titleClassName, showPercentages, totalRevenue, groupClassName, groupTextColor }: { title: string; data: Ledger; className?: string; titleClassName?: string, showPercentages: boolean, totalRevenue: number, groupClassName?: string, groupTextColor?: string }) => {
+const ReportSection = ({ title, data, className, titleClassName, showPercentages, totalRevenue }: { title: string; data: Ledger; className?: string; titleClassName?: string, showPercentages: boolean, totalRevenue: number }) => {
     const sectionTotal = calculateTotal(data);
     
-    const renderRowsRecursive = (nodes: Ledger[], level: number) => {
+    const renderRowsRecursive = (nodes: Ledger[], level: number, reportType: 'Income' | 'Expenses') => {
         return nodes.map(node => (
             <React.Fragment key={node.id}>
-                <ReportRow node={node} level={level} showPercentages={showPercentages} totalRevenue={totalRevenue} groupClassName={level === 0 ? groupClassName : ''} groupTextColor={groupTextColor} />
-                {node.children && node.children.length > 0 && renderRowsRecursive(node.children, level + 1)}
+                <ReportRow node={{...node, reportType}} level={level} showPercentages={showPercentages} totalRevenue={totalRevenue} />
+                {node.children && node.children.length > 0 && renderRowsRecursive(node.children, level + 1, reportType)}
             </React.Fragment>
         ));
     };
@@ -99,7 +111,7 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
             </div>
             
             <div className={cn(hasTitleBackground && "p-4 space-y-2")}>
-                {data.children && renderRowsRecursive(data.children, 0)}
+                {data.children && renderRowsRecursive(data.children, 0, title as 'Income' | 'Expenses')}
                 
                 <Separator className="my-2" />
                 <div className="flex justify-between font-bold text-sm py-2">
@@ -182,8 +194,8 @@ export default function ProfitAndLossPage() {
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <ReportSection title="Income" data={incomeData} titleClassName="text-primary-foreground bg-primary" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-primary" groupTextColor="text-primary" />
-                    <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive-foreground bg-destructive" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-destructive" groupTextColor="text-destructive" />
+                    <ReportSection title="Income" data={incomeData} titleClassName="text-primary-foreground bg-primary" showPercentages={showPercentages} totalRevenue={totalIncome} />
+                    <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive-foreground bg-destructive" showPercentages={showPercentages} totalRevenue={totalIncome} />
                 </div>
                 <Separator className="my-4" />
                 <div className={cn(
@@ -193,7 +205,7 @@ export default function ProfitAndLossPage() {
                     <span className="flex items-center gap-2">
                         {netProfit >= 0 ? 'Net Profit' : 'Net Loss'}
                         {showPercentages && (
-                            <Badge variant="outline" className="text-[10px] font-normal border-current text-current">
+                            <Badge variant="outline" className="text-[10px] font-normal border-current text-current p-0.5 leading-none">
                                 {netProfitPercentage.toFixed(2)}%
                             </Badge>
                         )}
