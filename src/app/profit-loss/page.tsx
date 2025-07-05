@@ -346,9 +346,9 @@ export default function ProfitAndLossPage() {
                             animate={{ opacity: 1, y: 0, height: 'auto' }}
                             exit={{ opacity: 0, y: -10, height: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="mt-4 flex items-center justify-between rounded-md border border-primary bg-primary/10 py-1.5 px-2.5 text-sm"
+                            className="mt-4 flex items-center justify-between rounded-md border border-primary bg-primary/10 py-1.5 px-2.5"
                         >
-                            <div className="font-normal text-primary">
+                            <div className="font-normal text-primary text-sm">
                                 Comparison View is On. Comparing with previous period data.
                             </div>
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-primary" onClick={() => setShowComparison(false)}>
