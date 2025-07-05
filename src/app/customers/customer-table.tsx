@@ -237,16 +237,23 @@ export function CustomerTable({ data }: { data: Customer[] }) {
     
     const requestSort = (key: keyof Customer | 'name') => {
         let direction: 'ascending' | 'descending' = 'ascending';
-        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-            direction = 'descending';
+        let newKey: keyof Customer | 'name' | null = key;
+
+        if (sortConfig.key === key) {
+            if (sortConfig.direction === 'ascending') {
+                direction = 'descending';
+            } else {
+                newKey = null;
+            }
         }
-        setSortConfig({ key, direction });
+        
+        setSortConfig({ key: newKey, direction });
     };
 
     const getSortableHeader = (title: string, key: keyof Customer | 'name') => {
         const isSorted = sortConfig.key === key;
         return (
-          <Button variant="ghost" onClick={() => requestSort(key)}>
+          <Button variant="ghost" size="sm" onClick={() => requestSort(key)}>
             {title}
             {isSorted ? (
               sortConfig.direction === 'ascending' ? (
@@ -578,7 +585,7 @@ export function CustomerTable({ data }: { data: Customer[] }) {
                 <TableHeader>
                     <TableRow>
                         {visibleColumns.map(column => (
-                            <TableHead key={column.id} className={cn(column.id === 'balanceDue' && 'text-right')}>
+                            <TableHead key={column.id} className={cn('h-12 py-2', column.id === 'balanceDue' && 'text-right')}>
                                 {column.id === 'actions' ? (
                                     <span className="flex justify-center">{column.label}</span>
                                 ) : (
