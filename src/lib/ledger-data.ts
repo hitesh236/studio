@@ -187,7 +187,8 @@ export const ledgerData: Ledger[] = [
                         { id: 'ledger-factory-rent', name: 'Factory Rent', type: 'ledger', balance: 50000 },
                         { id: 'ledger-wages', name: 'Wages', type: 'ledger', balance: 100000 },
                     ]
-                }
+                },
+                { id: 'ledger-other-direct-expenses', name: 'Other Direct Expenses', type: 'ledger', balance: 15000 },
             ]
         },
         {
@@ -234,7 +235,8 @@ export const ledgerData: Ledger[] = [
                         { id: 'ledger-dep-computers', name: 'Depreciation on Computers', type: 'ledger', balance: 40000 },
                         { id: 'ledger-dep-furniture', name: 'Depreciation on Furniture', type: 'ledger', balance: 20000 },
                     ]
-                }
+                },
+                { id: 'ledger-other-indirect-expenses', name: 'Other Indirect Expenses', type: 'ledger', balance: 7500 },
             ]
         },
       ]
