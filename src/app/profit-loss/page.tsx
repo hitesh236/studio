@@ -245,7 +245,7 @@ export default function ProfitAndLossPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-        <Card className="w-full max-w-5xl mx-auto">
+        <Card className="w-full">
             <CardHeader>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
