@@ -30,7 +30,7 @@ const calculateTotal = (node: Ledger): number => {
 };
 
 // Component to render a single row in the report
-const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName }: { node: Ledger; level: number; showPercentages: boolean; totalRevenue: number, groupClassName: string }) => {
+const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName }: { node: Ledger; level: number; showPercentages: boolean; totalRevenue: number, groupClassName?: string }) => {
     const isGroup = node.type === 'group';
     const total = calculateTotal(node);
     const displayTotal = node.id === 'ledger-closing-stock' ? Math.abs(total) : total;
@@ -41,14 +41,17 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName 
             layout
             className={cn(
                 "flex items-start justify-between py-1.5",
-                isGroup ? 'font-bold bg-muted/50 rounded-md px-2' : 'font-normal',
+                isGroup && 'bg-muted/50 rounded-md px-2',
                 isGroup ? groupClassName : ''
             )}
             style={{ paddingLeft: `${level * 10}px` }}
         >
-            <span className="flex items-center gap-1 pr-4 break-words">
+            <span className={cn(
+                "flex items-center gap-1 pr-4 break-words",
+                isGroup && "font-bold"
+            )}>
                 {isGroup ? (
-                    <Folder className={cn("h-3.5 w-3.5 shrink-0", groupClassName)} />
+                    <Folder className={cn("h-3.5 w-3.5 shrink-0")} />
                 ) : (
                     <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 )}
@@ -60,6 +63,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName 
             
             <span className={cn(
                 "font-mono text-sm text-right shrink-0",
+                isGroup && "font-bold",
                 !isGroup && "pr-[10px]"
             )}>
                 {isGroup || node.balance !== undefined ? formatCurrency(displayTotal, 'INR') : null}
@@ -70,7 +74,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName 
 
 
 // Component for a major section (Income or Expenses)
-const ReportSection = ({ title, data, className, titleClassName, showPercentages, totalRevenue, groupClassName }: { title: string; data: Ledger; className?: string; titleClassName?: string, showPercentages: boolean, totalRevenue: number, groupClassName: string }) => {
+const ReportSection = ({ title, data, className, titleClassName, showPercentages, totalRevenue, groupClassName }: { title: string; data: Ledger; className?: string; titleClassName?: string, showPercentages: boolean, totalRevenue: number, groupClassName?: string }) => {
     const sectionTotal = calculateTotal(data);
     
     const renderRowsRecursive = (nodes: Ledger[], level: number) => {
@@ -173,7 +177,7 @@ export default function ProfitAndLossPage() {
                 </div>
             </CardHeader>
             <CardContent className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <ReportSection title="Income" data={incomeData} titleClassName="text-primary-foreground bg-primary" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-primary" />
                     <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive-foreground bg-destructive" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-destructive" />
                 </div>
