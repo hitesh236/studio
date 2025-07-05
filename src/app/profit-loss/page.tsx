@@ -42,7 +42,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName,
             layout
             className={cn(
                 "flex items-start justify-between py-1.5",
-                 isGroup && 'rounded-md pl-2 font-bold border-t mt-2 pt-2'
+                 isGroup && 'rounded-md font-bold border-t mt-2 pt-2'
             )}
             style={{ paddingLeft: `${level * 10}px` }}
         >
@@ -58,8 +58,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName,
                 )}
                 <span className="text-sm flex items-center gap-2">
                     {node.name}
-                    {showPercentages && !isGroup && <span className="font-normal text-muted-foreground">({percentage.toFixed(2)}%)</span>}
-                    {showPercentages && isGroup && (
+                    {showPercentages && (
                         <Badge variant="outline" className="text-xs font-normal">
                             {percentage.toFixed(2)}%
                         </Badge>
