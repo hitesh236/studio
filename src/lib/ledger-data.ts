@@ -237,6 +237,14 @@ export const ledgerData: Ledger[] = [
                     ]
                 },
                 { id: 'ledger-other-indirect-expenses', name: 'Other Indirect Expenses', type: 'ledger', balance: 7500 },
+                {
+                    id: 'taxes',
+                    name: 'Taxes',
+                    type: 'group',
+                    children: [
+                        { id: 'ledger-income-tax', name: 'Income Tax', type: 'ledger', balance: 85000 },
+                    ]
+                }
             ]
         },
       ]

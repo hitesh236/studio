@@ -6,7 +6,7 @@ import type { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Download, Printer, Folder, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
@@ -14,6 +14,7 @@ import { ledgerData, type Ledger } from '@/lib/ledger-data';
 import { cn, formatCurrency } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 // Helper function to recursively calculate group totals
 const calculateTotal = (node: Ledger): number => {
@@ -36,20 +37,25 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledge
     const total = calculateTotal(node);
     const displayTotal = node.id === 'ledger-closing-stock' ? Math.abs(total) : total;
     const percentage = totalRevenue > 0 ? (total / totalRevenue) * 100 : 0;
+    
+    const textOpacityClass = level === 0 ? 'opacity-100' : level === 1 ? 'opacity-90' : 'opacity-80';
+    const bgOpacityClass = level === 0 ? 'bg-opacity-10' : level === 1 ? 'bg-opacity-5' : 'bg-opacity-0';
+
 
     return (
         <motion.div
             layout
             className={cn(
                 "flex items-start justify-between py-1.5",
-                 isGroup && 'rounded-md font-bold border-t mt-2 pt-2'
+                 isGroup && `rounded-md font-bold border-t mt-2 pt-2`
             )}
             style={{ paddingLeft: `${level * 10}px` }}
         >
             <span className={cn(
                 "flex items-center gap-1 pr-4 break-words",
-                isGroup ? (node.reportType === 'Income' ? 'text-primary' : 'text-destructive') : 'text-foreground',
-                !isGroup && "font-normal"
+                 isGroup ? (node.reportType === 'Income' ? 'text-primary' : 'text-destructive') : 'text-foreground',
+                !isGroup && "font-normal",
+                textOpacityClass
             )}>
                 {isGroup ? (
                     <Folder className={cn("h-3.5 w-3.5 shrink-0")} />
@@ -61,7 +67,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledge
                     {showPercentages && isGroup && (
                         <Badge 
                             variant='secondary' 
-                            className="text-[10px] font-normal py-0.5 px-1 leading-none"
+                            className="text-[10px] font-normal leading-[1] py-[2px] px-[4px]"
                         >
                             {percentage.toFixed(2)}%
                         </Badge>
@@ -69,7 +75,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledge
                      {showPercentages && !isGroup && (
                         <Badge 
                             variant='outline' 
-                            className="text-[10px] font-normal py-0.5 px-1 leading-none"
+                            className="text-[10px] font-normal leading-[1] py-[2px] px-[4px]"
                         >
                             {percentage.toFixed(2)}%
                         </Badge>
@@ -80,7 +86,8 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledge
             <span className={cn(
                 "font-mono text-sm text-right shrink-0",
                  !isGroup && "font-normal pr-[10px]",
-                 isGroup && 'pl-2'
+                 isGroup && 'pl-2',
+                 textOpacityClass
             )}>
                 {isGroup || node.balance !== undefined ? formatCurrency(displayTotal, 'INR') : null}
             </span>
@@ -150,6 +157,7 @@ export default function ProfitAndLossPage() {
     to: new Date(),
   });
   const [showPercentages, setShowPercentages] = React.useState(true);
+  const { toast } = useToast();
 
   const incomeData = ledgerData.find(group => group.id === 'income');
   const expenseData = ledgerData.find(group => group.id === 'expenses');
@@ -158,14 +166,41 @@ export default function ProfitAndLossPage() {
       return <div>Error: Income or Expense group not found in ledger data.</div>;
   }
   
-  const totalIncome = calculateTotal(incomeData);
-  const totalExpenses = calculateTotal(expenseData);
-  const netProfit = totalIncome - totalExpenses;
-  const netProfitPercentage = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
+    const findNode = (nodes: Ledger[], nodeId: string): Ledger | null => {
+        for (const node of nodes) {
+            if (node.id === nodeId) return node;
+            if (node.children) {
+                const found = findNode(node.children, nodeId);
+                if (found) return found;
+            }
+        }
+        return null;
+    };
+
+    const taxLedger = findNode(ledgerData, 'ledger-income-tax');
+    const incomeTaxAmount = taxLedger ? calculateTotal(taxLedger) : 0;
+    
+    const totalIncome = calculateTotal(incomeData);
+    const totalExpenses = calculateTotal(expenseData);
+    
+    const profitBeforeTax = totalIncome - (totalExpenses - incomeTaxAmount);
+    const netProfitAfterTax = profitBeforeTax - incomeTaxAmount;
+    
+    const totalRevenue = totalIncome;
+
+    const profitBeforeTaxPercentage = totalRevenue > 0 ? (profitBeforeTax / totalRevenue) * 100 : 0;
+    const netProfitPercentage = totalRevenue > 0 ? (netProfitAfterTax / totalRevenue) * 100 : 0;
+
+    const handleWipClick = (feature: string) => {
+        toast({
+            title: 'Work in Progress',
+            description: `${feature} functionality is coming soon.`,
+        });
+    };
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-        <Card className="w-[90%] mx-auto">
+        <Card className="w-full max-w-5xl mx-auto">
             <CardHeader>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
@@ -174,11 +209,12 @@ export default function ProfitAndLossPage() {
                             For the period of {date?.from ? format(date.from, 'LLL dd, y') : ''} to {date?.to ? format(date.to, 'LLL dd, y') : ''}
                         </CardDescription>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap justify-start sm:justify-end">
+                        <Button variant="outline" disabled>Compare Periods</Button>
                         <AnimatedToggleButton show={showPercentages} onToggle={() => setShowPercentages(prev => !prev)} />
                         <Popover>
                             <PopoverTrigger asChild>
-                                <Button id="date" variant="outline" className={cn("w-[260px] justify-start text-left font-normal", !date && "text-muted-foreground")}>
+                                <Button id="date" variant="outline" className={cn("w-full sm:w-[260px] justify-start text-left font-normal", !date && "text-muted-foreground")}>
                                     <CalendarIcon className="mr-2 h-4 w-4" />
                                     {date?.from ? (date.to ? <>{format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}</> : format(date.from, "LLL dd, y")) : <span>Pick a date</span>}
                                 </Button>
@@ -187,32 +223,64 @@ export default function ProfitAndLossPage() {
                                 <Calendar initialFocus mode="range" defaultMonth={date?.from} selected={date} onSelect={setDate} numberOfMonths={2} />
                             </PopoverContent>
                         </Popover>
-                         <Button variant="outline" size="icon"><Printer className="h-4 w-4" /></Button>
-                         <Button variant="outline" size="icon"><Download className="h-4 w-4" /></Button>
+                         <Button variant="outline" size="icon" onClick={() => handleWipClick('Print')}><Printer className="h-4 w-4" /></Button>
+                         <Button variant="outline" size="icon" onClick={() => handleWipClick('Download')}><Download className="h-4 w-4" /></Button>
                     </div>
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <ReportSection title="Income" data={incomeData} titleClassName="text-primary-foreground bg-primary" showPercentages={showPercentages} totalRevenue={totalIncome} />
-                    <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive-foreground bg-destructive" showPercentages={showPercentages} totalRevenue={totalIncome} />
+                    <ReportSection title="Income" data={incomeData} titleClassName="text-primary-foreground bg-primary" showPercentages={showPercentages} totalRevenue={totalRevenue} />
+                    <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive-foreground bg-destructive" showPercentages={showPercentages} totalRevenue={totalRevenue} />
                 </div>
+                
                 <Separator className="my-4" />
+
+                <div className="md:pl-[50%]">
+                    <div className="p-4 border rounded-lg space-y-2">
+                         <div className="flex justify-between font-bold text-base">
+                            <span className="flex items-center gap-2">
+                                Profit Before Tax
+                                {showPercentages && (
+                                    <Badge variant="outline" className="text-[10px] font-normal border-current text-current py-[2px] px-[4px] leading-none">
+                                        {profitBeforeTaxPercentage.toFixed(2)}%
+                                    </Badge>
+                                )}
+                            </span>
+                            <span className="font-mono">{formatCurrency(profitBeforeTax, 'INR')}</span>
+                        </div>
+                        <div className="flex justify-between text-base text-muted-foreground">
+                            <span>Less: Income Tax</span>
+                            <span className="font-mono">({formatCurrency(incomeTaxAmount, 'INR')})</span>
+                        </div>
+                    </div>
+                </div>
+                
                 <div className={cn(
-                    "flex justify-between font-bold text-xl p-4 rounded-md",
-                    netProfit >= 0 ? "bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300" : "bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300"
+                    "flex justify-between font-bold text-xl p-4 rounded-md mt-4",
+                    netProfitAfterTax >= 0 ? "bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300" : "bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300"
                 )}>
                     <span className="flex items-center gap-2">
-                        {netProfit >= 0 ? 'Net Profit' : 'Net Loss'}
+                        {netProfitAfterTax >= 0 ? 'Net Profit' : 'Net Loss'}
                         {showPercentages && (
-                            <Badge variant="outline" className="text-[10px] font-normal border-current text-current py-0.5 px-1 leading-none">
+                            <Badge variant="outline" className="text-[10px] font-normal border-current text-current py-[2px] px-[4px] leading-none">
                                 {netProfitPercentage.toFixed(2)}%
                             </Badge>
                         )}
                     </span>
-                    <span className="font-mono">{formatCurrency(netProfit, 'INR')}</span>
+                    <span className="font-mono">{formatCurrency(netProfitAfterTax, 'INR')}</span>
                 </div>
             </CardContent>
+            <CardFooter className="pt-6 border-t mt-4">
+                <div className="text-sm text-muted-foreground w-full">
+                    <h4 className="font-semibold text-foreground mb-2">Notes:</h4>
+                    <ul className="list-disc pl-5 space-y-1 text-xs">
+                        <li>All figures are in Indian Rupee (INR) unless otherwise stated.</li>
+                        <li>This is an unaudited statement generated for internal review purposes.</li>
+                        <li>GST collected and paid are accounted for under Duties & Taxes and do not affect the profit calculation directly.</li>
+                    </ul>
+                </div>
+            </CardFooter>
         </Card>
     </div>
   );
