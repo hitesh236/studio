@@ -251,7 +251,7 @@ export default function ProfitAndLossPage() {
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="flex items-center space-x-2">
-                            <Switch id="comparison-mode" checked={showComparison} onCheckedChange={setShowComparison} />
+                            <Switch id="comparison-mode" checked={showComparison} onCheckedChange={setShowComparison} className="h-5 w-9 data-[state=checked]:translate-x-4 data-[state=unchecked]:translate-x-0 [&_span]:h-4 [&_span]:w-4" />
                             <Label htmlFor="comparison-mode" className="whitespace-nowrap">Compare Periods</Label>
                         </div>
                         <Popover>
@@ -307,9 +307,9 @@ export default function ProfitAndLossPage() {
                             animate={{ opacity: 1, y: 0, height: 'auto' }}
                             exit={{ opacity: 0, y: -10, height: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="mt-4 flex items-center justify-between rounded-md border border-primary bg-primary/10 p-2.5 text-sm"
+                            className="mt-4 flex items-center justify-between rounded-md border border-primary bg-primary/10 py-1.5 px-2.5 text-sm"
                         >
-                            <div className="font-semibold text-primary">
+                            <div className="text-primary">
                                 Comparison View is On. Comparing with previous period data.
                             </div>
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-primary" onClick={() => setShowComparison(false)}>
