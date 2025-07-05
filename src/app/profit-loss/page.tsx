@@ -251,8 +251,8 @@ export default function ProfitAndLossPage() {
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="flex items-center space-x-2">
-                            <Switch id="comparison-mode" checked={showComparison} onCheckedChange={setShowComparison} className="h-5 w-9 data-[state=checked]:translate-x-4 data-[state=unchecked]:translate-x-0 [&_span]:h-4 [&_span]:w-4" />
-                            <Label htmlFor="comparison-mode" className="whitespace-nowrap">Compare Periods</Label>
+                            <Switch id="percentage-mode" checked={showPercentages} onCheckedChange={setShowPercentages} className="h-5 w-9 data-[state=checked]:translate-x-4 data-[state=unchecked]:translate-x-0 [&_span]:h-4 [&_span]:w-4" />
+                            <Label htmlFor="percentage-mode" className="whitespace-nowrap">Show %</Label>
                         </div>
                         <Popover>
                             <PopoverTrigger asChild>
@@ -274,10 +274,10 @@ export default function ProfitAndLossPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuCheckboxItem
-                              checked={showPercentages}
-                              onCheckedChange={setShowPercentages}
+                              checked={showComparison}
+                              onCheckedChange={setShowComparison}
                             >
-                              Show Percentages
+                              Compare Periods
                             </DropdownMenuCheckboxItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuSub>
@@ -309,7 +309,7 @@ export default function ProfitAndLossPage() {
                             transition={{ duration: 0.2 }}
                             className="mt-4 flex items-center justify-between rounded-md border border-primary bg-primary/10 py-1.5 px-2.5 text-sm"
                         >
-                            <div className="text-primary">
+                            <div className="text-primary font-normal">
                                 Comparison View is On. Comparing with previous period data.
                             </div>
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-primary" onClick={() => setShowComparison(false)}>
@@ -397,7 +397,7 @@ export default function ProfitAndLossPage() {
                     <ul className="list-disc pl-5 space-y-1 text-xs">
                         <li>All figures are in Indian Rupee (INR) unless otherwise stated.</li>
                         <li>This is an unaudited statement generated for internal review purposes.</li>
-                        <li>GST collected and paid are accounted for under Duties & Taxes and do not affect the profit calculation directly.</li>
+                        <li>GST collected and paid are accounted for under Duties &amp; Taxes and do not affect the profit calculation directly.</li>
                     </ul>
                 </div>
             </CardFooter>
@@ -405,3 +405,5 @@ export default function ProfitAndLossPage() {
     </div>
   );
 }
+
+    
