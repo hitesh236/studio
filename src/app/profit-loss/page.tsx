@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { ledgerData, type Ledger } from '@/lib/ledger-data';
 import { cn, formatCurrency } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { Badge } from '@/components/ui/badge';
 
 // Helper function to recursively calculate group totals
 const calculateTotal = (node: Ledger): number => {
@@ -55,16 +56,20 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName,
                 ) : (
                     <FileText className="h-3.5 w-3.5 shrink-0" />
                 )}
-                <span className="text-sm">
+                <span className="text-sm flex items-center gap-2">
                     {node.name}
-                    {showPercentages && !isGroup && <span className="font-normal text-muted-foreground ml-2">({percentage.toFixed(2)}%)</span>}
+                    {showPercentages && !isGroup && <span className="font-normal text-muted-foreground">({percentage.toFixed(2)}%)</span>}
+                    {showPercentages && isGroup && (
+                        <Badge variant="outline" className="text-xs font-normal">
+                            {percentage.toFixed(2)}%
+                        </Badge>
+                    )}
                 </span>
             </span>
             
             <span className={cn(
                 "font-mono text-sm text-right shrink-0",
-                 !isGroup && "font-normal pr-[10px]",
-                isGroup && level === 0 ? groupTextColor : 'text-foreground'
+                 !isGroup && "font-normal pr-[10px]"
             )}>
                 {isGroup || node.balance !== undefined ? formatCurrency(displayTotal, 'INR') : null}
             </span>
@@ -186,9 +191,13 @@ export default function ProfitAndLossPage() {
                     "flex justify-between font-bold text-xl p-4 rounded-md",
                     netProfit >= 0 ? "bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300" : "bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300"
                 )}>
-                    <span>
+                    <span className="flex items-center gap-2">
                         {netProfit >= 0 ? 'Net Profit' : 'Net Loss'}
-                        {showPercentages && <span className="font-normal text-muted-foreground ml-2">({netProfitPercentage.toFixed(2)}%)</span>}
+                        {showPercentages && (
+                            <Badge variant="outline" className="text-xs font-normal border-current text-current">
+                                {netProfitPercentage.toFixed(2)}%
+                            </Badge>
+                        )}
                     </span>
                     <span className="font-mono">{formatCurrency(netProfit, 'INR')}</span>
                 </div>
