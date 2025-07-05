@@ -44,7 +44,7 @@ const calculateTotal = (node: Ledger, period: 'current' | 'previous' = 'current'
 };
 
 // Component to render a single row in the report
-const ReportRow = ({ node, level, showPercentages, totalAssets, showComparison }: { node: Ledger; level: number; showPercentages: boolean; totalAssets: number; showComparison: boolean }) => {
+const ReportRow = ({ node, level, showPercentages, totalAssets, showComparison }: { node: Ledger & { reportType: 'Assets' | 'Liabilities & Equity' }; level: number; showPercentages: boolean; totalAssets: number; showComparison: boolean }) => {
     const isGroup = node.type === 'group';
     const currentTotal = calculateTotal(node, 'current');
     const percentage = totalAssets > 0 ? (currentTotal / totalAssets) * 100 : 0;
@@ -66,7 +66,8 @@ const ReportRow = ({ node, level, showPercentages, totalAssets, showComparison }
             style={{ paddingLeft: `${level * 10}px` }}
         >
             <span className={cn(
-                "flex items-center gap-1 pr-4 break-words text-foreground",
+                "flex items-center gap-1 pr-4 break-words",
+                 isGroup ? (node.reportType === 'Assets' ? 'text-primary' : 'text-destructive') : 'text-foreground',
                 !isGroup && "font-normal",
                 textOpacityClass
             )}>
@@ -133,11 +134,11 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
     const isIncrease = change > 0;
     const isDecrease = change < 0;
 
-    const renderRowsRecursive = (nodes: Ledger[]) => {
+    const renderRowsRecursive = (nodes: Ledger[], level: number, reportType: 'Assets' | 'Liabilities & Equity') => {
         return nodes.map(node => (
             <React.Fragment key={node.id}>
-                <ReportRow node={node} level={1} showPercentages={showPercentages} totalAssets={totalAssets} showComparison={showComparison} />
-                {node.children && node.children.length > 0 && renderRowsRecursive(node.children)}
+                <ReportRow node={{...node, reportType}} level={level} showPercentages={showPercentages} totalAssets={totalAssets} showComparison={showComparison} />
+                {node.children && node.children.length > 0 && renderRowsRecursive(node.children, level + 1, reportType)}
             </React.Fragment>
         ));
     };
@@ -156,7 +157,7 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
             </div>
             
             <div className={cn(hasTitleBackground && "p-4 space-y-2")}>
-                {data.children && renderRowsRecursive(data.children)}
+                {data.children && renderRowsRecursive(data.children, 1, title as 'Assets' | 'Liabilities & Equity')}
                 
                 <Separator className="my-2" />
                 
