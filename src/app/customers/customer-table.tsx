@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { Mail, MoreVertical, Phone, Send, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter as FilterIcon, Columns, GripVertical, Download, Users, FileWarning, Landmark } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Mail, MoreVertical, Phone, Send, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download, Users, FileWarning, Landmark, ArrowUp, ArrowDown } from "lucide-react";
 import { format } from "date-fns";
 import { cn, formatCurrency } from "@/lib/utils";
 import { Input } from '@/components/ui/input';
@@ -22,9 +22,8 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { SummaryCard } from '@/app/sales-invoices/summary-card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 const MobileCustomerCard = ({ customer }: { customer: Customer }) => {
@@ -97,7 +96,12 @@ const MobileCustomerCard = ({ customer }: { customer: Customer }) => {
 export function CustomerTable({ data }: { data: Customer[] }) {
     const [filter, setFilter] = React.useState('');
     const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(10);
+    const [rowsPerPage, setRowsPerPage] = React.useState("10");
+    const [density, setDensity] = React.useState<'normal' | 'compact'>('normal');
+    const [sortConfig, setSortConfig] = React.useState<{
+        key: keyof Customer | 'name' | null;
+        direction: 'ascending' | 'descending';
+    }>({ key: null, direction: 'ascending' });
     
     const filteredData = React.useMemo(() => {
         if (!filter) return data;
@@ -111,13 +115,31 @@ export function CustomerTable({ data }: { data: Customer[] }) {
         );
     }, [data, filter]);
 
-    const paginatedData = React.useMemo(() => {
-        const start = page * rowsPerPage;
-        const end = start + rowsPerPage;
-        return filteredData.slice(start, end);
-    }, [filteredData, page, rowsPerPage]);
+    const sortedData = React.useMemo(() => {
+        const dataToSort = [...filteredData];
+        if (sortConfig.key) {
+            dataToSort.sort((a, b) => {
+                const { key, direction } = sortConfig;
+                if (a[key as keyof Customer] < b[key as keyof Customer]) {
+                    return direction === 'ascending' ? -1 : 1;
+                }
+                if (a[key as keyof Customer] > b[key as keyof Customer]) {
+                    return direction === 'ascending' ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+        return dataToSort;
+    }, [filteredData, sortConfig]);
 
-    const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+    const paginatedData = React.useMemo(() => {
+        if (rowsPerPage === 'all') return sortedData;
+        const start = page * Number(rowsPerPage);
+        const end = start + Number(rowsPerPage);
+        return sortedData.slice(start, end);
+    }, [sortedData, page, rowsPerPage]);
+
+    const totalPages = Math.ceil(sortedData.length / Number(rowsPerPage === 'all' ? sortedData.length : rowsPerPage));
 
     const summaryStats = React.useMemo(() => {
         const totalCustomers = data.length;
@@ -128,6 +150,62 @@ export function CustomerTable({ data }: { data: Customer[] }) {
         return { totalCustomers, totalBalanceDue, overdueAccounts, b2bCustomers };
     }, [data]);
     
+    const requestSort = (key: keyof Customer | 'name') => {
+        let direction: 'ascending' | 'descending' = 'ascending';
+        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+            direction = 'descending';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const getSortableHeader = (title: string, key: keyof Customer | 'name') => {
+        const isSorted = sortConfig.key === key;
+        return (
+          <Button variant="ghost" onClick={() => requestSort(key)}>
+            {title}
+            {isSorted ? (
+              sortConfig.direction === 'ascending' ? (
+                <ArrowUp className="ml-2 h-4 w-4" />
+              ) : (
+                <ArrowDown className="ml-2 h-4 w-4" />
+              )
+            ) : null}
+          </Button>
+        );
+    };
+    
+    const getPaginationButtons = () => {
+        if (totalPages <= 1) return null;
+
+        const pageNumbers: (number | string)[] = [];
+        if (totalPages <= 7) {
+            for (let i = 0; i < totalPages; i++) pageNumbers.push(i);
+        } else {
+            pageNumbers.push(0);
+            if (page > 2) pageNumbers.push('...');
+            
+            const startPage = Math.max(1, page - 1);
+            const endPage = Math.min(totalPages - 2, page + 1);
+
+            for (let i = startPage; i <= endPage; i++) pageNumbers.push(i);
+
+            if (page < totalPages - 3) pageNumbers.push('...');
+            pageNumbers.push(totalPages - 1);
+        }
+
+        const uniquePageNumbers = [...new Set(pageNumbers)];
+
+        return uniquePageNumbers.map((p, index) =>
+            typeof p === 'number' ? (
+                <Button key={`${p}-${index}`} variant={page === p ? 'default' : 'outline'} size="icon" onClick={() => setPage(p)} className="h-9 w-9">
+                {p + 1}
+                </Button>
+            ) : (
+                <span key={`dots-${index}`} className="flex h-9 w-9 items-center justify-center">...</span>
+            )
+        );
+    };
+
   return (
     <div className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -153,6 +231,10 @@ export function CustomerTable({ data }: { data: Customer[] }) {
                         className="pl-10 w-full sm:w-64"
                       />
                     </div>
+                    <div className="hidden sm:flex items-center space-x-2">
+                        <Switch id="density-mode" checked={density === "compact"} onCheckedChange={(checked) => setDensity(checked ? "compact" : "normal")} />
+                        <Label htmlFor="density-mode">Compact</Label>
+                    </div>
                     <Button variant="outline" size="icon">
                         <Download className="h-4 w-4" />
                         <span className="sr-only">Export</span>
@@ -166,18 +248,18 @@ export function CustomerTable({ data }: { data: Customer[] }) {
             <Table>
                 <TableHeader>
                 <TableRow>
-                    <TableHead>Customer Name</TableHead>
-                    <TableHead>GSTIN</TableHead>
+                    <TableHead>{getSortableHeader('Customer Name', 'name')}</TableHead>
+                    <TableHead>{getSortableHeader('GSTIN', 'gstin')}</TableHead>
                     <TableHead>Contact</TableHead>
-                    <TableHead className="text-right">Balance Due</TableHead>
-                    <TableHead>Last Transaction</TableHead>
-                    <TableHead>Place of Supply</TableHead>
+                    <TableHead className="text-right">{getSortableHeader('Balance Due', 'balanceDue')}</TableHead>
+                    <TableHead>{getSortableHeader('Last Transaction', 'lastTransaction')}</TableHead>
+                    <TableHead>{getSortableHeader('Place of Supply', 'placeOfSupply')}</TableHead>
                     <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
                 {paginatedData.map((customer) => (
-                    <TableRow key={customer.id}>
+                    <TableRow key={customer.id} className={cn(density === 'compact' && 'h-10')}>
                     <TableCell className="font-medium">{customer.name}</TableCell>
                     <TableCell className="font-mono">{customer.gstin}</TableCell>
                     <TableCell>
@@ -236,29 +318,35 @@ export function CustomerTable({ data }: { data: Customer[] }) {
                 ))}
             </div>
         </CardContent>
-         <CardContent className="flex items-center justify-end space-x-2 py-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage(p => Math.max(0, p - 1))}
-                disabled={page === 0}
-              >
-                Previous
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                Page {page + 1} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                disabled={page >= totalPages - 1}
-              >
-                Next
-              </Button>
+         <CardContent className="flex items-center justify-between flex-wrap gap-4 py-4">
+              <div className="flex items-center gap-4">
+                  <p className="text-sm text-muted-foreground">
+                    Page {page + 1} of {totalPages}
+                  </p>
+                  <div className="flex items-center space-x-2">
+                    <p className="text-sm text-muted-foreground">Rows:</p>
+                    <Select value={rowsPerPage} onValueChange={setRowsPerPage}>
+                      <SelectTrigger className="w-[80px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="20">20</SelectItem>
+                        <SelectItem value="50">50</SelectItem>
+                        <SelectItem value="all">All</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+              </div>
+              {totalPages > 1 && (
+                  <div className="flex items-center space-x-1">
+                  <Button variant="outline" size="icon" onClick={() => setPage(0)} disabled={page === 0}><ChevronsLeft className="h-4 w-4" /></Button>
+                  <Button variant="outline" size="icon" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}><ChevronLeft className="h-4 w-4" /></Button>
+                  {getPaginationButtons()}
+                  <Button variant="outline" size="icon" onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}><ChevronRight className="h-4 w-4" /></Button>
+                  <Button variant="outline" size="icon" onClick={() => setPage(totalPages - 1)} disabled={page >= totalPages - 1}><ChevronsRight className="h-4 w-4" /></Button>
+                  </div>
+              )}
             </CardContent>
         </Card>
     </div>
   );
 }
-
