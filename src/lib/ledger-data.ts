@@ -141,7 +141,8 @@ export const ledgerData: Ledger[] = [
                         { id: 'ledger-domestic-sales', name: 'Domestic Sales', type: 'ledger', balance: 1250000 },
                         { id: 'ledger-export-sales', name: 'Export Sales', type: 'ledger', balance: 350000 },
                     ]
-                }
+                },
+                { id: 'ledger-other-direct', name: 'Other Direct Income', type: 'ledger', balance: 25000 }
             ]
         },
         {
@@ -203,6 +204,7 @@ export const ledgerData: Ledger[] = [
                         { id: 'ledger-rent', name: 'Rent & Rates', type: 'ledger', balance: 120000 },
                         { id: 'ledger-office-supplies', name: 'Printing & Stationery', type: 'ledger', balance: 35000 },
                         { id: 'ledger-internet', name: 'Telephone & Internet', type: 'ledger', balance: 25000 },
+                        { id: 'ledger-misc-operating-exp', name: 'Miscellaneous Operating Expenses', type: 'ledger', balance: 11500 },
                     ]
                 },
                 {
