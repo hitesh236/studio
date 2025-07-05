@@ -41,14 +41,13 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName 
             layout
             className={cn(
                 "flex items-start justify-between py-1.5",
-                isGroup && 'rounded-md px-2',
-                isGroup && 'bg-muted/50',
-                isGroup && level === 0 ? groupClassName : ''
+                isGroup && 'rounded-md px-2 font-bold border-t mt-2 pt-2',
+                level === 0 && groupClassName
             )}
             style={{ paddingLeft: `${level * 10}px` }}
         >
             <span className={cn(
-                "flex items-center gap-1 pr-4 break-words font-bold",
+                "flex items-center gap-1 pr-4 break-words",
                  !isGroup && "font-normal"
             )}>
                 {isGroup ? (
@@ -63,7 +62,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName 
             </span>
             
             <span className={cn(
-                "font-mono text-sm text-right shrink-0 font-bold",
+                "font-mono text-sm text-right shrink-0",
                 !isGroup && "font-normal pr-[10px]"
             )}>
                 {isGroup || node.balance !== undefined ? formatCurrency(displayTotal, 'INR') : null}
@@ -80,7 +79,7 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
     const renderRowsRecursive = (nodes: Ledger[], level: number) => {
         return nodes.map(node => (
             <React.Fragment key={node.id}>
-                <ReportRow node={node} level={level} showPercentages={showPercentages} totalRevenue={totalRevenue} groupClassName={groupClassName} />
+                <ReportRow node={node} level={level} showPercentages={showPercentages} totalRevenue={totalRevenue} groupClassName={level === 0 ? groupClassName : ''} />
                 {node.children && node.children.length > 0 && renderRowsRecursive(node.children, level + 1)}
             </React.Fragment>
         ));
