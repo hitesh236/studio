@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
-import { Mail, MoreVertical, Phone, Send, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download, Users, FileWarning, Landmark, ArrowUp, ArrowDown, Columns, GripVertical } from "lucide-react";
+import { Mail, MoreVertical, Phone, Send, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download, Users, FileWarning, Landmark, ArrowUp, ArrowDown, Columns, GripVertical, Filter as FilterIcon, X, Tag, Calendar as CalendarIcon, CircleDollarSign } from "lucide-react";
 import { format } from "date-fns";
 import { cn, formatCurrency } from "@/lib/utils";
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,11 @@ import { Badge } from '@/components/ui/badge';
 import { SummaryCard } from '@/app/sales-invoices/summary-card';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Calendar } from '@/components/ui/calendar';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
 
 const ALL_COLUMNS = [
     { id: 'name', label: 'Customer Name' },
@@ -33,6 +38,12 @@ const ALL_COLUMNS = [
     { id: 'lastTransaction', label: 'Last Transaction' },
     { id: 'placeOfSupply', label: 'Place of Supply' },
     { id: 'actions', label: 'Actions' },
+];
+
+const availableFilters = [
+  { id: "placeOfSupply", label: "Place of Supply" },
+  { id: "balanceStatus", label: "Balance Status" },
+  { id: "lastTransaction", label: "Last Transaction Date" },
 ];
 
 const MobileCustomerCard = ({ customer }: { customer: Customer }) => {
@@ -121,17 +132,54 @@ export function CustomerTable({ data }: { data: Customer[] }) {
     const draggedColumn = React.useRef<string | null>(null);
     const [dragOverColumn, setDragOverColumn] = React.useState<string | null>(null);
     
+    const [activeFilters, setActiveFilters] = React.useState<Set<string>>(new Set());
+    const [filterValues, setFilterValues] = React.useState<{
+        placesOfSupply: string[];
+        balanceStatus: 'all' | 'due' | 'clear';
+        lastTransaction: { from: Date | undefined; to: Date | undefined };
+    }>({
+        placesOfSupply: [],
+        balanceStatus: 'all',
+        lastTransaction: { from: undefined, to: undefined },
+    });
+    
+    const uniqueStates = React.useMemo(() => Array.from(new Set(data.map((c) => c.placeOfSupply.state))).sort(), [data]);
+
     const filteredData = React.useMemo(() => {
-        if (!filter) return data;
-        const lowercasedFilter = filter.toLowerCase();
-        return data.filter(customer =>
-            customer.name.toLowerCase().includes(lowercasedFilter) ||
-            customer.gstin.toLowerCase().includes(lowercasedFilter) ||
-            customer.contact.email?.toLowerCase().includes(lowercasedFilter) ||
-            customer.contact.phone?.toLowerCase().includes(lowercasedFilter) ||
-            customer.placeOfSupply.state.toLowerCase().includes(lowercasedFilter)
-        );
-    }, [data, filter]);
+        let baseData = data;
+        if (filter) {
+            const lowercasedFilter = filter.toLowerCase();
+            baseData = data.filter(customer =>
+                customer.name.toLowerCase().includes(lowercasedFilter) ||
+                customer.gstin.toLowerCase().includes(lowercasedFilter) ||
+                customer.contact.email?.toLowerCase().includes(lowercasedFilter) ||
+                customer.contact.phone?.toLowerCase().includes(lowercasedFilter) ||
+                customer.placeOfSupply.state.toLowerCase().includes(lowercasedFilter)
+            );
+        }
+
+        if (activeFilters.has("placeOfSupply") && filterValues.placesOfSupply.length > 0) {
+            baseData = baseData.filter(c => filterValues.placesOfSupply.includes(c.placeOfSupply.state));
+        }
+
+        if (activeFilters.has("balanceStatus") && filterValues.balanceStatus !== 'all') {
+            baseData = baseData.filter(c => filterValues.balanceStatus === 'due' ? c.balanceDue > 0 : c.balanceDue <= 0);
+        }
+
+        if (activeFilters.has("lastTransaction")) {
+            const { from, to } = filterValues.lastTransaction;
+            if (from) {
+                baseData = baseData.filter(c => c.lastTransaction >= from);
+            }
+            if (to) {
+                const toDate = new Date(to);
+                toDate.setHours(23, 59, 59, 999);
+                baseData = baseData.filter(c => c.lastTransaction <= toDate);
+            }
+        }
+
+        return baseData;
+    }, [data, filter, activeFilters, filterValues]);
 
     const sortedData = React.useMemo(() => {
         const dataToSort = [...filteredData];
@@ -269,6 +317,122 @@ export function CustomerTable({ data }: { data: Customer[] }) {
         });
     }, [columnVisibility, columnOrder]);
 
+    const toggleFilter = (filterId: string) => {
+        setActiveFilters(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(filterId)) {
+                newSet.delete(filterId);
+            } else {
+                newSet.add(filterId);
+            }
+            return newSet;
+        });
+        setPage(0);
+    };
+    
+    const removeFilter = (filterId: string) => {
+        setActiveFilters(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(filterId);
+            return newSet;
+        });
+    
+        // Reset filter values
+        switch (filterId) {
+            case 'placeOfSupply':
+                setFilterValues(prev => ({...prev, placesOfSupply: []}));
+                break;
+            case 'balanceStatus':
+                setFilterValues(prev => ({...prev, balanceStatus: 'all'}));
+                break;
+            case 'lastTransaction':
+                setFilterValues(prev => ({...prev, lastTransaction: { from: undefined, to: undefined }}));
+                break;
+        }
+        setPage(0);
+    };
+
+    const renderActiveFilters = () => {
+        return Array.from(activeFilters).map(filterId => {
+            switch(filterId) {
+                case 'placeOfSupply':
+                    return (
+                        <div key={filterId} className="flex items-center gap-2">
+                            <DropdownMenu>
+                                 <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="w-auto">
+                                        <Tag className="mr-2 h-4 w-4" />
+                                        Place of Supply
+                                        <Separator orientation="vertical" className="mx-2 h-4 bg-border" />
+                                        {filterValues.placesOfSupply.length > 0 ? (
+                                            <Badge variant="secondary" className="rounded-sm px-1 font-normal">
+                                                {filterValues.placesOfSupply.length} selected
+                                            </Badge>
+                                        ) : (
+                                            <span className="text-muted-foreground">Any</span>
+                                        )}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-56">
+                                    <DropdownMenuLabel>Filter by State</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    {uniqueStates.map(state => (
+                                        <DropdownMenuCheckboxItem key={state} checked={filterValues.placesOfSupply.includes(state)} onCheckedChange={(checked) => {
+                                            setFilterValues(prev => ({ ...prev, placesOfSupply: checked ? [...prev.placesOfSupply, state] : prev.placesOfSupply.filter(s => s !== state) }));
+                                        }}>{state}</DropdownMenuCheckboxItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
+                        </div>
+                    );
+                case 'balanceStatus':
+                    return (
+                        <div key={filterId} className="flex items-center gap-2">
+                            <div className="flex items-center rounded-md border h-10 px-3 text-sm">
+                                <CircleDollarSign className="mr-2 h-4 w-4" />
+                                <RadioGroup value={filterValues.balanceStatus} onValueChange={(value: 'all' | 'due' | 'clear') => setFilterValues(prev => ({...prev, balanceStatus: value}))} className="flex items-center gap-4">
+                                    <div className="flex items-center space-x-2"><RadioGroupItem value="all" id="all"/><Label htmlFor="all">All</Label></div>
+                                    <div className="flex items-center space-x-2"><RadioGroupItem value="due" id="due"/><Label htmlFor="due">Has Dues</Label></div>
+                                    <div className="flex items-center space-x-2"><RadioGroupItem value="clear" id="clear"/><Label htmlFor="clear">Clear</Label></div>
+                                </RadioGroup>
+                            </div>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
+                        </div>
+                    );
+                case 'lastTransaction':
+                    return (
+                        <div key={filterId} className="flex items-center gap-2">
+                           <Popover>
+                                <PopoverTrigger asChild>
+                                <Button variant={"outline"} className={cn("w-[240px] justify-start text-left font-normal", !filterValues.lastTransaction.from && "text-muted-foreground")}>
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {filterValues.lastTransaction.from ? (
+                                        filterValues.lastTransaction.to ? 
+                                        `${format(filterValues.lastTransaction.from, 'LLL dd, y')} - ${format(filterValues.lastTransaction.to, 'LLL dd, y')}` : 
+                                        format(filterValues.lastTransaction.from, 'LLL dd, y')
+                                    ) : 'Last Transaction Date'}
+                                </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    initialFocus
+                                    mode="range"
+                                    defaultMonth={filterValues.lastTransaction.from}
+                                    selected={filterValues.lastTransaction}
+                                    onSelect={(range) => setFilterValues(prev => ({...prev, lastTransaction: range || {from: undefined, to: undefined}}))}
+                                    numberOfMonths={2}
+                                />
+                                </PopoverContent>
+                            </Popover>
+                             <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
+                        </div>
+                    );
+                default:
+                    return null;
+            }
+        });
+      };
 
   return (
     <div className="space-y-4">
@@ -295,6 +459,26 @@ export function CustomerTable({ data }: { data: Customer[] }) {
                         className="pl-10 w-full sm:w-64"
                       />
                     </div>
+                     <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline" size="icon">
+                                <FilterIcon className="h-4 w-4"/>
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-56 p-4" align="end">
+                            <div className="space-y-4">
+                                <h4 className="font-medium leading-none">Add Filters</h4>
+                                <div className="space-y-2">
+                                {availableFilters.map((f) => (
+                                    <div key={f.id} className="flex items-center space-x-2">
+                                        <Checkbox id={f.id} checked={activeFilters.has(f.id)} onCheckedChange={() => toggleFilter(f.id)}/>
+                                        <Label htmlFor={f.id}>{f.label}</Label>
+                                    </div>
+                                ))}
+                                </div>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
                     <div className="hidden sm:flex items-center space-x-2">
                         <Switch id="density-mode" checked={density === "compact"} onCheckedChange={(checked) => setDensity(checked ? "compact" : "normal")} />
                         <Label htmlFor="density-mode">Compact</Label>
@@ -354,6 +538,11 @@ export function CustomerTable({ data }: { data: Customer[] }) {
                     </Button>
                 </div>
             </div>
+            {activeFilters.size > 0 && (
+                <div className="flex flex-wrap items-center gap-2 pt-4">
+                    {renderActiveFilters()}
+                </div>
+            )}
         </CardHeader>
         <CardContent>
             {/* Desktop Table */}
