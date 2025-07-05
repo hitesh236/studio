@@ -35,7 +35,6 @@ const pathToTitle: { [key: string]: string } = {
   '/settings': 'Settings',
   '/settings/user-roles': 'User Roles & Permissions',
   '/settings/user-roles/new': 'Add New Role',
-  '/table': 'Table',
   '/table2': 'Table 2',
   '/gst-summary': 'GST Summary',
   '/gst-reports': 'GST Reports',

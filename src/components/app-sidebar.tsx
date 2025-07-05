@@ -80,14 +80,6 @@ export function AppSidebar() {
           <SidebarGroupLabel>Component</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Table" isActive={pathname.startsWith('/table')} asChild>
-                    <Link href="/table" onClick={handleLinkClick}>
-                        <FileText />
-                        <span>Table</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
                 <SidebarMenuButton tooltip="Table 2" isActive={pathname.startsWith('/table2')} asChild>
                     <Link href="/table2" onClick={handleLinkClick}>
                         <FileText />
