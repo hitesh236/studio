@@ -44,7 +44,7 @@ const calculateTotal = (node: Ledger, period: 'current' | 'previous' = 'current'
 };
 
 // Component to render a single row in the report
-const ReportRow = ({ node, level, showPercentages, totalAssets, showComparison }: { node: Ledger & { reportType: 'Assets' | 'Liabilities & Equity' }; level: number; showPercentages: boolean; totalAssets: number; showComparison: boolean }) => {
+const ReportRow = ({ node, level, showPercentages, totalAssets, showComparison }: { node: Ledger & { reportType: 'Assets' | 'Liabilities' }; level: number; showPercentages: boolean; totalAssets: number; showComparison: boolean }) => {
     const isGroup = node.type === 'group';
     const currentTotal = calculateTotal(node, 'current');
     const percentage = totalAssets > 0 ? (currentTotal / totalAssets) * 100 : 0;
@@ -134,7 +134,7 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
     const isIncrease = change > 0;
     const isDecrease = change < 0;
 
-    const renderRowsRecursive = (nodes: Ledger[], level: number, reportType: 'Assets' | 'Liabilities & Equity') => {
+    const renderRowsRecursive = (nodes: Ledger[], level: number, reportType: 'Assets' | 'Liabilities') => {
         return nodes.map(node => (
             <React.Fragment key={node.id}>
                 <ReportRow node={{...node, reportType}} level={level} showPercentages={showPercentages} totalAssets={totalAssets} showComparison={showComparison} />
@@ -148,7 +148,7 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
     return (
         <div className={cn("border rounded-lg", hasTitleBackground ? "overflow-hidden" : "p-4 space-y-2", className)}>
              <div className="flex justify-between items-baseline">
-                <h3 className={cn("text-lg font-semibold", titleClassName, hasTitleBackground && "flex-grow px-4 py-2")}>{title}</h3>
+                <h3 className={cn("text-lg", titleClassName, hasTitleBackground && "flex-grow px-4 py-2")}>{title}</h3>
                 {showComparison && <div className="flex items-baseline justify-end gap-2 font-mono text-xs shrink-0 px-4 py-2 text-muted-foreground">
                     <span className="w-24 text-right">Current</span>
                     <span className="w-24 text-right">Previous</span>
@@ -157,7 +157,7 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
             </div>
             
             <div className={cn(hasTitleBackground && "p-4 space-y-2")}>
-                {data.children && renderRowsRecursive(data.children, 1, title as 'Assets' | 'Liabilities & Equity')}
+                {data.children && renderRowsRecursive(data.children, 1, title as 'Assets' | 'Liabilities')}
                 
                 <Separator className="my-2" />
                 
@@ -195,7 +195,7 @@ export default function BalanceSheetPage() {
     from: new Date(new Date().getFullYear(), 0, 1),
     to: new Date(),
   });
-  const [showPercentages, setShowPercentages] = React.useState(true);
+  const [showPercentages, setShowPercentages] = React.useState(false);
   const [showComparison, setShowComparison] = React.useState(false);
   const { toast } = useToast();
 
@@ -229,9 +229,15 @@ export default function BalanceSheetPage() {
       >
         <span className="sr-only">Toggle Percentages</span>
         
-        <div className="absolute inset-0 flex items-center justify-center">
-            <span className={cn("text-xs font-semibold whitespace-nowrap transition-opacity", !checked ? 'text-primary opacity-100' : 'opacity-0')}>Show %</span>
-            <span className={cn("text-xs font-semibold whitespace-nowrap transition-opacity", checked ? 'text-primary-foreground opacity-100' : 'opacity-0')}>Hide %</span>
+        <div className="absolute inset-y-0 left-3 flex items-center">
+            <span className={cn("text-xs font-semibold whitespace-nowrap transition-opacity duration-200", checked ? 'opacity-100 text-primary-foreground' : 'opacity-0')}>
+                Hide %
+            </span>
+        </div>
+        <div className="absolute inset-y-0 right-3 flex items-center">
+             <span className={cn("text-xs font-semibold whitespace-nowrap transition-opacity duration-200", !checked ? 'opacity-100 text-primary' : 'opacity-0')}>
+                Show %
+            </span>
         </div>
 
         <motion.div
@@ -326,7 +332,7 @@ export default function BalanceSheetPage() {
             <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <ReportSection title="Assets" data={assetsData} titleClassName="text-primary-foreground bg-primary" showPercentages={showPercentages} totalAssets={totalAssets} showComparison={showComparison} />
-                    <ReportSection title="Liabilities & Equity" data={liabilitiesData} titleClassName="text-destructive-foreground bg-destructive" showPercentages={showPercentages} totalAssets={totalAssets} showComparison={showComparison} />
+                    <ReportSection title="Liabilities" data={liabilitiesData} titleClassName="text-destructive-foreground bg-destructive" showPercentages={showPercentages} totalAssets={totalAssets} showComparison={showComparison} />
                 </div>
             </CardContent>
             <CardFooter className="pt-6 border-t mt-4 flex-col items-start gap-4">
@@ -339,7 +345,7 @@ export default function BalanceSheetPage() {
                     </Card>
                     <Card className="bg-destructive/10 border-destructive/20">
                         <CardHeader className="flex flex-row items-center justify-between p-3">
-                            <CardTitle className="text-base text-destructive">Total Liabilities & Equity</CardTitle>
+                            <CardTitle className="text-base text-destructive">Total Liabilities</CardTitle>
                             <CardDescription className="font-mono text-base font-bold text-destructive">{formatCurrency(totalLiabilities, 'INR')}</CardDescription>
                         </CardHeader>
                     </Card>
@@ -349,7 +355,7 @@ export default function BalanceSheetPage() {
                         <Info className="h-4 w-4" />
                         <AlertTitle>Out of Balance!</AlertTitle>
                         <AlertDescription>
-                            Total Assets do not equal Total Liabilities & Equity. The difference is {formatCurrency(Math.abs(totalAssets - totalLiabilities), 'INR')}.
+                            Total Assets do not equal Total Liabilities. The difference is {formatCurrency(Math.abs(totalAssets - totalLiabilities), 'INR')}.
                         </AlertDescription>
                     </Alert>
                 )}

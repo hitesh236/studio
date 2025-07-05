@@ -71,7 +71,7 @@ export const assetsData: Ledger = {
 
 export const liabilitiesData: Ledger = {
   id: 'liabilities',
-  name: 'Liabilities & Equity',
+  name: 'Liabilities',
   type: 'group',
   children: [
     {
