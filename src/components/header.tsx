@@ -20,6 +20,7 @@ import { LogOut, User } from 'lucide-react';
 
 const pathToTitle: { [key: string]: string } = {
   '/': 'Dashboard',
+  '/balance-sheet': 'Balance Sheet',
   '/customer-portfolio': 'Customer Portfolio',
   '/customers': 'Customers',
   '/customers/new': 'Add Customer',

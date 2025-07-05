@@ -211,9 +211,11 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <SidebarMenuButton tooltip="What I Own / Owe">
-                <Scale />
-                <span>What I Own / Owe</span>
+              <SidebarMenuButton tooltip="Balance Sheet" isActive={pathname.startsWith('/balance-sheet')} asChild>
+                <Link href="/balance-sheet" onClick={handleLinkClick}>
+                    <Scale />
+                    <span>Balance Sheet</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
