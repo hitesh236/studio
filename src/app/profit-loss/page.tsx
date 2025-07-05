@@ -27,6 +27,8 @@ import {
   DropdownMenuSubContent,
   DropdownMenuPortal
 } from '@/components/ui/dropdown-menu';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 
 // Helper function to recursively calculate group totals
@@ -248,9 +250,10 @@ export default function ProfitAndLossPage() {
                         </CardDescription>
                     </div>
                     <div className="flex items-center gap-4">
-                        <Button variant="outline" size="sm" onClick={() => setShowPercentages(!showPercentages)}>
-                            {showPercentages ? 'Hide %' : 'Show %'}
-                        </Button>
+                        <div className="flex items-center space-x-2">
+                            <Switch id="show-percentages" checked={showPercentages} onCheckedChange={setShowPercentages} />
+                            <Label htmlFor="show-percentages">Show %</Label>
+                        </div>
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button id="date" variant="outline" className={cn("w-full sm:w-[260px] justify-start text-left font-normal", !date && "text-muted-foreground")}>
@@ -306,7 +309,7 @@ export default function ProfitAndLossPage() {
                             transition={{ duration: 0.2 }}
                             className="mt-4 flex items-center justify-between rounded-md border border-primary bg-primary/10 py-1.5 px-2.5 text-sm"
                         >
-                            <div className="text-primary font-normal">
+                            <div className="font-normal text-primary">
                                 Comparison View is On. Comparing with previous period data.
                             </div>
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-primary" onClick={() => setShowComparison(false)}>
