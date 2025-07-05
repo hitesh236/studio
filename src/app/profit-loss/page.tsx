@@ -30,7 +30,7 @@ const calculateTotal = (node: Ledger): number => {
 };
 
 // Component to render a single row in the report
-const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName }: { node: Ledger; level: number; showPercentages: boolean; totalRevenue: number, groupClassName?: string }) => {
+const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName, groupTextColor }: { node: Ledger; level: number; showPercentages: boolean; totalRevenue: number, groupClassName?: string, groupTextColor?: string }) => {
     const isGroup = node.type === 'group';
     const total = calculateTotal(node);
     const displayTotal = node.id === 'ledger-closing-stock' ? Math.abs(total) : total;
@@ -41,13 +41,14 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName 
             layout
             className={cn(
                 "flex items-start justify-between py-1.5",
-                isGroup && 'rounded-md px-2 font-bold border-t mt-2 pt-2',
-                level === 0 && groupClassName
+                 isGroup && 'rounded-md px-2 font-bold border-t mt-2 pt-2'
             )}
             style={{ paddingLeft: `${level * 10}px` }}
         >
             <span className={cn(
                 "flex items-center gap-1 pr-4 break-words",
+                isGroup && level === 0 ? groupTextColor : 'text-foreground',
+                isGroup && level > 0 && 'text-foreground',
                  !isGroup && "font-normal"
             )}>
                 {isGroup ? (
@@ -63,7 +64,9 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName 
             
             <span className={cn(
                 "font-mono text-sm text-right shrink-0",
-                !isGroup && "font-normal pr-[10px]"
+                 !isGroup && "font-normal pr-[10px]",
+                isGroup && level === 0 ? groupTextColor : 'text-foreground',
+                isGroup && level > 0 && 'text-foreground'
             )}>
                 {isGroup || node.balance !== undefined ? formatCurrency(displayTotal, 'INR') : null}
             </span>
@@ -73,13 +76,13 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName 
 
 
 // Component for a major section (Income or Expenses)
-const ReportSection = ({ title, data, className, titleClassName, showPercentages, totalRevenue, groupClassName }: { title: string; data: Ledger; className?: string; titleClassName?: string, showPercentages: boolean, totalRevenue: number, groupClassName?: string }) => {
+const ReportSection = ({ title, data, className, titleClassName, showPercentages, totalRevenue, groupClassName, groupTextColor }: { title: string; data: Ledger; className?: string; titleClassName?: string, showPercentages: boolean, totalRevenue: number, groupClassName?: string, groupTextColor?: string }) => {
     const sectionTotal = calculateTotal(data);
     
     const renderRowsRecursive = (nodes: Ledger[], level: number) => {
         return nodes.map(node => (
             <React.Fragment key={node.id}>
-                <ReportRow node={node} level={level} showPercentages={showPercentages} totalRevenue={totalRevenue} groupClassName={level === 0 ? groupClassName : ''} />
+                <ReportRow node={node} level={level} showPercentages={showPercentages} totalRevenue={totalRevenue} groupClassName={level === 0 ? groupClassName : ''} groupTextColor={groupTextColor} />
                 {node.children && node.children.length > 0 && renderRowsRecursive(node.children, level + 1)}
             </React.Fragment>
         ));
@@ -177,8 +180,8 @@ export default function ProfitAndLossPage() {
             </CardHeader>
             <CardContent className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <ReportSection title="Income" data={incomeData} titleClassName="text-primary-foreground bg-primary" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-primary" />
-                    <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive-foreground bg-destructive" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-destructive" />
+                    <ReportSection title="Income" data={incomeData} titleClassName="text-primary-foreground bg-primary" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-primary" groupTextColor="text-primary" />
+                    <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive-foreground bg-destructive" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-destructive" groupTextColor="text-destructive" />
                 </div>
                 <Separator className="my-4" />
                 <div className={cn(
