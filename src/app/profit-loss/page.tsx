@@ -258,7 +258,10 @@ export default function ProfitAndLossPage() {
           >
             <span className="sr-only">Toggle Percentages</span>
             
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className={cn(
+                "absolute inset-0 flex items-center",
+                checked ? 'justify-start pl-3' : 'justify-end pr-3'
+            )}>
                 <span className={cn(
                     "text-xs font-semibold",
                     checked ? 'text-primary-foreground' : 'text-muted-foreground'
@@ -271,7 +274,7 @@ export default function ProfitAndLossPage() {
               className="h-6 w-6 rounded-full bg-background shadow-lg"
               initial={false}
               animate={{ x: checked ? '60px' : '0px' }}
-              transition={{ type: "spring", stiffness: 700, damping: 30 }}
+              transition={{ duration: 0.5 }}
             />
           </button>
         );
