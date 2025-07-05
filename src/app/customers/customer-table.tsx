@@ -253,7 +253,12 @@ export function CustomerTable({ data }: { data: Customer[] }) {
     const getSortableHeader = (title: string, key: keyof Customer | 'name') => {
         const isSorted = sortConfig.key === key;
         return (
-          <Button variant="ghost" size="sm" onClick={() => requestSort(key)}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => requestSort(key)}
+            className={cn(isSorted && "bg-muted hover:bg-muted")}
+          >
             {title}
             {isSorted ? (
               sortConfig.direction === 'ascending' ? (
@@ -585,7 +590,7 @@ export function CustomerTable({ data }: { data: Customer[] }) {
                 <TableHeader>
                     <TableRow>
                         {visibleColumns.map(column => (
-                            <TableHead key={column.id} className={cn('h-12 py-2', column.id === 'balanceDue' && 'text-right')}>
+                            <TableHead key={column.id} className={cn('h-10 py-2', column.id === 'balanceDue' && 'text-right')}>
                                 {column.id === 'actions' ? (
                                     <span className="flex justify-center">{column.label}</span>
                                 ) : (
