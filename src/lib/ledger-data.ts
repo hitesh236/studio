@@ -4,6 +4,7 @@ export type Ledger = {
   name: string;
   type: 'group' | 'ledger';
   balance?: number;
+  previousBalance?: number;
   position?: number;
   reportType?: 'Income' | 'Expenses';
   children?: Ledger[];
@@ -140,11 +141,11 @@ export const ledgerData: Ledger[] = [
                     name: 'Revenue from Operations',
                     type: 'group',
                     children: [
-                        { id: 'ledger-domestic-sales', name: 'Domestic Sales', type: 'ledger', balance: 1250000 },
-                        { id: 'ledger-export-sales', name: 'Export Sales', type: 'ledger', balance: 350000 },
+                        { id: 'ledger-domestic-sales', name: 'Domestic Sales', type: 'ledger', balance: 1250000, previousBalance: 1100000 },
+                        { id: 'ledger-export-sales', name: 'Export Sales', type: 'ledger', balance: 350000, previousBalance: 320000 },
                     ]
                 },
-                { id: 'ledger-other-direct', name: 'Other Direct Income', type: 'ledger', balance: 25000 }
+                { id: 'ledger-other-direct', name: 'Other Direct Income', type: 'ledger', balance: 25000, previousBalance: 20000 }
             ]
         },
         {
@@ -152,10 +153,10 @@ export const ledgerData: Ledger[] = [
             name: 'Income (Indirect)',
             type: 'group',
             children: [
-                { id: 'ledger-interest-received', name: 'Interest Received', type: 'ledger', balance: 15000 },
-                { id: 'ledger-commission', name: 'Commission Received', type: 'ledger', balance: 45000 },
-                { id: 'ledger-dividend', name: 'Dividend Received', type: 'ledger', balance: 20000 },
-                { id: 'ledger-gain-sale-asset', name: 'Gain on Sale of Asset', type: 'ledger', balance: 5000 },
+                { id: 'ledger-interest-received', name: 'Interest Received', type: 'ledger', balance: 15000, previousBalance: 12000 },
+                { id: 'ledger-commission', name: 'Commission Received', type: 'ledger', balance: 45000, previousBalance: 40000 },
+                { id: 'ledger-dividend', name: 'Dividend Received', type: 'ledger', balance: 20000, previousBalance: 18000 },
+                { id: 'ledger-gain-sale-asset', name: 'Gain on Sale of Asset', type: 'ledger', balance: 5000, previousBalance: 0 },
             ]
         },
       ]
@@ -177,9 +178,9 @@ export const ledgerData: Ledger[] = [
                     name: 'Cost of Goods Sold',
                     type: 'group',
                     children: [
-                         { id: 'ledger-opening-stock', name: 'Opening Stock', type: 'ledger', balance: 150000 },
-                         { id: 'ledger-purchases', name: 'Purchases', type: 'ledger', balance: 650000 },
-                         { id: 'ledger-closing-stock', name: 'Closing Stock', type: 'ledger', balance: -200000 },
+                         { id: 'ledger-opening-stock', name: 'Opening Stock', type: 'ledger', balance: 150000, previousBalance: 140000 },
+                         { id: 'ledger-purchases', name: 'Purchases', type: 'ledger', balance: 450000, previousBalance: 420000 },
+                         { id: 'ledger-closing-stock', name: 'Closing Stock', type: 'ledger', balance: -200000, previousBalance: -180000 },
                     ]
                 },
                 {
@@ -187,11 +188,11 @@ export const ledgerData: Ledger[] = [
                     name: 'Factory Overheads',
                     type: 'group',
                     children: [
-                        { id: 'ledger-factory-rent', name: 'Factory Rent', type: 'ledger', balance: 50000 },
-                        { id: 'ledger-wages', name: 'Wages', type: 'ledger', balance: 100000 },
+                        { id: 'ledger-factory-rent', name: 'Factory Rent', type: 'ledger', balance: 50000, previousBalance: 50000 },
+                        { id: 'ledger-wages', name: 'Wages', type: 'ledger', balance: 100000, previousBalance: 95000 },
                     ]
                 },
-                { id: 'ledger-other-direct-expenses', name: 'Other Direct Expenses', type: 'ledger', balance: 15000 },
+                { id: 'ledger-other-direct-expenses', name: 'Other Direct Expenses', type: 'ledger', balance: 15000, previousBalance: 12000 },
             ]
         },
         {
@@ -204,11 +205,11 @@ export const ledgerData: Ledger[] = [
                     name: 'Operating Expenses',
                     type: 'group',
                     children: [
-                        { id: 'ledger-salaries', name: 'Salaries & Wages', type: 'ledger', balance: 450000 },
-                        { id: 'ledger-rent', name: 'Rent & Rates', type: 'ledger', balance: 120000 },
-                        { id: 'ledger-office-supplies', name: 'Printing & Stationery', type: 'ledger', balance: 35000 },
-                        { id: 'ledger-internet', name: 'Telephone & Internet', type: 'ledger', balance: 25000 },
-                        { id: 'ledger-misc-operating-exp', name: 'Miscellaneous Operating Expenses', type: 'ledger', balance: 11500 },
+                        { id: 'ledger-salaries', name: 'Salaries & Wages', type: 'ledger', balance: 250000, previousBalance: 230000 },
+                        { id: 'ledger-rent', name: 'Rent & Rates', type: 'ledger', balance: 120000, previousBalance: 120000 },
+                        { id: 'ledger-office-supplies', name: 'Printing & Stationery', type: 'ledger', balance: 35000, previousBalance: 30000 },
+                        { id: 'ledger-internet', name: 'Telephone & Internet', type: 'ledger', balance: 25000, previousBalance: 22000 },
+                        { id: 'ledger-misc-operating-exp', name: 'Miscellaneous Operating Expenses', type: 'ledger', balance: 11500, previousBalance: 10000 },
                     ]
                 },
                 {
@@ -216,8 +217,8 @@ export const ledgerData: Ledger[] = [
                     name: 'Financial Expenses',
                     type: 'group',
                     children: [
-                        { id: 'ledger-bank-charges', name: 'Bank Charges', type: 'ledger', balance: 5000 },
-                        { id: 'ledger-interest-loans', name: 'Interest on Loans', type: 'ledger', balance: 60000 },
+                        { id: 'ledger-bank-charges', name: 'Bank Charges', type: 'ledger', balance: 5000, previousBalance: 4500 },
+                        { id: 'ledger-interest-loans', name: 'Interest on Loans', type: 'ledger', balance: 60000, previousBalance: 62000 },
                     ]
                 },
                 {
@@ -225,9 +226,9 @@ export const ledgerData: Ledger[] = [
                     name: 'Selling & Distribution',
                     type: 'group',
                     children: [
-                        { id: 'ledger-advertising', name: 'Advertising & Marketing', type: 'ledger', balance: 75000 },
-                        { id: 'ledger-freight-outward', name: 'Freight Outward', type: 'ledger', balance: 30000 },
-                        { id: 'ledger-sales-commission', name: 'Sales Commission', type: 'ledger', balance: 50000 },
+                        { id: 'ledger-advertising', name: 'Advertising & Marketing', type: 'ledger', balance: 75000, previousBalance: 70000 },
+                        { id: 'ledger-freight-outward', name: 'Freight Outward', type: 'ledger', balance: 30000, previousBalance: 28000 },
+                        { id: 'ledger-sales-commission', name: 'Sales Commission', type: 'ledger', balance: 50000, previousBalance: 45000 },
                     ]
                 },
                 {
@@ -235,11 +236,11 @@ export const ledgerData: Ledger[] = [
                     name: 'Depreciation & Amortization',
                     type: 'group',
                     children: [
-                        { id: 'ledger-dep-computers', name: 'Depreciation on Computers', type: 'ledger', balance: 40000 },
-                        { id: 'ledger-dep-furniture', name: 'Depreciation on Furniture', type: 'ledger', balance: 20000 },
+                        { id: 'ledger-dep-computers', name: 'Depreciation on Computers', type: 'ledger', balance: 40000, previousBalance: 35000 },
+                        { id: 'ledger-dep-furniture', name: 'Depreciation on Furniture', type: 'ledger', balance: 20000, previousBalance: 18000 },
                     ]
                 },
-                { id: 'ledger-other-indirect-expenses', name: 'Other Indirect Expenses', type: 'ledger', balance: 7500 }
+                { id: 'ledger-other-indirect-expenses', name: 'Other Indirect Expenses', type: 'ledger', balance: 7500, previousBalance: 7000 }
             ]
         },
       ]

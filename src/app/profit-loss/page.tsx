@@ -4,7 +4,7 @@
 import * as React from 'react';
 import type { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Download, Printer, Folder, FileText } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, Printer, Folder, FileText, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -17,28 +17,34 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 
 // Helper function to recursively calculate group totals
-const calculateTotal = (node: Ledger): number => {
+const calculateTotal = (node: Ledger, period: 'current' | 'previous' = 'current'): number => {
+    const balanceKey = period === 'current' ? 'balance' : 'previousBalance';
     if (node.type === 'ledger') {
         // For COGS, closing stock is a credit, hence negative to reduce expense
         if (node.id === 'ledger-closing-stock') {
-            return node.balance || 0;
+            return (node as any)[balanceKey] || 0;
         }
-        return node.balance || 0;
+        return (node as any)[balanceKey] || 0;
     }
     if (node.children) {
-        return node.children.reduce((sum, child) => sum + calculateTotal(child), 0);
+        return node.children.reduce((sum, child) => sum + calculateTotal(child, period), 0);
     }
     return 0;
 };
 
 // Component to render a single row in the report
-const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledger; level: number; showPercentages: boolean; totalRevenue: number }) => {
+const ReportRow = ({ node, level, showPercentages, totalRevenue, showComparison }: { node: Ledger; level: number; showPercentages: boolean; totalRevenue: number; showComparison: boolean }) => {
     const isGroup = node.type === 'group';
-    const total = calculateTotal(node);
-    const displayTotal = node.id === 'ledger-closing-stock' ? Math.abs(total) : total;
-    const percentage = totalRevenue > 0 ? (total / totalRevenue) * 100 : 0;
+    const currentTotal = calculateTotal(node, 'current');
+    const displayTotal = node.id === 'ledger-closing-stock' ? Math.abs(currentTotal) : currentTotal;
+    const percentage = totalRevenue > 0 ? (currentTotal / totalRevenue) * 100 : 0;
     
     const textOpacityClass = level === 0 ? 'opacity-100' : level === 1 ? 'opacity-90' : 'opacity-80';
+
+    const previousTotal = calculateTotal(node, 'previous');
+    const change = previousTotal !== 0 ? ((currentTotal - previousTotal) / Math.abs(previousTotal)) * 100 : (currentTotal !== 0 ? 100 : 0);
+    const isIncrease = change > 0;
+    const isDecrease = change < 0;
 
     return (
         <motion.div
@@ -65,7 +71,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledge
                      {showPercentages && isGroup && (
                         <Badge 
                             variant='secondary' 
-                            className="text-[10px] font-normal leading-[1] py-[2px] px-[4px]"
+                            className="font-normal leading-[1] py-[2px] px-[4px]"
                         >
                             {percentage.toFixed(2)}%
                         </Badge>
@@ -81,27 +87,47 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledge
                 </span>
             </span>
             
-            <span className={cn(
-                "font-mono text-sm text-right shrink-0",
-                 !isGroup && "font-normal pr-[10px]",
-                 isGroup && 'pl-2',
-                 textOpacityClass
-            )}>
-                {isGroup || node.balance !== undefined ? formatCurrency(displayTotal, 'INR') : null}
-            </span>
+            {showComparison ? (
+                <div className="flex items-baseline justify-end gap-2 font-mono text-sm shrink-0">
+                    <span className={cn("w-24 text-right", textOpacityClass)}>{formatCurrency(displayTotal, 'INR')}</span>
+                    <span className={cn("w-24 text-right text-muted-foreground/80", textOpacityClass)}>{formatCurrency(previousTotal, 'INR')}</span>
+                    <span className={cn("w-20 text-right text-xs flex items-center justify-end gap-1", isIncrease && 'text-green-600', isDecrease && 'text-red-600', textOpacityClass)}>
+                        {previousTotal !== 0 && Math.abs(change) > 0.01 ? (
+                            <>
+                                <span>{change.toFixed(1)}%</span>
+                                {isIncrease && <ArrowUp className="h-3 w-3" />}
+                                {isDecrease && <ArrowDown className="h-3 w-3" />}
+                            </>
+                        ) : previousTotal === 0 && currentTotal !== 0 ? 'New' : '-'}
+                    </span>
+                </div>
+            ) : (
+                <span className={cn(
+                    "font-mono text-sm text-right shrink-0",
+                    !isGroup && "font-normal pr-[10px]",
+                    isGroup && 'pl-2',
+                    textOpacityClass
+                )}>
+                    {isGroup || node.balance !== undefined ? formatCurrency(displayTotal, 'INR') : null}
+                </span>
+            )}
         </motion.div>
     );
 };
 
 
 // Component for a major section (Income or Expenses)
-const ReportSection = ({ title, data, className, titleClassName, showPercentages, totalRevenue }: { title: string; data: Ledger; className?: string; titleClassName?: string, showPercentages: boolean, totalRevenue: number }) => {
-    const sectionTotal = calculateTotal(data);
-    
+const ReportSection = ({ title, data, className, titleClassName, showPercentages, totalRevenue, showComparison }: { title: string; data: Ledger; className?: string; titleClassName?: string, showPercentages: boolean, totalRevenue: number, showComparison: boolean }) => {
+    const sectionTotal = calculateTotal(data, 'current');
+    const sectionPreviousTotal = calculateTotal(data, 'previous');
+    const change = sectionPreviousTotal !== 0 ? ((sectionTotal - sectionPreviousTotal) / Math.abs(sectionPreviousTotal)) * 100 : (sectionTotal !== 0 ? 100 : 0);
+    const isIncrease = change > 0;
+    const isDecrease = change < 0;
+
     const renderRowsRecursive = (nodes: Ledger[], level: number, reportType: 'Income' | 'Expenses') => {
         return nodes.map(node => (
             <React.Fragment key={node.id}>
-                <ReportRow node={{...node, reportType}} level={level} showPercentages={showPercentages} totalRevenue={totalRevenue} />
+                <ReportRow node={{...node, reportType}} level={level} showPercentages={showPercentages} totalRevenue={totalRevenue} showComparison={showComparison} />
                 {node.children && node.children.length > 0 && renderRowsRecursive(node.children, level + 1, reportType)}
             </React.Fragment>
         ));
@@ -113,16 +139,41 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
         <div className={cn("border rounded-lg", hasTitleBackground ? "overflow-hidden" : "p-4 space-y-2", className)}>
              <div className="flex justify-between items-baseline">
                 <h3 className={cn("text-lg font-semibold", titleClassName, hasTitleBackground && "flex-grow px-4 py-2")}>{title}</h3>
+                {showComparison && <div className="flex items-baseline justify-end gap-2 font-mono text-xs shrink-0 px-4 py-2 text-muted-foreground">
+                    <span className="w-24 text-right">Current</span>
+                    <span className="w-24 text-right">Previous</span>
+                    <span className="w-20 text-right">Change</span>
+                </div>}
             </div>
             
             <div className={cn(hasTitleBackground && "p-4 space-y-2")}>
                 {data.children && renderRowsRecursive(data.children, 0, title as 'Income' | 'Expenses')}
                 
                 <Separator className="my-2" />
-                <div className="flex justify-between font-bold text-sm py-2">
-                    <span>Total {title}</span>
-                    <span className="font-mono">{formatCurrency(sectionTotal, 'INR')}</span>
-                </div>
+                
+                {showComparison ? (
+                    <div className="flex justify-between font-bold text-sm py-2">
+                        <span>Total {title}</span>
+                        <div className="flex items-baseline justify-end gap-2 font-mono text-sm">
+                            <span className="w-24 text-right">{formatCurrency(sectionTotal, 'INR')}</span>
+                            <span className="w-24 text-right text-muted-foreground/80">{formatCurrency(sectionPreviousTotal, 'INR')}</span>
+                            <span className={cn("w-20 text-right text-xs flex items-center justify-end gap-1", isIncrease && 'text-green-600', isDecrease && 'text-red-600')}>
+                                {sectionPreviousTotal !== 0 && Math.abs(change) > 0.01 ? (
+                                    <>
+                                        <span>{change.toFixed(1)}%</span>
+                                        {isIncrease && <ArrowUp className="h-3 w-3" />}
+                                        {isDecrease && <ArrowDown className="h-3 w-3" />}
+                                    </>
+                                ) : '-'}
+                            </span>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex justify-between font-bold text-sm py-2">
+                        <span>Total {title}</span>
+                        <span className="font-mono">{formatCurrency(sectionTotal, 'INR')}</span>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -155,6 +206,7 @@ export default function ProfitAndLossPage() {
     to: new Date(),
   });
   const [showPercentages, setShowPercentages] = React.useState(true);
+  const [showComparison, setShowComparison] = React.useState(false);
   const { toast } = useToast();
 
   const incomeData = ledgerData.find(group => group.id === 'income');
@@ -164,17 +216,25 @@ export default function ProfitAndLossPage() {
       return <div>Error: Income or Expense group not found in ledger data.</div>;
   }
   
-    const totalIncome = calculateTotal(incomeData);
-    const totalExpenses = calculateTotal(expenseData);
-    const incomeTaxAmount = 85000; // Assuming a fixed tax amount for this example
+    const totalIncome = calculateTotal(incomeData, 'current');
+    const totalPreviousIncome = calculateTotal(incomeData, 'previous');
+    const totalExpenses = calculateTotal(expenseData, 'current');
+    const totalPreviousExpenses = calculateTotal(expenseData, 'previous');
+    const incomeTaxAmount = 85000;
+    const previousIncomeTaxAmount = 75000;
     
     const profitBeforeTax = totalIncome - totalExpenses;
+    const previousProfitBeforeTax = totalPreviousIncome - totalPreviousExpenses;
     const netProfitAfterTax = profitBeforeTax - incomeTaxAmount;
+    const previousNetProfitAfterTax = previousProfitBeforeTax - previousIncomeTaxAmount;
     
     const totalRevenue = totalIncome;
 
     const profitBeforeTaxPercentage = totalRevenue > 0 ? (profitBeforeTax / totalRevenue) * 100 : 0;
     const netProfitPercentage = totalRevenue > 0 ? (netProfitAfterTax / totalRevenue) * 100 : 0;
+
+    const profitChange = previousProfitBeforeTax !== 0 ? ((profitBeforeTax - previousProfitBeforeTax) / Math.abs(previousProfitBeforeTax)) * 100 : (profitBeforeTax !== 0 ? 100 : 0);
+    const netProfitChange = previousNetProfitAfterTax !== 0 ? ((netProfitAfterTax - previousNetProfitAfterTax) / Math.abs(previousNetProfitAfterTax)) * 100 : (netProfitAfterTax !== 0 ? 100 : 0);
 
     const handleWipClick = (feature: string) => {
         toast({
@@ -195,7 +255,9 @@ export default function ProfitAndLossPage() {
                         </CardDescription>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap justify-start sm:justify-end">
-                        <Button variant="outline" disabled>Compare Periods</Button>
+                        <Button variant="outline" onClick={() => setShowComparison(prev => !prev)}>
+                            {showComparison ? 'Hide Comparison' : 'Compare Periods'}
+                        </Button>
                         <AnimatedToggleButton show={showPercentages} onToggle={() => setShowPercentages(prev => !prev)} />
                         <Popover>
                             <PopoverTrigger asChild>
@@ -215,8 +277,8 @@ export default function ProfitAndLossPage() {
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <ReportSection title="Income" data={incomeData} titleClassName="text-primary-foreground bg-primary" showPercentages={showPercentages} totalRevenue={totalRevenue} />
-                    <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive-foreground bg-destructive" showPercentages={showPercentages} totalRevenue={totalRevenue} />
+                    <ReportSection title="Income" data={incomeData} titleClassName="text-primary-foreground bg-primary" showPercentages={showPercentages} totalRevenue={totalRevenue} showComparison={showComparison} />
+                    <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive-foreground bg-destructive" showPercentages={showPercentages} totalRevenue={totalRevenue} showComparison={showComparison} />
                 </div>
                 
                 <Separator className="my-4" />
@@ -232,11 +294,29 @@ export default function ProfitAndLossPage() {
                                     </Badge>
                                 )}
                             </span>
-                            <span className="font-mono">{formatCurrency(profitBeforeTax, 'INR')}</span>
+                            {showComparison ? (
+                                <div className="flex items-baseline justify-end gap-2 font-mono text-sm">
+                                    <span className="w-24 text-right">{formatCurrency(profitBeforeTax, 'INR')}</span>
+                                    <span className="w-24 text-right text-muted-foreground/80">{formatCurrency(previousProfitBeforeTax, 'INR')}</span>
+                                    <span className={cn("w-20 text-right text-xs flex items-center justify-end gap-1", profitChange > 0 && "text-green-600", profitChange < 0 && "text-red-600")}>
+                                        {Math.abs(profitChange) > 0.01 && <>{profitChange.toFixed(1)}% {profitChange > 0 ? <ArrowUp className="h-3 w-3"/> : <ArrowDown className="h-3 w-3"/>}</>}
+                                    </span>
+                                </div>
+                            ) : (
+                                <span className="font-mono">{formatCurrency(profitBeforeTax, 'INR')}</span>
+                            )}
                         </div>
                         <div className="flex justify-between text-base text-muted-foreground">
                             <span>Less: Income Tax</span>
-                            <span className="font-mono">({formatCurrency(incomeTaxAmount, 'INR')})</span>
+                             {showComparison ? (
+                                <div className="flex items-baseline justify-end gap-2 font-mono text-sm">
+                                    <span className="w-24 text-right">({formatCurrency(incomeTaxAmount, 'INR')})</span>
+                                    <span className="w-24 text-right text-muted-foreground/80">({formatCurrency(previousIncomeTaxAmount, 'INR')})</span>
+                                    <span className="w-20 text-right"></span>
+                                </div>
+                            ) : (
+                                <span className="font-mono">({formatCurrency(incomeTaxAmount, 'INR')})</span>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -253,7 +333,17 @@ export default function ProfitAndLossPage() {
                             </Badge>
                         )}
                     </span>
-                    <span className="font-mono">{formatCurrency(netProfitAfterTax, 'INR')}</span>
+                     {showComparison ? (
+                        <div className="flex items-baseline justify-end gap-2 font-mono text-xl">
+                            <span className="w-32 text-right">{formatCurrency(netProfitAfterTax, 'INR')}</span>
+                            <span className="w-32 text-right text-current/80">{formatCurrency(previousNetProfitAfterTax, 'INR')}</span>
+                            <span className={cn("w-24 text-right text-sm flex items-center justify-end gap-1", netProfitChange > 0 && "text-green-600", netProfitChange < 0 && "text-red-600")}>
+                                {Math.abs(netProfitChange) > 0.01 && <>{netProfitChange.toFixed(1)}% {netProfitChange > 0 ? <ArrowUp className="h-3 w-3"/> : <ArrowDown className="h-3 w-3"/>}</>}
+                            </span>
+                        </div>
+                    ) : (
+                        <span className="font-mono">{formatCurrency(netProfitAfterTax, 'INR')}</span>
+                    )}
                 </div>
             </CardContent>
             <CardFooter className="pt-6 border-t mt-4">
