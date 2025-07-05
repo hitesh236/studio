@@ -1,18 +1,18 @@
 'use client';
 
-import { HicksTableContainer } from "@/components/hicks-table/hicks-table-container";
-import { generateData, Person } from "@/lib/data";
+import { CustomerTable } from "./customer-table";
+import { generateCustomerData, type Customer } from "./data";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
 export default function CustomersPage() {
-  const data: Person[] = generateData(500);
+  const data: Customer[] = generateCustomerData();
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <HicksTableContainer data={data} />
+      <CustomerTable data={data} />
 
       <motion.div
         className="fixed bottom-8 right-8 z-10"

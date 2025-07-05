@@ -8,14 +8,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Person } from "@/lib/data";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { Customer } from "./data";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Mail, MoreVertical, Phone, Send } from "lucide-react";
+import { format } from "date-fns";
+import { cn, formatCurrency } from "@/lib/utils";
 
 interface CustomerTableProps {
-  data: Person[];
+  data: Customer[];
 }
 
 export function CustomerTable({ data }: CustomerTableProps) {
@@ -23,59 +25,74 @@ export function CustomerTable({ data }: CustomerTableProps) {
     <Card>
       <CardHeader>
         <CardTitle>Customers</CardTitle>
+        <CardDescription>
+          A list of your B2B and B2C customers.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Customer Name</TableHead>
+                <TableHead>GSTIN</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead className="text-right">Balance Due</TableHead>
+                <TableHead>Last Transaction</TableHead>
+                <TableHead>Place of Supply</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((person) => {
-                let statusVariant: "default" | "secondary" | "destructive" | "outline";
-                switch (person.status) {
-                  case "Converted":
-                    statusVariant = "default";
-                    break;
-                  case "Active":
-                    statusVariant = "secondary";
-                    break;
-                  case "Lost":
-                    statusVariant = "destructive";
-                    break;
-                  case "Follow-Up":
-                    statusVariant = "outline";
-                    break;
-                  default:
-                    statusVariant = "outline";
-                }
-                return (
-                  <TableRow key={person.id}>
-                    <TableCell className="font-medium">{`${person.firstName} ${person.lastName}`}</TableCell>
-                    <TableCell>{person.email}</TableCell>
-                    <TableCell>{person.company}</TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariant}>{person.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon">
-                        <Edit className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
-                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {data.map((customer) => (
+                <TableRow key={customer.id}>
+                  <TableCell className="font-medium">{customer.name}</TableCell>
+                  <TableCell className="font-mono">{customer.gstin}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      {customer.contact.phone && (
+                        <span className="flex items-center gap-2 text-sm">
+                          <Phone className="h-3 w-3 text-muted-foreground" />
+                          {customer.contact.phone}
+                        </span>
+                      )}
+                      {customer.contact.email && (
+                        <span className="flex items-center gap-2 text-sm">
+                          <Mail className="h-3 w-3 text-muted-foreground" />
+                          {customer.contact.email}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className={cn(
+                    "text-right font-mono",
+                    customer.balanceDue > 0 ? "text-destructive" : "text-green-600"
+                  )}>
+                    {formatCurrency(customer.balanceDue, 'INR')}
+                  </TableCell>
+                  <TableCell>{format(customer.lastTransaction, "dd-MMM-yyyy")}</TableCell>
+                  <TableCell>{customer.placeOfSupply.code} ({customer.placeOfSupply.abbr})</TableCell>
+                  <TableCell className="text-center">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>View</DropdownMenuItem>
+                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        {customer.balanceDue > 0 && (
+                            <DropdownMenuItem className="text-destructive focus:text-destructive">
+                                <Send className="mr-2 h-4 w-4" />
+                                Remind
+                            </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>
