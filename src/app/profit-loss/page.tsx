@@ -42,7 +42,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName,
             layout
             className={cn(
                 "flex items-start justify-between py-1.5",
-                 isGroup && 'rounded-md font-bold border-t mt-2 pt-2'
+                 isGroup && 'rounded-md font-bold border-t mt-2 pt-2 pl-2'
             )}
             style={{ paddingLeft: `${level * 10}px` }}
         >
@@ -59,7 +59,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName,
                 <span className="text-sm flex items-center gap-2">
                     {node.name}
                     {showPercentages && (
-                        <Badge variant="outline" className="text-xs font-normal">
+                        <Badge variant={isGroup ? 'secondary' : 'outline'} className="text-[10px] font-normal">
                             {percentage.toFixed(2)}%
                         </Badge>
                     )}
@@ -193,7 +193,7 @@ export default function ProfitAndLossPage() {
                     <span className="flex items-center gap-2">
                         {netProfit >= 0 ? 'Net Profit' : 'Net Loss'}
                         {showPercentages && (
-                            <Badge variant="outline" className="text-xs font-normal border-current text-current">
+                            <Badge variant="outline" className="text-[10px] font-normal border-current text-current">
                                 {netProfitPercentage.toFixed(2)}%
                             </Badge>
                         )}
