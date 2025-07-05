@@ -248,7 +248,7 @@ export default function ProfitAndLossPage() {
                         </CardDescription>
                     </div>
                     <div className="flex items-center gap-4">
-                        <Button variant="outline" size="sm" onClick={() => setShowPercentages(!showPercentages)} className="w-28">
+                        <Button variant="outline" size="sm" onClick={() => setShowPercentages(!showPercentages)}>
                             {showPercentages ? 'Hide %' : 'Show %'}
                         </Button>
                         <Popover>
