@@ -252,38 +252,21 @@ export default function ProfitAndLossPage() {
             aria-checked={checked}
             onClick={() => onCheckedChange(!checked)}
             className={cn(
-              'relative inline-flex h-7 w-[88px] shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent px-1 transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-              checked ? 'bg-primary' : 'bg-input'
+              'relative h-7 w-[88px] shrink-0 cursor-pointer rounded-full border-2 p-0.5 transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+              checked ? 'bg-primary border-primary' : 'bg-input border-input'
             )}
           >
-            <span className="sr-only">Show Percentages</span>
-            <span
-              aria-hidden="true"
+            <span className="sr-only">Toggle Percentages</span>
+            <motion.div
               className={cn(
-                'absolute text-xs font-semibold transition-opacity',
-                'left-2.5 text-primary-foreground',
-                checked ? 'opacity-100' : 'opacity-0'
+                "h-6 w-[48px] rounded-full bg-background shadow-lg flex items-center justify-center text-xs font-semibold",
+                 checked ? 'text-primary' : 'text-muted-foreground'
               )}
+              animate={{ x: checked ? '36px' : '0px' }}
+              transition={{ type: "spring", stiffness: 700, damping: 30 }}
             >
-              Show %
-            </span>
-            <span
-              aria-hidden="true"
-              className={cn(
-                'absolute text-xs font-semibold transition-opacity',
-                'right-2.5 text-muted-foreground',
-                !checked ? 'opacity-100' : 'opacity-0'
-              )}
-            >
-              Hide %
-            </span>
-            <span
-              aria-hidden="true"
-              className={cn(
-                'pointer-events-none inline-block h-6 w-6 transform rounded-full bg-background shadow-lg ring-0 transition duration-200 ease-in-out',
-                checked ? 'translate-x-[62px]' : 'translate-x-0'
-              )}
-            />
+              {checked ? 'Hide %' : 'Show %'}
+            </motion.div>
           </button>
         );
       };
