@@ -32,7 +32,8 @@ import Link from 'next/link';
 
 
 const ALL_COLUMNS = [
-    { id: 'name', label: 'Customer Name' },
+    { id: 'name', label: 'Customer' },
+    { id: 'email', label: 'Email' },
     { id: 'gstin', label: 'GSTIN' },
     { id: 'contact', label: 'Contact' },
     { id: 'balanceDue', label: 'Balance Due' },
@@ -54,9 +55,9 @@ const MobileCustomerCard = ({ customer }: { customer: Customer }) => {
             <CardHeader className="p-4">
                 <div className="flex justify-between items-start">
                     <div>
-                        <CardTitle className="text-base">{customer.name}</CardTitle>
+                        <CardTitle className="text-base">{customer.company || customer.name}</CardTitle>
+                        {customer.company && <CardDescription>{customer.name}</CardDescription>}
                         <CardDescription>{customer.gstin}</CardDescription>
-                        {customer.contact.email && <span className="text-xs text-muted-foreground">{customer.contact.email}</span>}
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -85,6 +86,12 @@ const MobileCustomerCard = ({ customer }: { customer: Customer }) => {
                         <span className="flex items-center gap-2 text-sm">
                           <Phone className="h-3 w-3 text-muted-foreground" />
                           {customer.contact.phone}
+                        </span>
+                      )}
+                       {customer.contact.email && (
+                        <span className="flex items-center gap-2 text-sm">
+                          <Mail className="h-3 w-3 text-muted-foreground" />
+                          {customer.contact.email}
                         </span>
                       )}
                     </div>
@@ -121,7 +128,7 @@ export function CustomerTable({ data }: { data: Customer[] }) {
     }>({ key: null, direction: 'ascending' });
     
     const [columnVisibility, setColumnVisibility] = React.useState<Set<string>>(
-        new Set(ALL_COLUMNS.map(c => c.id))
+        new Set(ALL_COLUMNS.map(c => c.id).filter(id => id !== 'email'))
     );
     const [columnOrder, setColumnOrder] = React.useState<string[]>(
         ALL_COLUMNS.map(c => c.id)
@@ -161,6 +168,7 @@ export function CustomerTable({ data }: { data: Customer[] }) {
             const lowercasedFilter = filter.toLowerCase();
             baseData = data.filter(customer =>
                 customer.name.toLowerCase().includes(lowercasedFilter) ||
+                (customer.company && customer.company.toLowerCase().includes(lowercasedFilter)) ||
                 customer.gstin.toLowerCase().includes(lowercasedFilter) ||
                 customer.contact.email?.toLowerCase().includes(lowercasedFilter) ||
                 customer.contact.phone?.toLowerCase().includes(lowercasedFilter) ||
@@ -590,9 +598,9 @@ export function CustomerTable({ data }: { data: Customer[] }) {
                                         case 'name': return (
                                             <div className="flex items-center gap-2">
                                                 <div>
-                                                    <div className="font-medium">{customer.name}</div>
-                                                    {customer.contact.email && (
-                                                        <div className="text-xs text-muted-foreground">{customer.contact.email}</div>
+                                                    <div className="font-medium">{customer.company || customer.name}</div>
+                                                    {customer.company && (
+                                                        <div className="text-xs text-muted-foreground">{customer.name}</div>
                                                     )}
                                                 </div>
                                                 <Button asChild variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground opacity-0 group-hover/row:opacity-100">
@@ -603,6 +611,7 @@ export function CustomerTable({ data }: { data: Customer[] }) {
                                                 </Button>
                                             </div>
                                         );
+                                        case 'email': return <span>{customer.contact.email}</span>;
                                         case 'gstin': return <span className="font-mono">{customer.gstin}</span>;
                                         case 'contact': return (
                                             <div className="flex flex-col gap-1">

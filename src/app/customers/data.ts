@@ -1,7 +1,8 @@
 
 export type Customer = {
   id: string;
-  name: string;
+  name: string; // Person's name
+  company?: string; // Optional company name
   gstin: string; // or '-'
   contact: {
     phone?: string;
@@ -27,11 +28,14 @@ const indianStatesMap: Record<string, { code: string; abbr: string }> = {
   'Rajasthan': { code: '08', abbr: 'RJ' },
 };
 
-const customerNames = [
+const companyNames = [
   "Innovate Solutions Ltd.", "Quantum Systems", "Synergy Creations", "Apex Logistics",
   "Starlight Fabrics", "Blue Ribbon Foods", "Venture Dynamics", "Peak Performance Co.",
-  "Nexus Infotech", "Aarav Sharma", "Priya Patel", "Rohan Gupta", "Sunita Rao", "Vikram Singh"
+  "Nexus Infotech"
 ];
+const personNames = ["Aarav Sharma", "Priya Patel", "Rohan Gupta", "Sunita Rao", "Vikram Singh"];
+const allCustomerEntities = [...companyNames, ...personNames];
+
 
 const getRandomElement = <T>(arr: T[] | readonly T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
@@ -46,11 +50,23 @@ export const generateCustomerData = (): Customer[] => {
     const data: Customer[] = [];
     const now = new Date();
 
-    for (let i = 0; i < 14; i++) {
-        const name = customerNames[i];
-        const isB2B = Math.random() > 0.3; // 70% chance of being B2B
+    for (let i = 0; i < allCustomerEntities.length; i++) {
+        const entityName = allCustomerEntities[i];
+        const isCompany = companyNames.includes(entityName);
+        
         const stateName = getRandomElement(Object.keys(indianStatesMap));
         const placeOfSupply = indianStatesMap[stateName];
+        
+        let name: string;
+        let company: string | undefined;
+
+        if (isCompany) {
+            company = entityName;
+            name = getRandomElement(personNames);
+        } else {
+            company = undefined;
+            name = entityName;
+        }
 
         const balanceRandom = Math.random();
         let balanceDue: number;
@@ -60,13 +76,16 @@ export const generateCustomerData = (): Customer[] => {
             balanceDue = 0;
         }
 
+        const hasGstin = company ? true : Math.random() > 0.5; // Companies always have GSTIN, individuals have 50% chance
+
         data.push({
             id: `cust-${1001 + i}`,
-            name: name,
-            gstin: isB2B ? generateRandomGstin(placeOfSupply.code) : '-',
+            name,
+            company,
+            gstin: hasGstin ? generateRandomGstin(placeOfSupply.code) : '-',
             contact: {
                 phone: `98${Math.floor(Math.random() * 90000000) + 10000000}`,
-                email: `${name.split(' ')[0].toLowerCase()}@example.com`,
+                email: `${name.split(' ')[0].toLowerCase()}@${company ? company.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/gi, '') : 'example'}.com`,
             },
             balanceDue,
             lastTransaction: new Date(now.getTime() - Math.random() * 30 * 24 * 60 * 60 * 1000), // last 30 days
