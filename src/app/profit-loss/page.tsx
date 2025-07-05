@@ -48,7 +48,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledge
         >
             <span className={cn(
                 "flex items-center gap-1 pr-4 break-words",
-                isGroup && level === 0 ? (node.reportType === 'Income' ? 'text-primary' : 'text-destructive') : 'text-foreground',
+                isGroup ? (node.reportType === 'Income' ? 'text-primary' : 'text-destructive') : 'text-foreground',
                 !isGroup && "font-normal"
             )}>
                 {isGroup ? (
@@ -61,7 +61,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledge
                     {showPercentages && isGroup && (
                         <Badge 
                             variant='secondary' 
-                            className="text-[10px] font-normal p-0.5 leading-none"
+                            className="text-[10px] font-normal py-0.5 px-1 leading-none"
                         >
                             {percentage.toFixed(2)}%
                         </Badge>
@@ -69,7 +69,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue }: { node: Ledge
                      {showPercentages && !isGroup && (
                         <Badge 
                             variant='outline' 
-                            className="text-[10px] font-normal p-0.5 leading-none"
+                            className="text-[10px] font-normal py-0.5 px-1 leading-none"
                         >
                             {percentage.toFixed(2)}%
                         </Badge>
@@ -205,7 +205,7 @@ export default function ProfitAndLossPage() {
                     <span className="flex items-center gap-2">
                         {netProfit >= 0 ? 'Net Profit' : 'Net Loss'}
                         {showPercentages && (
-                            <Badge variant="outline" className="text-[10px] font-normal border-current text-current p-0.5 leading-none">
+                            <Badge variant="outline" className="text-[10px] font-normal border-current text-current py-0.5 px-1 leading-none">
                                 {netProfitPercentage.toFixed(2)}%
                             </Badge>
                         )}
