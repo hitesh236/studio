@@ -4,7 +4,7 @@
 import * as React from 'react';
 import type { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Download, Printer, Folder, FileText, ArrowUp, ArrowDown } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, Printer, Folder, FileText, ArrowUp, ArrowDown, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -15,6 +15,19 @@ import { cn, formatCurrency } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuCheckboxItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal
+} from '@/components/ui/dropdown-menu';
+
 
 // Helper function to recursively calculate group totals
 const calculateTotal = (node: Ledger, period: 'current' | 'previous' = 'current'): number => {
@@ -51,7 +64,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, showComparison 
             layout
             className={cn(
                 "flex items-start justify-between py-1.5",
-                 isGroup && `rounded-md font-bold border-t mt-2 pt-2`
+                 isGroup && `font-bold border-t mt-2 pt-2`
             )}
             style={{ paddingLeft: `${level * 10}px` }}
         >
@@ -179,26 +192,6 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
     );
 };
 
-const AnimatedToggleButton = ({ show, onToggle }: { show: boolean, onToggle: () => void }) => {
-  return (
-    <div
-      onClick={onToggle}
-      className={cn(
-        "flex h-7 w-[90px] cursor-pointer items-center rounded-full bg-muted p-1 transition-colors",
-        show ? "justify-end" : "justify-start"
-      )}
-    >
-      <motion.div
-        layout
-        transition={{ type: "spring", stiffness: 700, damping: 30 }}
-        className="flex h-5 items-center justify-center rounded-full bg-primary px-3 text-xs font-medium text-primary-foreground"
-      >
-        {show ? 'Hide %' : 'Show %'}
-      </motion.div>
-    </div>
-  );
-};
-
 
 export default function ProfitAndLossPage() {
   const [date, setDate] = React.useState<DateRange | undefined>({
@@ -246,7 +239,7 @@ export default function ProfitAndLossPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
         <Card className="w-full">
-            <CardHeader>
+            <CardHeader className="w-full">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
                         <CardTitle className="text-2xl">Profit &amp; Loss Statement</CardTitle>
@@ -254,11 +247,7 @@ export default function ProfitAndLossPage() {
                             For the period of {date?.from ? format(date.from, 'LLL dd, y') : ''} to {date?.to ? format(date.to, 'LLL dd, y') : ''}
                         </CardDescription>
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap justify-start sm:justify-end">
-                        <Button variant="outline" onClick={() => setShowComparison(prev => !prev)}>
-                            {showComparison ? 'Hide Comparison' : 'Compare Periods'}
-                        </Button>
-                        <AnimatedToggleButton show={showPercentages} onToggle={() => setShowPercentages(prev => !prev)} />
+                    <div className="flex items-center gap-2">
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button id="date" variant="outline" className={cn("w-full sm:w-[260px] justify-start text-left font-normal", !date && "text-muted-foreground")}>
@@ -270,8 +259,45 @@ export default function ProfitAndLossPage() {
                                 <Calendar initialFocus mode="range" defaultMonth={date?.from} selected={date} onSelect={setDate} numberOfMonths={2} />
                             </PopoverContent>
                         </Popover>
-                         <Button variant="outline" size="icon" onClick={() => handleWipClick('Print')}><Printer className="h-4 w-4" /></Button>
-                         <Button variant="outline" size="icon" onClick={() => handleWipClick('Download')}><Download className="h-4 w-4" /></Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="icon">
+                              <Settings className="h-4 w-4" />
+                              <span className="sr-only">View Options</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuCheckboxItem
+                              checked={showComparison}
+                              onCheckedChange={setShowComparison}
+                            >
+                              Compare Periods
+                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem
+                              checked={showPercentages}
+                              onCheckedChange={setShowPercentages}
+                            >
+                              Show Percentages
+                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuSub>
+                              <DropdownMenuSubTrigger>
+                                <Download className="mr-2 h-4 w-4" />
+                                <span>Download</span>
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                  <DropdownMenuItem onClick={() => handleWipClick('Download PDF')}>PDF</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleWipClick('Download XLS')}>XLS</DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                              </DropdownMenuPortal>
+                            </DropdownMenuSub>
+                            <DropdownMenuItem onClick={() => handleWipClick('Print')}>
+                              <Printer className="mr-2 h-4 w-4" />
+                              <span>Print</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </div>
             </CardHeader>
