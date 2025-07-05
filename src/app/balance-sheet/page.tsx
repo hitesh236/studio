@@ -230,8 +230,8 @@ export default function BalanceSheetPage() {
         <span className="sr-only">Toggle Percentages</span>
         
         <div className="absolute inset-0 flex items-center justify-center">
-            <span className={cn("text-xs font-semibold transition-opacity", !checked ? 'text-primary opacity-100' : 'opacity-0')}>Show %</span>
-            <span className={cn("text-xs font-semibold transition-opacity", checked ? 'text-primary-foreground opacity-100' : 'opacity-0')}>Hide %</span>
+            <span className={cn("text-xs font-semibold whitespace-nowrap transition-opacity", !checked ? 'text-primary opacity-100' : 'opacity-0')}>Show %</span>
+            <span className={cn("text-xs font-semibold whitespace-nowrap transition-opacity", checked ? 'text-primary-foreground opacity-100' : 'opacity-0')}>Hide %</span>
         </div>
 
         <motion.div
