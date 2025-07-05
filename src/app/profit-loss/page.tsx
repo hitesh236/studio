@@ -238,6 +238,56 @@ export default function ProfitAndLossPage() {
         });
     };
 
+    const PercentageToggle = ({
+        checked,
+        onCheckedChange,
+      }: {
+        checked: boolean;
+        onCheckedChange: (checked: boolean) => void;
+      }) => {
+        return (
+          <button
+            type="button"
+            role="switch"
+            aria-checked={checked}
+            onClick={() => onCheckedChange(!checked)}
+            className={cn(
+              'relative inline-flex h-7 w-[88px] shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent px-1 transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+              checked ? 'bg-primary' : 'bg-input'
+            )}
+          >
+            <span className="sr-only">Show Percentages</span>
+            <span
+              aria-hidden="true"
+              className={cn(
+                'absolute text-xs font-semibold transition-opacity',
+                'left-2.5 text-primary-foreground',
+                checked ? 'opacity-100' : 'opacity-0'
+              )}
+            >
+              Show %
+            </span>
+            <span
+              aria-hidden="true"
+              className={cn(
+                'absolute text-xs font-semibold transition-opacity',
+                'right-2.5 text-muted-foreground',
+                !checked ? 'opacity-100' : 'opacity-0'
+              )}
+            >
+              Hide %
+            </span>
+            <span
+              aria-hidden="true"
+              className={cn(
+                'pointer-events-none inline-block h-6 w-6 transform rounded-full bg-background shadow-lg ring-0 transition duration-200 ease-in-out',
+                checked ? 'translate-x-[62px]' : 'translate-x-0'
+              )}
+            />
+          </button>
+        );
+      };
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
         <Card>
@@ -250,10 +300,7 @@ export default function ProfitAndLossPage() {
                         </CardDescription>
                     </div>
                     <div className="flex items-center gap-4">
-                        <div className="flex items-center space-x-2">
-                            <Switch id="show-percentages" checked={showPercentages} onCheckedChange={setShowPercentages} />
-                            <Label htmlFor="show-percentages">Show %</Label>
-                        </div>
+                        <PercentageToggle checked={showPercentages} onCheckedChange={setShowPercentages} />
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button id="date" variant="outline" className={cn("w-full sm:w-[260px] justify-start text-left font-normal", !date && "text-muted-foreground")}>
@@ -405,5 +452,3 @@ export default function ProfitAndLossPage() {
     </div>
   );
 }
-
-    
