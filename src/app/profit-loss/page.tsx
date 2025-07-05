@@ -41,15 +41,14 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName,
             layout
             className={cn(
                 "flex items-start justify-between py-1.5",
-                 isGroup && 'rounded-md px-2 font-bold border-t mt-2 pt-2'
+                 isGroup && 'rounded-md pl-2 font-bold border-t mt-2 pt-2'
             )}
             style={{ paddingLeft: `${level * 10}px` }}
         >
             <span className={cn(
                 "flex items-center gap-1 pr-4 break-words",
                 isGroup && level === 0 ? groupTextColor : 'text-foreground',
-                isGroup && level > 0 && 'text-foreground',
-                 !isGroup && "font-normal"
+                !isGroup && "font-normal"
             )}>
                 {isGroup ? (
                     <Folder className={cn("h-3.5 w-3.5 shrink-0")} />
@@ -65,8 +64,7 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName,
             <span className={cn(
                 "font-mono text-sm text-right shrink-0",
                  !isGroup && "font-normal pr-[10px]",
-                isGroup && level === 0 ? groupTextColor : 'text-foreground',
-                isGroup && level > 0 && 'text-foreground'
+                isGroup && level === 0 ? groupTextColor : 'text-foreground'
             )}>
                 {isGroup || node.balance !== undefined ? formatCurrency(displayTotal, 'INR') : null}
             </span>
@@ -178,7 +176,7 @@ export default function ProfitAndLossPage() {
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="space-y-8">
+            <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <ReportSection title="Income" data={incomeData} titleClassName="text-primary-foreground bg-primary" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-primary" groupTextColor="text-primary" />
                     <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive-foreground bg-destructive" showPercentages={showPercentages} totalRevenue={totalIncome} groupClassName="text-destructive" groupTextColor="text-destructive" />
