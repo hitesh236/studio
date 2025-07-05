@@ -41,19 +41,22 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName 
             layout
             className={cn(
                 "flex items-start justify-between py-1.5",
-                isGroup && 'bg-muted/50 rounded-md px-2',
+                isGroup && 'rounded-md px-2',
+                isGroup && level === 0 && 'bg-muted/50',
+                isGroup && level === 1 && 'bg-muted/40',
+                isGroup && level >= 2 && 'bg-muted/30',
                 isGroup ? groupClassName : ''
             )}
             style={{ paddingLeft: `${level * 10}px` }}
         >
             <span className={cn(
-                "flex items-center gap-1 pr-4 break-words",
-                isGroup && "font-bold"
+                "flex items-center gap-1 pr-4 break-words font-bold",
+                 !isGroup && "font-normal"
             )}>
                 {isGroup ? (
                     <Folder className={cn("h-3.5 w-3.5 shrink-0")} />
                 ) : (
-                    <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <FileText className="h-3.5 w-3.5 shrink-0" />
                 )}
                 <span className="text-sm">
                     {node.name}
@@ -62,9 +65,8 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, groupClassName 
             </span>
             
             <span className={cn(
-                "font-mono text-sm text-right shrink-0",
-                isGroup && "font-bold",
-                !isGroup && "pr-[10px]"
+                "font-mono text-sm text-right shrink-0 font-bold",
+                !isGroup && "font-normal pr-[10px]"
             )}>
                 {isGroup || node.balance !== undefined ? formatCurrency(displayTotal, 'INR') : null}
             </span>
