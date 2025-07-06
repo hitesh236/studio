@@ -44,6 +44,7 @@ const pathToTitle: { [key: string]: string } = {
   '/vendors': 'Vendors',
   '/vendors/new': 'Add Vendor',
   '/hotels': 'Hotels',
+  '/hotels/new': 'Add Hotel',
 };
 
 export function Header() {
