@@ -197,6 +197,7 @@ export default function BalanceSheetPage() {
   });
   const [showPercentages, setShowPercentages] = React.useState(false);
   const [showComparison, setShowComparison] = React.useState(false);
+  const [isFullWidth, setIsFullWidth] = React.useState(false);
   const { toast } = useToast();
 
   const totalAssets = calculateTotal(assetsData, 'current');
@@ -283,6 +284,12 @@ export default function BalanceSheetPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuCheckboxItem
+                              checked={isFullWidth}
+                              onCheckedChange={setIsFullWidth}
+                            >
+                              Full Width View
+                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem
                               checked={showComparison}
                               onCheckedChange={setShowComparison}
                             >
@@ -330,7 +337,7 @@ export default function BalanceSheetPage() {
                  </AnimatePresence>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className={cn("grid gap-4", isFullWidth ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2")}>
                     <ReportSection title="Assets" data={assetsData} titleClassName="text-primary-foreground bg-primary" showPercentages={showPercentages} totalAssets={totalAssets} showComparison={showComparison} />
                     <ReportSection title="Liabilities" data={liabilitiesData} titleClassName="text-destructive-foreground bg-destructive" showPercentages={showPercentages} totalAssets={totalAssets} showComparison={showComparison} />
                 </div>
