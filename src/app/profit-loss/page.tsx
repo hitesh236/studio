@@ -202,6 +202,7 @@ export default function ProfitAndLossPage() {
   });
   const [showPercentages, setShowPercentages] = React.useState(true);
   const [showComparison, setShowComparison] = React.useState(false);
+  const [isFullWidth, setIsFullWidth] = React.useState(false);
   const { toast } = useToast();
 
   const incomeData = ledgerData.find(group => group.id === 'income');
@@ -313,6 +314,12 @@ export default function ProfitAndLossPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuCheckboxItem
+                              checked={isFullWidth}
+                              onCheckedChange={setIsFullWidth}
+                            >
+                              Full Width View
+                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem
                               checked={showComparison}
                               onCheckedChange={setShowComparison}
                             >
@@ -360,7 +367,7 @@ export default function ProfitAndLossPage() {
                  </AnimatePresence>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className={cn("grid gap-4", isFullWidth ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2")}>
                     <ReportSection title="Income" data={incomeData} titleClassName="text-primary-foreground bg-primary" showPercentages={showPercentages} totalRevenue={totalRevenue} showComparison={showComparison} />
                     <ReportSection title="Expenses" data={expenseData} titleClassName="text-destructive-foreground bg-destructive" showPercentages={showPercentages} totalRevenue={totalRevenue} showComparison={showComparison} />
                 </div>
@@ -444,5 +451,7 @@ export default function ProfitAndLossPage() {
     </div>
   );
 }
+
+    
 
     
