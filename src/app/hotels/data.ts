@@ -1,13 +1,19 @@
 
 'use client';
 
-export type RoomType = {
+export type MealPlan = {
   name: string;
   price: number;
 };
 
-export type Season = {
+export type RoomType = {
   name: string;
+  price: number; // This is the base price for the room only (EP)
+  mealPlans: MealPlan[];
+};
+
+export type Season = {
+  name:string;
   roomTypes: RoomType[];
 };
 
@@ -28,17 +34,17 @@ const hotelsData: Omit<Hotel, 'id' | 'imageUrl' | 'rating'>[] = [
       {
         name: 'Peak Season (Oct - Mar)',
         roomTypes: [
-          { name: 'Luxury Grande Room', price: 45000 },
-          { name: 'Taj Club Room', price: 65000 },
-          { name: 'Executive Suite', price: 90000 },
+          { name: 'Luxury Grande Room', price: 45000, mealPlans: [{ name: 'Breakfast (CP)', price: 2500 }, { name: 'Breakfast & Dinner (MAP)', price: 6000 }] },
+          { name: 'Taj Club Room', price: 65000, mealPlans: [{ name: 'Breakfast (CP)', price: 3500 }, { name: 'All Meals (AP)', price: 8000 }] },
+          { name: 'Executive Suite', price: 90000, mealPlans: [{ name: 'Breakfast (CP)', price: 3500 }] },
         ],
       },
       {
         name: 'Off Season (Apr - Sep)',
         roomTypes: [
-          { name: 'Luxury Grande Room', price: 32000 },
-          { name: 'Taj Club Room', price: 50000 },
-          { name: 'Executive Suite', price: 75000 },
+          { name: 'Luxury Grande Room', price: 32000, mealPlans: [{ name: 'Breakfast (CP)', price: 2500 }] },
+          { name: 'Taj Club Room', price: 50000, mealPlans: [] },
+          { name: 'Executive Suite', price: 75000, mealPlans: [{ name: 'Breakfast (CP)', price: 3500 }, { name: 'Breakfast & Dinner (MAP)', price: 7000 }] },
         ],
       },
     ],
@@ -50,17 +56,17 @@ const hotelsData: Omit<Hotel, 'id' | 'imageUrl' | 'rating'>[] = [
       {
         name: 'Peak Season (Oct - Mar)',
         roomTypes: [
-          { name: 'Premier Room', price: 55000 },
-          { name: 'Premier Room with Balcony', price: 65000 },
-          { name: 'Deluxe Suite with Balcony', price: 120000 },
+          { name: 'Premier Room', price: 55000, mealPlans: [{ name: 'Breakfast Included', price: 0 }] },
+          { name: 'Premier Room with Balcony', price: 65000, mealPlans: [{ name: 'Breakfast Included', price: 0 }, { name: 'Dinner', price: 5000 }] },
+          { name: 'Deluxe Suite with Balcony', price: 120000, mealPlans: [{ name: 'All Meals Included', price: 0 }] },
         ],
       },
       {
         name: 'Off Season (Apr - Sep)',
         roomTypes: [
-          { name: 'Premier Room', price: 40000 },
-          { name: 'Premier Room with Balcony', price: 48000 },
-          { name: 'Deluxe Suite with Balcony', price: 95000 },
+          { name: 'Premier Room', price: 40000, mealPlans: [] },
+          { name: 'Premier Room with Balcony', price: 48000, mealPlans: [{ name: 'Breakfast', price: 3000 }] },
+          { name: 'Deluxe Suite with Balcony', price: 95000, mealPlans: [{ name: 'Breakfast', price: 3000 }, { name: 'Dinner', price: 5000 }] },
         ],
       },
     ],
@@ -72,17 +78,17 @@ const hotelsData: Omit<Hotel, 'id' | 'imageUrl' | 'rating'>[] = [
       {
         name: 'Peak Season (Oct - Mar)',
         roomTypes: [
-          { name: 'Palace Room', price: 60000 },
-          { name: 'Historical Suite', price: 150000 },
-          { name: 'Maharaja Suite', price: 500000 },
+          { name: 'Palace Room', price: 60000, mealPlans: [{ name: 'Royal Breakfast', price: 4000 }] },
+          { name: 'Historical Suite', price: 150000, mealPlans: [{ name: 'Royal Breakfast', price: 5000 }, { name: 'Royal Dinner', price: 10000 }] },
+          { name: 'Maharaja Suite', price: 500000, mealPlans: [{ name: 'All Inclusive Royal Service', price: 25000 }] },
         ],
       },
        {
         name: 'Off Season (Apr - Sep)',
         roomTypes: [
-          { name: 'Palace Room', price: 45000 },
-          { name: 'Historical Suite', price: 110000 },
-          { name: 'Maharaja Suite', price: 380000 },
+          { name: 'Palace Room', price: 45000, mealPlans: [{ name: 'Breakfast', price: 3000 }] },
+          { name: 'Historical Suite', price: 110000, mealPlans: [{ name: 'Breakfast', price: 4000 }] },
+          { name: 'Maharaja Suite', price: 380000, mealPlans: [{ name: 'All Inclusive', price: 20000 }] },
         ],
       },
     ],
@@ -94,9 +100,9 @@ const hotelsData: Omit<Hotel, 'id' | 'imageUrl' | 'rating'>[] = [
       {
         name: 'All Year',
         roomTypes: [
-          { name: 'Deluxe Room', price: 25000 },
-          { name: 'Conservatory Room', price: 35000 },
-          { name: 'Royal Suite', price: 75000 },
+          { name: 'Deluxe Room', price: 25000, mealPlans: [{ name: 'Breakfast Buffet', price: 1800 }] },
+          { name: 'Conservatory Room', price: 35000, mealPlans: [{ name: 'Breakfast Buffet', price: 2200 }] },
+          { name: 'Royal Suite', price: 75000, mealPlans: [{ name: 'Breakfast & High Tea', price: 5000 }] },
         ],
       },
     ],
@@ -108,17 +114,17 @@ const hotelsData: Omit<Hotel, 'id' | 'imageUrl' | 'rating'>[] = [
         {
             name: 'Peak Season (Oct - Mar)',
             roomTypes: [
-                { name: 'Heritage Room', price: 30000 },
-                { name: 'Grand Heritage Room', price: 40000 },
-                { name: 'Luxury Suite', price: 80000 },
+                { name: 'Heritage Room', price: 30000, mealPlans: [{ name: 'Imperial Breakfast', price: 3000 }] },
+                { name: 'Grand Heritage Room', price: 40000, mealPlans: [{ name: 'Imperial Breakfast', price: 3500 }, {name: 'Dinner at The Spice Route', price: 8000}] },
+                { name: 'Luxury Suite', price: 80000, mealPlans: [] },
             ],
         },
         {
             name: 'Off Season (Apr - Sep)',
             roomTypes: [
-                { name: 'Heritage Room', price: 22000 },
-                { name: 'Grand Heritage Room', price: 30000 },
-                { name: 'Luxury Suite', price: 65000 },
+                { name: 'Heritage Room', price: 22000, mealPlans: [] },
+                { name: 'Grand Heritage Room', price: 30000, mealPlans: [{name: 'Breakfast', price: 2500}] },
+                { name: 'Luxury Suite', price: 65000, mealPlans: [{name: 'Breakfast', price: 2500}] },
             ],
         }
     ]

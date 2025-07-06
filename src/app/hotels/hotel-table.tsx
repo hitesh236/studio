@@ -13,6 +13,7 @@ import {
   Trash2,
   MoreVertical,
   ChevronDown,
+  Utensils,
 } from 'lucide-react';
 import type { Hotel, RoomType } from './data';
 import {
@@ -109,14 +110,26 @@ const HotelRow = ({ hotel, isExpanded, onExpand }: { hotel: Hotel; isExpanded: b
                           <TableHeader>
                             <TableRow>
                               <TableHead>Room Type</TableHead>
-                              <TableHead className="text-right">Price/Night</TableHead>
+                              <TableHead className="text-right">Price/Night (EP)</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {season.roomTypes.map(room => (
                               <TableRow key={room.name}>
-                                <TableCell>{room.name}</TableCell>
-                                <TableCell className="text-right font-mono">{formatCurrency(room.price, 'INR')}</TableCell>
+                                <TableCell>
+                                    <div className="font-medium">{room.name}</div>
+                                    {room.mealPlans.length > 0 && (
+                                        <div className="mt-2 space-y-1">
+                                            {room.mealPlans.map(plan => (
+                                                <div key={plan.name} className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                    <Utensils className="h-3 w-3" />
+                                                    <span>{plan.name}: <span className="font-mono">{formatCurrency(plan.price, 'INR')}</span></span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </TableCell>
+                                <TableCell className="text-right font-mono align-top">{formatCurrency(room.price, 'INR')}</TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -169,11 +182,23 @@ const MobileHotelCard = ({ hotel, isExpanded, onExpand }: { hotel: Hotel; isExpa
                             {hotel.seasons.map(season => (
                                 <div key={season.name}>
                                     <h4 className="font-semibold mb-2">{season.name}</h4>
-                                     <div className="space-y-1 text-sm">
+                                     <div className="space-y-3 text-sm">
                                         {season.roomTypes.map(room => (
-                                            <div key={room.name} className="flex justify-between">
-                                                <span className="text-muted-foreground">{room.name}</span>
-                                                <span className="font-mono">{formatCurrency(room.price, 'INR')}</span>
+                                            <div key={room.name}>
+                                                <div className="flex justify-between font-medium">
+                                                    <span>{room.name}</span>
+                                                    <span className="font-mono">{formatCurrency(room.price, 'INR')}</span>
+                                                </div>
+                                                {room.mealPlans.length > 0 && (
+                                                    <div className="pl-2 mt-1 space-y-1">
+                                                        {room.mealPlans.map(plan => (
+                                                            <div key={plan.name} className="flex justify-between text-xs text-muted-foreground">
+                                                                <span className="flex items-center gap-1.5"><Utensils className="h-3 w-3" /> {plan.name}</span>
+                                                                <span className="font-mono">{formatCurrency(plan.price, 'INR')}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
                                     </div>

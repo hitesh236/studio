@@ -23,12 +23,18 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, PlusCircle, Trash2 } from 'lucide-react';
+import { Loader2, Save, PlusCircle, Trash2, Utensils } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+
+const mealPlanSchema = z.object({
+    name: z.string().min(1, 'Plan name is required.'),
+    price: z.coerce.number().min(0, 'Price must be a positive number.'),
+});
 
 const roomTypeSchema = z.object({
   name: z.string().min(1, 'Room type name is required.'),
   price: z.coerce.number().min(0, 'Price must be a positive number.'),
+  mealPlans: z.array(mealPlanSchema),
 });
 
 const seasonSchema = z.object({
@@ -60,7 +66,7 @@ export function AddHotelForm() {
       seasons: [
         {
           name: 'Peak Season',
-          roomTypes: [{ name: 'Deluxe Room', price: 10000 }],
+          roomTypes: [{ name: 'Deluxe Room', price: 10000, mealPlans: [{ name: 'Breakfast', price: 1000 }] }],
         },
       ],
     },
@@ -83,6 +89,63 @@ export function AddHotelForm() {
     form.reset();
   }
   
+  const MealPlansArray = ({ seasonIndex, roomIndex }: { seasonIndex: number, roomIndex: number }) => {
+    const { fields, append, remove } = useFieldArray({
+      control: form.control,
+      name: `seasons.${seasonIndex}.roomTypes.${roomIndex}.mealPlans`
+    });
+    
+    return (
+        <div className="space-y-3 mt-3">
+            <h5 className="text-xs font-semibold text-muted-foreground flex items-center gap-2"><Utensils className="h-3 w-3" /> Meal Plans</h5>
+            {fields.map((field, mealIndex) => (
+                 <div key={field.id} className="flex items-start gap-2">
+                    <div className="grid grid-cols-2 gap-2 flex-grow">
+                        <FormField
+                            control={form.control}
+                            name={`seasons.${seasonIndex}.roomTypes.${roomIndex}.mealPlans.${mealIndex}.name`}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormControl><Input placeholder="Plan Name (e.g., Breakfast)" {...field} className="h-9" /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name={`seasons.${seasonIndex}.roomTypes.${roomIndex}.mealPlans.${mealIndex}.price`}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormControl><Input type="number" placeholder="Additional Price" {...field} className="h-9" /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 shrink-0 text-destructive"
+                        onClick={() => remove(mealIndex)}
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                 </div>
+            ))}
+             <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => append({ name: '', price: 0 })}
+                className="text-xs h-8"
+            >
+                <PlusCircle className="mr-2 h-3 w-3" /> Add Meal Plan
+            </Button>
+        </div>
+    );
+  }
+
   const RoomTypesArray = ({ seasonIndex }: { seasonIndex: number }) => {
     const { fields, append, remove } = useFieldArray({
       control: form.control,
@@ -93,33 +156,38 @@ export function AddHotelForm() {
       <div className="space-y-4 pl-4 border-l-2 border-muted">
         {fields.map((field, roomIndex) => (
           <div key={field.id} className="flex items-start gap-2">
-            <div className="grid grid-cols-2 gap-2 flex-grow">
-               <FormField
-                  control={form.control}
-                  name={`seasons.${seasonIndex}.roomTypes.${roomIndex}.name`}
-                  render={({ field }) => (
-                      <FormItem>
-                        <FormControl><Input placeholder="Room Type Name" {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                  )}
-              />
-               <FormField
-                  control={form.control}
-                  name={`seasons.${seasonIndex}.roomTypes.${roomIndex}.price`}
-                  render={({ field }) => (
-                      <FormItem>
-                        <FormControl><Input type="number" placeholder="Price" {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                  )}
-              />
+            <div className="flex-grow space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                <FormField
+                    control={form.control}
+                    name={`seasons.${seasonIndex}.roomTypes.${roomIndex}.name`}
+                    render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Room Type Name</FormLabel>
+                          <FormControl><Input placeholder="e.g. Deluxe Room" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name={`seasons.${seasonIndex}.roomTypes.${roomIndex}.price`}
+                    render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Base Price (EP)</FormLabel>
+                          <FormControl><Input type="number" placeholder="Room only price" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                    )}
+                />
+              </div>
+              <MealPlansArray seasonIndex={seasonIndex} roomIndex={roomIndex} />
             </div>
             <Button
               type="button"
               variant="destructive"
               size="icon"
-              className="h-9 w-9 shrink-0"
+              className="h-9 w-9 shrink-0 mt-6"
               onClick={() => remove(roomIndex)}
               disabled={fields.length <= 1}
             >
@@ -131,7 +199,7 @@ export function AddHotelForm() {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => append({ name: '', price: 0 })}
+            onClick={() => append({ name: '', price: 0, mealPlans: [] })}
             className="mt-2"
         >
             <PlusCircle className="mr-2 h-4 w-4" /> Add Room Type
@@ -204,7 +272,7 @@ export function AddHotelForm() {
                 <h3 className="text-lg font-medium mb-4">Seasons & Pricing</h3>
                 <div className="space-y-6">
                     {seasonFields.map((field, index) => (
-                        <Card key={field.id} className="p-4">
+                        <Card key={field.id} className="p-4 bg-muted/30">
                              <div className="flex justify-between items-center mb-4">
                                 <FormField
                                     control={form.control}
@@ -231,7 +299,7 @@ export function AddHotelForm() {
                     <Button
                         type="button"
                         variant="outline"
-                        onClick={() => appendSeason({ name: '', roomTypes: [{ name: '', price: 0 }] })}
+                        onClick={() => appendSeason({ name: '', roomTypes: [{ name: '', price: 0, mealPlans: [] }] })}
                         className="mt-4"
                     >
                         <PlusCircle className="mr-2 h-4 w-4" /> Add Season
