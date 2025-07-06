@@ -12,12 +12,16 @@ import {
   SidebarGroupLabel,
   SidebarFooter,
   useSidebar,
-  SidebarSeparator
+  SidebarSeparator,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton
 } from '@/components/ui/sidebar';
 import {
     BookOpen,
     Box,
     Briefcase,
+    Car,
     ChevronDown,
     Database,
     Eye,
@@ -25,6 +29,7 @@ import {
     FileText,
     Globe,
     History,
+    Hotel,
     LayoutDashboard,
     Luggage,
     Palette,
@@ -53,6 +58,19 @@ export function AppSidebar() {
   const { state, isMobile, setOpenMobile } = useSidebar();
   const pathname = usePathname();
   const [activeMenu, setActiveMenu] = React.useState('accounting');
+  const [openTravelSubMenus, setOpenTravelSubMenus] = React.useState(new Set<string>());
+
+  const toggleTravelSubMenu = (id: string) => {
+    setOpenTravelSubMenus(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
 
   const handleLinkClick = () => {
     if (isMobile) {
@@ -342,11 +360,51 @@ export function AppSidebar() {
                                 <span>Packages</span>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
-                         <SidebarMenuItem>
-                            <SidebarMenuButton tooltip="Masters">
-                                <Database />
-                                <span>Masters</span>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                onClick={() => toggleTravelSubMenu('masters')}
+                                className="justify-between"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Database />
+                                    <span>Masters</span>
+                                </div>
+                                <ChevronDown
+                                    className={`transition-transform duration-200 ${
+                                        openTravelSubMenus.has('masters') ? 'rotate-180' : ''
+                                    }`}
+                                />
                             </SidebarMenuButton>
+                            <AnimatePresence>
+                                {openTravelSubMenus.has('masters') && (
+                                    <motion.div
+                                        key="masters-submenu"
+                                        initial="hidden"
+                                        animate="visible"
+                                        exit="hidden"
+                                        variants={menuVariants}
+                                    >
+                                        <SidebarMenuSub>
+                                            <SidebarMenuSubItem>
+                                                <SidebarMenuSubButton tooltip="Hotel" asChild>
+                                                    <Link href="#" onClick={handleLinkClick}>
+                                                        <Hotel />
+                                                        <span>Hotel</span>
+                                                    </Link>
+                                                </SidebarMenuSubButton>
+                                            </SidebarMenuSubItem>
+                                            <SidebarMenuSubItem>
+                                                <SidebarMenuSubButton tooltip="Cabs" asChild>
+                                                    <Link href="#" onClick={handleLinkClick}>
+                                                        <Car />
+                                                        <span>Cabs</span>
+                                                    </Link>
+                                                </SidebarMenuSubButton>
+                                            </SidebarMenuSubItem>
+                                        </SidebarMenuSub>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </SidebarMenuItem>
                     </SidebarMenu>
                 </SidebarGroup>
