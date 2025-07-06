@@ -35,6 +35,7 @@ import {
     Palette,
     Percent,
     Plane,
+    PlusCircle,
     Receipt,
     Redo2,
     Scale,
@@ -386,7 +387,7 @@ export function AppSidebar() {
                                     >
                                         <SidebarMenuSub>
                                             <SidebarMenuSubItem>
-                                                <SidebarMenuSubButton tooltip="Hotel" isActive={pathname.startsWith('/hotels')} asChild>
+                                                <SidebarMenuSubButton tooltip="Hotel" isActive={pathname === '/hotels'} asChild>
                                                     <Link href="/hotels" onClick={handleLinkClick}>
                                                         <Hotel />
                                                         <span>Hotel</span>
@@ -398,6 +399,14 @@ export function AppSidebar() {
                                                     <Link href="#" onClick={handleLinkClick}>
                                                         <Car />
                                                         <span>Cabs</span>
+                                                    </Link>
+                                                </SidebarMenuSubButton>
+                                            </SidebarMenuSubItem>
+                                            <SidebarMenuSubItem>
+                                                <SidebarMenuSubButton tooltip="Add Hotel" isActive={pathname === '/hotels/new'} asChild>
+                                                    <Link href="/hotels/new" onClick={handleLinkClick}>
+                                                        <PlusCircle />
+                                                        <span>Add Hotel</span>
                                                     </Link>
                                                 </SidebarMenuSubButton>
                                             </SidebarMenuSubItem>
