@@ -25,8 +25,7 @@ export default function HotelsPage() {
         <div className="p-4 sm:p-6 lg:p-8">
             <HotelTable data={hotels} />
             <motion.div
-                drag
-                className="fixed bottom-8 right-8 z-50 cursor-grab active:cursor-grabbing"
+                className="fixed bottom-8 right-8 z-50"
                 initial={{ opacity: 0, y: 100 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
@@ -35,6 +34,8 @@ export default function HotelsPage() {
                 damping: 20,
                 delay: 0.3,
                 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
             >
                 <Button asChild className="rounded-full shadow-lg">
                 <Link href="/hotels/new">
