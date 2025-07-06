@@ -386,8 +386,8 @@ export function AppSidebar() {
                                     >
                                         <SidebarMenuSub>
                                             <SidebarMenuSubItem>
-                                                <SidebarMenuSubButton tooltip="Hotel" asChild>
-                                                    <Link href="#" onClick={handleLinkClick}>
+                                                <SidebarMenuSubButton tooltip="Hotel" isActive={pathname.startsWith('/hotels')} asChild>
+                                                    <Link href="/hotels" onClick={handleLinkClick}>
                                                         <Hotel />
                                                         <span>Hotel</span>
                                                     </Link>
