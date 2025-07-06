@@ -14,6 +14,8 @@ export type RoomType = {
 
 export type Season = {
   name:string;
+  startDate?: Date;
+  endDate?: Date;
   roomTypes: RoomType[];
 };
 
