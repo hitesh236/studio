@@ -4,7 +4,7 @@
 import type { SalesInvoice } from "./data";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowUp, ArrowDown, Eye, Pencil, FileX2, CreditCard } from "lucide-react";
+import { ArrowUp, ArrowDown, Eye, Pencil, FileX2, CreditCard, Undo2 } from "lucide-react";
 import { formatCurrency, cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -13,6 +13,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import Link from "next/link";
 
 
 type ColumnProps = {
@@ -248,6 +249,17 @@ export const columns = ({
                 </Button>
               </TooltipTrigger>
               <TooltipContent><p>Edit Invoice</p></TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                 <Button asChild variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}>
+                    <Link href={`/sales-invoice-returns/new?invoiceData=${encodeURIComponent(JSON.stringify(row))}`}>
+                        <Undo2 className="h-4 w-4" />
+                        <span className="sr-only">Create Sales Return</span>
+                    </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent><p>Create Sales Return</p></TooltipContent>
             </Tooltip>
             {canAddPayment && (
               <Tooltip>

@@ -13,6 +13,8 @@ import {
   Save,
   Loader2,
 } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import type { SalesInvoice } from '@/app/sales-invoices/data';
 
 import { cn, formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -94,6 +96,7 @@ type CreditNoteFormValues = z.infer<typeof creditNoteFormSchema>;
 
 export function CreditNoteForm() {
   const { toast } = useToast();
+  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   
   const customers = [
@@ -117,8 +120,45 @@ export function CreditNoteForm() {
   });
 
   React.useEffect(() => {
-    form.setValue('creditNoteNumber', `CN-${Math.floor(Math.random() * 9000) + 1000}`);
-  }, [form]);
+    const invoiceDataString = searchParams.get('invoiceData');
+    if (!invoiceDataString) {
+      form.setValue('creditNoteNumber', `CN-${Math.floor(Math.random() * 9000) + 1000}`);
+    }
+  }, [form, searchParams]);
+
+  React.useEffect(() => {
+    const invoiceDataString = searchParams.get('invoiceData');
+    if (invoiceDataString) {
+      try {
+        const invoice: SalesInvoice = JSON.parse(decodeURIComponent(invoiceDataString));
+        const invoiceDate = invoice.invoiceDate ? new Date(invoice.invoiceDate) : undefined;
+
+        form.reset({
+          customerName: invoice.customerName,
+          placeOfSupply: invoice.placeOfSupply,
+          creditNoteNumber: `CN-${Math.floor(Math.random() * 9000) + 1000}`,
+          creditNoteDate: new Date(),
+          originalInvoiceNumber: invoice.invoiceNumber,
+          originalInvoiceDate: invoiceDate,
+          reasonForReturn: '',
+          items: invoice.items.map(item => ({
+            itemName: item.name,
+            hsnCode: '',
+            quantity: item.quantity,
+            rate: item.rate,
+            gstRate: 18,
+          })),
+        });
+      } catch (error) {
+        console.error("Failed to parse invoice data from URL", error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Could not load invoice data for return.'
+        });
+      }
+    }
+  }, [searchParams, form, toast]);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,

@@ -24,7 +24,9 @@ import {
   Landmark,
   CheckCircle2,
   Download,
+  Undo2,
 } from "lucide-react";
+import Link from 'next/link';
 
 import {
   Table,
@@ -208,6 +210,17 @@ const MobileInvoiceCard = ({ invoice, isExpanded, toggleRowExpansion, selectedRo
                   <TooltipContent>
                     <p>Edit Invoice</p>
                   </TooltipContent>
+                </Tooltip>
+                 <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button asChild variant="ghost" size="icon" className="h-8 w-8">
+                            <Link href={`/sales-invoice-returns/new?invoiceData=${encodeURIComponent(JSON.stringify(invoice))}`}>
+                                <Undo2 className="h-4 w-4" />
+                                <span className="sr-only">Create Sales Return</span>
+                            </Link>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>Create Sales Return</p></TooltipContent>
                 </Tooltip>
                 {canAddPayment && (
                   <Tooltip>
