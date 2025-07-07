@@ -99,6 +99,8 @@ export function CreditNoteForm() {
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   
+  const isFromInvoice = !!searchParams.get('invoiceData');
+
   const customers = [
     { id: 'cust1', name: 'Innovate Inc.', gstin: '27ABCDE1234F1Z5', address: '123 Tech Park, Mumbai, Maharashtra' },
     { id: 'cust2', name: 'Solutions Corp.', gstin: '29AABCS1234A1Z5', address: '456 Business Hub, Bengaluru, Karnataka' },
@@ -230,6 +232,7 @@ export function CreditNoteForm() {
                                     }
                                 }}
                                 value={field.value}
+                                disabled={isFromInvoice}
                             >
                                 <FormControl>
                                     <SelectTrigger>
@@ -251,7 +254,7 @@ export function CreditNoteForm() {
                  <FormField control={form.control} name="placeOfSupply" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Place of Supply</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value} disabled={isFromInvoice}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger></FormControl>
                         <SelectContent>{indianStates.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}</SelectContent>
                         </Select><FormMessage />
@@ -293,7 +296,7 @@ export function CreditNoteForm() {
                     <FormField control={form.control} name="originalInvoiceNumber" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Original Invoice No.</FormLabel>
-                            <FormControl><Input placeholder="e.g., INV-001" {...field} /></FormControl>
+                            <FormControl><Input placeholder="e.g., INV-001" {...field} readOnly={isFromInvoice} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )} />
@@ -301,7 +304,7 @@ export function CreditNoteForm() {
                         <FormItem className="flex flex-col">
                             <FormLabel>Original Invoice Date</FormLabel>
                             <Popover><PopoverTrigger asChild><FormControl>
-                                <Button variant={"outline"} className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                                <Button variant={"outline"} className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")} disabled={isFromInvoice}>
                                     {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                                     <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                 </Button>
@@ -332,18 +335,18 @@ export function CreditNoteForm() {
                 <TableBody>
                   {fields.map((field, index) => (
                     <TableRow key={field.id}>
-                      <TableCell><FormField control={form.control} name={`items.${index}.itemName`} render={({ field }) => <Input placeholder="Item name" {...field} />} /></TableCell>
-                      <TableCell><FormField control={form.control} name={`items.${index}.hsnCode`} render={({ field }) => <Input placeholder="HSN Code" {...field} />} /></TableCell>
+                      <TableCell><FormField control={form.control} name={`items.${index}.itemName`} render={({ field }) => <Input placeholder="Item name" {...field} readOnly={isFromInvoice} />} /></TableCell>
+                      <TableCell><FormField control={form.control} name={`items.${index}.hsnCode`} render={({ field }) => <Input placeholder="HSN Code" {...field} readOnly={isFromInvoice} />} /></TableCell>
                       <TableCell><FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
                       <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
-                      <TableCell><FormField control={form.control} name={`items.${index}.gstRate`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
+                      <TableCell><FormField control={form.control} name={`items.${index}.gstRate`} render={({ field }) => <Input type="number" className="text-right" {...field} readOnly={isFromInvoice} />} /></TableCell>
                       <TableCell className="text-right font-mono">{formatCurrency((watchedItems[index]?.quantity || 0) * (watchedItems[index]?.rate || 0), 'INR')}</TableCell>
                       <TableCell><Button variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-              <Button type="button" variant="outline" className="mt-4" onClick={() => append({ itemName: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 })}>
+              <Button type="button" variant="outline" className="mt-4" onClick={() => append({ itemName: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 })} disabled={isFromInvoice}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Item
               </Button>
             </div>
