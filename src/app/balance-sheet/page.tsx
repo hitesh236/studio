@@ -49,7 +49,7 @@ const ReportRow = ({ node, level, showPercentages, totalAssets, showComparison }
     const currentTotal = calculateTotal(node, 'current');
     const percentage = totalAssets > 0 ? (currentTotal / totalAssets) * 100 : 0;
     
-    const textOpacityClass = level === 0 ? 'opacity-100' : level === 1 ? 'opacity-90' : 'opacity-80';
+    const textOpacityClass = level === 1 ? 'opacity-100' : level === 2 ? 'opacity-90' : 'opacity-80';
 
     const previousTotal = calculateTotal(node, 'previous');
     const change = previousTotal !== 0 ? ((currentTotal - previousTotal) / Math.abs(previousTotal)) * 100 : (currentTotal !== 0 ? 100 : 0);
