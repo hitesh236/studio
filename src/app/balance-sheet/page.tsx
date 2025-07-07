@@ -56,14 +56,34 @@ const ReportRow = ({ node, level, showPercentages, totalAssets, showComparison }
     const isIncrease = change > 0;
     const isDecrease = change < 0;
 
+    const groupBgClass = isGroup
+      ? {
+          1: 'bg-slate-200 dark:bg-slate-800/40',
+          2: 'bg-slate-100 dark:bg-slate-800/30',
+          3: 'bg-slate-50 dark:bg-slate-800/20',
+        }[level] || 'bg-slate-50/50 dark:bg-slate-800/10'
+      : '';
+
+    let basePadding: number;
+    if (isGroup) {
+      basePadding = level === 1 ? 10 : 20;
+    } else {
+      basePadding = 25;
+    }
+
+    const indentation = (level - 1) * 15;
+    const finalPaddingLeft = basePadding + indentation;
+    const finalPaddingRight = basePadding;
+
     return (
         <motion.div
             layout
             className={cn(
                 "flex items-start justify-between py-1.5",
-                 isGroup && `font-bold border-t mt-2 pt-2`
+                 isGroup && `font-bold border-t mt-2 pt-2 rounded-md`,
+                 groupBgClass
             )}
-            style={{ paddingLeft: `${level * 10}px` }}
+            style={{ paddingLeft: `${finalPaddingLeft}px`, paddingRight: `${finalPaddingRight}px` }}
         >
             <span className={cn(
                 "flex items-center gap-1 pr-4 break-words",
@@ -114,7 +134,7 @@ const ReportRow = ({ node, level, showPercentages, totalAssets, showComparison }
             ) : (
                 <span className={cn(
                     "font-mono text-sm text-right shrink-0",
-                    !isGroup && "font-normal pr-[10px]",
+                    !isGroup && "font-normal",
                     isGroup && 'pl-2',
                     textOpacityClass
                 )}>
