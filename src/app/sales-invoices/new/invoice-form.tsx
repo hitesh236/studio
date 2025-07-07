@@ -60,7 +60,7 @@ import {
 } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuGroup } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuGroup, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu";
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
@@ -104,7 +104,7 @@ const invoiceFormSchema = z.object({
   shippingAddress: z.string().optional(),
   invoiceNumber: z.string().min(1, 'Invoice number is required.'),
   invoiceDate: z.date(),
-  dueDate: z.date(),
+  dueDate: z.date().optional(),
   currency: z.enum(['INR', 'USD', 'EUR']).default('INR'),
   exchangeRate: z.coerce.number().min(0.01, 'Exchange rate must be positive.').default(1),
   items: z.array(invoiceItemSchema).min(1, 'At least one item is required.'),
@@ -126,6 +126,12 @@ export function InvoiceForm() {
     hsn: true,
     discount: true,
   });
+
+  const [formFieldVisibility, setFormFieldVisibility] = React.useState({
+    dueDate: true,
+    currency: true,
+  });
+
   const [manualRoundOff, setManualRoundOff] = React.useState<number>(0);
   const [autoRoundOff, setAutoRoundOff] = React.useState(true);
 
@@ -288,51 +294,63 @@ export function InvoiceForm() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Settings className="h-5 w-5" />
-                  <span className="sr-only">Toggle Columns</span>
+                  <span className="sr-only">Invoice Settings</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Column Visibility</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.unit}
-                  onCheckedChange={(checked) =>
-                    setColumnVisibility((prev) => ({ ...prev, unit: !!checked }))
-                  }
-                  disabled={invoiceType === 'service'}
-                >
-                  Unit
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.hsn}
-                  onCheckedChange={(checked) =>
-                    setColumnVisibility((prev) => ({ ...prev, hsn: !!checked }))
-                  }
-                >
-                  HSN/SAC Code
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.discount}
-                  onCheckedChange={(checked) =>
-                    setColumnVisibility((prev) => ({ ...prev, discount: !!checked }))
-                  }
-                >
-                  Discount (%)
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuSeparator />
+              <DropdownMenuContent align="end" className="w-64">
                  <DropdownMenuGroup>
-                  <DropdownMenuLabel>Invoice Mode</DropdownMenuLabel>
-                    <Select value={invoiceCreationMode} onValueChange={(value) => setInvoiceCreationMode(value as any)}>
-                      <SelectTrigger className="w-[180px] mx-2">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="both">Items and Services</SelectItem>
-                        <SelectItem value="item">Items Only</SelectItem>
-                        <SelectItem value="service">Services Only</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <DropdownMenuLabel>Invoice Mode</DropdownMenuLabel>
+                    <DropdownMenuRadioGroup value={invoiceCreationMode} onValueChange={(value) => setInvoiceCreationMode(value as any)}>
+                        <DropdownMenuRadioItem value="both">Items and Services</DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="item">Items Only</DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="service">Services Only</DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
                  </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>Column Visibility</DropdownMenuLabel>
+                  <DropdownMenuCheckboxItem
+                    checked={columnVisibility.unit}
+                    onCheckedChange={(checked) =>
+                      setColumnVisibility((prev) => ({ ...prev, unit: !!checked }))
+                    }
+                    disabled={invoiceType === 'service'}
+                  >
+                    Unit
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={columnVisibility.hsn}
+                    onCheckedChange={(checked) =>
+                      setColumnVisibility((prev) => ({ ...prev, hsn: !!checked }))
+                    }
+                  >
+                    HSN/SAC Code
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={columnVisibility.discount}
+                    onCheckedChange={(checked) =>
+                      setColumnVisibility((prev) => ({ ...prev, discount: !!checked }))
+                    }
+                  >
+                    Discount (%)
+                  </DropdownMenuCheckboxItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                    <DropdownMenuLabel>Field Visibility</DropdownMenuLabel>
+                    <DropdownMenuCheckboxItem
+                        checked={formFieldVisibility.dueDate}
+                        onCheckedChange={(checked) => setFormFieldVisibility(prev => ({ ...prev, dueDate: !!checked }))}
+                    >
+                        Due Date
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                        checked={formFieldVisibility.currency}
+                        onCheckedChange={(checked) => setFormFieldVisibility(prev => ({ ...prev, currency: !!checked }))}
+                    >
+                        Currency & Exchange Rate
+                    </DropdownMenuCheckboxItem>
+                </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
           </CardHeader>
@@ -556,90 +574,95 @@ export function InvoiceForm() {
                                 </FormItem>
                             )}
                         />
-                        <FormField
-                            control={form.control}
-                            name="dueDate"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                <FormLabel>Due Date</FormLabel>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                    <FormControl>
-                                        <Button
-                                        variant={"outline"}
-                                        className={cn(
-                                            "w-full pl-3 text-left font-normal",
-                                            !field.value && "text-muted-foreground"
-                                        )}
-                                        >
-                                        {field.value ? (
-                                            format(field.value, "PPP")
-                                        ) : (
-                                            <span>Pick a date</span>
-                                        )}
-                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                        </Button>
-                                    </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                        mode="single"
-                                        selected={field.value}
-                                        onSelect={field.onChange}
-                                        initialFocus
-                                    />
-                                    </PopoverContent>
-                                </Popover>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="currency"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Currency</FormLabel>
-                                <Select onValueChange={(value) => {
-                                    field.onChange(value);
-                                    form.setValue('exchangeRate', value === 'INR' ? 1 : 83.50);
-                                }} defaultValue={field.value}>
-                                <FormControl>
-                                    <SelectTrigger>
-                                    <SelectValue placeholder="Select currency" />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    <SelectItem value="INR">INR (Indian Rupee)</SelectItem>
-                                    <SelectItem value="USD">USD (United States Dollar)</SelectItem>
-                                    <SelectItem value="EUR">EUR (Euro)</SelectItem>
-                                </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                        {watchedCurrency !== 'INR' && (
+                        {formFieldVisibility.dueDate && (
                             <FormField
                                 control={form.control}
-                                name="exchangeRate"
+                                name="dueDate"
                                 render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Exchange Rate (1 {watchedCurrency} to INR)</FormLabel>
+                                    <FormItem className="flex flex-col">
+                                    <FormLabel>Due Date</FormLabel>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
                                         <FormControl>
-                                            <Input type="number" step="0.01" {...field} />
+                                            <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "w-full pl-3 text-left font-normal",
+                                                !field.value && "text-muted-foreground"
+                                            )}
+                                            >
+                                            {field.value ? (
+                                                format(field.value, "PPP")
+                                            ) : (
+                                                <span>Pick a date</span>
+                                            )}
+                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                            </Button>
                                         </FormControl>
-                                        <FormMessage />
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                            mode="single"
+                                            selected={field.value}
+                                            onSelect={field.onChange}
+                                            initialFocus
+                                        />
+                                        </PopoverContent>
+                                    </Popover>
+                                    <FormMessage />
                                     </FormItem>
                                 )}
                             />
+                        )}
+                        {formFieldVisibility.currency && (
+                          <>
+                            <FormField
+                                control={form.control}
+                                name="currency"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Currency</FormLabel>
+                                    <Select onValueChange={(value) => {
+                                        field.onChange(value);
+                                        form.setValue('exchangeRate', value === 'INR' ? 1 : 83.50);
+                                    }} defaultValue={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                        <SelectValue placeholder="Select currency" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="INR">INR (Indian Rupee)</SelectItem>
+                                        <SelectItem value="USD">USD (United States Dollar)</SelectItem>
+                                        <SelectItem value="EUR">EUR (Euro)</SelectItem>
+                                    </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            {watchedCurrency !== 'INR' && (
+                                <FormField
+                                    control={form.control}
+                                    name="exchangeRate"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Exchange Rate (1 {watchedCurrency} to INR)</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" step="0.01" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            )}
+                          </>
                         )}
                     </div>
                 </div>
 
                 <Separator />
                 
-                {/* Invoice Items Section */}
                 <div className="space-y-4">
                     {invoiceCreationMode === 'both' && (
                         <Tabs value={invoiceType} onValueChange={(value) => setInvoiceType(value as 'item' | 'service')} className="w-full">
@@ -650,7 +673,6 @@ export function InvoiceForm() {
                         </Tabs>
                     )}
                     
-                    {/* Desktop Table View */}
                     <div className="hidden md:block">
                         <Table>
                             <TableHeader>
@@ -813,7 +835,6 @@ export function InvoiceForm() {
                         </Table>
                     </div>
 
-                     {/* Mobile Card View */}
                     <div className="md:hidden space-y-4">
                         {fields.map((field, index) => {
                             const item = watchedItems[index];
@@ -962,7 +983,6 @@ export function InvoiceForm() {
 
                 <Separator />
                 
-                {/* Totals Section */}
                 <div className="flex justify-end pt-4">
                   <div className="w-full md:max-w-2xl grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                     <Card>
@@ -1046,7 +1066,6 @@ export function InvoiceForm() {
 
                 <Separator />
                 
-                {/* Payment Section */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-semibold">Receive Payment</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1108,7 +1127,6 @@ export function InvoiceForm() {
 
                 <Separator />
 
-                {/* Notes and Actions */}
                 <div className="space-y-4">
                      <FormField
                         control={form.control}
