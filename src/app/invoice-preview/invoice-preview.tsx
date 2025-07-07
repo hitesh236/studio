@@ -20,7 +20,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
     const isIntraState = seller.state === buyer.placeOfSupply;
 
     return (
-        <Card className="p-8 print:p-2 shadow-none border-none print:text-[10px]">
+        <Card className="p-8 print:p-2 shadow-none border-none">
             {/* Header */}
             <div className="flex justify-between items-start mb-6 print:mb-3">
                 <div className="flex items-center gap-4 print:gap-2">
@@ -45,27 +45,27 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
             {/* Seller & Buyer Details */}
             <div className="grid grid-cols-2 gap-8 print:gap-4 text-sm print:text-[10px]">
                 <div>
-                    <h3 className="font-semibold mb-2 print:mb-1">From:</h3>
-                    <p className="font-bold">{seller.name}</p>
-                    <p>{seller.address}</p>
-                    <p>GSTIN: <span className="font-mono">{seller.gstin}</span></p>
+                    <h3 className="font-semibold mb-2 print:mb-1 print:text-[10px]">From:</h3>
+                    <p className="font-bold print:text-[10px]">{seller.name}</p>
+                    <p className="print:text-[10px]">{seller.address}</p>
+                    <p className="print:text-[10px]">GSTIN: <span className="font-mono">{seller.gstin}</span></p>
                 </div>
                 <div className="text-right">
-                    <h3 className="font-semibold mb-2 print:mb-1">Bill To:</h3>
-                    <p className="font-bold">{buyer.name}</p>
-                    <p>{buyer.billingAddress}</p>
-                    {buyer.gstin && <p>GSTIN: <span className="font-mono">{buyer.gstin}</span></p>}
+                    <h3 className="font-semibold mb-2 print:mb-1 print:text-[10px]">Bill To:</h3>
+                    <p className="font-bold print:text-[10px]">{buyer.name}</p>
+                    <p className="print:text-[10px]">{buyer.billingAddress}</p>
+                    {buyer.gstin && <p className="print:text-[10px]">GSTIN: <span className="font-mono">{buyer.gstin}</span></p>}
                 </div>
                 <div className="col-span-2 grid grid-cols-2 gap-8 print:gap-4">
                      <div>
-                        <h3 className="font-semibold mb-2 print:mb-1">Ship To:</h3>
-                        <p className="font-bold">{buyer.name}</p>
-                        <p>{buyer.shippingAddress}</p>
+                        <h3 className="font-semibold mb-2 print:mb-1 print:text-[10px]">Ship To:</h3>
+                        <p className="font-bold print:text-[10px]">{buyer.name}</p>
+                        <p className="print:text-[10px]">{buyer.shippingAddress}</p>
                     </div>
                     <div className="text-right">
-                        <p><strong>Place of Supply:</strong> {buyer.placeOfSupply}</p>
-                        <p><strong>Invoice Date:</strong> {format(invoiceDetails.date, 'PPP')}</p>
-                        <p><strong>Due Date:</strong> {format(invoiceDetails.dueDate, 'PPP')}</p>
+                        <p className="print:text-[10px]"><strong>Place of Supply:</strong> {buyer.placeOfSupply}</p>
+                        <p className="print:text-[10px]"><strong>Invoice Date:</strong> {format(invoiceDetails.date, 'PPP')}</p>
+                        <p className="print:text-[10px]"><strong>Due Date:</strong> {format(invoiceDetails.dueDate, 'PPP')}</p>
                     </div>
                 </div>
             </div>
@@ -75,61 +75,61 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-muted/50">
-                            <TableHead className="w-12 text-center print:h-auto print:py-1 print:px-2">#</TableHead>
-                            <TableHead className="print:h-auto print:py-1 print:px-2">Item & Description</TableHead>
-                            <TableHead className="text-center print:h-auto print:py-1 print:px-2">HSN</TableHead>
-                            <TableHead className="text-right print:h-auto print:py-1 print:px-2">Qty</TableHead>
-                            <TableHead className="text-right print:h-auto print:py-1 print:px-2">Rate</TableHead>
-                            <TableHead className="text-right print:h-auto print:py-1 print:px-2">Amount</TableHead>
+                            <TableHead className="w-12 text-center print:h-auto print:py-1 print:px-2 print:text-[10px]">#</TableHead>
+                            <TableHead className="print:h-auto print:py-1 print:px-2 print:text-[10px]">Item & Description</TableHead>
+                            <TableHead className="text-center print:h-auto print:py-1 print:px-2 print:text-[10px]">HSN</TableHead>
+                            <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">Qty</TableHead>
+                            <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">Rate</TableHead>
+                            <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">Amount</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {items.map((item, index) => (
                             <TableRow key={item.id}>
-                                <TableCell className="text-center print:py-1 print:px-2">{index + 1}</TableCell>
-                                <TableCell className="print:py-1 print:px-2">
-                                    <p className="font-medium">{item.name}</p>
+                                <TableCell className="text-center print:py-1 print:px-2 print:text-[10px]">{index + 1}</TableCell>
+                                <TableCell className="print:py-1 print:px-2 print:text-[10px]">
+                                    <p className="font-medium print:text-[10px]">{item.name}</p>
                                 </TableCell>
-                                <TableCell className="text-center print:py-1 print:px-2">{item.hsn}</TableCell>
-                                <TableCell className="text-right print:py-1 print:px-2">{item.quantity} {item.unit}</TableCell>
-                                <TableCell className="text-right font-mono print:py-1 print:px-2">{formatCurrency(item.rate, 'INR')}</TableCell>
-                                <TableCell className="text-right font-mono print:py-1 print:px-2">{formatCurrency(item.quantity * item.rate, 'INR')}</TableCell>
+                                <TableCell className="text-center print:py-1 print:px-2 print:text-[10px]">{item.hsn}</TableCell>
+                                <TableCell className="text-right print:py-1 print:px-2 print:text-[10px]">{item.quantity} {item.unit}</TableCell>
+                                <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(item.rate, 'INR')}</TableCell>
+                                <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(item.quantity * item.rate, 'INR')}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                     <TableFooter>
                         <TableRow>
-                            <TableCell colSpan={5} className="text-right font-semibold print:py-1 print:px-2">Subtotal</TableCell>
-                            <TableCell className="text-right font-mono print:py-1 print:px-2">{formatCurrency(totals.subtotal, 'INR')}</TableCell>
+                            <TableCell colSpan={5} className="text-right font-semibold print:py-1 print:px-2 print:text-[10px]">Subtotal</TableCell>
+                            <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(totals.subtotal, 'INR')}</TableCell>
                         </TableRow>
                         {isIntraState ? (
                             <>
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-right print:py-1 print:px-2">CGST @ {totals.gstRate / 2}%</TableCell>
-                                    <TableCell className="text-right font-mono print:py-1 print:px-2">{formatCurrency(totals.cgst, 'INR')}</TableCell>
+                                    <TableCell colSpan={5} className="text-right print:py-1 print:px-2 print:text-[10px]">CGST @ {totals.gstRate / 2}%</TableCell>
+                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(totals.cgst, 'INR')}</TableCell>
                                 </TableRow>
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-right print:py-1 print:px-2">SGST @ {totals.gstRate / 2}%</TableCell>
-                                    <TableCell className="text-right font-mono print:py-1 print:px-2">{formatCurrency(totals.sgst, 'INR')}</TableCell>
+                                    <TableCell colSpan={5} className="text-right print:py-1 print:px-2 print:text-[10px]">SGST @ {totals.gstRate / 2}%</TableCell>
+                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(totals.sgst, 'INR')}</TableCell>
                                 </TableRow>
                             </>
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-right print:py-1 print:px-2">IGST @ {totals.gstRate}%</TableCell>
-                                <TableCell className="text-right font-mono print:py-1 print:px-2">{formatCurrency(totals.igst, 'INR')}</TableCell>
+                                <TableCell colSpan={5} className="text-right print:py-1 print:px-2 print:text-[10px]">IGST @ {totals.gstRate}%</TableCell>
+                                <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(totals.igst, 'INR')}</TableCell>
                             </TableRow>
                         )}
                         <TableRow className="text-base print:text-[10px] font-bold bg-muted/50">
-                            <TableCell colSpan={5} className="text-right print:py-1 print:px-2">Grand Total</TableCell>
-                            <TableCell className="text-right font-mono print:py-1 print:px-2">{formatCurrency(totals.grandTotal, 'INR')}</TableCell>
+                            <TableCell colSpan={5} className="text-right print:py-1 print:px-2 print:text-[10px]">Grand Total</TableCell>
+                            <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(totals.grandTotal, 'INR')}</TableCell>
                         </TableRow>
                         <TableRow>
-                            <TableCell colSpan={5} className="text-right font-semibold print:py-1 print:px-2">Amount Paid</TableCell>
-                            <TableCell className="text-right font-mono print:py-1 print:px-2">{formatCurrency(totals.amountPaid, 'INR')}</TableCell>
+                            <TableCell colSpan={5} className="text-right font-semibold print:py-1 print:px-2 print:text-[10px]">Amount Paid</TableCell>
+                            <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(totals.amountPaid, 'INR')}</TableCell>
                         </TableRow>
                         <TableRow className="text-base print:text-[10px] font-bold">
-                            <TableCell colSpan={5} className="text-right print:py-1 print:px-2">Amount Due</TableCell>
-                            <TableCell className="text-right font-mono text-destructive print:py-1 print:px-2">{formatCurrency(totals.amountDue, 'INR')}</TableCell>
+                            <TableCell colSpan={5} className="text-right print:py-1 print:px-2 print:text-[10px]">Amount Due</TableCell>
+                            <TableCell className="text-right font-mono text-destructive print:py-1 print:px-2 print:text-[10px]">{formatCurrency(totals.amountDue, 'INR')}</TableCell>
                         </TableRow>
                     </TableFooter>
                 </Table>
@@ -140,28 +140,28 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
             {/* Footer sections */}
             <div className="space-y-6 print:space-y-2 text-sm print:text-[10px]">
                 <div>
-                    <h4 className="font-semibold mb-1">Amount in Words:</h4>
-                    <p className="text-muted-foreground">{numberToWords(totals.grandTotal)}</p>
+                    <h4 className="font-semibold mb-1 print:text-[10px]">Amount in Words:</h4>
+                    <p className="text-muted-foreground print:text-[10px]">{numberToWords(totals.grandTotal)}</p>
                 </div>
                 <div>
-                    <h4 className="font-semibold mb-1">Bank Details:</h4>
-                    <p className="text-muted-foreground">Bank Name: {bankDetails.name}</p>
-                    <p className="text-muted-foreground">Account Number: {bankDetails.accountNumber}</p>
-                    <p className="text-muted-foreground">IFSC Code: {bankDetails.ifsc}</p>
+                    <h4 className="font-semibold mb-1 print:text-[10px]">Bank Details:</h4>
+                    <p className="text-muted-foreground print:text-[10px]">Bank Name: {bankDetails.name}</p>
+                    <p className="text-muted-foreground print:text-[10px]">Account Number: {bankDetails.accountNumber}</p>
+                    <p className="text-muted-foreground print:text-[10px]">IFSC Code: {bankDetails.ifsc}</p>
                 </div>
                  <div>
-                    <h4 className="font-semibold mb-1">Terms & Conditions:</h4>
-                    <ul className="list-disc list-inside text-muted-foreground">
-                        {terms.map((term, i) => <li key={i}>{term}</li>)}
+                    <h4 className="font-semibold mb-1 print:text-[10px]">Terms & Conditions:</h4>
+                    <ul className="list-disc list-inside text-muted-foreground text-xs print:text-[10px]">
+                        {terms.map((term, i) => <li key={i} className="print:text-[10px]">{term}</li>)}
                     </ul>
                 </div>
             </div>
 
             {/* Signature */}
             <div className="mt-16 print:mt-8 pt-8 print:pt-4 border-t text-right">
-                <p className="font-semibold">For {seller.name}</p>
+                <p className="font-semibold print:text-[10px]">For {seller.name}</p>
                 <div className="h-16 print:h-8"></div>
-                <p>(Authorised Signatory)</p>
+                <p className="print:text-[10px]">(Authorised Signatory)</p>
             </div>
         </Card>
     );
