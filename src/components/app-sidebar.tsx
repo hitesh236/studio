@@ -207,9 +207,11 @@ export function AppSidebar() {
                       </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Invoice Returns (Sales)">
-                      <Undo2 />
-                      <span>Invoice Returns (Sales)</span>
+                    <SidebarMenuButton tooltip="Invoice Returns (Sales)" isActive={pathname.startsWith('/sales-invoice-returns')} asChild>
+                      <Link href="/sales-invoice-returns" onClick={handleLinkClick}>
+                        <Undo2 />
+                        <span>Invoice Returns (Sales)</span>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>
