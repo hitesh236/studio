@@ -2,230 +2,292 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
-import type { InvoiceDetails } from './data';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import type { SampleInvoice } from './data';
+import { Card } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
-import { formatCurrency } from '@/lib/utils';
-import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { cn, formatCurrency, numberToWords } from '@/lib/utils';
 
-interface InvoiceProps {
-  data: InvoiceDetails;
+
+interface InvoiceWithReturnProps {
+  invoice: SampleInvoice;
 }
 
-const DetailItem = ({ label, value }: { label: string, value: string | undefined }) => (
-    value ? <div className="flex text-xs"><dt className="w-24 font-semibold">{label}</dt><dd className="flex-1">: {value}</dd></div> : null
-);
+export function InvoiceWithReturn({ invoice }: InvoiceWithReturnProps) {
+    const { seller, buyer, invoiceDetails, items, totals, bankDetails, terms } = invoice;
 
-export function Invoice2({ data }: InvoiceProps) {
-  const { seller, billTo, shipTo, invoiceMeta, irnDetails, items, summary, footer } = data;
+    const isIntraState = seller.state === buyer.placeOfSupply;
 
-  return (
-    <Card className="max-w-4xl mx-auto my-8 p-8 font-sans text-sm">
-      <header className="grid grid-cols-12 gap-4 mb-4">
-        <div className="col-span-2 flex items-center justify-center">
-            <Image src={seller.logoUrl} alt="Company Logo" width={80} height={80} data-ai-hint="company logo" />
-        </div>
-        <div className="col-span-8 text-center">
-            <h1 className="text-2xl font-bold">{seller.name}</h1>
-            {seller.address.map((line, i) => <p key={i} className="text-xs">{line}</p>)}
-            <p className="text-xs mt-1">
-                Contact: {seller.contact} | E-Mail: {seller.email}
-            </p>
-            <p className="text-xs font-semibold">
-                GSTIN/UIN: {seller.gstin} | PAN: {seller.pan} | CIN: {seller.cin}
-            </p>
-        </div>
-        <div className="col-span-2 flex items-center justify-center">
-             <Image src={seller.qrCodeUrl} alt="QR Code" width={80} height={80} data-ai-hint="qr code" />
-        </div>
-      </header>
-      
-      <div className="text-center font-bold text-lg my-2 py-1 border-y border-black">
-        Tax Invoice
-      </div>
+    // GST Breakdown Logic
+    const gstBreakdown = React.useMemo(() => {
+        const breakdown: Record<string, {
+            hsn: string;
+            taxableValue: number;
+            gstRate: number;
+            igst: number;
+            cgst: number;
+            sgst: number;
+            totalTax: number;
+        }> = {};
 
-      <section className="grid grid-cols-12 gap-4 mb-2">
-        <div className="col-span-4 border border-gray-400 p-2">
-            <h3 className="font-bold underline">Bill To,</h3>
-            <p className="font-bold">{billTo.name}</p>
-            <p>{billTo.address.join(', ')}</p>
-            <p>State: {billTo.state}</p>
-            <p>Pincode: {billTo.pincode}</p>
-            <p>GSTIN: {billTo.gstin}</p>
-            <p>Mobile: {billTo.mobile}</p>
-        </div>
-         <div className="col-span-4 border border-gray-400 p-2">
-            <h3 className="font-bold underline">Ship To,</h3>
-            <p className="font-bold">{shipTo.name}</p>
-            <p>{shipTo.address.join(', ')}</p>
-            <p>State: {shipTo.state}</p>
-            <p>Pincode: {shipTo.pincode}</p>
-            <p>GSTIN: {shipTo.gstin}</p>
-            <p>Mobile: {shipTo.mobile}</p>
-        </div>
-        <div className="col-span-4 border border-gray-400 p-2">
-            <dl>
-                <DetailItem label="Inv No." value={invoiceMeta.invNo} />
-                <DetailItem label="Date" value={invoiceMeta.invDate} />
-                <DetailItem label="Order No." value={invoiceMeta.orderNo} />
-                <DetailItem label="Date" value={invoiceMeta.orderDate} />
-                <DetailItem label="LR No." value={invoiceMeta.lrNo} />
-                <DetailItem label="Date" value={invoiceMeta.lrDate} />
-                <DetailItem label="Del No." value={invoiceMeta.delNo} />
-                <DetailItem label="Date" value={invoiceMeta.delDate} />
-                <DetailItem label="Eway Bill No." value={invoiceMeta.ewayBillNo} />
-                <DetailItem label="Date" value={invoiceMeta.ewayDate} />
-                <DetailItem label="Doc No." value={invoiceMeta.docNo} />
-                <DetailItem label="Disp. Through" value={invoiceMeta.dispThrough} />
-                <DetailItem label="Destination" value={invoiceMeta.destination} />
-                <DetailItem label="Vehicle No." value={invoiceMeta.vehicleNo} />
-                <DetailItem label="Payment Terms" value={invoiceMeta.paymentTerms} />
-                <DetailItem label="Terms Delivery" value={invoiceMeta.termsDelivery} />
-            </dl>
-        </div>
-      </section>
+        items.forEach(item => {
+            const { hsn, quantity, rate, gstRate } = item;
+            const taxableAmount = quantity * rate;
+            const gstAmount = taxableAmount * (gstRate / 100);
 
-      <section className="border border-gray-400 p-2 text-xs mb-2">
-        <p><span className="font-bold">place of supply:</span> West Bengal</p>
-        <p><span className="font-bold">IRN:</span> {irnDetails.irn}</p>
-        <div className="flex justify-between">
-            <p><span className="font-bold">Ack No.:</span> {irnDetails.ackNo}</p>
-            <p><span className="font-bold">Ack Date:</span> {irnDetails.ackDate}</p>
-        </div>
-      </section>
-      
-      <section>
-        <Table className="border border-gray-400">
-            <TableHeader>
-                <TableRow className="text-xs">
-                    <TableHead className="border border-gray-400 h-auto">Sr. No.</TableHead>
-                    <TableHead className="border border-gray-400 h-auto w-[30%]">Description of Goods</TableHead>
-                    <TableHead className="border border-gray-400 h-auto">HSN/SAC</TableHead>
-                    <TableHead className="border border-gray-400 h-auto">MRP</TableHead>
-                    <TableHead className="border border-gray-400 h-auto text-right">Quantity</TableHead>
-                    <TableHead className="border border-gray-400 h-auto text-right">Rate</TableHead>
-                    <TableHead className="border border-gray-400 h-auto text-right">per</TableHead>
-                    <TableHead className="border border-gray-400 h-auto text-right">Disc%</TableHead>
-                    <TableHead className="border border-gray-400 h-auto text-right">Amount</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {items.map(item => (
-                    <TableRow key={item.srNo} className="text-xs">
-                        <TableCell className="border border-gray-400 align-top">{item.srNo}</TableCell>
-                        <TableCell className="border border-gray-400 align-top">
-                            <p className="font-semibold">{item.description}</p>
-                            {item.subLines.map((line, i) => (
-                                <p key={i} className="text-xs italic pl-2">{line}</p>
-                            ))}
-                        </TableCell>
-                        <TableCell className="border border-gray-400 align-top">{item.hsn}</TableCell>
-                        <TableCell className="border border-gray-400 align-top text-right">{item.mrp?.toFixed(2)}</TableCell>
-                        <TableCell className="border border-gray-400 align-top text-right">{item.quantity} {item.unit}</TableCell>
-                        <TableCell className="border border-gray-400 align-top text-right">{item.rate.toFixed(2)}</TableCell>
-                        <TableCell className="border border-gray-400 align-top text-right">{item.per}</TableCell>
-                        <TableCell className="border border-gray-400 align-top text-right">{item.discount?.toFixed(2)}</TableCell>
-                        <TableCell className="border border-gray-400 align-top text-right">{formatCurrency(item.amount, 'INR').replace('₹', '')}</TableCell>
-                    </TableRow>
-                ))}
-            </TableBody>
-        </Table>
+            if (!breakdown[hsn]) {
+                breakdown[hsn] = {
+                    hsn: hsn,
+                    taxableValue: 0,
+                    gstRate: gstRate, // Assuming HSN has one rate
+                    igst: 0,
+                    cgst: 0,
+                    sgst: 0,
+                    totalTax: 0
+                };
+            }
 
-        <div className="grid grid-cols-12">
-            <div className="col-span-8"></div>
-            <div className="col-span-4">
-                 <div className="grid grid-cols-2 text-xs border-r border-l border-b border-gray-400">
-                    <div className="p-1">Transport Charges</div>
-                    <div className="p-1 text-right">{formatCurrency(summary.transportCharges, 'INR').replace('₹', '')}</div>
-                    <div className="p-1">IGST</div>
-                    <div className="p-1 text-right">{formatCurrency(summary.igst, 'INR').replace('₹', '')}</div>
-                    <div className="p-1">Rounding Off</div>
-                    <div className="p-1 text-right">{summary.roundingOff.toFixed(2)}</div>
-                </div>
-            </div>
-        </div>
+            breakdown[hsn].taxableValue += taxableAmount;
+            breakdown[hsn].totalTax += gstAmount;
 
-        <div className="grid grid-cols-12 border-t border-b border-gray-400 font-bold mt-[-1px]">
-            <div className="col-span-8 p-1 text-right">Total</div>
-            <div className="col-span-1 p-1 text-right">{summary.totalQty} Pcs</div>
-            <div className="col-span-3 p-1 text-right">{formatCurrency(summary.totalAmount, 'INR').replace('₹', '')}</div>
-        </div>
-         <div className="flex justify-between font-bold text-xs p-1">
-            <span>Amount Chargeable (in words)</span>
-            <span>E. & O.E</span>
-        </div>
-        <p className="font-bold p-1">{footer.amountInWords}</p>
+            if (isIntraState) {
+                breakdown[hsn].cgst += gstAmount / 2;
+                breakdown[hsn].sgst += gstAmount / 2;
+            } else {
+                breakdown[hsn].igst += gstAmount;
+            }
+        });
+        return Object.values(breakdown);
+    }, [items, isIntraState]);
 
-      </section>
+    const breakdownTotals = React.useMemo(() => {
+        return gstBreakdown.reduce((acc, item) => {
+            acc.taxableValue += item.taxableValue;
+            acc.igst += item.igst;
+            acc.cgst += item.cgst;
+            acc.sgst += item.sgst;
+            acc.totalTax += item.totalTax;
+            return acc;
+        }, { taxableValue: 0, igst: 0, cgst: 0, sgst: 0, totalTax: 0 });
+    }, [gstBreakdown]);
 
-      <footer className="mt-2 text-xs">
-        <div className="grid grid-cols-12 gap-4">
-            <div className="col-span-4">
-                <h3 className="font-bold underline">Company's Bank Details</h3>
-                {footer.companyBankDetails.slice(0, 1).map((bank, i) => (
-                    <div key={i}>
-                        <p><span className="font-semibold">A/c Holder's Name :</span> {bank.holderName}</p>
-                        <p><span className="font-semibold">Bank Name :</span> {bank.bankName}</p>
-                        <p><span className="font-semibold">A/c No. :</span> {bank.acNo}</p>
-                        <p><span className="font-semibold">IFS Code :</span> {bank.ifsCode}</p>
-                        <p><span className="font-semibold">Branch :</span> {bank.branch}</p>
+
+    return (
+        <Card className="p-8 print:p-2 shadow-none border-none print:text-[10px]">
+            {/* Header */}
+            <header className="flex justify-between items-start mb-6 print:mb-3">
+                <div className="flex items-center gap-4 print:gap-2">
+                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className="h-16 w-16 print:h-8 print:w-8">
+                        <rect width="256" height="256" fill="none"></rect>
+                        <path d="M42.4,188.4,74.8,93.2a15.9,15.9,0,0,1,15.1-10.8h76.2a15.9,15.9,0,0,1,15.1,10.8l32.4,95.2a16,16,0,0,1-15.1,21.2H57.5A16,16,0,0,1,42.4,188.4Z" opacity="0.2"></path>
+                        <path d="M42.4,188.4,74.8,93.2a15.9,15.9,0,0,1,15.1-10.8h76.2a15.9,15.9,0,0,1,15.1,10.8l32.4,95.2a16,16,0,0,1-15.1,21.2H57.5A16,16,0,0,1,42.4,188.4Z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"></path><line x1="128" y1="40" x2="128" y2="82.4" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"></line>
+                    </svg>
+                    <div>
+                        <h1 className="text-3xl print:text-[10px] font-bold">{seller.name}</h1>
+                        <p className="text-sm print:text-[10px] text-muted-foreground max-w-xs">{seller.address}</p>
+                        <p className="text-sm print:text-[10px] text-muted-foreground">GSTIN: <span className="font-mono">{seller.gstin}</span></p>
                     </div>
-                ))}
-            </div>
-            <div className="col-span-4">
-                 <h3 className="font-bold underline">Company's second Bank Details</h3>
-                {footer.companyBankDetails.slice(1, 2).map((bank, i) => (
-                    <div key={i}>
-                        <p><span className="font-semibold">A/c Holder's Name :</span> {bank.holderName}</p>
-                        <p><span className="font-semibold">Bank Name :</span> {bank.bankName}</p>
-                        <p><span className="font-semibold">A/c No. :</span> {bank.acNo}</p>
-                        <p><span className="font-semibold">IFS Code :</span> {bank.ifsCode}</p>
-                        <p><span className="font-semibold">Branch :</span> {bank.branch}</p>
-                    </div>
-                ))}
-            </div>
-             <div className="col-span-4 flex flex-col items-center">
-                <h3 className="font-bold underline">Scan to Pay</h3>
-                <Image src={seller.qrCodeUrl} alt="Scan to Pay QR Code" width={80} height={80} data-ai-hint="payment qr" />
-            </div>
-        </div>
-        
-        <Separator className="my-2 bg-gray-400"/>
-        
-        <div className="grid grid-cols-12 gap-4">
-            <div className="col-span-8">
-                <h3 className="font-bold">Terms and Conditions</h3>
-                <ol className="list-decimal list-inside">
-                    {footer.termsAndConditions.map((term, i) => <li key={i}>{term}</li>)}
-                </ol>
-            </div>
-            <div className="col-span-4">
-                <h3 className="font-bold">Declaration</h3>
-                <p>{footer.declaration}</p>
-            </div>
-        </div>
-
-        <Separator className="my-2 bg-gray-400"/>
-
-        <div className="flex justify-end">
-            <div className="text-center relative">
-                <p className="font-bold">{footer.signature.for}</p>
-                <div className="h-20 w-40 flex items-center justify-center">
-                    <Image src={footer.signature.stampUrl} alt="Company Stamp" width={100} height={50} data-ai-hint="company stamp" />
                 </div>
-                <p>{footer.signature.designation}</p>
+                <div className="text-right">
+                    <h2 className="text-4xl print:text-[10px] font-bold tracking-tight uppercase text-primary">Tax Invoice</h2>
+                    <div className="mt-2 space-y-1 print:text-[10px] text-sm">
+                        <p><strong>Invoice No:</strong> {invoiceDetails.number}</p>
+                        <p><strong>Invoice Date:</strong> {format(invoiceDetails.date, 'PPP')}</p>
+                        <p><strong>Place of Supply:</strong> {buyer.placeOfSupply}</p>
+                        <p><strong>Due Date:</strong> {format(invoiceDetails.dueDate, 'PPP')}</p>
+                    </div>
+                </div>
+            </header>
+            
+            <Separator className="my-6 print:my-3" />
+
+            {/* Seller & Buyer Details */}
+            <section className="grid grid-cols-2 gap-8 print:gap-4 text-sm print:text-[10px]">
+                <div>
+                    <h3 className="font-semibold mb-2 print:mb-1 print:text-[10px]">Bill To:</h3>
+                    <p className="font-bold print:text-[10px]">{buyer.name}</p>
+                    <p className="print:text-[10px]">{buyer.billingAddress}</p>
+                    {buyer.gstin && <p className="print:text-[10px]">GSTIN: <span className="font-mono">{buyer.gstin}</span></p>}
+                </div>
+                <div>
+                    <h3 className="font-semibold mb-2 print:mb-1 print:text-[10px]">Ship To:</h3>
+                    <p className="font-bold print:text-[10px]">{buyer.name}</p>
+                    <p className="print:text-[10px]">{buyer.shippingAddress}</p>
+                </div>
+            </section>
+
+            {/* Items Table */}
+            <section className="mt-8 print:mt-4">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="w-12 text-center print:h-auto print:py-1 print:px-2 print:text-[10px]">#</TableHead>
+                            <TableHead className="print:h-auto print:py-1 print:px-2 print:text-[10px]">Item & Description</TableHead>
+                            <TableHead className="text-center print:h-auto print:py-1 print:px-2 print:text-[10px]">HSN</TableHead>
+                            <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">Qty</TableHead>
+                            <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">Rate</TableHead>
+                            <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">GST</TableHead>
+                            <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">Total</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {items.map((item, index) => {
+                            const taxableAmount = item.quantity * item.rate;
+                            const gstAmount = taxableAmount * (item.gstRate / 100);
+                            const totalAmount = taxableAmount + gstAmount;
+                            return (
+                                <TableRow key={item.id}>
+                                    <TableCell className="text-center print:py-1 print:px-2 print:text-[10px]">{index + 1}</TableCell>
+                                    <TableCell className="print:py-1 print:px-2 print:text-[10px]">
+                                        <p className="font-medium print:text-[10px]">{item.name}</p>
+                                    </TableCell>
+                                    <TableCell className="text-center print:py-1 print:px-2 print:text-[10px]">{item.hsn}</TableCell>
+                                    <TableCell className="text-right print:py-1 print:px-2 print:text-[10px]">{item.quantity} {item.unit}</TableCell>
+                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(item.rate, 'INR')}</TableCell>
+                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{item.gstRate}%</TableCell>
+                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(totalAmount, 'INR')}</TableCell>
+                                </TableRow>
+                            );
+                        })}
+                    </TableBody>
+                </Table>
+            </section>
+            
+            <Separator className="my-6 print:my-3" />
+
+            {/* Totals Section */}
+            <section className="flex justify-between items-start gap-8 print:gap-4">
+                <div className="flex-1 space-y-2 print:text-[10px]">
+                     <h4 className="font-semibold print:text-[10px]">Amount in Words:</h4>
+                    <p className="text-muted-foreground print:text-[10px]">{numberToWords(totals.grandTotal)}</p>
+                </div>
+                 <div className="w-full max-w-sm space-y-2 print:text-[10px]">
+                    <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">Subtotal:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.subtotal, 'INR')}</span></div>
+                    {isIntraState ? (
+                        <>
+                            <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">CGST:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.cgst, 'INR')}</span></div>
+                            <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">SGST:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.sgst, 'INR')}</span></div>
+                        </>
+                    ) : (
+                        <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">IGST:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.igst, 'INR')}</span></div>
+                    )}
+                    <Separator />
+                    <div className="flex justify-between font-bold text-lg print:text-[10px]"><span className="print:text-[10px]">Grand Total:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.grandTotal, 'INR')}</span></div>
+                    <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">Amount Paid:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.amountPaid, 'INR')}</span></div>
+                    {totals.salesReturnAmount && (
+                        <div className="flex justify-between print:text-[10px]">
+                            <span className="text-muted-foreground print:text-[10px]">Sales Return:</span>
+                            <span className="font-mono print:text-[10px] text-green-600">
+                                - {formatCurrency(totals.salesReturnAmount, 'INR')}
+                            </span>
+                        </div>
+                    )}
+                    <Separator />
+                    <div className="flex justify-between font-bold text-lg print:text-[10px] text-destructive"><span className="print:text-[10px]">Amount Due:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.amountDue, 'INR')}</span></div>
+                </div>
+            </section>
+
+            {/* GST Breakdown Table */}
+            <section className="mt-8 print:mt-4">
+                <h4 className="font-semibold mb-2 print:mb-1 print:text-[10px]">Tax Breakdown</h4>
+                 <Table>
+                    <TableHeader>
+                        {isIntraState ? (
+                            <>
+                                <TableRow>
+                                    <TableHead rowSpan={2} className="text-center align-middle print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">HSN/SAC</TableHead>
+                                    <TableHead rowSpan={2} className="text-right align-middle print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">Taxable Value</TableHead>
+                                    <TableHead colSpan={2} className="text-center align-middle print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">CGST</TableHead>
+                                    <TableHead colSpan={2} className="text-center align-middle print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">SGST</TableHead>
+                                    <TableHead rowSpan={2} className="text-right align-middle print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">Total Tax Amount</TableHead>
+                                </TableRow>
+                                <TableRow>
+                                    <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground font-normal">Rate</TableHead>
+                                    <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground font-normal">Amount</TableHead>
+                                    <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground font-normal">Rate</TableHead>
+                                    <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground font-normal">Amount</TableHead>
+                                </TableRow>
+                            </>
+                        ) : (
+                             <TableRow>
+                                <TableHead className="text-center print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">HSN/SAC</TableHead>
+                                <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">Taxable Value</TableHead>
+                                <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">IGST Rate</TableHead>
+                                <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">IGST Amount</TableHead>
+                                <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">Total Tax Amount</TableHead>
+                            </TableRow>
+                        )}
+                    </TableHeader>
+                    <TableBody>
+                        {gstBreakdown.map(item => (
+                            <TableRow key={item.hsn} className="text-xs">
+                                <TableCell className="text-center print:py-1 print:px-2 print:text-[10px] px-2 py-1">{item.hsn}</TableCell>
+                                <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(item.taxableValue, 'INR')}</TableCell>
+                                {isIntraState ? (
+                                    <>
+                                        <TableCell className="text-right print:py-1 print:px-2 print:text-[10px] px-2 py-1">{item.gstRate / 2}%</TableCell>
+                                        <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(item.cgst, 'INR')}</TableCell>
+                                        <TableCell className="text-right print:py-1 print:px-2 print:text-[10px] px-2 py-1">{item.gstRate / 2}%</TableCell>
+                                        <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(item.sgst, 'INR')}</TableCell>
+                                    </>
+                                ) : (
+                                    <>
+                                        <TableCell className="text-right print:py-1 print:px-2 print:text-[10px] px-2 py-1">{item.gstRate}%</TableCell>
+                                        <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(item.igst, 'INR')}</TableCell>
+                                    </>
+                                )}
+                                <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(item.totalTax, 'INR')}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                    <TableFooter>
+                         <TableRow className="font-bold text-xs">
+                            <TableCell className="text-right print:py-1 print:px-2 print:text-[10px] px-2 py-1">Total</TableCell>
+                            <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(breakdownTotals.taxableValue, 'INR')}</TableCell>
+                            {isIntraState ? (
+                                <>
+                                    <TableCell className="px-2 py-1"></TableCell>
+                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(breakdownTotals.cgst, 'INR')}</TableCell>
+                                    <TableCell className="px-2 py-1"></TableCell>
+                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(breakdownTotals.sgst, 'INR')}</TableCell>
+                                </>
+                            ) : (
+                                <>
+                                    <TableCell className="px-2 py-1"></TableCell>
+                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(breakdownTotals.igst, 'INR')}</TableCell>
+                                </>
+                            )}
+                            <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(breakdownTotals.totalTax, 'INR')}</TableCell>
+                        </TableRow>
+                    </TableFooter>
+                </Table>
+            </section>
+
+            <Separator className="my-6 print:my-3" />
+
+            {/* Footer sections */}
+            <footer className="grid grid-cols-2 gap-8 print:gap-4 text-sm print:text-[10px]">
+                <div>
+                    <h4 className="font-semibold mb-1 print:text-[10px]">Bank Details:</h4>
+                    <p className="text-muted-foreground print:text-[10px]">Bank Name: {bankDetails.name}</p>
+                    <p className="text-muted-foreground print:text-[10px]">Account Number: {bankDetails.accountNumber}</p>
+                    <p className="text-muted-foreground print:text-[10px]">IFSC Code: {bankDetails.ifsc}</p>
+                </div>
+                 <div>
+                    <h4 className="font-semibold mb-1 print:text-[10px]">Terms & Conditions:</h4>
+                    <ul className="list-disc list-inside text-muted-foreground text-xs print:text-[10px]">
+                        {terms.map((term, i) => <li key={i} className="print:text-[10px]">{term}</li>)}
+                    </ul>
+                </div>
+            </footer>
+
+            {/* Signature */}
+            <div className="mt-16 print:mt-8 pt-8 print:pt-4 border-t text-right">
+                <p className="font-semibold print:text-[10px]">For {seller.name}</p>
+                <div className="h-16 print:h-8"></div>
+                <p className="print:text-[10px]">(Authorised Signatory)</p>
             </div>
-        </div>
-        
-        <Separator className="my-2 bg-gray-400"/>
-        
-        <div className="text-center">
-            <p className="font-bold">{footer.jurisdiction}</p>
-            <p>This is a Computer Generated Invoice</p>
-        </div>
-      </footer>
-    </Card>
-  );
+        </Card>
+    );
 }
