@@ -111,15 +111,6 @@ export const columns = ({
       ),
     },
     {
-      accessor: "dueDate",
-      header: getSortableHeader("Due Date", "dueDate"),
-      cell: (row: SalesInvoice) => (
-        <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>
-          {format(row.dueDate, "MMM d, yyyy")}
-        </div>
-      ),
-    },
-    {
       accessor: "currencyCode",
       header: "Currency",
       cell: (row: SalesInvoice) => (
@@ -168,53 +159,6 @@ export const columns = ({
         <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>
           <Badge variant="outline">{row.gstType}</Badge>
         </div>
-      ),
-    },
-    {
-      accessor: "placeOfSupply",
-      header: "Place of Supply",
-      cell: (row: SalesInvoice) => (
-        <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.placeOfSupply}</div>
-      ),
-    },
-    {
-      accessor: "paymentStatus",
-      header: getSortableHeader("Payment Status", "paymentStatus"),
-      cell: (row: SalesInvoice) => {
-        let variant: "default" | "secondary" | "destructive" | "outline";
-        switch (row.paymentStatus) {
-          case "Paid":
-            variant = "default";
-            break;
-          case "Partially Paid":
-            variant = "secondary";
-            break;
-          case "Overdue":
-            variant = "destructive";
-            break;
-          case "Outstanding":
-            variant = "outline";
-            break;
-        }
-        return (
-          <div className={cn(density === 'compact' && 'py-1 px-2')}>
-            <Badge variant={variant} className="w-[110px] justify-center font-normal whitespace-nowrap">{row.paymentStatus}</Badge>
-          </div>
-        );
-      },
-    },
-    {
-      accessor: "amountPaid",
-      header: getSortableHeader("Amount Paid", "amountPaid"),
-      cell: (row: SalesInvoice) => (
-        <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountPaid, 'INR')}</div>
-      ),
-    },
-    {
-      accessor: "amountDue",
-      header: getSortableHeader("Amount Due", "amountDue"),
-      cell: (row: SalesInvoice) => (
-        <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountDue, 'INR')}</div>
       ),
     },
     {

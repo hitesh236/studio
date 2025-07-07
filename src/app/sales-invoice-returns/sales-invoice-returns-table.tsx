@@ -24,6 +24,7 @@ import {
   Landmark,
   CheckCircle2,
   Download,
+  FileText,
 } from "lucide-react";
 
 import {
@@ -74,16 +75,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-const availableFilters = [
-  { id: "paymentStatus", label: "Payment Status" },
-];
+const availableFilters: any[] = [];
 
 const ALL_COLUMNS = [
     { id: 'select', label: 'Select' },
     { id: 'invoiceNumber', label: 'Invoice Number' },
     { id: 'customerName', label: 'Customer Name' },
     { id: 'invoiceDate', label: 'Invoice Date' },
-    { id: 'dueDate', label: 'Due Date' },
     { id: 'currencyCode', label: 'Currency' },
     { id: 'exchangeRate', label: 'Exch. Rate' },
     { id: 'amountForeign', label: 'Amount (FCY)' },
@@ -91,10 +89,6 @@ const ALL_COLUMNS = [
     { id: 'totalTaxableValue', label: 'Taxable Value' },
     { id: 'totalGstAmount', label: 'GST Amount' },
     { id: 'gstType', label: 'GST Type' },
-    { id: 'placeOfSupply', label: 'Place of Supply' },
-    { id: 'paymentStatus', label: 'Payment Status' },
-    { id: 'amountPaid', label: 'Amount Paid' },
-    { id: 'amountDue', label: 'Amount Due' },
     { id: 'createdBy', label: 'Created By' },
     { id: 'actions', label: 'Actions' },
   ];
@@ -106,23 +100,6 @@ const MobileInvoiceCard = ({ invoice, isExpanded, toggleRowExpansion, selectedRo
   selectedRows: Set<string>;
   onSelectRow: (id: string) => void;
 }) => {
-  let statusVariant: "default" | "secondary" | "destructive" | "outline";
-  switch (invoice.paymentStatus) {
-    case "Paid":
-      statusVariant = "default";
-      break;
-    case "Partially Paid":
-      statusVariant = "secondary";
-      break;
-    case "Overdue":
-      statusVariant = "destructive";
-      break;
-    case "Outstanding":
-      statusVariant = "outline";
-      break;
-  }
-  const canAddPayment = invoice.paymentStatus === 'Outstanding' || invoice.paymentStatus === 'Partially Paid' || invoice.paymentStatus === 'Overdue';
-
   return (
     <Card className="transition-shadow hover:shadow-md">
       <div className="flex items-start p-4">
@@ -140,10 +117,9 @@ const MobileInvoiceCard = ({ invoice, isExpanded, toggleRowExpansion, selectedRo
                   <CardTitle className="text-base">{invoice.invoiceNumber}</CardTitle>
                   <p className="text-sm text-muted-foreground">{invoice.customerName}</p>
                 </div>
-                <Badge variant={statusVariant}>{invoice.paymentStatus}</Badge>
               </div>
-              <p className="text-lg font-semibold pt-2">{formatCurrency(invoice.amountDue, 'INR')}</p>
-              <p className="text-xs text-muted-foreground">Amount Due</p>
+              <p className="text-lg font-semibold pt-2">{formatCurrency(invoice.amountBase, 'INR')}</p>
+              <p className="text-xs text-muted-foreground">Total Amount</p>
             </CardHeader>
           </div>
           {isExpanded && (
@@ -155,16 +131,8 @@ const MobileInvoiceCard = ({ invoice, isExpanded, toggleRowExpansion, selectedRo
                   {format(invoice.invoiceDate, "MMM d, yyyy")}
                 </div>
                 <div>
-                  <strong className="text-muted-foreground block">Due Date</strong>
-                  {format(invoice.dueDate, "MMM d, yyyy")}
-                </div>
-                <div>
                   <strong className="text-muted-foreground block">Amount (Base)</strong>
                   {formatCurrency(invoice.amountBase, 'INR')}
-                </div>
-                <div>
-                  <strong className="text-muted-foreground block">Amount Paid</strong>
-                  {formatCurrency(invoice.amountPaid, 'INR')}
                 </div>
                  <div>
                   <strong className="text-muted-foreground block">Amount (FCY)</strong>
@@ -177,10 +145,6 @@ const MobileInvoiceCard = ({ invoice, isExpanded, toggleRowExpansion, selectedRo
                 <div>
                   <strong className="text-muted-foreground block">GST Type</strong>
                   {invoice.gstType}
-                </div>
-                 <div>
-                  <strong className="text-muted-foreground block">Place of Supply</strong>
-                  {invoice.placeOfSupply}
                 </div>
                 <div className="col-span-2">
                   <strong className="text-muted-foreground block">Created By</strong>
@@ -209,18 +173,6 @@ const MobileInvoiceCard = ({ invoice, isExpanded, toggleRowExpansion, selectedRo
                     <p>Edit Invoice</p>
                   </TooltipContent>
                 </Tooltip>
-                {canAddPayment && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <CreditCard className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Add Payment</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
@@ -252,13 +204,6 @@ export function SalesInvoiceReturnsTable({ data }: { data: SalesInvoice[] }) {
     direction: "ascending" | "descending";
   }>({ key: null, direction: "ascending" });
 
-  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
-  const [filterValues, setFilterValues] = useState<{
-    paymentStatuses: string[];
-  }>({
-    paymentStatuses: [],
-  });
-
   const [columnVisibility, setColumnVisibility] = useState<Set<string>>(
     new Set(ALL_COLUMNS.map(c => c.id))
   );
@@ -281,26 +226,14 @@ export function SalesInvoiceReturnsTable({ data }: { data: SalesInvoice[] }) {
     });
   };
 
-  const uniquePaymentStatuses = useMemo(() => Array.from(new Set(data.map((p) => p.paymentStatus))).sort(), [data]);
-
   const summaryStats = useMemo(() => {
     const totalSales = data.reduce((acc, inv) => acc + inv.amountBase, 0);
-    const totalOutstanding = data
-      .filter(inv => ['Outstanding', 'Partially Paid'].includes(inv.paymentStatus))
-      .reduce((acc, inv) => acc + inv.amountDue, 0);
-    const totalOverdue = data
-      .filter(inv => inv.paymentStatus === 'Overdue')
-      .reduce((acc, inv) => acc + inv.amountDue, 0);
     const totalGst = data.reduce((acc, inv) => acc + inv.totalGstAmount, 0);
-    const paidInvoices = data.filter(inv => inv.paymentStatus === 'Paid').length;
     const totalInvoices = data.length;
 
     return {
       totalSales,
-      totalOutstanding,
-      totalOverdue,
       totalGst,
-      paidInvoices,
       totalInvoices,
     };
   }, [data]);
@@ -315,13 +248,9 @@ export function SalesInvoiceReturnsTable({ data }: { data: SalesInvoice[] }) {
         invoice.createdBy.toLowerCase().includes(searchTerm)
       );
     });
-
-    if (activeFilters.has("paymentStatus") && filterValues.paymentStatuses.length > 0) {
-      results = results.filter((p) => filterValues.paymentStatuses.includes(p.paymentStatus));
-    }
     
     return results;
-  }, [data, filter, activeFilters, filterValues]);
+  }, [data, filter]);
 
   const requestSort = (key: string) => {
     let newKey: string | null = key;
@@ -489,34 +418,6 @@ export function SalesInvoiceReturnsTable({ data }: { data: SalesInvoice[] }) {
     );
   };
 
-  const toggleFilter = (filterId: string) => {
-    setActiveFilters(prev => {
-        const newSet = new Set(prev);
-        if (newSet.has(filterId)) {
-            newSet.delete(filterId);
-        } else {
-            newSet.add(filterId);
-        }
-        return newSet;
-    });
-    setPageAndClearSelection(0);
-  };
-
-  const removeFilter = (filterId: string) => {
-    setActiveFilters(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(filterId);
-        return newSet;
-    });
-
-    switch (filterId) {
-        case 'paymentStatus':
-            setFilterValues(prev => ({...prev, paymentStatuses: []}));
-            break;
-    }
-    setPageAndClearSelection(0);
-  };
-
   const handleDragStart = (e: React.DragEvent, columnId: string) => {
     draggedColumn.current = columnId;
     e.dataTransfer.effectAllowed = 'move';
@@ -560,50 +461,10 @@ export function SalesInvoiceReturnsTable({ data }: { data: SalesInvoice[] }) {
     setDragOverColumn(null);
   };
 
-  const renderActiveFilters = () => {
-    return Array.from(activeFilters).map(filterId => {
-        switch(filterId) {
-            case 'paymentStatus':
-                return (
-                    <div key={filterId} className="flex items-center gap-2">
-                        <DropdownMenu>
-                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="w-auto">
-                                    <Tag className="mr-2 h-4 w-4" />
-                                    Payment Status
-                                    <Separator orientation="vertical" className="mx-2 h-4 bg-border" />
-                                    {filterValues.paymentStatuses.length > 0 ? (
-                                        <Badge variant="secondary" className="rounded-sm px-1 font-normal">
-                                            {filterValues.paymentStatuses.length} selected
-                                        </Badge>
-                                    ) : (
-                                        <span className="text-muted-foreground">Any</span>
-                                    )}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56">
-                                <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                {uniquePaymentStatuses.map(status => (
-                                    <DropdownMenuCheckboxItem key={status} checked={filterValues.paymentStatuses.includes(status)} onCheckedChange={(checked) => {
-                                        setFilterValues(prev => ({ ...prev, paymentStatuses: checked ? [...prev.paymentStatuses, status] : prev.paymentStatuses.filter(s => s !== status) }));
-                                    }}>{status}</DropdownMenuCheckboxItem>
-                                ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
-                    </div>
-                );
-            default:
-                return null;
-        }
-    });
-  };
-
   return (
     <TooltipProvider>
       <div className="space-y-4">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <SummaryCard
             icon={TrendingUp}
             title="Total Sales (BCY)"
@@ -611,24 +472,14 @@ export function SalesInvoiceReturnsTable({ data }: { data: SalesInvoice[] }) {
             variant="primary"
           />
           <SummaryCard
-            icon={CircleDollarSign}
-            title="Total Outstanding"
-            value={formatCurrency(summaryStats.totalOutstanding, 'INR')}
-          />
-          <SummaryCard
-            icon={FileWarning}
-            title="Total Overdue"
-            value={formatCurrency(summaryStats.totalOverdue, 'INR')}
-          />
-          <SummaryCard
-            icon={CheckCircle2}
-            title="Invoices Paid"
-            value={`${summaryStats.paidInvoices} / ${summaryStats.totalInvoices}`}
-          />
-          <SummaryCard
             icon={Landmark}
             title="Total GST"
             value={formatCurrency(summaryStats.totalGst, 'INR')}
+          />
+          <SummaryCard
+            icon={FileText}
+            title="Total Returns"
+            value={`${summaryStats.totalInvoices}`}
           />
         </div>
 
@@ -674,26 +525,6 @@ export function SalesInvoiceReturnsTable({ data }: { data: SalesInvoice[] }) {
               <Label htmlFor="density-mode">Compact View</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                    <Button variant="outline" size="icon">
-                      <FilterIcon className="h-4 w-4"/>
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-56 p-4" align="end">
-                    <div className="space-y-4">
-                        <h4 className="font-medium leading-none">Add Filters</h4>
-                        <div className="space-y-2">
-                        {availableFilters.map((f) => (
-                            <div key={f.id} className="flex items-center space-x-2">
-                                <Checkbox id={f.id} checked={activeFilters.has(f.id)} onCheckedChange={() => toggleFilter(f.id)}/>
-                                <Label htmlFor={f.id}>{f.label}</Label>
-                            </div>
-                        ))}
-                        </div>
-                    </div>
-                </PopoverContent>
-              </Popover>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="icon">
@@ -763,12 +594,6 @@ export function SalesInvoiceReturnsTable({ data }: { data: SalesInvoice[] }) {
           </div>
         </div>
         
-        {activeFilters.size > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            {renderActiveFilters()}
-          </div>
-        )}
-
         {/* Mobile View */}
         <div className="grid gap-4 md:hidden">
           {paginatedData.length > 0 ? (
