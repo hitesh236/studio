@@ -103,7 +103,6 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                                 <TableCell className="text-center print:py-1 print:px-2">{index + 1}</TableCell>
                                 <TableCell className="print:py-1 print:px-2">
                                     <p className="font-medium">{item.name}</p>
-                                    <p className="text-xs print:text-[9px] text-muted-foreground">{item.description}</p>
                                 </TableCell>
                                 <TableCell className="text-center print:py-1 print:px-2">{item.hsn}</TableCell>
                                 <TableCell className="text-right print:py-1 print:px-2">{item.quantity} {item.unit}</TableCell>
