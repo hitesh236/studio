@@ -61,12 +61,21 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, showComparison 
     const isIncrease = change > 0;
     const isDecrease = change < 0;
 
+    const groupBgClass = isGroup
+      ? {
+          0: 'bg-slate-50 dark:bg-slate-800/20',
+          1: 'bg-slate-100 dark:bg-slate-800/30',
+          2: 'bg-slate-200 dark:bg-slate-800/40',
+        }[level] || 'bg-slate-200/50 dark:bg-slate-800/50'
+      : '';
+
     return (
         <motion.div
             layout
             className={cn(
                 "flex items-start justify-between py-1.5",
-                 isGroup && `font-bold border-t mt-2 pt-2`
+                 isGroup && `font-bold border-t mt-2 pt-2 px-2 rounded-md`,
+                 groupBgClass
             )}
             style={{ paddingLeft: `${level * 10}px` }}
         >
@@ -451,6 +460,8 @@ export default function ProfitAndLossPage() {
     </div>
   );
 }
+
+    
 
     
 
