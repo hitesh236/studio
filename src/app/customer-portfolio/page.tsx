@@ -4,8 +4,9 @@
 import * as React from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import Link from 'next/link';
 import {
-  Mail, Phone, MapPin, ChevronDown, ChevronUp, ChevronRight, Plus, CreditCard, FileText, FileWarning, TrendingUp, CircleDollarSign, Scale, Download, Calendar as CalendarIcon, MoreHorizontal
+  Mail, Phone, MapPin, ChevronDown, ChevronUp, Plus, CreditCard, FileText, FileWarning, TrendingUp, CircleDollarSign, Scale, Download, Calendar as CalendarIcon, MoreHorizontal
 } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 
@@ -35,44 +36,53 @@ import { SummaryCard } from '@/app/sales-invoices/summary-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import Loading from '../loading';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 // --- Reusable Dialog Component ---
-const AddPaymentDialog = ({ invoice, onPaymentAdd }: { invoice: SalesInvoice | null, onPaymentAdd: () => void }) => {
+const AddPaymentDialog = ({ customer, isOpen, onOpenChange, onPaymentAdd }: { customer: Person, isOpen: boolean, onOpenChange: (open: boolean) => void, onPaymentAdd: (amount: number) => void }) => {
     const { toast } = useToast();
-    const [amount, setAmount] = React.useState(invoice?.amountDue.toString() ?? '0');
-    const [isOpen, setIsOpen] = React.useState(false);
-
-    React.useEffect(() => {
-        if (invoice) {
-            setAmount(invoice.amountDue.toFixed(2));
-            setIsOpen(true);
-        } else {
-            setIsOpen(false);
-        }
-    }, [invoice]);
-
-    if (!invoice) return null;
+    const [amount, setAmount] = React.useState('');
+    const [paymentMode, setPaymentMode] = React.useState('bank');
 
     const handleSave = () => {
+        const parsedAmount = parseFloat(amount);
+        if (isNaN(parsedAmount) || parsedAmount <= 0) {
+            toast({
+                title: 'Invalid Amount',
+                description: 'Please enter a valid payment amount.',
+                variant: 'destructive',
+            });
+            return;
+        }
+
         toast({
             title: "Payment Recorded",
-            description: `Payment of ${formatCurrency(parseFloat(amount), invoice.currencyCode)} for invoice ${invoice.invoiceNumber} has been recorded.`
+            description: `Payment of ${formatCurrency(parsedAmount, 'INR')} for ${customer.company} has been recorded.`
         });
-        onPaymentAdd();
+        onPaymentAdd(parsedAmount);
+        onOpenChange(false);
+        setAmount('');
     }
 
+    React.useEffect(() => {
+        if (!isOpen) {
+            setAmount('');
+            setPaymentMode('bank');
+        }
+    }, [isOpen]);
+
+    if (!customer) return null;
+
     return (
-        <Dialog open={isOpen} onOpenChange={(open) => {
-            if (!open) onPaymentAdd();
-        }}>
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Add Payment for {invoice.invoiceNumber}</DialogTitle>
+                    <DialogTitle>Add Payment for {customer.company}</DialogTitle>
                     <DialogDescription>
-                        Record a payment received from {invoice.customerName}.
+                        Record a payment received from this customer. This will be an on-account payment.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -84,7 +94,22 @@ const AddPaymentDialog = ({ invoice, onPaymentAdd }: { invoice: SalesInvoice | n
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                             className="col-span-3"
+                            placeholder="Enter amount"
                         />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="payment-mode" className="text-right">Payment Mode</Label>
+                        <Select onValueChange={setPaymentMode} defaultValue={paymentMode}>
+                             <SelectTrigger id="payment-mode" className="col-span-3">
+                                <SelectValue placeholder="Select a mode" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="bank">Bank Transfer</SelectItem>
+                                <SelectItem value="cash">Cash</SelectItem>
+                                <SelectItem value="upi">UPI</SelectItem>
+                                <SelectItem value="cheque">Cheque</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
                 <DialogFooter>
@@ -97,6 +122,7 @@ const AddPaymentDialog = ({ invoice, onPaymentAdd }: { invoice: SalesInvoice | n
         </Dialog>
     );
 };
+
 
 // --- Mobile Ledger Card ---
 const MobileLedgerCard = ({ entry }: { entry: { id: string; date: Date; description: string; ref: string; debit: number; credit: number; balance: number } }) => {
@@ -256,11 +282,8 @@ const CustomerLedgerView = ({ customerLedgerData }: { customerLedgerData: Custom
 };
 
 // --- Mobile Invoice Card ---
-const MobileInvoiceCard = ({ invoice, isExpanded, onExpand, onAddPaymentClick }: {
+const MobileInvoiceCard = ({ invoice }: {
     invoice: SalesInvoice;
-    isExpanded: boolean;
-    onExpand: () => void;
-    onAddPaymentClick: (invoice: SalesInvoice) => void;
 }) => {
     const getStatusVariant = (status: SalesInvoice['paymentStatus']) => {
         switch (status) {
@@ -271,11 +294,11 @@ const MobileInvoiceCard = ({ invoice, isExpanded, onExpand, onAddPaymentClick }:
         }
     };
     return (
-        <Card onClick={onExpand} className="cursor-pointer">
+        <Card>
             <CardContent className="p-4 space-y-3">
                 <div className="flex justify-between items-start">
                     <div>
-                        <p className="font-semibold">{invoice.invoiceNumber}</p>
+                        <Link href="/invoice-preview" className="font-semibold hover:underline">{invoice.invoiceNumber}</Link>
                         <p className="text-sm text-muted-foreground">{format(invoice.invoiceDate, 'dd-MMM-yyyy')}</p>
                     </div>
                      <Badge variant={getStatusVariant(invoice.paymentStatus)}>{invoice.paymentStatus}</Badge>
@@ -284,51 +307,13 @@ const MobileInvoiceCard = ({ invoice, isExpanded, onExpand, onAddPaymentClick }:
                     <p className="text-sm text-muted-foreground">Amount Due</p>
                     <p className="text-lg font-mono text-destructive">{formatCurrency(invoice.amountDue, invoice.currencyCode)}</p>
                 </div>
-                {isExpanded && (
-                    <div className="space-y-4 pt-4">
-                        <Separator />
-                        <h4 className="font-semibold text-sm">Invoice Items</h4>
-                        <div className="space-y-2">
-                             {invoice.items.map(item => (
-                                <div key={item.id} className="flex justify-between text-sm">
-                                    <p className="text-muted-foreground">{item.name} (x{item.quantity})</p>
-                                    <p className="font-mono">{formatCurrency(item.quantity * item.rate, invoice.currencyCode)}</p>
-                                </div>
-                            ))}
-                        </div>
-                        <Separator />
-                        <Button
-                            className="w-full"
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onAddPaymentClick(invoice);
-                            }}
-                            disabled={invoice.paymentStatus === 'Paid'}
-                        >
-                            <Plus className="mr-2 h-4 w-4" /> Add Payment
-                        </Button>
-                    </div>
-                )}
             </CardContent>
         </Card>
     )
 }
 
 // --- Invoice Tab Component ---
-const CustomerInvoiceView = ({ customerInvoices, onAddPaymentClick }: { customerInvoices: SalesInvoice[], onAddPaymentClick: (invoice: SalesInvoice) => void }) => {
-    const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set());
-
-    const toggleRowExpansion = (id: string) => {
-        setExpandedRows(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(id)) newSet.delete(id);
-            else newSet.add(id);
-            return newSet;
-        });
-    };
-
+const CustomerInvoiceView = ({ customerInvoices }: { customerInvoices: SalesInvoice[] }) => {
     const summaryStats = React.useMemo(() => {
         const totalBilled = customerInvoices.reduce((acc, inv) => acc + inv.amountBase, 0);
         const totalPaid = customerInvoices.reduce((acc, inv) => acc + inv.amountPaid, 0);
@@ -364,80 +349,31 @@ const CustomerInvoiceView = ({ customerInvoices, onAddPaymentClick }: { customer
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-12"></TableHead>
                                     <TableHead>Invoice #</TableHead>
                                     <TableHead>Date</TableHead>
                                     <TableHead>Due Date</TableHead>
                                     <TableHead className="text-right">Amount</TableHead>
                                     <TableHead className="text-right">Amount Due</TableHead>
                                     <TableHead className="text-center">Status</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {customerInvoices.length > 0 ? customerInvoices.map(invoice => (
-                                    <React.Fragment key={invoice.id}>
-                                        <TableRow onClick={() => toggleRowExpansion(invoice.id)} className="cursor-pointer">
-                                            <TableCell>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                    {expandedRows.has(invoice.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                                                </Button>
-                                            </TableCell>
-                                            <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                                            <TableCell>{format(invoice.invoiceDate, 'dd-MMM-yyyy')}</TableCell>
-                                            <TableCell>{format(invoice.dueDate, 'dd-MMM-yyyy')}</TableCell>
-                                            <TableCell className="text-right font-mono">{formatCurrency(invoice.amountBase, 'INR')}</TableCell>
-                                            <TableCell className="text-right font-mono text-destructive">{formatCurrency(invoice.amountDue, 'INR')}</TableCell>
-                                            <TableCell className="text-center">
-                                                <Badge variant={getStatusVariant(invoice.paymentStatus)}>{invoice.paymentStatus}</Badge>
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        onAddPaymentClick(invoice);
-                                                    }}
-                                                    disabled={invoice.paymentStatus === 'Paid'}
-                                                >
-                                                    <Plus className="mr-2 h-4 w-4" /> Add Payment
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                        {expandedRows.has(invoice.id) && (
-                                            <TableRow>
-                                                <TableCell colSpan={8} className="p-0">
-                                                    <div className="p-4 bg-muted/50">
-                                                        <h4 className="font-semibold mb-2">Invoice Items</h4>
-                                                        <Table>
-                                                            <TableHeader>
-                                                                <TableRow>
-                                                                    <TableHead>Item</TableHead>
-                                                                    <TableHead className="text-right">Quantity</TableHead>
-                                                                    <TableHead className="text-right">Rate</TableHead>
-                                                                    <TableHead className="text-right">Amount ({invoice.currencyCode})</TableHead>
-                                                                </TableRow>
-                                                            </TableHeader>
-                                                            <TableBody>
-                                                                {invoice.items.map(item => (
-                                                                    <TableRow key={item.id}>
-                                                                        <TableCell>{item.name}</TableCell>
-                                                                        <TableCell className="text-right">{item.quantity}</TableCell>
-                                                                        <TableCell className="text-right font-mono">{formatCurrency(item.rate, invoice.currencyCode)}</TableCell>
-                                                                        <TableCell className="text-right font-mono">{formatCurrency(item.quantity * item.rate, invoice.currencyCode)}</TableCell>
-                                                                    </TableRow>
-                                                                ))}
-                                                            </TableBody>
-                                                        </Table>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </React.Fragment>
+                                    <TableRow key={invoice.id}>
+                                        <TableCell className="font-medium">
+                                            <Link href="/invoice-preview" className="hover:underline">{invoice.invoiceNumber}</Link>
+                                        </TableCell>
+                                        <TableCell>{format(invoice.invoiceDate, 'dd-MMM-yyyy')}</TableCell>
+                                        <TableCell>{format(invoice.dueDate, 'dd-MMM-yyyy')}</TableCell>
+                                        <TableCell className="text-right font-mono">{formatCurrency(invoice.amountBase, 'INR')}</TableCell>
+                                        <TableCell className="text-right font-mono text-destructive">{formatCurrency(invoice.amountDue, 'INR')}</TableCell>
+                                        <TableCell className="text-center">
+                                            <Badge variant={getStatusVariant(invoice.paymentStatus)}>{invoice.paymentStatus}</Badge>
+                                        </TableCell>
+                                    </TableRow>
                                 )) : (
                                     <TableRow>
-                                        <TableCell colSpan={8} className="text-center h-24">
+                                        <TableCell colSpan={6} className="text-center h-24">
                                             No invoices found for this customer.
                                         </TableCell>
                                     </TableRow>
@@ -451,9 +387,6 @@ const CustomerInvoiceView = ({ customerInvoices, onAddPaymentClick }: { customer
                             <MobileInvoiceCard 
                                 key={invoice.id} 
                                 invoice={invoice}
-                                isExpanded={expandedRows.has(invoice.id)}
-                                onExpand={() => toggleRowExpansion(invoice.id)}
-                                onAddPaymentClick={onAddPaymentClick}
                             />
                         )) : (
                              <div className="text-center text-muted-foreground py-12">No invoices found.</div>
@@ -470,6 +403,7 @@ const CustomerPortfolioContent = () => {
     const searchParams = useSearchParams();
     const customerId = searchParams.get('id');
     const [isDetailsExpanded, setIsDetailsExpanded] = React.useState(false);
+    const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false);
 
     const allCustomers = React.useMemo(() => generateData(50), []);
     const allInvoices = React.useMemo(() => generateSalesInvoices(50), []);
@@ -483,8 +417,6 @@ const CustomerPortfolioContent = () => {
     }, [customerId, allCustomers]);
     
     const customerInvoices = React.useMemo(() => allInvoices.filter(inv => inv.customerName === customer.company), [allInvoices, customer.company]);
-
-    const [paymentInvoice, setPaymentInvoice] = React.useState<SalesInvoice | null>(null);
 
     return (
         <div className="p-4 sm:p-6 lg:p-8 space-y-6">
@@ -501,10 +433,13 @@ const CustomerPortfolioContent = () => {
                             <CardDescription>{customer.company}</CardDescription>
                             </div>
                         </div>
-                        <Button variant="ghost" size="icon" onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}>
-                            {isDetailsExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                            <span className="sr-only">{isDetailsExpanded ? 'Collapse' : 'Expand'} details</span>
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Button onClick={() => setIsPaymentDialogOpen(true)}><Plus className="mr-2 h-4 w-4" /> Add Payment</Button>
+                            <Button variant="ghost" size="icon" onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}>
+                                {isDetailsExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                                <span className="sr-only">{isDetailsExpanded ? 'Collapse' : 'Expand'} details</span>
+                            </Button>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -541,19 +476,27 @@ const CustomerPortfolioContent = () => {
             </Card>
 
             <Tabs defaultValue="ledger">
-                <TabsList>
-                    <TabsTrigger value="ledger">Ledger</TabsTrigger>
-                    <TabsTrigger value="invoice">Invoices</TabsTrigger>
+                <TabsList className="bg-transparent p-0 justify-start gap-2 h-auto flex-wrap">
+                    <TabsTrigger value="ledger" className="rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:border data-[state=inactive]:border-border data-[state=inactive]:bg-transparent">Ledger</TabsTrigger>
+                    <TabsTrigger value="invoice" className="rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:border data-[state=inactive]:border-border data-[state=inactive]:bg-transparent">Invoices</TabsTrigger>
                 </TabsList>
                 <TabsContent value="ledger">
                     <CustomerLedgerView customerLedgerData={allLedgerData} />
                 </TabsContent>
                 <TabsContent value="invoice">
-                    <CustomerInvoiceView customerInvoices={customerInvoices} onAddPaymentClick={setPaymentInvoice} />
+                    <CustomerInvoiceView customerInvoices={customerInvoices} />
                 </TabsContent>
             </Tabs>
             
-            <AddPaymentDialog invoice={paymentInvoice} onPaymentAdd={() => setPaymentInvoice(null)} />
+            <AddPaymentDialog 
+                customer={customer} 
+                isOpen={isPaymentDialogOpen} 
+                onOpenChange={setIsPaymentDialogOpen} 
+                onPaymentAdd={(amount) => {
+                    // You would typically handle the state update here, e.g., refetching data
+                    console.log(`Payment of ${amount} added.`);
+                }} 
+            />
         </div>
     );
 }
