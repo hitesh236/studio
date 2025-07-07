@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -139,11 +140,11 @@ export default function InvoicePreviewPage() {
       <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold text-center sm:text-left">Invoice Preview</h1>
+        </div>
+        <div className="flex items-center gap-2">
           <Badge variant={getStatusVariant(status)} className="text-base">
             {status}
           </Badge>
-        </div>
-        <div className="flex items-center gap-2">
           {!isPaid && (
             <Button onClick={() => setIsPaymentDialogOpen(true)}>
               <CreditCard className="mr-2 h-4 w-4" />
