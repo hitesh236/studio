@@ -17,6 +17,7 @@ export type SampleInvoice = {
     number: string;
     date: Date;
     dueDate: Date;
+    status: 'Paid' | 'Partially Paid' | 'Unpaid';
   };
   items: {
     id: number;
@@ -34,6 +35,8 @@ export type SampleInvoice = {
     igst: number;
     gstRate: number;
     grandTotal: number;
+    amountPaid: number;
+    amountDue: number;
   };
   bankDetails: {
     name: string;
@@ -61,6 +64,7 @@ export const sampleInvoice: SampleInvoice = {
     number: 'INV-2024-07-001',
     date: new Date('2024-07-21'),
     dueDate: new Date('2024-08-20'),
+    status: 'Partially Paid',
   },
   items: [
     {
@@ -98,6 +102,8 @@ export const sampleInvoice: SampleInvoice = {
     igst: 31050,
     gstRate: 18,
     grandTotal: 203550,
+    amountPaid: 100000,
+    amountDue: 103550,
   },
   bankDetails: {
     name: 'Global Bank of India',

@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, Table
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { cn, formatCurrency, numberToWords } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 
 interface InvoicePreviewProps {
@@ -16,8 +17,18 @@ interface InvoicePreviewProps {
 
 export function InvoicePreview({ invoice }: InvoicePreviewProps) {
     const { seller, buyer, invoiceDetails, items, totals, bankDetails, terms } = invoice;
+    const { status } = invoiceDetails;
 
     const isIntraState = seller.state === buyer.placeOfSupply;
+
+    const getStatusVariant = (status: SampleInvoice['invoiceDetails']['status']): "default" | "secondary" | "destructive" | "outline" => {
+        switch (status) {
+            case 'Paid': return 'default';
+            case 'Partially Paid': return 'secondary';
+            case 'Unpaid': return 'destructive';
+            default: return 'outline';
+        }
+    };
 
     return (
         <Card className="p-8 print:p-2 shadow-none border-none print:text-[10px]">
@@ -37,6 +48,9 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                 <div className="text-right">
                     <h2 className="text-3xl print:text-2xl font-bold tracking-tight">TAX INVOICE</h2>
                     <p className="text-muted-foreground text-sm print:text-xs mt-1"># {invoiceDetails.number}</p>
+                    <Badge variant={getStatusVariant(status)} className="mt-2 text-base print:text-sm">
+                        {status}
+                    </Badge>
                 </div>
             </div>
             
@@ -123,6 +137,14 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                         <TableRow className="text-base print:text-sm font-bold bg-muted/50">
                             <TableCell colSpan={5} className="text-right print:py-1 print:px-2">Grand Total</TableCell>
                             <TableCell className="text-right font-mono print:py-1 print:px-2">{formatCurrency(totals.grandTotal, 'INR')}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell colSpan={5} className="text-right font-semibold print:py-1 print:px-2">Amount Paid</TableCell>
+                            <TableCell className="text-right font-mono print:py-1 print:px-2">{formatCurrency(totals.amountPaid, 'INR')}</TableCell>
+                        </TableRow>
+                        <TableRow className="text-base print:text-sm font-bold">
+                            <TableCell colSpan={5} className="text-right print:py-1 print:px-2">Amount Due</TableCell>
+                            <TableCell className="text-right font-mono text-destructive print:py-1 print:px-2">{formatCurrency(totals.amountDue, 'INR')}</TableCell>
                         </TableRow>
                     </TableFooter>
                 </Table>
