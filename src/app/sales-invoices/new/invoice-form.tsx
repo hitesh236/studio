@@ -60,7 +60,7 @@ import {
 } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuGroup } from "@/components/ui/dropdown-menu";
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
@@ -119,7 +119,8 @@ export function InvoiceForm() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [invoiceType, setInvoiceType] = React.useState<'item' | 'service'>('item');
-  const [showInvoiceTypeTabs, setShowInvoiceTypeTabs] = React.useState(true);
+  const [invoiceCreationMode, setInvoiceCreationMode] = React.useState<'both' | 'item' | 'service'>('both');
+  
   const [columnVisibility, setColumnVisibility] = React.useState({
     unit: true,
     hsn: true,
@@ -163,6 +164,15 @@ export function InvoiceForm() {
     form.setValue('invoiceDate', today);
     form.setValue('dueDate', futureDate);
   }, []);
+  
+  React.useEffect(() => {
+    if (invoiceCreationMode === 'item') {
+        setInvoiceType('item');
+    } else if (invoiceCreationMode === 'service') {
+        setInvoiceType('service');
+    }
+  }, [invoiceCreationMode]);
+
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -282,7 +292,7 @@ export function InvoiceForm() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Show/Hide Columns</DropdownMenuLabel>
+                <DropdownMenuLabel>Column Visibility</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuCheckboxItem
                   checked={columnVisibility.unit}
@@ -310,12 +320,19 @@ export function InvoiceForm() {
                   Discount (%)
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuCheckboxItem
-                    checked={showInvoiceTypeTabs}
-                    onCheckedChange={setShowInvoiceTypeTabs}
-                >
-                    Show Item/Service Tabs
-                </DropdownMenuCheckboxItem>
+                 <DropdownMenuGroup>
+                  <DropdownMenuLabel>Invoice Mode</DropdownMenuLabel>
+                    <Select value={invoiceCreationMode} onValueChange={(value) => setInvoiceCreationMode(value as any)}>
+                      <SelectTrigger className="w-[180px] mx-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="both">Items and Services</SelectItem>
+                        <SelectItem value="item">Items Only</SelectItem>
+                        <SelectItem value="service">Services Only</SelectItem>
+                      </SelectContent>
+                    </Select>
+                 </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
           </CardHeader>
@@ -624,15 +641,15 @@ export function InvoiceForm() {
                 
                 {/* Invoice Items Section */}
                 <div className="space-y-4">
-                    {showInvoiceTypeTabs && (
+                    {invoiceCreationMode === 'both' && (
                         <Tabs value={invoiceType} onValueChange={(value) => setInvoiceType(value as 'item' | 'service')} className="w-full">
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="item" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Item Invoice</TabsTrigger>
-                                <TabsTrigger value="service" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Service Invoice</TabsTrigger>
+                            <TabsList className="bg-transparent p-0 justify-start gap-2 h-auto flex-wrap">
+                                <TabsTrigger value="item" className="rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border border-input bg-transparent hover:bg-accent hover:text-accent-foreground data-[state=active]:border-transparent">Item Invoice</TabsTrigger>
+                                <TabsTrigger value="service" className="rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border border-input bg-transparent hover:bg-accent hover:text-accent-foreground data-[state=active]:border-transparent">Service Invoice</TabsTrigger>
                             </TabsList>
                         </Tabs>
                     )}
-
+                    
                     {/* Desktop Table View */}
                     <div className="hidden md:block">
                         <Table>
