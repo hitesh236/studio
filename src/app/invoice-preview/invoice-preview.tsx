@@ -91,6 +91,12 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                 </div>
                 <div className="text-right">
                     <h2 className="text-4xl print:text-[10px] font-bold tracking-tight uppercase text-primary">Tax Invoice</h2>
+                    <div className="mt-2 space-y-1 print:text-[10px] text-sm">
+                        <p><strong>Invoice No:</strong> {invoiceDetails.number}</p>
+                        <p><strong>Invoice Date:</strong> {format(invoiceDetails.date, 'PPP')}</p>
+                        <p><strong>Place of Supply:</strong> {buyer.placeOfSupply}</p>
+                        <p><strong>Due Date:</strong> {format(invoiceDetails.dueDate, 'PPP')}</p>
+                    </div>
                 </div>
             </header>
             
@@ -108,16 +114,6 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                     <h3 className="font-semibold mb-2 print:mb-1 print:text-[10px]">Ship To:</h3>
                     <p className="font-bold print:text-[10px]">{buyer.name}</p>
                     <p className="print:text-[10px]">{buyer.shippingAddress}</p>
-                </div>
-                 <div className="col-span-2 grid grid-cols-2 gap-8 print:gap-4 border-t pt-4 mt-2">
-                    <div>
-                        <p className="print:text-[10px]"><strong>Invoice No:</strong> {invoiceDetails.number}</p>
-                        <p className="print:text-[10px]"><strong>Invoice Date:</strong> {format(invoiceDetails.date, 'PPP')}</p>
-                    </div>
-                     <div className="text-right">
-                        <p className="print:text-[10px]"><strong>Place of Supply:</strong> {buyer.placeOfSupply}</p>
-                        <p className="print:text-[10px]"><strong>Due Date:</strong> {format(invoiceDetails.dueDate, 'PPP')}</p>
-                    </div>
                 </div>
             </section>
 
