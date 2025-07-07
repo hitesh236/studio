@@ -1,18 +1,19 @@
+
 "use client";
 
 import type { SalesInvoice } from "./data";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowUp, ArrowDown, Eye, Pencil, FileX2, CreditCard, MoreHorizontal } from "lucide-react";
+import { ArrowUp, ArrowDown, Eye, Pencil, FileX2, CreditCard } from "lucide-react";
 import { formatCurrency, cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 
 type ColumnProps = {
   density: 'normal' | 'compact';
@@ -226,24 +227,46 @@ export const columns = ({
       cell: (row: SalesInvoice) => {
         const canAddPayment = row.paymentStatus === 'Outstanding' || row.paymentStatus === 'Partially Paid' || row.paymentStatus === 'Overdue';
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem><Eye className="mr-2 h-4 w-4" /> View Invoice</DropdownMenuItem>
-              <DropdownMenuItem><Pencil className="mr-2 h-4 w-4" /> Edit Invoice</DropdownMenuItem>
-              {canAddPayment && (
-                <DropdownMenuItem><CreditCard className="mr-2 h-4 w-4" /> Add Payment</DropdownMenuItem>
-              )}
-              <DropdownMenuItem className="text-destructive focus:text-destructive">
-                <FileX2 className="mr-2 h-4 w-4" /> Cancel Invoice
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className={cn("flex items-center justify-center gap-1", density === 'compact' && 'p-0')}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}>
+                  <Eye className="h-4 w-4" />
+                  <span className="sr-only">View Invoice</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent><p>View Invoice</p></TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}>
+                  <Pencil className="h-4 w-4" />
+                  <span className="sr-only">Edit Invoice</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent><p>Edit Invoice</p></TooltipContent>
+            </Tooltip>
+            {canAddPayment && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}>
+                    <CreditCard className="h-4 w-4" />
+                    <span className="sr-only">Add Payment</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Add Payment</p></TooltipContent>
+              </Tooltip>
+            )}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-destructive hover:text-destructive", density === 'compact' && 'h-6 w-6')}>
+                  <FileX2 className="h-4 w-4" />
+                  <span className="sr-only">Cancel Invoice</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent><p>Cancel Invoice</p></TooltipContent>
+            </Tooltip>
+          </div>
         )
       },
     },
