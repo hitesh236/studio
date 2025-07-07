@@ -39,6 +39,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu';
 import {
   Table,
@@ -77,6 +79,8 @@ import {
   Settings,
   ShieldOff,
   Shield,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -211,52 +215,49 @@ const LedgerEntry = ({
   );
 };
 
-const LedgerTableView = ({ ledgers, onToggleStatus }: { ledgers: Ledger[]; onToggleStatus: (ledgerId: string) => void; }) => {
-    const flattenedLedgers = useMemo(() => {
-        const flatten = (nodes: Ledger[], parentName: string): { id: string; name: string; parentName: string; balance?: number; status: 'active' | 'disabled' }[] => {
-            let list: any[] = [];
-            nodes.forEach(node => {
-                if (node.type === 'ledger') {
-                    list.push({
-                        id: node.id,
-                        name: node.name,
-                        parentName: parentName,
-                        balance: node.balance,
-                        status: node.status || 'active'
-                    });
-                }
-                if (node.children) {
-                    list = [...list, ...flatten(node.children, node.name)];
-                }
-            });
-            return list;
-        };
-        return flatten(ledgers, 'Root');
-    }, [ledgers]);
+const LedgerTableView = ({ ledgers, onToggleStatus, isCompact, sortConfig, requestSort }: { 
+    ledgers: any[]; // The flattened list
+    onToggleStatus: (ledgerId: string) => void;
+    isCompact: boolean;
+    sortConfig: { key: string; direction: 'ascending' | 'descending' };
+    requestSort: (key: string) => void;
+}) => {
+
+    const SortableHeader = ({ title, sortKey }: { title: string; sortKey: string }) => {
+        const isSorted = sortConfig.key === sortKey;
+        return (
+            <Button variant="ghost" onClick={() => requestSort(sortKey)}>
+                {title}
+                {isSorted ? (
+                    sortConfig.direction === 'ascending' ? <ArrowUp className="ml-2 h-4 w-4" /> : <ArrowDown className="ml-2 h-4 w-4" />
+                ) : null}
+            </Button>
+        );
+    };
 
     return (
         <div className="rounded-md border">
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Ledger Name</TableHead>
-                        <TableHead>Parent Group</TableHead>
-                        <TableHead className="text-right">Balance</TableHead>
-                        <TableHead>Status</TableHead>
+                        <TableHead><SortableHeader title="Ledger Name" sortKey="name" /></TableHead>
+                        <TableHead><SortableHeader title="Parent Group" sortKey="parentName" /></TableHead>
+                        <TableHead className="text-right"><SortableHeader title="Balance" sortKey="balance" /></TableHead>
+                        <TableHead><SortableHeader title="Status" sortKey="status" /></TableHead>
                         <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {flattenedLedgers.map(ledger => (
-                        <TableRow key={ledger.id} className={cn(ledger.status === 'disabled' && 'opacity-60')}>
-                            <TableCell className="font-medium">{ledger.name}</TableCell>
-                            <TableCell>{ledger.parentName}</TableCell>
-                            <TableCell className="text-right font-mono">{ledger.balance ? formatCurrency(ledger.balance, 'INR') : '-'}</TableCell>
-                            <TableCell>
+                    {ledgers.map(ledger => (
+                        <TableRow key={ledger.id} className={cn(ledger.status === 'disabled' && 'opacity-60', isCompact && 'h-10')}>
+                            <TableCell className={cn("font-medium", isCompact && 'py-1 px-2')}>{ledger.name}</TableCell>
+                            <TableCell className={cn(isCompact && 'py-1 px-2')}>{ledger.parentName}</TableCell>
+                            <TableCell className={cn("text-right font-mono", isCompact && 'py-1 px-2')}>{ledger.balance ? formatCurrency(ledger.balance, 'INR') : '-'}</TableCell>
+                            <TableCell className={cn(isCompact && 'py-1 px-2')}>
                                 <Badge variant={ledger.status === 'active' ? 'default' : 'destructive'}>{ledger.status}</Badge>
                             </TableCell>
-                            <TableCell className="text-center">
-                                <Button variant="ghost" size="icon" onClick={() => onToggleStatus(ledger.id)}>
+                            <TableCell className={cn("text-center", isCompact && 'py-1 px-2')}>
+                                <Button variant="ghost" size="icon" onClick={() => onToggleStatus(ledger.id)} className={cn(isCompact && 'h-7 w-7')}>
                                     {ledger.status === 'disabled' ? (
                                         <Shield className="h-4 w-4" />
                                     ) : (
@@ -277,6 +278,8 @@ export function LedgerView({ data }: { data: Ledger[] }) {
   const [ledgers, setLedgers] = useState<Ledger[]>(data);
   const { toast } = useToast();
   const [viewMode, setViewMode] = useState('hierarchy');
+  const [isCompact, setIsCompact] = useState(false);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'ascending' | 'descending' }>({ key: 'name', direction: 'ascending' });
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newAccountName, setNewAccountName] = useState('');
@@ -466,6 +469,61 @@ export function LedgerView({ data }: { data: Ledger[] }) {
     setLedgers(toggle);
   };
 
+    const flattenedLedgers = useMemo(() => {
+        const flatten = (nodes: Ledger[], parentName: string): { id: string; name: string; parentName: string; balance?: number; status: 'active' | 'disabled' }[] => {
+            let list: any[] = [];
+            nodes.forEach(node => {
+                if (node.type === 'ledger') {
+                    list.push({
+                        id: node.id,
+                        name: node.name,
+                        parentName: parentName,
+                        balance: node.balance,
+                        status: node.status || 'active'
+                    });
+                }
+                if (node.children) {
+                    list = [...list, ...flatten(node.children, node.name)];
+                }
+            });
+            return list;
+        };
+        return flatten(ledgers, 'Root');
+    }, [ledgers]);
+
+    const sortedLedgers = useMemo(() => {
+        const dataToSort = [...flattenedLedgers];
+        if (sortConfig.key) {
+            dataToSort.sort((a, b) => {
+                const key = sortConfig.key as keyof typeof a;
+                const valA = a[key];
+                const valB = b[key];
+
+                if (valA === undefined || valA === null) return 1;
+                if (valB === undefined || valB === null) return -1;
+                
+                if (typeof valA === 'number' && typeof valB === 'number') {
+                    return sortConfig.direction === 'ascending' ? valA - valB : valB - valA;
+                }
+
+                if (typeof valA === 'string' && typeof valB === 'string') {
+                    return sortConfig.direction === 'ascending' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                }
+                
+                return 0;
+            });
+        }
+        return dataToSort;
+    }, [flattenedLedgers, sortConfig]);
+
+    const requestSort = (key: string) => {
+        let direction: 'ascending' | 'descending' = 'ascending';
+        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+            direction = 'descending';
+        }
+        setSortConfig({ key, direction });
+    };
+
   const ParentGroupCombobox = ({ value, onChange, placeholder, groups }: { value: string | null; onChange: (value: string | null) => void; placeholder: string; groups: { value: string; label: string }[]; }) => {
     const [open, setOpen] = React.useState(false);
     return (
@@ -522,6 +580,14 @@ export function LedgerView({ data }: { data: Ledger[] }) {
                             <DropdownMenuRadioItem value="hierarchy">Hierarchy View</DropdownMenuRadioItem>
                             <DropdownMenuRadioItem value="table">Table View</DropdownMenuRadioItem>
                         </DropdownMenuRadioGroup>
+                        {viewMode === 'table' && (
+                            <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuCheckboxItem checked={isCompact} onCheckedChange={setIsCompact}>
+                                    Compact View
+                                </DropdownMenuCheckboxItem>
+                            </>
+                        )}
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
@@ -550,7 +616,7 @@ export function LedgerView({ data }: { data: Ledger[] }) {
             </div>
           </>
         ) : (
-          <LedgerTableView ledgers={ledgers} onToggleStatus={handleToggleStatus} />
+          <LedgerTableView ledgers={sortedLedgers} onToggleStatus={handleToggleStatus} isCompact={isCompact} sortConfig={sortConfig} requestSort={requestSort} />
         )}
       </CardContent>
     </Card>
