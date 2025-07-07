@@ -152,6 +152,14 @@ export function AppSidebar() {
                           </Link>
                       </SidebarMenuButton>
                   </SidebarMenuItem>
+                   <SidebarMenuItem>
+                      <SidebarMenuButton tooltip="Invoice2" isActive={pathname.startsWith('/invoice2')} asChild>
+                          <Link href="/invoice2" onClick={handleLinkClick}>
+                              <FileText />
+                              <span>Invoice2</span>
+                          </Link>
+                      </SidebarMenuButton>
+                  </SidebarMenuItem>
                   <SidebarMenuItem>
                       <SidebarMenuButton tooltip="Invoice Preview FC" isActive={pathname.startsWith('/invoice-preview-fc')} asChild>
                           <Link href="/invoice-preview-fc" onClick={handleLinkClick}>

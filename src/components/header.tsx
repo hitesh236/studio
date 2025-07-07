@@ -26,6 +26,7 @@ const pathToTitle: { [key: string]: string } = {
   '/customers/new': 'Add Customer',
   '/invoice-preview': 'Invoice Preview',
   '/invoice-preview-fc': 'Invoice Preview FC',
+  '/invoice2': 'Invoice',
   '/journal-entries': 'Journal Entries',
   '/journal-entries/new': 'New Journal Entry',
   '/my-accounts': 'Groups & Ledgers',
