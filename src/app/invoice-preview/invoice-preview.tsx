@@ -30,20 +30,20 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                         <path d="M42.4,188.4,74.8,93.2a15.9,15.9,0,0,1,15.1-10.8h76.2a15.9,15.9,0,0,1,15.1,10.8l32.4,95.2a16,16,0,0,1-15.1,21.2H57.5A16,16,0,0,1,42.4,188.4Z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"></path><line x1="128" y1="40" x2="128" y2="82.4" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"></line>
                     </svg>
                     <div>
-                        <h1 className="text-2xl font-bold">{seller.name}</h1>
-                        <p className="text-sm text-muted-foreground max-w-xs">{seller.address}</p>
+                        <h1 className="text-2xl print:text-[10px] font-bold">{seller.name}</h1>
+                        <p className="text-sm print:text-[10px] text-muted-foreground max-w-xs">{seller.address}</p>
                     </div>
                 </div>
                 <div className="text-right">
-                    <h2 className="text-3xl font-bold tracking-tight">TAX INVOICE</h2>
-                    <p className="text-muted-foreground text-sm mt-1"># {invoiceDetails.number}</p>
+                    <h2 className="text-3xl print:text-[10px] font-bold tracking-tight">TAX INVOICE</h2>
+                    <p className="text-muted-foreground text-sm print:text-[10px] mt-1"># {invoiceDetails.number}</p>
                 </div>
             </div>
             
             <Separator className="my-6 print:my-3" />
 
             {/* Seller & Buyer Details */}
-            <div className="grid grid-cols-2 gap-8 print:gap-4 text-sm">
+            <div className="grid grid-cols-2 gap-8 print:gap-4 text-sm print:text-[10px]">
                 <div>
                     <h3 className="font-semibold mb-2 print:mb-1">From:</h3>
                     <p className="font-bold">{seller.name}</p>
@@ -119,7 +119,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                                 <TableCell className="text-right font-mono print:py-1 print:px-2">{formatCurrency(totals.igst, 'INR')}</TableCell>
                             </TableRow>
                         )}
-                        <TableRow className="text-base font-bold bg-muted/50">
+                        <TableRow className="text-base print:text-[10px] font-bold bg-muted/50">
                             <TableCell colSpan={5} className="text-right print:py-1 print:px-2">Grand Total</TableCell>
                             <TableCell className="text-right font-mono print:py-1 print:px-2">{formatCurrency(totals.grandTotal, 'INR')}</TableCell>
                         </TableRow>
@@ -127,7 +127,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                             <TableCell colSpan={5} className="text-right font-semibold print:py-1 print:px-2">Amount Paid</TableCell>
                             <TableCell className="text-right font-mono print:py-1 print:px-2">{formatCurrency(totals.amountPaid, 'INR')}</TableCell>
                         </TableRow>
-                        <TableRow className="text-base font-bold">
+                        <TableRow className="text-base print:text-[10px] font-bold">
                             <TableCell colSpan={5} className="text-right print:py-1 print:px-2">Amount Due</TableCell>
                             <TableCell className="text-right font-mono text-destructive print:py-1 print:px-2">{formatCurrency(totals.amountDue, 'INR')}</TableCell>
                         </TableRow>
@@ -138,7 +138,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
             <Separator className="my-6 print:my-3" />
 
             {/* Footer sections */}
-            <div className="space-y-6 print:space-y-2 text-sm">
+            <div className="space-y-6 print:space-y-2 text-sm print:text-[10px]">
                 <div>
                     <h4 className="font-semibold mb-1">Amount in Words:</h4>
                     <p className="text-muted-foreground">{numberToWords(totals.grandTotal)}</p>
