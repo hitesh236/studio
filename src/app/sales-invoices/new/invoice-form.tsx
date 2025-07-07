@@ -64,6 +64,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMe
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -117,6 +118,7 @@ type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;
 export function InvoiceForm() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [invoiceType, setInvoiceType] = React.useState<'item' | 'service'>('item');
   const [columnVisibility, setColumnVisibility] = React.useState({
     unit: true,
     hsn: true,
@@ -199,7 +201,8 @@ export function InvoiceForm() {
     const gstSummary: { [key: number]: { taxable: number; gst: number } } = {};
 
     watchedItems.forEach(item => {
-        const itemAmount = (item.quantity || 0) * (item.rate || 0);
+        const quantity = invoiceType === 'service' ? 1 : (item.quantity || 0);
+        const itemAmount = quantity * (item.rate || 0);
         const itemDiscount = itemAmount * ((item.discount || 0) / 100);
         const taxableAmount = itemAmount - itemDiscount;
         const gstRate = item.gstRate || 0;
@@ -247,7 +250,7 @@ export function InvoiceForm() {
     const singleGstRate = Object.keys(gstSummary).length === 1 ? Object.keys(gstSummary)[0] : null;
 
     return { subtotal, totalDiscount, totalTaxableValue, grandTotal, totalGst, isIntraState, totalCgst, totalSgst, totalIgst, singleGstRate, amountDue, roundOffValue };
-  }, [watchedItems, watchedPlaceOfSupply, watchedPaymentReceived, autoRoundOff, manualRoundOff]);
+  }, [watchedItems, watchedPlaceOfSupply, watchedPaymentReceived, autoRoundOff, manualRoundOff, invoiceType]);
   
   async function onSubmit(data: InvoiceFormValues) {
     setIsSubmitting(true);
@@ -285,6 +288,7 @@ export function InvoiceForm() {
                   onCheckedChange={(checked) =>
                     setColumnVisibility((prev) => ({ ...prev, unit: !!checked }))
                   }
+                  disabled={invoiceType === 'service'}
                 >
                   Unit
                 </DropdownMenuCheckboxItem>
@@ -612,19 +616,23 @@ export function InvoiceForm() {
                 
                 {/* Invoice Items Section */}
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center">
+                    <Tabs value={invoiceType} onValueChange={(value) => setInvoiceType(value as 'item' | 'service')} className="w-full">
+                        <TabsList>
+                            <TabsTrigger value="item">Item Invoice</TabsTrigger>
+                            <TabsTrigger value="service">Service Invoice</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
                     <h3 className="text-lg font-semibold">Line Items</h3>
-                  </div>
 
                     {/* Desktop Table View */}
                     <div className="hidden md:block">
                         <Table>
                             <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[30%] min-w-[200px] h-12 p-2 text-xs whitespace-nowrap">Item</TableHead>
-                                <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">Qty</TableHead>
-                                {columnVisibility.unit && <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">Unit</TableHead>}
-                                <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">Rate</TableHead>
+                                <TableHead className="w-[30%] min-w-[200px] h-12 p-2 text-xs whitespace-nowrap">{invoiceType === 'item' ? 'Item' : 'Service'}</TableHead>
+                                {invoiceType === 'item' && <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">Qty</TableHead>}
+                                {invoiceType === 'item' && columnVisibility.unit && <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">Unit</TableHead>}
+                                <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">{invoiceType === 'item' ? 'Rate' : 'Amount'}</TableHead>
                                 {columnVisibility.discount && <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">Discount(%)</TableHead>}
                                 <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">Taxable Amt.</TableHead>
                                 <TableHead className="text-right h-12 p-2 text-xs whitespace-nowrap">GST(%)</TableHead>
@@ -635,7 +643,8 @@ export function InvoiceForm() {
                             <TableBody>
                             {fields.map((field, index) => {
                                 const item = watchedItems[index];
-                                const itemAmount = (item.quantity || 0) * (item.rate || 0);
+                                const quantity = invoiceType === 'service' ? 1 : (item.quantity || 0);
+                                const itemAmount = quantity * (item.rate || 0);
                                 const itemDiscount = itemAmount * ((item.discount || 0) / 100);
                                 const taxableAmount = itemAmount - itemDiscount;
                                 const gstAmount = taxableAmount * ((item.gstRate || 0) / 100);
@@ -651,7 +660,7 @@ export function InvoiceForm() {
                                                 <FormItem>
                                                     <FormControl>
                                                         <Textarea
-                                                            placeholder="Item name and description"
+                                                            placeholder={invoiceType === 'item' ? 'Item name and description' : 'Service description'}
                                                             {...field}
                                                             rows={1}
                                                             className="min-h-[38px]"
@@ -668,7 +677,7 @@ export function InvoiceForm() {
                                                 <FormItem className="mt-1">
                                                     <FormControl>
                                                         <Input
-                                                            placeholder="HSN/SAC Code"
+                                                            placeholder={invoiceType === 'item' ? 'HSN Code' : 'SAC Code'}
                                                             {...field}
                                                             className="h-8 text-xs"
                                                         />
@@ -678,7 +687,7 @@ export function InvoiceForm() {
                                             )}
                                         />}
                                     </TableCell>
-                                    <TableCell>
+                                    {invoiceType === 'item' && <TableCell>
                                          <FormField
                                             control={form.control}
                                             name={`items.${index}.quantity`}
@@ -691,8 +700,8 @@ export function InvoiceForm() {
                                                 </FormItem>
                                             )}
                                         />
-                                    </TableCell>
-                                    {columnVisibility.unit && <TableCell>
+                                    </TableCell>}
+                                    {invoiceType === 'item' && columnVisibility.unit && <TableCell>
                                          <FormField
                                             control={form.control}
                                             name={`items.${index}.unit`}
@@ -782,7 +791,8 @@ export function InvoiceForm() {
                     <div className="md:hidden space-y-4">
                         {fields.map((field, index) => {
                             const item = watchedItems[index];
-                            const itemAmount = (item.quantity || 0) * (item.rate || 0);
+                            const quantity = invoiceType === 'service' ? 1 : (item.quantity || 0);
+                            const itemAmount = quantity * (item.rate || 0);
                             const itemDiscount = itemAmount * ((item.discount || 0) / 100);
                             const taxableAmount = itemAmount - itemDiscount;
                             const gstAmount = taxableAmount * ((item.gstRate || 0) / 100);
@@ -791,7 +801,7 @@ export function InvoiceForm() {
                             return (
                                 <Card key={field.id} className="p-4">
                                     <div className="flex justify-between items-start mb-4">
-                                        <h4 className="font-semibold pt-1">Item #{index + 1}</h4>
+                                        <h4 className="font-semibold pt-1">{invoiceType === 'item' ? 'Item' : 'Service'} #{index + 1}</h4>
                                         <Button
                                             type="button"
                                             variant="ghost"
@@ -809,9 +819,9 @@ export function InvoiceForm() {
                                             name={`items.${index}.itemName`}
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Item Name / Description</FormLabel>
+                                                    <FormLabel>{invoiceType === 'item' ? 'Item Name / Description' : 'Service Description'}</FormLabel>
                                                     <FormControl>
-                                                        <Textarea placeholder="Item name..." {...field} rows={1} />
+                                                        <Textarea placeholder={invoiceType === 'item' ? 'Item name...' : 'Service details...'} {...field} rows={1} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -822,43 +832,45 @@ export function InvoiceForm() {
                                             name={`items.${index}.hsnCode`}
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>HSN/SAC Code</FormLabel>
+                                                    <FormLabel>{invoiceType === 'item' ? 'HSN Code' : 'SAC Code'}</FormLabel>
                                                     <FormControl>
-                                                        <Input placeholder="HSN/SAC Code" {...field} />
+                                                        <Input placeholder={invoiceType === 'item' ? 'HSN Code' : 'SAC Code'} {...field} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
                                         />}
                                         <div className="grid grid-cols-2 gap-4">
-                                            <FormField
-                                                control={form.control}
-                                                name={`items.${index}.quantity`}
-                                                render={({ field }) => (
-                                                    <FormItem>
-                                                        <FormLabel>Quantity</FormLabel>
-                                                        <FormControl><Input type="number" {...field} /></FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
-                                            {columnVisibility.unit && <FormField
-                                                control={form.control}
-                                                name={`items.${index}.unit`}
-                                                render={({ field }) => (
-                                                    <FormItem>
-                                                        <FormLabel>Unit</FormLabel>
-                                                        <FormControl><Input placeholder="pcs" {...field} /></FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />}
+                                            {invoiceType === 'item' && <>
+                                                <FormField
+                                                    control={form.control}
+                                                    name={`items.${index}.quantity`}
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Quantity</FormLabel>
+                                                            <FormControl><Input type="number" {...field} /></FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                {columnVisibility.unit && <FormField
+                                                    control={form.control}
+                                                    name={`items.${index}.unit`}
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Unit</FormLabel>
+                                                            <FormControl><Input placeholder="pcs" {...field} /></FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />}
+                                            </>}
                                             <FormField
                                                 control={form.control}
                                                 name={`items.${index}.rate`}
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>Rate</FormLabel>
+                                                        <FormLabel>{invoiceType === 'item' ? 'Rate' : 'Amount'}</FormLabel>
                                                         <FormControl><Input type="number" {...field} /></FormControl>
                                                         <FormMessage />
                                                     </FormItem>
@@ -917,7 +929,7 @@ export function InvoiceForm() {
                         onClick={() => append({ itemName: '', hsnCode: '', quantity: 1, rate: 0, discount: 0, gstRate: 18, unit: 'pcs' })}
                     >
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Another Item
+                        Add Another Line
                     </Button>
                 </div>
 
