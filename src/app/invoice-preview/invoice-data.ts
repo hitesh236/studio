@@ -27,13 +27,13 @@ export type SampleInvoice = {
     quantity: number;
     unit: string;
     rate: number;
+    gstRate: number;
   }[];
   totals: {
     subtotal: number;
     cgst: number;
     sgst: number;
     igst: number;
-    gstRate: number;
     grandTotal: number;
     amountPaid: number;
     amountDue: number;
@@ -75,6 +75,7 @@ export const sampleInvoice: SampleInvoice = {
       quantity: 1,
       unit: 'year',
       rate: 50000,
+      gstRate: 18,
     },
     {
       id: 2,
@@ -84,6 +85,7 @@ export const sampleInvoice: SampleInvoice = {
       quantity: 1,
       unit: 'item',
       rate: 2500,
+      gstRate: 18,
     },
     {
         id: 3,
@@ -93,6 +95,7 @@ export const sampleInvoice: SampleInvoice = {
         quantity: 12,
         unit: 'months',
         rate: 10000,
+        gstRate: 18,
     }
   ],
   totals: {
@@ -100,7 +103,6 @@ export const sampleInvoice: SampleInvoice = {
     cgst: 0,
     sgst: 0,
     igst: 31050,
-    gstRate: 18,
     grandTotal: 203550,
     amountPaid: 100000,
     amountDue: 103550,
