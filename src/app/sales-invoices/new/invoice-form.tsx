@@ -119,6 +119,7 @@ export function InvoiceForm() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [invoiceType, setInvoiceType] = React.useState<'item' | 'service'>('item');
+  const [showInvoiceTypeTabs, setShowInvoiceTypeTabs] = React.useState(true);
   const [columnVisibility, setColumnVisibility] = React.useState({
     unit: true,
     hsn: true,
@@ -307,6 +308,13 @@ export function InvoiceForm() {
                   }
                 >
                   Discount (%)
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem
+                    checked={showInvoiceTypeTabs}
+                    onCheckedChange={setShowInvoiceTypeTabs}
+                >
+                    Show Item/Service Tabs
                 </DropdownMenuCheckboxItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -616,13 +624,14 @@ export function InvoiceForm() {
                 
                 {/* Invoice Items Section */}
                 <div className="space-y-4">
-                    <Tabs value={invoiceType} onValueChange={(value) => setInvoiceType(value as 'item' | 'service')} className="w-full">
-                        <TabsList>
-                            <TabsTrigger value="item">Item Invoice</TabsTrigger>
-                            <TabsTrigger value="service">Service Invoice</TabsTrigger>
-                        </TabsList>
-                    </Tabs>
-                    <h3 className="text-lg font-semibold">Line Items</h3>
+                    {showInvoiceTypeTabs && (
+                        <Tabs value={invoiceType} onValueChange={(value) => setInvoiceType(value as 'item' | 'service')} className="w-full">
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="item" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Item Invoice</TabsTrigger>
+                                <TabsTrigger value="service" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Service Invoice</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    )}
 
                     {/* Desktop Table View */}
                     <div className="hidden md:block">
