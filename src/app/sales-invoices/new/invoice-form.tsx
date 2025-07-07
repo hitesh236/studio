@@ -107,6 +107,8 @@ const invoiceFormSchema = z.object({
   exchangeRate: z.coerce.number().min(0.01, 'Exchange rate must be positive.').default(1),
   items: z.array(invoiceItemSchema).min(1, 'At least one item is required.'),
   notes: z.string().optional(),
+  paymentReceived: z.coerce.number().optional().default(0),
+  paymentMode: z.string().optional(),
 });
 
 type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;
@@ -142,6 +144,8 @@ export function InvoiceForm() {
       exchangeRate: 1,
       items: [{ itemName: '', hsnCode: '', quantity: 1, rate: 0, discount: 0, gstRate: 18, unit: 'pcs' }],
       notes: 'Thank you for your business. All payments are due within 30 days.',
+      paymentReceived: 0,
+      paymentMode: '',
     },
   });
 
@@ -163,6 +167,7 @@ export function InvoiceForm() {
   const watchedItems = form.watch('items');
   const watchedPlaceOfSupply = form.watch('placeOfSupply');
   const watchedCurrency = form.watch('currency');
+  const watchedPaymentReceived = form.watch('paymentReceived');
   
   const handleAddCustomer = () => {
     if (newCustomer.name && newCustomer.address) {
@@ -230,10 +235,11 @@ export function InvoiceForm() {
     }
 
     const grandTotal = totalTaxableValue + totalGst + roundOff;
+    const amountDue = grandTotal - (watchedPaymentReceived || 0);
     const singleGstRate = Object.keys(gstSummary).length === 1 ? Object.keys(gstSummary)[0] : null;
 
-    return { subtotal, totalDiscount, totalTaxableValue, grandTotal, totalGst, isIntraState, totalCgst, totalSgst, totalIgst, singleGstRate };
-  }, [watchedItems, watchedPlaceOfSupply, roundOff]);
+    return { subtotal, totalDiscount, totalTaxableValue, grandTotal, totalGst, isIntraState, totalCgst, totalSgst, totalIgst, singleGstRate, amountDue };
+  }, [watchedItems, watchedPlaceOfSupply, roundOff, watchedPaymentReceived]);
   
   async function onSubmit(data: InvoiceFormValues) {
     setIsSubmitting(true);
@@ -980,6 +986,68 @@ export function InvoiceForm() {
                       </CardContent>
                     </Card>
                   </div>
+                </div>
+
+                <Separator />
+                
+                {/* Payment Section */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Receive Payment</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                            <FormField
+                                control={form.control}
+                                name="paymentReceived"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Amount Received</FormLabel>
+                                        <FormControl>
+                                            <Input type="number" placeholder="0.00" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="paymentMode"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Payment Mode</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                        <SelectValue placeholder="Select mode" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="cash">Cash</SelectItem>
+                                        <SelectItem value="hdfc-bank">HDFC Bank</SelectItem>
+                                        <SelectItem value="sbi-bank">SBI Bank</SelectItem>
+                                        <SelectItem value="icici-bank">ICICI Bank</SelectItem>
+                                        <SelectItem value="online">Online / UPI</SelectItem>
+                                    </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <Card className="bg-muted/50">
+                            <CardHeader className="p-4 pb-2">
+                                <CardTitle className="text-base font-semibold">Balance Due</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-4 pt-0">
+                                <div className="text-3xl font-bold font-mono text-destructive">
+                                    {formatCurrency(totals.amountDue, watchedCurrency)}
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Base Currency (INR): {formatCurrency(totals.amountDue * (form.getValues('exchangeRate') || 1), 'INR')}
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
 
                 <Separator />
