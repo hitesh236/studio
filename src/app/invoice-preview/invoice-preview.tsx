@@ -121,7 +121,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
             <section className="mt-8 print:mt-4">
                 <Table>
                     <TableHeader>
-                        <TableRow className="bg-muted/50">
+                        <TableRow>
                             <TableHead className="w-12 text-center print:h-auto print:py-1 print:px-2 print:text-[10px]">#</TableHead>
                             <TableHead className="print:h-auto print:py-1 print:px-2 print:text-[10px]">Item & Description</TableHead>
                             <TableHead className="text-center print:h-auto print:py-1 print:px-2 print:text-[10px]">HSN</TableHead>
@@ -187,70 +187,70 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                     <TableHeader>
                         {isIntraState ? (
                             <>
-                                <TableRow className="bg-muted/50">
-                                    <TableHead rowSpan={2} className="text-center align-middle print:h-auto print:py-1 print:px-2 print:text-[10px]">HSN/SAC</TableHead>
-                                    <TableHead rowSpan={2} className="text-right align-middle print:h-auto print:py-1 print:px-2 print:text-[10px]">Taxable Value</TableHead>
-                                    <TableHead colSpan={2} className="text-center align-middle print:h-auto print:py-1 print:px-2 print:text-[10px]">CGST</TableHead>
-                                    <TableHead colSpan={2} className="text-center align-middle print:h-auto print:py-1 print:px-2 print:text-[10px]">SGST</TableHead>
-                                    <TableHead rowSpan={2} className="text-right align-middle print:h-auto print:py-1 print:px-2 print:text-[10px]">Total Tax Amount</TableHead>
+                                <TableRow>
+                                    <TableHead rowSpan={2} className="text-center align-middle print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">HSN/SAC</TableHead>
+                                    <TableHead rowSpan={2} className="text-right align-middle print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">Taxable Value</TableHead>
+                                    <TableHead colSpan={2} className="text-center align-middle print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">CGST</TableHead>
+                                    <TableHead colSpan={2} className="text-center align-middle print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">SGST</TableHead>
+                                    <TableHead rowSpan={2} className="text-right align-middle print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">Total Tax Amount</TableHead>
                                 </TableRow>
-                                <TableRow className="bg-muted/50">
-                                    <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">Rate</TableHead>
-                                    <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">Amount</TableHead>
-                                    <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">Rate</TableHead>
-                                    <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">Amount</TableHead>
+                                <TableRow>
+                                    <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground font-normal">Rate</TableHead>
+                                    <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground font-normal">Amount</TableHead>
+                                    <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground font-normal">Rate</TableHead>
+                                    <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground font-normal">Amount</TableHead>
                                 </TableRow>
                             </>
                         ) : (
-                             <TableRow className="bg-muted/50">
-                                <TableHead className="text-center print:h-auto print:py-1 print:px-2 print:text-[10px]">HSN/SAC</TableHead>
-                                <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">Taxable Value</TableHead>
-                                <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">IGST Rate</TableHead>
-                                <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">IGST Amount</TableHead>
-                                <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">Total Tax Amount</TableHead>
+                             <TableRow>
+                                <TableHead className="text-center print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">HSN/SAC</TableHead>
+                                <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">Taxable Value</TableHead>
+                                <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">IGST Rate</TableHead>
+                                <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">IGST Amount</TableHead>
+                                <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px] text-xs h-auto px-2 py-1 bg-transparent text-foreground">Total Tax Amount</TableHead>
                             </TableRow>
                         )}
                     </TableHeader>
                     <TableBody>
                         {gstBreakdown.map(item => (
-                            <TableRow key={item.hsn}>
-                                <TableCell className="text-center print:py-1 print:px-2 print:text-[10px]">{item.hsn}</TableCell>
-                                <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(item.taxableValue, 'INR')}</TableCell>
+                            <TableRow key={item.hsn} className="text-xs">
+                                <TableCell className="text-center print:py-1 print:px-2 print:text-[10px] px-2 py-1">{item.hsn}</TableCell>
+                                <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(item.taxableValue, 'INR')}</TableCell>
                                 {isIntraState ? (
                                     <>
-                                        <TableCell className="text-right print:py-1 print:px-2 print:text-[10px]">{item.gstRate / 2}%</TableCell>
-                                        <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(item.cgst, 'INR')}</TableCell>
-                                        <TableCell className="text-right print:py-1 print:px-2 print:text-[10px]">{item.gstRate / 2}%</TableCell>
-                                        <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(item.sgst, 'INR')}</TableCell>
+                                        <TableCell className="text-right print:py-1 print:px-2 print:text-[10px] px-2 py-1">{item.gstRate / 2}%</TableCell>
+                                        <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(item.cgst, 'INR')}</TableCell>
+                                        <TableCell className="text-right print:py-1 print:px-2 print:text-[10px] px-2 py-1">{item.gstRate / 2}%</TableCell>
+                                        <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(item.sgst, 'INR')}</TableCell>
                                     </>
                                 ) : (
                                     <>
-                                        <TableCell className="text-right print:py-1 print:px-2 print:text-[10px]">{item.gstRate}%</TableCell>
-                                        <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(item.igst, 'INR')}</TableCell>
+                                        <TableCell className="text-right print:py-1 print:px-2 print:text-[10px] px-2 py-1">{item.gstRate}%</TableCell>
+                                        <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(item.igst, 'INR')}</TableCell>
                                     </>
                                 )}
-                                <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(item.totalTax, 'INR')}</TableCell>
+                                <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(item.totalTax, 'INR')}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                     <TableFooter>
-                         <TableRow className="font-bold">
-                            <TableCell className="text-right print:py-1 print:px-2 print:text-[10px]">Total</TableCell>
-                            <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(breakdownTotals.taxableValue, 'INR')}</TableCell>
+                         <TableRow className="font-bold text-xs">
+                            <TableCell className="text-right print:py-1 print:px-2 print:text-[10px] px-2 py-1">Total</TableCell>
+                            <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(breakdownTotals.taxableValue, 'INR')}</TableCell>
                             {isIntraState ? (
                                 <>
-                                    <TableCell></TableCell>
-                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(breakdownTotals.cgst, 'INR')}</TableCell>
-                                    <TableCell></TableCell>
-                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(breakdownTotals.sgst, 'INR')}</TableCell>
+                                    <TableCell className="px-2 py-1"></TableCell>
+                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(breakdownTotals.cgst, 'INR')}</TableCell>
+                                    <TableCell className="px-2 py-1"></TableCell>
+                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(breakdownTotals.sgst, 'INR')}</TableCell>
                                 </>
                             ) : (
                                 <>
-                                    <TableCell></TableCell>
-                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(breakdownTotals.igst, 'INR')}</TableCell>
+                                    <TableCell className="px-2 py-1"></TableCell>
+                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(breakdownTotals.igst, 'INR')}</TableCell>
                                 </>
                             )}
-                            <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(breakdownTotals.totalTax, 'INR')}</TableCell>
+                            <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px] px-2 py-1">{formatCurrency(breakdownTotals.totalTax, 'INR')}</TableCell>
                         </TableRow>
                     </TableFooter>
                 </Table>
