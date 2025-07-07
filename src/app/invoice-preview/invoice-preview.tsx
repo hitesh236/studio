@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -8,7 +7,6 @@ import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, Table
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { cn, formatCurrency, numberToWords } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
 
 
 interface InvoicePreviewProps {
@@ -17,18 +15,8 @@ interface InvoicePreviewProps {
 
 export function InvoicePreview({ invoice }: InvoicePreviewProps) {
     const { seller, buyer, invoiceDetails, items, totals, bankDetails, terms } = invoice;
-    const { status } = invoiceDetails;
 
     const isIntraState = seller.state === buyer.placeOfSupply;
-
-    const getStatusVariant = (status: SampleInvoice['invoiceDetails']['status']): "default" | "secondary" | "destructive" | "outline" => {
-        switch (status) {
-            case 'Paid': return 'default';
-            case 'Partially Paid': return 'secondary';
-            case 'Unpaid': return 'destructive';
-            default: return 'outline';
-        }
-    };
 
     return (
         <Card className="p-8 print:p-2 shadow-none border-none print:text-[10px]">
@@ -48,9 +36,6 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                 <div className="text-right">
                     <h2 className="text-3xl print:text-2xl font-bold tracking-tight">TAX INVOICE</h2>
                     <p className="text-muted-foreground text-sm print:text-xs mt-1"># {invoiceDetails.number}</p>
-                    <Badge variant={getStatusVariant(status)} className="mt-2 text-base print:text-sm">
-                        {status}
-                    </Badge>
                 </div>
             </div>
             

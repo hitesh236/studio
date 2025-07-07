@@ -1,11 +1,10 @@
-
 'use client';
 
 import * as React from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, Printer, CreditCard } from "lucide-react";
 import { InvoicePreview } from "./invoice-preview";
-import { sampleInvoice } from "./invoice-data";
+import { sampleInvoice, type SampleInvoice } from "./invoice-data";
 import { Separator } from '@/components/ui/separator';
 import {
   Dialog,
@@ -21,6 +20,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 
 const AddPaymentDialog = ({ invoice, isOpen, onOpenChange }: { invoice: typeof sampleInvoice, isOpen: boolean, onOpenChange: (open: boolean) => void }) => {
@@ -122,11 +123,26 @@ export default function InvoicePreviewPage() {
   };
 
   const isPaid = sampleInvoice.invoiceDetails.status === 'Paid';
+  const { status } = sampleInvoice.invoiceDetails;
+
+  const getStatusVariant = (status: SampleInvoice['invoiceDetails']['status']): "default" | "secondary" | "destructive" | "outline" => {
+    switch (status) {
+        case 'Paid': return 'default';
+        case 'Partially Paid': return 'secondary';
+        case 'Unpaid': return 'destructive';
+        default: return 'outline';
+    }
+  };
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 print:p-0">
       <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden">
-        <h1 className="text-2xl font-bold text-center sm:text-left">Invoice Preview</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold text-center sm:text-left">Invoice Preview</h1>
+          <Badge variant={getStatusVariant(status)} className="text-base">
+            {status}
+          </Badge>
+        </div>
         <div className="flex items-center gap-2">
           {!isPaid && (
             <Button onClick={() => setIsPaymentDialogOpen(true)}>
