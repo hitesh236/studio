@@ -49,8 +49,6 @@ const ReportRow = ({ node, level, showPercentages, totalAssets, showComparison }
     const currentTotal = calculateTotal(node, 'current');
     const percentage = totalAssets > 0 ? (currentTotal / totalAssets) * 100 : 0;
     
-    const textOpacityClass = level === 1 ? 'opacity-100' : level === 2 ? 'opacity-90' : 'opacity-80';
-
     const previousTotal = calculateTotal(node, 'previous');
     const change = previousTotal !== 0 ? ((currentTotal - previousTotal) / Math.abs(previousTotal)) * 100 : (currentTotal !== 0 ? 100 : 0);
     const isIncrease = change > 0;
@@ -64,32 +62,26 @@ const ReportRow = ({ node, level, showPercentages, totalAssets, showComparison }
         }[level] || 'bg-slate-50/50 dark:bg-slate-800/10'
       : '';
 
-    let basePadding: number;
-    if (isGroup) {
-      basePadding = level === 1 ? 10 : 20;
-    } else {
-      basePadding = 25;
-    }
-
-    const indentation = (level - 1) * 15;
-    const finalPaddingLeft = basePadding + indentation;
-    const finalPaddingRight = basePadding;
+    const indentationClass = {
+        1: 'pl-4',
+        2: 'pl-8',
+        3: 'pl-12',
+    }[level] || 'pl-16';
 
     return (
         <motion.div
             layout
             className={cn(
-                "flex items-start justify-between py-1.5",
+                "flex items-start justify-between py-1.5 pr-4",
                  isGroup && `font-bold border-t mt-2 pt-2 rounded-md`,
-                 groupBgClass
+                 groupBgClass,
+                 indentationClass
             )}
-            style={{ paddingLeft: `${finalPaddingLeft}px`, paddingRight: `${finalPaddingRight}px` }}
         >
             <span className={cn(
                 "flex items-center gap-1 pr-4 break-words",
                  isGroup ? (node.reportType === 'Assets' ? 'text-primary' : 'text-destructive') : 'text-foreground',
-                !isGroup && "font-normal",
-                textOpacityClass
+                !isGroup && "font-normal"
             )}>
                 {isGroup ? (
                     <Folder className={cn("h-3.5 w-3.5 shrink-0")} />
@@ -119,9 +111,9 @@ const ReportRow = ({ node, level, showPercentages, totalAssets, showComparison }
             
             {showComparison ? (
                 <div className="flex items-baseline justify-end gap-2 font-mono text-sm shrink-0">
-                    <span className={cn("w-24 text-right", textOpacityClass)}>{formatCurrency(currentTotal, 'INR')}</span>
-                    <span className={cn("w-24 text-right text-muted-foreground/80", textOpacityClass)}>{formatCurrency(previousTotal, 'INR')}</span>
-                    <span className={cn("w-20 text-right text-xs flex items-center justify-end gap-1", isIncrease && 'text-green-600', isDecrease && 'text-red-600', textOpacityClass)}>
+                    <span className={cn("w-24 text-right")}>{formatCurrency(currentTotal, 'INR')}</span>
+                    <span className={cn("w-24 text-right text-muted-foreground/80")}>{formatCurrency(previousTotal, 'INR')}</span>
+                    <span className={cn("w-20 text-right text-xs flex items-center justify-end gap-1", isIncrease && 'text-green-600', isDecrease && 'text-red-600')}>
                         {previousTotal !== 0 && Math.abs(change) > 0.01 ? (
                             <>
                                 <span>{change.toFixed(1)}%</span>
@@ -135,8 +127,7 @@ const ReportRow = ({ node, level, showPercentages, totalAssets, showComparison }
                 <span className={cn(
                     "font-mono text-sm text-right shrink-0",
                     !isGroup && "font-normal",
-                    isGroup && 'pl-2',
-                    textOpacityClass
+                    isGroup && 'pl-2'
                 )}>
                     {isGroup || node.balance !== undefined ? formatCurrency(currentTotal, 'INR') : null}
                 </span>
