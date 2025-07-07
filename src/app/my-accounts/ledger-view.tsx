@@ -278,7 +278,7 @@ export function LedgerView({ data }: { data: Ledger[] }) {
   const { toast } = useToast();
   const [viewMode, setViewMode] = useState('hierarchy');
   const [isCompact, setIsCompact] = useState(false);
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'ascending' | 'descending' }>({ key: 'name', direction: 'ascending' });
+  const [sortConfig, setSortConfig] = useState<{ key: string | null; direction: 'ascending' | 'descending' }>({ key: 'name', direction: 'ascending' });
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newAccountName, setNewAccountName] = useState('');
@@ -517,10 +517,16 @@ export function LedgerView({ data }: { data: Ledger[] }) {
 
     const requestSort = (key: string) => {
         let direction: 'ascending' | 'descending' = 'ascending';
-        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-            direction = 'descending';
+        let newKey: string | null = key;
+
+        if (sortConfig.key === key) {
+            if (sortConfig.direction === 'ascending') {
+                direction = 'descending';
+            } else {
+                newKey = null;
+            }
         }
-        setSortConfig({ key, direction });
+        setSortConfig({ key: newKey as string, direction });
     };
 
   const ParentGroupCombobox = ({ value, onChange, placeholder, groups }: { value: string | null; onChange: (value: string | null) => void; placeholder: string; groups: { value: string; label: string }[]; }) => {
@@ -615,7 +621,7 @@ export function LedgerView({ data }: { data: Ledger[] }) {
             </div>
           </>
         ) : (
-          <LedgerTableView ledgers={sortedLedgers} onToggleStatus={handleToggleStatus} isCompact={isCompact} sortConfig={sortConfig} requestSort={requestSort} />
+          <LedgerTableView ledgers={sortedLedgers} onToggleStatus={handleToggleStatus} isCompact={isCompact} sortConfig={sortConfig as { key: string; direction: 'ascending' | 'descending' }} requestSort={requestSort} />
         )}
       </CardContent>
     </Card>

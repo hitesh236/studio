@@ -257,7 +257,7 @@ export function CustomerTable({ data }: { data: Customer[] }) {
             variant="ghost"
             size="sm"
             onClick={() => requestSort(key)}
-            className={cn(isSorted && "bg-muted hover:bg-muted")}
+            className={cn(isSorted && "bg-accent hover:bg-accent")}
           >
             {title}
             {isSorted ? (

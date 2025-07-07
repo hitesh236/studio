@@ -36,7 +36,10 @@ export const columns = ({
   const getSortableHeader = (title: string, accessor: string) => {
     const isSorted = sortConfig.key === accessor;
     return (
-      <Button variant="ghost" onClick={() => requestSort(accessor)} className="text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground p-2">
+      <Button variant="ghost" onClick={() => requestSort(accessor)} className={cn(
+        "text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground p-2",
+        isSorted && "bg-accent hover:bg-accent"
+        )}>
         {title}
         {isSorted ? (
           sortConfig.direction === 'ascending' ? (
