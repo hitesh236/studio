@@ -36,7 +36,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
@@ -226,7 +225,7 @@ const LedgerTableView = ({ ledgers, onToggleStatus, isCompact, sortConfig, reque
     const SortableHeader = ({ title, sortKey }: { title: string; sortKey: string }) => {
         const isSorted = sortConfig.key === sortKey;
         return (
-            <Button variant="ghost" onClick={() => requestSort(sortKey)}>
+            <Button variant="ghost" onClick={() => requestSort(sortKey)} className={cn(isSorted && "bg-muted hover:bg-muted")}>
                 {title}
                 {isSorted ? (
                     sortConfig.direction === 'ascending' ? <ArrowUp className="ml-2 h-4 w-4" /> : <ArrowDown className="ml-2 h-4 w-4" />
