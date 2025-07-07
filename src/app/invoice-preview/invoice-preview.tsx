@@ -74,53 +74,55 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
 
 
     return (
-        <Card className="p-8 print:p-2 shadow-none border-none">
+        <Card className="p-8 print:p-2 shadow-none border-none print:text-[10px]">
             {/* Header */}
-            <div className="flex justify-between items-start mb-6 print:mb-3">
+            <header className="flex justify-between items-start mb-6 print:mb-3">
                 <div className="flex items-center gap-4 print:gap-2">
-                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className="h-12 w-12 print:h-8 print:w-8">
+                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className="h-16 w-16 print:h-8 print:w-8">
                         <rect width="256" height="256" fill="none"></rect>
                         <path d="M42.4,188.4,74.8,93.2a15.9,15.9,0,0,1,15.1-10.8h76.2a15.9,15.9,0,0,1,15.1,10.8l32.4,95.2a16,16,0,0,1-15.1,21.2H57.5A16,16,0,0,1,42.4,188.4Z" opacity="0.2"></path>
                         <path d="M42.4,188.4,74.8,93.2a15.9,15.9,0,0,1,15.1-10.8h76.2a15.9,15.9,0,0,1,15.1,10.8l32.4,95.2a16,16,0,0,1-15.1,21.2H57.5A16,16,0,0,1,42.4,188.4Z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"></path><line x1="128" y1="40" x2="128" y2="82.4" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"></line>
                     </svg>
                     <div>
-                        <h1 className="text-2xl print:text-[10px] font-bold">{seller.name}</h1>
+                        <h1 className="text-3xl print:text-[10px] font-bold">{seller.name}</h1>
                         <p className="text-sm print:text-[10px] text-muted-foreground max-w-xs">{seller.address}</p>
                         <p className="text-sm print:text-[10px] text-muted-foreground">GSTIN: <span className="font-mono">{seller.gstin}</span></p>
                     </div>
                 </div>
                 <div className="text-right">
-                    <h2 className="text-3xl print:text-[10px] font-bold tracking-tight">TAX INVOICE</h2>
-                    <p className="text-muted-foreground text-sm print:text-[10px] mt-1"># {invoiceDetails.number}</p>
+                    <h2 className="text-4xl print:text-[10px] font-bold tracking-tight uppercase text-primary">Tax Invoice</h2>
                 </div>
-            </div>
+            </header>
             
             <Separator className="my-6 print:my-3" />
 
             {/* Seller & Buyer Details */}
-            <div className="grid grid-cols-2 gap-8 print:gap-4 text-sm print:text-[10px]">
-                <div className="text-right">
+            <section className="grid grid-cols-2 gap-8 print:gap-4 text-sm print:text-[10px]">
+                <div>
                     <h3 className="font-semibold mb-2 print:mb-1 print:text-[10px]">Bill To:</h3>
                     <p className="font-bold print:text-[10px]">{buyer.name}</p>
                     <p className="print:text-[10px]">{buyer.billingAddress}</p>
                     {buyer.gstin && <p className="print:text-[10px]">GSTIN: <span className="font-mono">{buyer.gstin}</span></p>}
                 </div>
-                <div className="col-span-2 grid grid-cols-2 gap-8 print:gap-4">
-                     <div>
-                        <h3 className="font-semibold mb-2 print:mb-1 print:text-[10px]">Ship To:</h3>
-                        <p className="font-bold print:text-[10px]">{buyer.name}</p>
-                        <p className="print:text-[10px]">{buyer.shippingAddress}</p>
-                    </div>
-                    <div className="text-right">
-                        <p className="print:text-[10px]"><strong>Place of Supply:</strong> {buyer.placeOfSupply}</p>
+                <div>
+                    <h3 className="font-semibold mb-2 print:mb-1 print:text-[10px]">Ship To:</h3>
+                    <p className="font-bold print:text-[10px]">{buyer.name}</p>
+                    <p className="print:text-[10px]">{buyer.shippingAddress}</p>
+                </div>
+                 <div className="col-span-2 grid grid-cols-2 gap-8 print:gap-4 border-t pt-4 mt-2">
+                    <div>
+                        <p className="print:text-[10px]"><strong>Invoice No:</strong> {invoiceDetails.number}</p>
                         <p className="print:text-[10px]"><strong>Invoice Date:</strong> {format(invoiceDetails.date, 'PPP')}</p>
+                    </div>
+                     <div className="text-right">
+                        <p className="print:text-[10px]"><strong>Place of Supply:</strong> {buyer.placeOfSupply}</p>
                         <p className="print:text-[10px]"><strong>Due Date:</strong> {format(invoiceDetails.dueDate, 'PPP')}</p>
                     </div>
                 </div>
-            </div>
+            </section>
 
             {/* Items Table */}
-            <div className="mt-8 print:mt-4">
+            <section className="mt-8 print:mt-4">
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-muted/50">
@@ -153,48 +155,37 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                             );
                         })}
                     </TableBody>
-                    <TableFooter>
-                        <TableRow>
-                            <TableCell colSpan={6} className="text-right font-semibold print:py-1 print:px-2 print:text-[10px]">Subtotal</TableCell>
-                            <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(totals.subtotal, 'INR')}</TableCell>
-                        </TableRow>
-                        {isIntraState ? (
-                            <>
-                                <TableRow>
-                                    <TableCell colSpan={6} className="text-right print:py-1 print:px-2 print:text-[10px]">CGST</TableCell>
-                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(totals.cgst, 'INR')}</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell colSpan={6} className="text-right print:py-1 print:px-2 print:text-[10px]">SGST</TableCell>
-                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(totals.sgst, 'INR')}</TableCell>
-                                </TableRow>
-                            </>
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={6} className="text-right print:py-1 print:px-2 print:text-[10px]">IGST</TableCell>
-                                <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(totals.igst, 'INR')}</TableCell>
-                            </TableRow>
-                        )}
-                        <TableRow className="text-base print:text-[10px] font-bold bg-muted/50">
-                            <TableCell colSpan={6} className="text-right print:py-1 print:px-2 print:text-[10px]">Grand Total</TableCell>
-                            <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(totals.grandTotal, 'INR')}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell colSpan={6} className="text-right font-semibold print:py-1 print:px-2 print:text-[10px]">Amount Paid</TableCell>
-                            <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(totals.amountPaid, 'INR')}</TableCell>
-                        </TableRow>
-                        <TableRow className="text-base print:text-[10px] font-bold">
-                            <TableCell colSpan={6} className="text-right print:py-1 print:px-2 print:text-[10px]">Amount Due</TableCell>
-                            <TableCell className="text-right font-mono text-destructive print:py-1 print:px-2 print:text-[10px]">{formatCurrency(totals.amountDue, 'INR')}</TableCell>
-                        </TableRow>
-                    </TableFooter>
                 </Table>
-            </div>
+            </section>
             
             <Separator className="my-6 print:my-3" />
 
+            {/* Totals Section */}
+            <section className="flex justify-between items-start gap-8 print:gap-4">
+                <div className="flex-1 space-y-2 print:text-[10px]">
+                     <h4 className="font-semibold print:text-[10px]">Amount in Words:</h4>
+                    <p className="text-muted-foreground print:text-[10px]">{numberToWords(totals.grandTotal)}</p>
+                </div>
+                 <div className="w-full max-w-sm space-y-2 print:text-[10px]">
+                    <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">Subtotal:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.subtotal, 'INR')}</span></div>
+                    {isIntraState ? (
+                        <>
+                            <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">CGST:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.cgst, 'INR')}</span></div>
+                            <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">SGST:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.sgst, 'INR')}</span></div>
+                        </>
+                    ) : (
+                        <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">IGST:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.igst, 'INR')}</span></div>
+                    )}
+                    <Separator />
+                    <div className="flex justify-between font-bold text-lg print:text-[10px]"><span className="print:text-[10px]">Grand Total:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.grandTotal, 'INR')}</span></div>
+                    <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">Amount Paid:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.amountPaid, 'INR')}</span></div>
+                    <Separator />
+                    <div className="flex justify-between font-bold text-lg print:text-[10px] text-destructive"><span className="print:text-[10px]">Amount Due:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.amountDue, 'INR')}</span></div>
+                </div>
+            </section>
+
             {/* GST Breakdown Table */}
-            <div className="mt-8 print:mt-4">
+            <section className="mt-8 print:mt-4">
                 <h4 className="font-semibold mb-2 print:mb-1 print:text-[10px]">Tax Breakdown</h4>
                  <Table>
                     <TableHeader>
@@ -252,8 +243,10 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                             <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(breakdownTotals.taxableValue, 'INR')}</TableCell>
                             {isIntraState ? (
                                 <>
-                                    <TableCell colSpan={2} className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(breakdownTotals.cgst, 'INR')}</TableCell>
-                                    <TableCell colSpan={2} className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(breakdownTotals.sgst, 'INR')}</TableCell>
+                                    <TableCell></TableCell>
+                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(breakdownTotals.cgst, 'INR')}</TableCell>
+                                    <TableCell></TableCell>
+                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(breakdownTotals.sgst, 'INR')}</TableCell>
                                 </>
                             ) : (
                                 <>
@@ -265,16 +258,12 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                         </TableRow>
                     </TableFooter>
                 </Table>
-            </div>
+            </section>
 
             <Separator className="my-6 print:my-3" />
 
             {/* Footer sections */}
-            <div className="space-y-6 print:space-y-2 text-sm print:text-[10px]">
-                <div>
-                    <h4 className="font-semibold mb-1 print:text-[10px]">Amount in Words:</h4>
-                    <p className="text-muted-foreground print:text-[10px]">{numberToWords(totals.grandTotal)}</p>
-                </div>
+            <footer className="grid grid-cols-2 gap-8 print:gap-4 text-sm print:text-[10px]">
                 <div>
                     <h4 className="font-semibold mb-1 print:text-[10px]">Bank Details:</h4>
                     <p className="text-muted-foreground print:text-[10px]">Bank Name: {bankDetails.name}</p>
@@ -287,7 +276,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                         {terms.map((term, i) => <li key={i} className="print:text-[10px]">{term}</li>)}
                     </ul>
                 </div>
-            </div>
+            </footer>
 
             {/* Signature */}
             <div className="mt-16 print:mt-8 pt-8 print:pt-4 border-t text-right">
