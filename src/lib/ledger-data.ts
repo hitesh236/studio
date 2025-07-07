@@ -1,4 +1,5 @@
 
+
 export type Ledger = {
   id: string;
   name: string;
@@ -8,6 +9,7 @@ export type Ledger = {
   position?: number;
   reportType?: 'Income' | 'Expenses';
   children?: Ledger[];
+  status?: 'active' | 'disabled';
 };
 
 export const ledgerData: Ledger[] = [
@@ -23,18 +25,18 @@ export const ledgerData: Ledger[] = [
             type: 'group',
             children: [
               { id: 'bank-accounts', name: 'Bank Accounts', type: 'group', children: [
-                { id: 'ledger-hdfc', name: 'HDFC Bank', type: 'ledger' },
-                { id: 'ledger-icici', name: 'ICICI Bank', type: 'ledger' },
+                { id: 'ledger-hdfc', name: 'HDFC Bank', type: 'ledger', balance: 154300.50 },
+                { id: 'ledger-icici', name: 'ICICI Bank', type: 'ledger', balance: 75000 },
               ] },
               { id: 'cash-in-hand', name: 'Cash-in-hand', type: 'group', children: [
-                { id: 'ledger-cash', name: 'Cash', type: 'ledger' },
+                { id: 'ledger-cash', name: 'Cash', type: 'ledger', balance: 50000 },
               ] },
               { id: 'deposits-asset', name: 'Deposits (Asset)', type: 'group', children: [] },
               { id: 'loans-advances-asset', name: 'Loans & Advances (Asset)', type: 'group', children: [] },
               { id: 'stock-in-hand', name: 'Stock-in-hand', type: 'group', children: [] },
               { id: 'sundry-debtors', name: 'Sundry Debtors', type: 'group', children: [
-                { id: 'ledger-customer-a', name: 'Innovate Inc.', type: 'ledger' },
-                { id: 'ledger-customer-b', name: 'Solutions Corp.', type: 'ledger' },
+                { id: 'ledger-customer-a', name: 'Innovate Inc.', type: 'ledger', balance: 89500 },
+                { id: 'ledger-customer-b', name: 'Solutions Corp.', type: 'ledger', balance: 124000 },
               ] },
             ]
         },
@@ -43,8 +45,8 @@ export const ledgerData: Ledger[] = [
             name: 'Fixed Assets',
             type: 'group',
             children: [
-                { id: 'ledger-furniture', name: 'Furniture & Fixtures', type: 'ledger' },
-                { id: 'ledger-computers', name: 'Computers', type: 'ledger' },
+                { id: 'ledger-furniture', name: 'Furniture & Fixtures', type: 'ledger', balance: 250000 },
+                { id: 'ledger-computers', name: 'Computers', type: 'ledger', balance: 120000 },
             ]
         },
         {
@@ -73,12 +75,12 @@ export const ledgerData: Ledger[] = [
             type: 'group',
             children: [
               { id: 'duties-taxes', name: 'Duties & Taxes', type: 'group', children: [
-                 { id: 'ledger-gst', name: 'GST Payable', type: 'ledger' },
+                 { id: 'ledger-gst', name: 'GST Payable', type: 'ledger', balance: 45000 },
               ] },
               { id: 'provisions', name: 'Provisions', type: 'group', children: [] },
               { id: 'sundry-creditors', name: 'Sundry Creditors', type: 'group', children: [
-                { id: 'ledger-vendor-a', name: 'Cloud Services LLC', type: 'ledger' },
-                { id: 'ledger-vendor-b', name: 'Office Supplies R Us', type: 'ledger' },
+                { id: 'ledger-vendor-a', name: 'Cloud Services LLC', type: 'ledger', balance: 65000 },
+                { id: 'ledger-vendor-b', name: 'Office Supplies R Us', type: 'ledger', balance: 22000 },
               ] },
             ]
         },
@@ -118,7 +120,7 @@ export const ledgerData: Ledger[] = [
             type: 'group',
             children: [
                 { id: 'reserves-surplus', name: 'Reserves & Surplus', type: 'group', children: [
-                    { id: 'ledger-retained-earnings', name: 'Retained Earnings', type: 'ledger' },
+                    { id: 'ledger-retained-earnings', name: 'Retained Earnings', type: 'ledger', balance: 850000 },
                 ] }
             ]
           }
