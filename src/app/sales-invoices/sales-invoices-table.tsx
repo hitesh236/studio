@@ -90,13 +90,14 @@ const ALL_COLUMNS = [
     { id: 'exchangeRate', label: 'Exch. Rate' },
     { id: 'amountForeign', label: 'Amount (FCY)' },
     { id: 'amountBase', label: 'Amount (BCY)' },
+    { id: 'amountPaid', label: 'Amount Paid' },
+    { id: 'salesReturnAmount', label: 'Return Amount' },
+    { id: 'amountDue', label: 'Amount Due' },
     { id: 'totalTaxableValue', label: 'Taxable Value' },
     { id: 'totalGstAmount', label: 'GST Amount' },
     { id: 'gstType', label: 'GST Type' },
     { id: 'placeOfSupply', label: 'Place of Supply' },
     { id: 'paymentStatus', label: 'Payment Status' },
-    { id: 'amountPaid', label: 'Amount Paid' },
-    { id: 'amountDue', label: 'Amount Due' },
     { id: 'createdBy', label: 'Created By' },
     { id: 'actions', label: 'Actions' },
   ];
@@ -168,6 +169,12 @@ const MobileInvoiceCard = ({ invoice, isExpanded, toggleRowExpansion, selectedRo
                   <strong className="text-muted-foreground block">Amount Paid</strong>
                   {formatCurrency(invoice.amountPaid, 'INR')}
                 </div>
+                 {invoice.salesReturnAmount && invoice.salesReturnAmount > 0 && (
+                    <div>
+                        <strong className="text-muted-foreground block">Return Amount</strong>
+                        <span className="text-green-600">{formatCurrency(invoice.salesReturnAmount, 'INR')}</span>
+                    </div>
+                )}
                  <div>
                   <strong className="text-muted-foreground block">Amount (FCY)</strong>
                   {formatCurrency(invoice.amountForeign, invoice.currencyCode)}

@@ -22,6 +22,7 @@ export type SalesInvoice = {
   placeOfSupply: string;
   paymentStatus: 'Outstanding' | 'Partially Paid' | 'Paid' | 'Overdue';
   amountPaid: number;
+  salesReturnAmount?: number;
   amountDue: number;
   createdBy: string;
   items: SalesInvoiceItem[];
@@ -92,7 +93,10 @@ export function generateSalesInvoices(count: number): SalesInvoice[] {
         amountPaid = 0;
     }
     
-    const amountDue = Math.max(0, amountBase - amountPaid);
+    const hasReturn = Math.random() < 0.2; // 20% chance of having a sales return
+    const salesReturnAmount = hasReturn ? Math.floor(Math.random() * (amountBase / 4)) : 0; // Return up to 25% of base amount
+
+    const amountDue = Math.max(0, amountBase - amountPaid - salesReturnAmount);
 
     let paymentStatus: SalesInvoice['paymentStatus'];
     if (amountDue <= 0.01) { // Use a small epsilon for float comparison
@@ -123,6 +127,7 @@ export function generateSalesInvoices(count: number): SalesInvoice[] {
       placeOfSupply: getRandomElement(placesOfSupply),
       paymentStatus: paymentStatus,
       amountPaid: amountPaid,
+      salesReturnAmount: salesReturnAmount > 0 ? salesReturnAmount : undefined,
       amountDue: amountDue,
       createdBy: getRandomElement(createdByUsers),
       items: items,

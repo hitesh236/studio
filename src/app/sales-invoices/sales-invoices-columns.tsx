@@ -212,6 +212,15 @@ export const columns = ({
       ),
     },
     {
+      accessor: "salesReturnAmount",
+      header: getSortableHeader("Return Amount", "salesReturnAmount"),
+      cell: (row: SalesInvoice) => (
+        <div className={cn("font-mono text-right whitespace-nowrap text-green-600", density === 'compact' && 'py-1 px-2 text-sm')}>
+          {row.salesReturnAmount ? formatCurrency(row.salesReturnAmount, 'INR') : '-'}
+        </div>
+      ),
+    },
+    {
       accessor: "amountDue",
       header: getSortableHeader("Amount Due", "amountDue"),
       cell: (row: SalesInvoice) => (
