@@ -63,6 +63,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -121,7 +122,8 @@ export function InvoiceForm() {
     hsn: true,
     discount: true,
   });
-  const [roundOff, setRoundOff] = React.useState<number>(0);
+  const [manualRoundOff, setManualRoundOff] = React.useState<number>(0);
+  const [autoRoundOff, setAutoRoundOff] = React.useState(true);
 
   const [customers, setCustomers] = React.useState([
     { id: 'cust1', name: 'Innovate Inc.', gstin: '27ABCDE1234F1Z5', address: '123 Tech Park, Mumbai, Maharashtra' },
@@ -234,12 +236,18 @@ export function InvoiceForm() {
       }
     }
 
-    const grandTotal = totalTaxableValue + totalGst + roundOff;
+    const grandTotalBeforeRoundOff = totalTaxableValue + totalGst;
+    
+    const roundOffValue = autoRoundOff
+      ? Math.round(grandTotalBeforeRoundOff) - grandTotalBeforeRoundOff
+      : manualRoundOff;
+    
+    const grandTotal = grandTotalBeforeRoundOff + roundOffValue;
     const amountDue = grandTotal - (watchedPaymentReceived || 0);
     const singleGstRate = Object.keys(gstSummary).length === 1 ? Object.keys(gstSummary)[0] : null;
 
-    return { subtotal, totalDiscount, totalTaxableValue, grandTotal, totalGst, isIntraState, totalCgst, totalSgst, totalIgst, singleGstRate, amountDue };
-  }, [watchedItems, watchedPlaceOfSupply, roundOff, watchedPaymentReceived]);
+    return { subtotal, totalDiscount, totalTaxableValue, grandTotal, totalGst, isIntraState, totalCgst, totalSgst, totalIgst, singleGstRate, amountDue, roundOffValue };
+  }, [watchedItems, watchedPlaceOfSupply, watchedPaymentReceived, autoRoundOff, manualRoundOff]);
   
   async function onSubmit(data: InvoiceFormValues) {
     setIsSubmitting(true);
@@ -966,14 +974,24 @@ export function InvoiceForm() {
                           <span className="font-mono">{formatCurrency(totals.totalGst, watchedCurrency)}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">Round Off</span>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            className="h-7 w-24 text-right font-mono p-1"
-                            value={roundOff}
-                            onChange={(e) => setRoundOff(parseFloat(e.target.value) || 0)}
-                          />
+                            <div className="flex items-center gap-2">
+                                <Label htmlFor="auto-round-off" className="text-muted-foreground">Round Off</Label>
+                                <Switch
+                                    id="auto-round-off"
+                                    checked={autoRoundOff}
+                                    onCheckedChange={setAutoRoundOff}
+                                    className="h-4 w-7 data-[state=checked]:translate-x-3 data-[state=unchecked]:translate-x-0 [&>span]:h-3 [&>span]:w-3"
+                                />
+                            </div>
+                            <Input
+                                type="number"
+                                step="0.01"
+                                className="h-7 w-24 text-right font-mono p-1"
+                                value={autoRoundOff ? totals.roundOffValue.toFixed(2) : manualRoundOff}
+                                onChange={(e) => setManualRoundOff(parseFloat(e.target.value) || 0)}
+                                readOnly={autoRoundOff}
+                                disabled={autoRoundOff}
+                            />
                         </div>
                         <Separator className="my-1" />
                         <div className="flex justify-between text-base font-bold">
