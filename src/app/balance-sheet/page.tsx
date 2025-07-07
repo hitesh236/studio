@@ -136,6 +136,53 @@ const ReportRow = ({ node, level, showPercentages, totalAssets, showComparison }
     );
 };
 
+const MobileReportCard = ({ node, showComparison }: { node: Ledger; showComparison: boolean }) => {
+    const isGroup = node.type === 'group';
+    const currentTotal = calculateTotal(node, 'current');
+    
+    const previousTotal = calculateTotal(node, 'previous');
+    const change = previousTotal !== 0 ? ((currentTotal - previousTotal) / Math.abs(previousTotal)) * 100 : (currentTotal !== 0 ? 100 : 0);
+    const isIncrease = change > 0;
+    const isDecrease = change < 0;
+
+    return (
+        <Card className={cn(isGroup && 'bg-muted/50')}>
+            <CardHeader className="p-3 flex flex-row items-center justify-between">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    {isGroup ? (
+                        <Folder className="h-4 w-4 text-primary" />
+                    ) : (
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                    )}
+                    {node.name}
+                </CardTitle>
+                <span className="font-mono text-sm">{formatCurrency(currentTotal, 'INR')}</span>
+            </CardHeader>
+            {showComparison && (
+                <CardContent className="p-3 pt-0 text-xs">
+                    <Separator className="mb-2" />
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">Previous</span>
+                        <span className="font-mono">{formatCurrency(previousTotal, 'INR')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">Change</span>
+                        <span className={cn("font-mono flex items-center gap-1", isIncrease && 'text-green-600', isDecrease && 'text-red-600')}>
+                             {previousTotal !== 0 && Math.abs(change) > 0.01 ? (
+                                <>
+                                    <span>{change.toFixed(1)}%</span>
+                                    {isIncrease && <ArrowUp className="h-3 w-3" />}
+                                    {isDecrease && <ArrowDown className="h-3 w-3" />}
+                                </>
+                            ) : previousTotal === 0 && currentTotal !== 0 ? 'New' : '-'}
+                        </span>
+                    </div>
+                </CardContent>
+            )}
+        </Card>
+    );
+};
+
 
 // Component for a major section (Assets or Liabilities)
 const ReportSection = ({ title, data, className, titleClassName, showPercentages, totalAssets, showComparison }: { title: string; data: Ledger; className?: string; titleClassName?: string, showPercentages: boolean, totalAssets: number, showComparison: boolean }) => {
@@ -153,6 +200,20 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
             </React.Fragment>
         ));
     };
+
+    const renderMobileRowsRecursive = (nodes: Ledger[], level: number, acc: JSX.Element[] = []): JSX.Element[] => {
+        for (const node of nodes) {
+            acc.push(
+                <div key={node.id} style={{ paddingLeft: `${level * 0.5}rem` }}>
+                    <MobileReportCard node={node} showComparison={showComparison} />
+                </div>
+            );
+            if (node.children && node.children.length > 0) {
+                renderMobileRowsRecursive(node.children, level + 1, acc);
+            }
+        }
+        return acc;
+    };
     
     const hasTitleBackground = titleClassName?.includes('bg-');
 
@@ -160,7 +221,7 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
         <div className={cn("border rounded-lg", hasTitleBackground ? "overflow-hidden" : "p-4 space-y-2", className)}>
              <div className="flex justify-between items-baseline">
                 <h3 className={cn("text-lg", titleClassName, hasTitleBackground && "flex-grow px-4 py-2")}>{title}</h3>
-                {showComparison && <div className="flex items-baseline justify-end gap-2 font-mono text-xs shrink-0 px-4 py-2 text-muted-foreground">
+                {showComparison && <div className="hidden md:flex items-baseline justify-end gap-2 font-mono text-xs shrink-0 px-4 py-2 text-muted-foreground">
                     <span className="w-24 text-right">Current</span>
                     <span className="w-24 text-right">Previous</span>
                     <span className="w-20 text-right">Change</span>
@@ -168,33 +229,74 @@ const ReportSection = ({ title, data, className, titleClassName, showPercentages
             </div>
             
             <div className={cn(hasTitleBackground && "p-4 space-y-2")}>
-                {data.children && renderRowsRecursive(data.children, 1, title as 'Assets' | 'Liabilities')}
+                {/* Desktop View */}
+                <div className="hidden md:block">
+                  {data.children && renderRowsRecursive(data.children, 1, title as 'Assets' | 'Liabilities')}
+                </div>
+                {/* Mobile View */}
+                <div className="md:hidden space-y-2">
+                  {data.children && renderMobileRowsRecursive(data.children, 0)}
+                </div>
                 
                 <Separator className="my-2" />
-                
-                {showComparison ? (
-                    <div className="flex justify-between font-bold text-sm py-2">
-                        <span>Total {title}</span>
-                        <div className="flex items-baseline justify-end gap-2 font-mono text-sm">
-                            <span className="w-24 text-right">{formatCurrency(sectionTotal, 'INR')}</span>
-                            <span className="w-24 text-right text-muted-foreground/80">{formatCurrency(sectionPreviousTotal, 'INR')}</span>
-                            <span className={cn("w-20 text-right text-xs flex items-center justify-end gap-1", isIncrease && 'text-green-600', isDecrease && 'text-red-600')}>
-                                {sectionPreviousTotal !== 0 && Math.abs(change) > 0.01 ? (
-                                    <>
-                                        <span>{change.toFixed(1)}%</span>
-                                        {isIncrease && <ArrowUp className="h-3 w-3" />}
-                                        {isDecrease && <ArrowDown className="h-3 w-3" />}
-                                    </>
-                                ) : '-'}
-                            </span>
+
+                {/* Desktop Total */}
+                <div className="hidden md:block">
+                    {showComparison ? (
+                        <div className="flex justify-between font-bold text-sm py-2">
+                            <span>Total {title}</span>
+                            <div className="flex items-baseline justify-end gap-2 font-mono text-sm">
+                                <span className="w-24 text-right">{formatCurrency(sectionTotal, 'INR')}</span>
+                                <span className="w-24 text-right text-muted-foreground/80">{formatCurrency(sectionPreviousTotal, 'INR')}</span>
+                                <span className={cn("w-20 text-right text-xs flex items-center justify-end gap-1", isIncrease && 'text-green-600', isDecrease && 'text-red-600')}>
+                                    {sectionPreviousTotal !== 0 && Math.abs(change) > 0.01 ? (
+                                        <>
+                                            <span>{change.toFixed(1)}%</span>
+                                            {isIncrease && <ArrowUp className="h-3 w-3" />}
+                                            {isDecrease && <ArrowDown className="h-3 w-3" />}
+                                        </>
+                                    ) : '-'}
+                                </span>
+                            </div>
                         </div>
-                    </div>
-                ) : (
-                    <div className="flex justify-between font-bold text-sm py-2">
-                        <span>Total {title}</span>
-                        <span className="font-mono">{formatCurrency(sectionTotal, 'INR')}</span>
-                    </div>
-                )}
+                    ) : (
+                        <div className="flex justify-between font-bold text-sm py-2">
+                            <span>Total {title}</span>
+                            <span className="font-mono">{formatCurrency(sectionTotal, 'INR')}</span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Mobile Total */}
+                <div className="md:hidden">
+                    <Card className="bg-muted/50">
+                        <CardHeader className="p-3 flex flex-row items-center justify-between">
+                            <CardTitle className="text-base">Total {title}</CardTitle>
+                            <span className="font-mono text-base">{formatCurrency(sectionTotal, 'INR')}</span>
+                        </CardHeader>
+                        {showComparison && (
+                            <CardContent className="p-3 pt-0 text-sm">
+                                <Separator className="mb-2" />
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Previous</span>
+                                    <span className="font-mono">{formatCurrency(sectionPreviousTotal, 'INR')}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Change</span>
+                                    <span className={cn("font-mono flex items-center gap-1", isIncrease && 'text-green-600', isDecrease && 'text-red-600')}>
+                                        {sectionPreviousTotal !== 0 && Math.abs(change) > 0.01 ? (
+                                            <>
+                                                <span>{change.toFixed(1)}%</span>
+                                                {isIncrease && <ArrowUp className="h-3 w-3" />}
+                                                {isDecrease && <ArrowDown className="h-3 w-3" />}
+                                            </>
+                                        ) : '-'}
+                                    </span>
+                                </div>
+                            </CardContent>
+                        )}
+                    </Card>
+                </div>
             </div>
         </div>
     );
