@@ -33,6 +33,7 @@ const pathToTitle: { [key: string]: string } = {
   '/profit-loss': 'Profit & Loss Statement',
   '/sales-invoices': 'Sales Invoices',
   '/sales-invoice-returns': 'Sales Invoice Returns',
+  '/sales-invoice-returns/new': 'New Sales Return',
   '/sales-invoices/new': 'Create Invoice',
   '/settings': 'Settings',
   '/settings/user-roles': 'User Roles & Permissions',
