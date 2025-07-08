@@ -107,11 +107,11 @@ export function AddCustomerForm({ onSuccess }: { onSuccess?: () => void }) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [visibleSections, setVisibleSections] = React.useState<Record<string, boolean>>({
-    contactDetails: true,
-    taxCompliance: true,
-    financialControls: true,
-    bankingDetails: true,
-    additionalFields: true,
+    contactDetails: false,
+    taxCompliance: false,
+    financialControls: false,
+    bankingDetails: false,
+    additionalFields: false,
   });
 
   const form = useForm<CustomerFormValues>({
