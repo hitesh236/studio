@@ -254,7 +254,7 @@ export function PurchaseBillForm() {
                     <CommandEmpty>No account found.</CommandEmpty>
                     <CommandGroup>
                         {allLedgers.map(acc => (
-                            <CommandItem value={acc.value} key={acc.value} onSelect={(currentValue) => { onChange(currentValue); setOpen(false); }}>
+                            <CommandItem value={acc.label} key={acc.value} onSelect={() => { onChange(acc.value); setOpen(false); }}>
                                 <Check className={cn("mr-2 h-4 w-4", acc.value === value ? "opacity-100" : "opacity-0")} />
                                 {acc.label}
                             </CommandItem>
@@ -419,9 +419,9 @@ export function PurchaseBillForm() {
             <div>
               {purchaseMode === 'both' && (
                   <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full mb-4">
-                      <TabsList className="grid w-full grid-cols-2">
-                          <TabsTrigger value="inventory">Inventory Purchase</TabsTrigger>
-                          <TabsTrigger value="assets">Asset Purchase</TabsTrigger>
+                      <TabsList className="bg-transparent p-0 justify-start gap-2 h-auto flex-wrap">
+                          <TabsTrigger value="inventory" className="rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border border-input bg-transparent hover:bg-accent hover:text-accent-foreground data-[state=active]:border-transparent">Inventory Purchase</TabsTrigger>
+                          <TabsTrigger value="assets" className="rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border border-input bg-transparent hover:bg-accent hover:text-accent-foreground data-[state=active]:border-transparent">Asset Purchase</TabsTrigger>
                       </TabsList>
                   </Tabs>
               )}
