@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -75,10 +74,11 @@ export function LedgerDetailView({ ledgerTransactions }: { ledgerTransactions: L
 
     const processedLedgerData = React.useMemo(() => {
         let runningBalance = 0;
-        return filteredLedgerData.map(entry => {
+        const chronologicallyProcessed = filteredLedgerData.map(entry => {
             runningBalance += entry.debit - entry.credit;
             return { ...entry, balance: runningBalance };
         });
+        return chronologicallyProcessed.reverse();
     }, [filteredLedgerData]);
 
     const ledgerSummary = React.useMemo(() => {
