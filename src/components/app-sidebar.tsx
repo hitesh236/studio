@@ -237,9 +237,11 @@ export function AppSidebar() {
                       </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Purchase Bills">
-                      <Receipt />
-                      <span>Purchase Bills</span>
+                    <SidebarMenuButton tooltip="Purchase Bills" isActive={pathname.startsWith('/purchase-bills')} asChild>
+                       <Link href="/purchase-bills" onClick={handleLinkClick}>
+                        <Receipt />
+                        <span>Purchase Bills</span>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>

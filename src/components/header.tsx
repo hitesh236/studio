@@ -49,6 +49,7 @@ const pathToTitle: { [key: string]: string } = {
   '/hotels': 'Hotels',
   '/hotels/new': 'Add Hotel',
   '/ledgers': 'Ledger Details',
+  '/purchase-bills': 'New Purchase Bill',
 };
 
 export function Header() {
