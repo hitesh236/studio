@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -61,9 +62,7 @@ const SheetContent = React.forwardRef<
     <SheetOverlay />
     <SheetPrimitive.Content
       ref={ref}
-      onInteractOutside={(e) => {
-        e.preventDefault()
-      }}
+      onPointerDownOutside={(e) => e.preventDefault()}
       className={cn(sheetVariants({ side }), className)}
       {...props}
     >
