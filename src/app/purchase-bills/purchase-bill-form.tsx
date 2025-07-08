@@ -14,6 +14,7 @@ import {
   Loader2,
   ChevronsUpDown,
   Check,
+  Settings,
 } from 'lucide-react';
 
 import { cn, formatCurrency } from '@/lib/utils';
@@ -69,6 +70,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { ledgerData as chartOfAccountsData, type Ledger } from '@/lib/ledger-data';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -107,6 +110,9 @@ type PurchaseBillValues = z.infer<typeof purchaseBillSchema>;
 export function PurchaseBillForm() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [purchaseMode, setPurchaseMode] = React.useState<'both' | 'assets' | 'inventory'>('both');
+  const [activeTab, setActiveTab] = React.useState<'assets' | 'inventory'>('inventory');
+
 
   const [vendors, setVendors] = React.useState([
     { id: 'vend1', name: 'Cloud Services LLC', gstin: '27AAAAA0000A1Z5', address: '789 Cloud Ave, Pune, Maharashtra' },
@@ -138,6 +144,14 @@ export function PurchaseBillForm() {
     form.setValue('billDate', today);
     form.setValue('dueDate', futureDate);
   }, [form]);
+
+  React.useEffect(() => {
+    if (purchaseMode === 'assets') {
+        setActiveTab('assets');
+    } else if (purchaseMode === 'inventory') {
+        setActiveTab('inventory');
+    }
+  }, [purchaseMode]);
 
 
   const { fields, append, remove } = useFieldArray({
@@ -251,14 +265,35 @@ export function PurchaseBillForm() {
         </Popover>
     );
   };
+  
+  const showAccountColumn = activeTab === 'inventory';
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Card className="max-w-6xl mx-auto">
           <CardHeader>
-            <CardTitle className="text-2xl">New Purchase Bill</CardTitle>
-            <CardDescription>Enter the details from your vendor's bill.</CardDescription>
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle className="text-2xl">New Purchase Bill</CardTitle>
+                <CardDescription>Enter the details from your vendor's bill.</CardDescription>
+              </div>
+              <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                          <Settings className="h-5 w-5" />
+                      </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Purchase Mode</DropdownMenuLabel>
+                      <DropdownMenuRadioGroup value={purchaseMode} onValueChange={(value) => setPurchaseMode(value as any)}>
+                          <DropdownMenuRadioItem value="both">Assets & Inventory</DropdownMenuRadioItem>
+                          <DropdownMenuRadioItem value="assets">Assets Only</DropdownMenuRadioItem>
+                          <DropdownMenuRadioItem value="inventory">Inventory Only</DropdownMenuRadioItem>
+                      </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -382,11 +417,19 @@ export function PurchaseBillForm() {
 
             {/* Items Table */}
             <div>
+              {purchaseMode === 'both' && (
+                  <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full mb-4">
+                      <TabsList className="grid w-full grid-cols-2">
+                          <TabsTrigger value="inventory">Inventory Purchase</TabsTrigger>
+                          <TabsTrigger value="assets">Asset Purchase</TabsTrigger>
+                      </TabsList>
+                  </Tabs>
+              )}
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-1/3">Item</TableHead>
-                    <TableHead className="w-1/4">Account</TableHead>
+                    {showAccountColumn && <TableHead className="w-1/4">Account</TableHead>}
                     <TableHead>HSN/SAC</TableHead>
                     <TableHead className="text-right">Qty</TableHead>
                     <TableHead className="text-right">Rate</TableHead>
@@ -399,7 +442,7 @@ export function PurchaseBillForm() {
                   {fields.map((field, index) => (
                     <TableRow key={field.id}>
                       <TableCell><FormField control={form.control} name={`items.${index}.itemName`} render={({ field }) => <Input placeholder="Item name" {...field} />} /></TableCell>
-                      <TableCell>
+                      {showAccountColumn && <TableCell>
                         <FormField
                             control={form.control}
                             name={`items.${index}.ledgerAccountId`}
@@ -410,7 +453,7 @@ export function PurchaseBillForm() {
                                 </FormItem>
                             )}
                         />
-                      </TableCell>
+                      </TableCell>}
                       <TableCell><FormField control={form.control} name={`items.${index}.hsnCode`} render={({ field }) => <Input placeholder="HSN Code" {...field} />} /></TableCell>
                       <TableCell><FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
                       <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
