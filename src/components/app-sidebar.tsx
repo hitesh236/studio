@@ -255,10 +255,10 @@ export function AppSidebar() {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Journal Entries" isActive={pathname.startsWith('/journal-entries')} asChild>
+                    <SidebarMenuButton tooltip="All Entries" isActive={pathname.startsWith('/journal-entries')} asChild>
                       <Link href="/journal-entries" onClick={handleLinkClick}>
                           <BookOpen />
-                          <span>Journal Entries</span>
+                          <span>All Entries</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

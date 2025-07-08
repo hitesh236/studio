@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -18,7 +19,9 @@ export default function JournalEntriesPage() {
 
     return (
         <div className="p-4 sm:p-6 lg:p-8">
-            <JournalEntriesTable data={journalEntries} />
+            <div className="max-w-5xl mx-auto">
+                <JournalEntriesTable data={journalEntries} />
+            </div>
         </div>
     );
 }

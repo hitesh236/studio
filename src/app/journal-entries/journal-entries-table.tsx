@@ -254,7 +254,7 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
         <CardHeader>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                  <CardTitle>Journal Entries</CardTitle>
+                  <CardTitle>All Entries</CardTitle>
                   <CardDescription>A record of all financial transactions. Showing {filteredData.length} entries.</CardDescription>
               </div>
               <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 w-full sm:w-auto">
@@ -307,7 +307,7 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
         <CardContent>
           {/* Desktop Table View */}
           <div className="hidden rounded-md border md:block">
-              <Table className={cn("text-xs", density === 'compact' ? "text-[11px]" : "")}>
+              <Table className={cn(density === 'compact' && 'text-xs')}>
                   <TableHeader>
                   <TableRow>
                       <TableHead className={cn("w-[100px] p-2 h-10", density === 'compact' && 'p-1 h-8')}>Date</TableHead>
