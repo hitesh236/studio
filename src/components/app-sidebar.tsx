@@ -137,6 +137,14 @@ export function AppSidebar() {
                 <SidebarGroupLabel>Component</SidebarGroupLabel>
                 <SidebarMenu>
                   <SidebarMenuItem>
+                      <SidebarMenuButton tooltip="Ledgers" isActive={pathname.startsWith('/ledgers')} asChild>
+                          <Link href="/ledgers" onClick={handleLinkClick}>
+                              <BookOpen />
+                              <span>Ledgers</span>
+                          </Link>
+                      </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
                       <SidebarMenuButton tooltip="Table 2" isActive={pathname.startsWith('/table2')} asChild>
                           <Link href="/table2" onClick={handleLinkClick}>
                               <FileText />
