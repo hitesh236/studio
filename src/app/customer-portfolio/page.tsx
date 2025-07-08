@@ -404,6 +404,7 @@ const CustomerPortfolioContent = () => {
     const customerId = searchParams.get('id');
     const [isDetailsExpanded, setIsDetailsExpanded] = React.useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false);
+    const { toast } = useToast();
 
     const allCustomers = React.useMemo(() => generateData(50), []);
     const allInvoices = React.useMemo(() => generateSalesInvoices(50), []);
@@ -417,6 +418,13 @@ const CustomerPortfolioContent = () => {
     }, [customerId, allCustomers]);
     
     const customerInvoices = React.useMemo(() => allInvoices.filter(inv => inv.customerName === customer.company), [allInvoices, customer.company]);
+    
+    const handleWipClick = (feature: string) => {
+        toast({
+            title: 'Work in Progress',
+            description: `${feature} functionality is coming soon.`,
+        });
+    };
 
     return (
         <div className="p-4 sm:p-6 lg:p-8 space-y-6">
@@ -434,7 +442,8 @@ const CustomerPortfolioContent = () => {
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Button onClick={() => setIsPaymentDialogOpen(true)}><Plus className="mr-2 h-4 w-4" /> Add Payment</Button>
+                            <Button onClick={() => handleWipClick('Payment In')}><Plus className="mr-2 h-4 w-4" /> Payment In</Button>
+                            <Button onClick={() => setIsPaymentDialogOpen(true)}><Plus className="mr-2 h-4 w-4" /> Payment out</Button>
                             <Button variant="ghost" size="icon" onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}>
                                 {isDetailsExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                                 <span className="sr-only">{isDetailsExpanded ? 'Collapse' : 'Expand'} details</span>
