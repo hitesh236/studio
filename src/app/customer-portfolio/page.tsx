@@ -431,7 +431,10 @@ const CustomerPortfolioContent = () => {
             <Card>
                 <CardHeader>
                     <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-4">
+                        <div 
+                            className="flex items-center gap-4 cursor-pointer"
+                            onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
+                        >
                             <Avatar className="h-16 w-16">
                             <AvatarImage src="https://placehold.co/64x64.png" alt={`${customer.firstName} ${customer.lastName}`} data-ai-hint="person avatar" />
                             <AvatarFallback>{customer.firstName.charAt(0)}{customer.lastName.charAt(0)}</AvatarFallback>
@@ -443,7 +446,7 @@ const CustomerPortfolioContent = () => {
                         </div>
                         <div className="flex items-center gap-2">
                             <Button onClick={() => handleWipClick('Payment In')}><Plus className="mr-2 h-4 w-4" /> Payment In</Button>
-                            <Button onClick={() => setIsPaymentDialogOpen(true)}><Plus className="mr-2 h-4 w-4" /> Payment out</Button>
+                            <Button variant="secondary" onClick={() => setIsPaymentDialogOpen(true)}><Plus className="mr-2 h-4 w-4" /> Payment out</Button>
                             <Button variant="ghost" size="icon" onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}>
                                 {isDetailsExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                                 <span className="sr-only">{isDetailsExpanded ? 'Collapse' : 'Expand'} details</span>
