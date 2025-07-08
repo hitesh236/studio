@@ -103,7 +103,7 @@ const optionalSectionsConfig = {
   additionalFields: 'Additional Fields',
 };
 
-export function AddCustomerForm() {
+export function AddCustomerForm({ onSuccess }: { onSuccess?: () => void }) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [visibleSections, setVisibleSections] = React.useState<Record<string, boolean>>({
@@ -153,10 +153,13 @@ export function AddCustomerForm() {
     });
     setIsSubmitting(false);
     form.reset();
+    if (onSuccess) {
+      onSuccess();
+    }
   }
 
   return (
-    <Card className="max-w-4xl mx-auto">
+    <Card className="max-w-4xl mx-auto shadow-none border-none">
       <CardHeader className="flex flex-row items-start justify-between">
         <div>
             <CardTitle>Create a New Customer</CardTitle>
