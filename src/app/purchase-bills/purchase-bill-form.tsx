@@ -12,6 +12,8 @@ import {
   Trash2,
   Save,
   Loader2,
+  ChevronsUpDown,
+  Check,
 } from 'lucide-react';
 
 import { cn, formatCurrency } from '@/lib/utils';
@@ -55,9 +57,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { ledgerData as chartOfAccountsData, type Ledger } from '@/lib/ledger-data';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -72,6 +83,7 @@ const indianStates = [
 
 const purchaseItemSchema = z.object({
   itemName: z.string().min(1, 'Item name is required.'),
+  ledgerAccountId: z.string().min(1, 'Account is required.'),
   hsnCode: z.string().optional(),
   quantity: z.coerce.number().min(0.01, 'Quantity must be positive.'),
   rate: z.coerce.number().min(0, 'Rate cannot be negative.'),
@@ -113,7 +125,7 @@ export function PurchaseBillForm() {
       billNumber: '',
       billDate: undefined,
       dueDate: undefined,
-      items: [{ itemName: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 }],
+      items: [{ itemName: '', ledgerAccountId: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 }],
       notes: '',
     },
   });
@@ -135,6 +147,22 @@ export function PurchaseBillForm() {
   
   const watchedItems = form.watch('items');
   const watchedPlaceOfSupply = form.watch('placeOfSupply');
+
+  const allLedgers = React.useMemo(() => {
+    const flatten = (accounts: Ledger[]): { value: string, label: string }[] => {
+        let list: { value: string, label: string }[] = [];
+        accounts.forEach(acc => {
+            if (acc.type === 'ledger') {
+                list.push({ value: acc.id, label: acc.name });
+            }
+            if (acc.children) {
+                list = [...list, ...flatten(acc.children)];
+            }
+        });
+        return list;
+    };
+    return flatten(chartOfAccountsData);
+  }, []);
   
   const handleAddVendor = () => {
     if (newVendor.name && newVendor.address) {
@@ -192,14 +220,42 @@ export function PurchaseBillForm() {
       vendorAddress: '',
       billNumber: '',
       billDate: new Date(),
-      items: [{ itemName: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 }],
+      items: [{ itemName: '', ledgerAccountId: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 }],
     });
   }
+
+  const AccountCombobox = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
+    const [open, setOpen] = React.useState(false);
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild><FormControl>
+                <Button variant="outline" role="combobox" className={cn("w-full justify-between", !value && "text-muted-foreground")}>
+                {value ? allLedgers.find(acc => acc.value === value)?.label : "Select account"}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+            </FormControl></PopoverTrigger>
+            <PopoverContent className="w-[300px] p-0"><Command>
+                <CommandInput placeholder="Search accounts..." />
+                <CommandList>
+                    <CommandEmpty>No account found.</CommandEmpty>
+                    <CommandGroup>
+                        {allLedgers.map(acc => (
+                            <CommandItem value={acc.label} key={acc.value} onSelect={() => { onChange(acc.value); setOpen(false); }}>
+                                <Check className={cn("mr-2 h-4 w-4", acc.value === value ? "opacity-100" : "opacity-0")} />
+                                {acc.label}
+                            </CommandItem>
+                        ))}
+                    </CommandGroup>
+                </CommandList>
+            </Command></PopoverContent>
+        </Popover>
+    );
+  };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <Card>
+        <Card className="max-w-6xl mx-auto">
           <CardHeader>
             <CardTitle className="text-2xl">New Purchase Bill</CardTitle>
             <CardDescription>Enter the details from your vendor's bill.</CardDescription>
@@ -330,6 +386,7 @@ export function PurchaseBillForm() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-1/3">Item</TableHead>
+                    <TableHead className="w-1/4">Account</TableHead>
                     <TableHead>HSN/SAC</TableHead>
                     <TableHead className="text-right">Qty</TableHead>
                     <TableHead className="text-right">Rate</TableHead>
@@ -342,6 +399,18 @@ export function PurchaseBillForm() {
                   {fields.map((field, index) => (
                     <TableRow key={field.id}>
                       <TableCell><FormField control={form.control} name={`items.${index}.itemName`} render={({ field }) => <Input placeholder="Item name" {...field} />} /></TableCell>
+                      <TableCell>
+                        <FormField
+                            control={form.control}
+                            name={`items.${index}.ledgerAccountId`}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <AccountCombobox value={field.value} onChange={field.onChange} />
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                      </TableCell>
                       <TableCell><FormField control={form.control} name={`items.${index}.hsnCode`} render={({ field }) => <Input placeholder="HSN Code" {...field} />} /></TableCell>
                       <TableCell><FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
                       <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
@@ -352,7 +421,7 @@ export function PurchaseBillForm() {
                   ))}
                 </TableBody>
               </Table>
-              <Button type="button" variant="outline" className="mt-4" onClick={() => append({ itemName: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 })}>
+              <Button type="button" variant="outline" className="mt-4" onClick={() => append({ itemName: '', ledgerAccountId: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 })}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Item
               </Button>
             </div>
