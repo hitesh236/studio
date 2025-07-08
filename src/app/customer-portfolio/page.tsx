@@ -424,19 +424,33 @@ const CustomerPortfolioContent = () => {
     const [isDetailsExpanded, setIsDetailsExpanded] = React.useState(false);
     const [dialogType, setDialogType] = React.useState<'in' | 'out' | null>(null);
 
-    const allCustomers = React.useMemo(() => generateData(50), []);
-    const allInvoices = React.useMemo(() => generateSalesInvoices(50), []);
-    const allLedgerData = React.useMemo(() => generateCustomerLedger(25), []);
+    const [allCustomers, setAllCustomers] = React.useState<Person[] | null>(null);
+    const [allInvoices, setAllInvoices] = React.useState<SalesInvoice[] | null>(null);
+    const [allLedgerData, setAllLedgerData] = React.useState<CustomerLedgerEntry[] | null>(null);
+
+    React.useEffect(() => {
+        setAllCustomers(generateData(50));
+        setAllInvoices(generateSalesInvoices(50));
+        setAllLedgerData(generateCustomerLedger(25));
+    }, []);
 
     const customer = React.useMemo(() => {
+        if (!allCustomers) return null;
         if (customerId) {
             return allCustomers.find(c => c.id === customerId) || allCustomers[0];
         }
         return allCustomers[0];
     }, [customerId, allCustomers]);
     
-    const customerInvoices = React.useMemo(() => allInvoices.filter(inv => inv.customerName === customer.company), [allInvoices, customer.company]);
+    const customerInvoices = React.useMemo(() => {
+        if (!allInvoices || !customer) return [];
+        return allInvoices.filter(inv => inv.customerName === customer.company);
+    }, [allInvoices, customer]);
     
+    if (!customer || !allLedgerData) {
+        return <Loading />;
+    }
+
     return (
         <div className="p-4 sm:p-6 lg:p-8 space-y-6">
             <Card>
