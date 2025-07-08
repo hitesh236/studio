@@ -240,7 +240,7 @@ export function PurchaseBillForm() {
                     <CommandEmpty>No account found.</CommandEmpty>
                     <CommandGroup>
                         {allLedgers.map(acc => (
-                            <CommandItem value={acc.label} key={acc.value} onSelect={() => { onChange(acc.value); setOpen(false); }}>
+                            <CommandItem value={acc.value} key={acc.value} onSelect={(currentValue) => { onChange(currentValue); setOpen(false); }}>
                                 <Check className={cn("mr-2 h-4 w-4", acc.value === value ? "opacity-100" : "opacity-0")} />
                                 {acc.label}
                             </CommandItem>
