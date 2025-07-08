@@ -40,12 +40,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import Loading from '../loading';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Textarea } from '@/components/ui/textarea';
 
 // --- Reusable Dialog Component ---
-const AddPaymentDialog = ({ customer, isOpen, onOpenChange, onPaymentAdd }: { customer: Person, isOpen: boolean, onOpenChange: (open: boolean) => void, onPaymentAdd: (amount: number) => void }) => {
+const AddPaymentDialog = ({ customer, isOpen, onOpenChange, onPaymentAdd, type }: { customer: Person, isOpen: boolean, onOpenChange: (open: boolean) => void, onPaymentAdd: (amount: number) => void, type: 'in' | 'out' | null }) => {
     const { toast } = useToast();
     const [amount, setAmount] = React.useState('');
     const [paymentMode, setPaymentMode] = React.useState('bank');
+    const [reason, setReason] = React.useState('');
 
     const handleSave = () => {
         const parsedAmount = parseFloat(amount);
@@ -59,31 +61,36 @@ const AddPaymentDialog = ({ customer, isOpen, onOpenChange, onPaymentAdd }: { cu
         }
 
         toast({
-            title: "Payment Recorded",
+            title: `Payment ${type === 'in' ? 'Received' : 'Made'}`,
             description: `Payment of ${formatCurrency(parsedAmount, 'INR')} for ${customer.company} has been recorded.`
         });
         onPaymentAdd(parsedAmount);
         onOpenChange(false);
         setAmount('');
+        setReason('');
     }
 
     React.useEffect(() => {
         if (!isOpen) {
             setAmount('');
             setPaymentMode('bank');
+            setReason('');
         }
     }, [isOpen]);
 
-    if (!customer) return null;
+    if (!customer || !type) return null;
+
+    const title = type === 'in' ? `Add Payment In from ${customer.company}` : `Record Payment Out for ${customer.company}`;
+    const description = type === 'in'
+        ? "Record a payment received from this customer. This will be an on-account payment."
+        : "Record a payment made to this customer or on their behalf.";
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Add Payment for {customer.company}</DialogTitle>
-                    <DialogDescription>
-                        Record a payment received from this customer. This will be an on-account payment.
-                    </DialogDescription>
+                    <DialogTitle>{title}</DialogTitle>
+                    <DialogDescription>{description}</DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
@@ -111,6 +118,18 @@ const AddPaymentDialog = ({ customer, isOpen, onOpenChange, onPaymentAdd }: { cu
                             </SelectContent>
                         </Select>
                     </div>
+                    {type === 'out' && (
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="reason" className="text-right">Reason</Label>
+                            <Textarea
+                                id="reason"
+                                value={reason}
+                                onChange={(e) => setReason(e.target.value)}
+                                className="col-span-3"
+                                placeholder="Reason for payment out (e.g., refund, advance settlement)"
+                            />
+                        </div>
+                    )}
                 </div>
                 <DialogFooter>
                     <DialogClose asChild>
@@ -403,8 +422,7 @@ const CustomerPortfolioContent = () => {
     const searchParams = useSearchParams();
     const customerId = searchParams.get('id');
     const [isDetailsExpanded, setIsDetailsExpanded] = React.useState(false);
-    const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false);
-    const { toast } = useToast();
+    const [dialogType, setDialogType] = React.useState<'in' | 'out' | null>(null);
 
     const allCustomers = React.useMemo(() => generateData(50), []);
     const allInvoices = React.useMemo(() => generateSalesInvoices(50), []);
@@ -419,13 +437,6 @@ const CustomerPortfolioContent = () => {
     
     const customerInvoices = React.useMemo(() => allInvoices.filter(inv => inv.customerName === customer.company), [allInvoices, customer.company]);
     
-    const handleWipClick = (feature: string) => {
-        toast({
-            title: 'Work in Progress',
-            description: `${feature} functionality is coming soon.`,
-        });
-    };
-
     return (
         <div className="p-4 sm:p-6 lg:p-8 space-y-6">
             <Card>
@@ -445,8 +456,8 @@ const CustomerPortfolioContent = () => {
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Button onClick={() => handleWipClick('Payment In')}><Plus className="mr-2 h-4 w-4" /> Payment In</Button>
-                            <Button variant="secondary" onClick={() => setIsPaymentDialogOpen(true)}><Plus className="mr-2 h-4 w-4" /> Payment out</Button>
+                            <Button onClick={() => setDialogType('in')}><Plus className="mr-2 h-4 w-4" /> Payment In</Button>
+                            <Button variant="destructive" onClick={() => setDialogType('out')}><Plus className="mr-2 h-4 w-4" /> Payment out</Button>
                             <Button variant="ghost" size="icon" onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}>
                                 {isDetailsExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                                 <span className="sr-only">{isDetailsExpanded ? 'Collapse' : 'Expand'} details</span>
@@ -502,8 +513,9 @@ const CustomerPortfolioContent = () => {
             
             <AddPaymentDialog 
                 customer={customer} 
-                isOpen={isPaymentDialogOpen} 
-                onOpenChange={setIsPaymentDialogOpen} 
+                isOpen={dialogType !== null}
+                type={dialogType}
+                onOpenChange={(open) => { if (!open) setDialogType(null) }} 
                 onPaymentAdd={(amount) => {
                     // You would typically handle the state update here, e.g., refetching data
                     console.log(`Payment of ${amount} added.`);
@@ -522,3 +534,5 @@ export default function CustomerPortfolioPage() {
         </Suspense>
     );
 }
+
+    
