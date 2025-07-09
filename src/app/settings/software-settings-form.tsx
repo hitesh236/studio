@@ -20,14 +20,23 @@ import {
   FormItem,
   FormLabel,
   FormDescription,
+  FormMessage,
 } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Save } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 const softwareSettingsSchema = z.object({
   enableTravelModule: z.boolean().default(false),
   showAdvancedAccounting: z.boolean().default(true),
+  // Invoice Numbering
+  changePrefixEveryYear: z.boolean().default(true),
+  prefixType: z.enum(['text', 'financialYear']).default('financialYear'),
+  prefixText: z.string().optional(),
+  startingNumber: z.coerce.number().int().min(1, "Starting number must be at least 1").default(1),
 });
 
 type SoftwareSettingsValues = z.infer<typeof softwareSettingsSchema>;
@@ -41,8 +50,40 @@ export function SoftwareSettingsForm() {
     defaultValues: {
       enableTravelModule: true,
       showAdvancedAccounting: true,
+      changePrefixEveryYear: true,
+      prefixType: 'financialYear',
+      prefixText: '',
+      startingNumber: 1,
     },
   });
+
+  const watchedPrefixType = form.watch('prefixType');
+  const watchedPrefixText = form.watch('prefixText');
+  const watchedStartingNumber = form.watch('startingNumber');
+
+  const currentFinancialYear = React.useMemo(() => {
+    const today = new Date();
+    const currentMonth = today.getMonth(); // 0-11
+    const currentYear = today.getFullYear();
+    if (currentMonth >= 3) { // April (index 3) onwards
+      return `${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
+    } else { // Jan, Feb, March
+      return `${currentYear - 1}-${currentYear.toString().slice(-2)}`;
+    }
+  }, []);
+
+  const invoicePreview = React.useMemo(() => {
+    const prefix = watchedPrefixType === 'financialYear' ? currentFinancialYear : watchedPrefixText || '';
+    const paddedNumber = String(watchedStartingNumber || 1).padStart(4, '0');
+    return `${prefix}${prefix ? '/' : ''}${paddedNumber}`;
+  }, [watchedPrefixType, watchedPrefixText, watchedStartingNumber, currentFinancialYear]);
+
+  React.useEffect(() => {
+    if (watchedPrefixType === 'financialYear') {
+      form.setValue('prefixText', currentFinancialYear);
+    }
+  }, [watchedPrefixType, currentFinancialYear, form]);
+
 
   async function onSubmit(data: SoftwareSettingsValues) {
     setIsSubmitting(true);
@@ -59,6 +100,85 @@ export function SoftwareSettingsForm() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <h2 className="text-xl font-semibold">Software Settings</h2>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Invoice Numbering</CardTitle>
+            <CardDescription>
+              Customize how your invoice numbers are generated.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <FormField
+              control={form.control}
+              name="changePrefixEveryYear"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Change Every Financial Year</FormLabel>
+                    <FormDescription>
+                      Automatically reset invoice number and update prefix at the start of each financial year.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                 <FormField
+                    control={form.control}
+                    name="prefixType"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Prefix</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl><SelectTrigger><SelectValue placeholder="Select prefix type" /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                    <SelectItem value="text">Text</SelectItem>
+                                    <SelectItem value="financialYear">Financial Year</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="prefixText"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Prefix Value</FormLabel>
+                            <FormControl><Input placeholder="e.g. INV-" {...field} readOnly={watchedPrefixType === 'financialYear'} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+             <FormField
+                control={form.control}
+                name="startingNumber"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Starting Number</FormLabel>
+                        <FormControl><Input type="number" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <div>
+              <Label>Preview</Label>
+              <p className="text-sm font-mono p-2 bg-muted rounded-md border text-muted-foreground">
+                Your first invoice number will look like: {invoicePreview}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Module Management</CardTitle>
@@ -109,6 +229,7 @@ export function SoftwareSettingsForm() {
             />
           </CardContent>
         </Card>
+        
         <div className="flex justify-end">
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
