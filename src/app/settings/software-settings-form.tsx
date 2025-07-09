@@ -129,7 +129,7 @@ export function SoftwareSettingsForm() {
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                  <FormField
                     control={form.control}
                     name="prefixType"
@@ -158,18 +158,19 @@ export function SoftwareSettingsForm() {
                         </FormItem>
                     )}
                 />
+                 <FormField
+                    control={form.control}
+                    name="startingNumber"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Starting Number</FormLabel>
+                            <FormControl><Input type="number" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
             </div>
-             <FormField
-                control={form.control}
-                name="startingNumber"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Starting Number</FormLabel>
-                        <FormControl><Input type="number" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )}
-            />
+            
             <div>
               <Label>Preview</Label>
               <p className="text-sm font-mono p-2 bg-muted rounded-md border text-muted-foreground">
