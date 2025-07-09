@@ -49,10 +49,12 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { GstSettingsForm } from './gst-settings-form';
 import { PaymentTermsForm } from './payment-terms-form';
+import { SoftwareSettingsForm } from './software-settings-form';
 
 
 const settingsTabs = [
   { id: 'company', label: 'Company Setting' },
+  { id: 'software', label: 'Software Setting' },
   { id: 'gst', label: 'GST Type' },
   { id: 'payment', label: 'Payment Terms' },
   { id: 'integration', label: 'Integration' },
@@ -402,6 +404,8 @@ export default function SettingsPage() {
     switch (activeTab) {
       case 'company':
         return <CompanySettingForm />;
+      case 'software':
+        return <SoftwareSettingsForm />;
       case 'gst':
         return <GstSettingsForm />;
       case 'payment':
