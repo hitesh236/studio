@@ -50,6 +50,7 @@ import { useToast } from '@/hooks/use-toast';
 import { GstSettingsForm } from './gst-settings-form';
 import { PaymentTermsForm } from './payment-terms-form';
 import { SoftwareSettingsForm } from './software-settings-form';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 
 const settingsTabs = [
@@ -98,7 +99,6 @@ const companySettingsSchema = z.object({
   pan: z.string().length(10, 'PAN must be 10 characters.').optional().or(z.literal('')),
   logo: z.any().optional(),
   financialYearStart: z.date(),
-  financialYearEnd: z.date(),
   baseCurrency: z.string().min(1, 'Base currency is required.'),
   decimalPlaces: z.coerce.number().int().min(0).max(4),
   thousandSeparator: z.string(),
@@ -118,6 +118,7 @@ const optionalFields = {
 function CompanySettingForm() {
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [logoPreview, setLogoPreview] = React.useState<string | null>(null);
     const [visibleFields, setVisibleFields] = React.useState<Record<string, boolean>>({
         tradingName: true,
         address: true,
@@ -144,12 +145,30 @@ function CompanySettingForm() {
             gstin: '',
             pan: '',
             financialYearStart: new Date(new Date().getFullYear(), 3, 1),
-            financialYearEnd: new Date(new Date().getFullYear() + 1, 2, 31),
             baseCurrency: 'INR',
             decimalPlaces: 2,
             thousandSeparator: ',',
         },
     });
+
+    const financialYearStart = form.watch('financialYearStart');
+    const financialYearEnd = React.useMemo(() => {
+        if (!financialYearStart) return null;
+        const year = financialYearStart.getFullYear();
+        const month = financialYearStart.getMonth();
+        // If FY starts from April (month 3) or later, it ends in the next calendar year.
+        const endYear = month >= 3 ? year + 1 : year;
+        return new Date(endYear, 2, 31);
+    }, [financialYearStart]);
+
+    React.useEffect(() => {
+        // Clean up the object URL to avoid memory leaks
+        return () => {
+            if (logoPreview) {
+                URL.revokeObjectURL(logoPreview);
+            }
+        };
+    }, [logoPreview]);
 
     async function onSubmit(data: CompanySettingsValues) {
         setIsSubmitting(true);
@@ -195,6 +214,14 @@ function CompanySettingForm() {
                         <FormItem>
                             <FormLabel>Legal Name</FormLabel>
                             <FormControl><Input placeholder="Your Company Inc." {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                    
+                    <FormField name="gstin" control={form.control} render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>GSTIN</FormLabel>
+                            <FormControl><Input placeholder="15-digit GSTIN" {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )} />
@@ -292,41 +319,16 @@ function CompanySettingForm() {
 
                     {/* Optional Tax Fields */}
                     {visibleFields.taxIds && (
-                        <>
-                            <FormField name="gstin" control={form.control} render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>GSTIN</FormLabel>
-                                    <FormControl><Input placeholder="15-digit GSTIN" {...field} /></FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-                            <FormField name="pan" control={form.control} render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>PAN</FormLabel>
-                                    <FormControl><Input placeholder="10-digit PAN" {...field} /></FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-                        </>
+                        <FormField name="pan" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>PAN</FormLabel>
+                                <FormControl><Input placeholder="10-digit PAN" {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
                     )}
-
-                    {/* Optional Logo */}
-                    {visibleFields.logo && <FormField name="logo" control={form.control} render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                            <FormLabel>Company Logo</FormLabel>
-                            <FormControl>
-                                <div className="flex items-center gap-4">
-                                    <div className="w-16 h-16 rounded-md bg-muted flex items-center justify-center">
-                                        <Upload className="h-8 w-8 text-muted-foreground"/>
-                                    </div>
-                                    <Input type="file" className="flex-1" onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)} />
-                                </div>
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />}
                     
-                    {/* Financial Year */}
+                     {/* Financial Year */}
                     <FormField name="financialYearStart" control={form.control} render={({ field }) => (
                         <FormItem className="flex flex-col">
                             <FormLabel>Financial Year Start</FormLabel>
@@ -341,20 +343,14 @@ function CompanySettingForm() {
                             <FormMessage />
                         </FormItem>
                     )} />
-                    <FormField name="financialYearEnd" control={form.control} render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                            <FormLabel>Financial Year End</FormLabel>
-                            <Popover><PopoverTrigger asChild><FormControl>
-                                <Button variant={"outline"} className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
-                                    {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                            </FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start">
-                                <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
-                            </PopoverContent></Popover>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
+
+                    <div className="flex flex-col space-y-2">
+                        <FormLabel>Financial Year End</FormLabel>
+                        <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground">
+                            {financialYearEnd ? format(financialYearEnd, "PPP") : 'Calculated automatically'}
+                        </div>
+                    </div>
+
 
                     {/* Optional Number Formatting */}
                     {visibleFields.numberFormat && (
@@ -385,6 +381,42 @@ function CompanySettingForm() {
                             )} />
                         </>
                     )}
+
+                     {/* Optional Logo */}
+                    {visibleFields.logo && <FormField name="logo" control={form.control} render={({ field: { onChange, value, ...rest } }) => (
+                        <FormItem className="md:col-span-2">
+                            <FormLabel>Company Logo</FormLabel>
+                             <div className="flex items-center gap-4">
+                                <Avatar className="h-20 w-20 rounded-md">
+                                    <AvatarImage src={logoPreview || undefined} alt="Company Logo Preview" />
+                                    <AvatarFallback className="rounded-md">
+                                        <Upload className="h-8 w-8 text-muted-foreground"/>
+                                    </AvatarFallback>
+                                </Avatar>
+                                <FormControl>
+                                    <Input
+                                        type="file"
+                                        accept="image/*"
+                                        className="flex-1"
+                                        {...rest}
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                if (logoPreview) URL.revokeObjectURL(logoPreview);
+                                                setLogoPreview(URL.createObjectURL(file));
+                                                onChange(file);
+                                            } else {
+                                                if (logoPreview) URL.revokeObjectURL(logoPreview);
+                                                setLogoPreview(null);
+                                                onChange(null);
+                                            }
+                                        }}
+                                    />
+                                </FormControl>
+                            </div>
+                            <FormMessage />
+                        </FormItem>
+                    )} />}
                 </div>
                 <div className="flex justify-end pt-4">
                     <Button type="submit" disabled={isSubmitting}>
