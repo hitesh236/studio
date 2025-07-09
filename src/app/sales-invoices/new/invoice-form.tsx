@@ -134,6 +134,13 @@ export function InvoiceForm() {
 
   const [manualRoundOff, setManualRoundOff] = React.useState<number>(0);
   const [autoRoundOff, setAutoRoundOff] = React.useState(true);
+  
+  const [numberingSettings, setNumberingSettings] = React.useState({
+    changePrefixEveryYear: true,
+    prefixType: 'financialYear' as 'text' | 'financialYear',
+    prefixText: '',
+    startingNumber: 1,
+  });
 
   const [customers, setCustomers] = React.useState([
     { id: 'cust1', name: 'Innovate Inc.', gstin: '27ABCDE1234F1Z5', address: '123 Tech Park, Mumbai, Maharashtra' },
@@ -161,12 +168,32 @@ export function InvoiceForm() {
     },
   });
 
+  const currentFinancialYear = React.useMemo(() => {
+    const today = new Date();
+    const currentMonth = today.getMonth(); // 0-11
+    const currentYear = today.getFullYear();
+    if (currentMonth >= 3) { // April (index 3) onwards
+      return `${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
+    } else { // Jan, Feb, March
+      return `${currentYear - 1}-${currentYear.toString().slice(-2)}`;
+    }
+  }, []);
+
+  const invoicePreview = React.useMemo(() => {
+    const prefix = numberingSettings.prefixType === 'financialYear' ? currentFinancialYear : numberingSettings.prefixText || '';
+    const paddedNumber = String(numberingSettings.startingNumber || 1).padStart(4, '0');
+    return `${prefix}${prefix ? '/' : ''}${paddedNumber}`;
+  }, [numberingSettings, currentFinancialYear]);
+  
+  React.useEffect(() => {
+    form.setValue('invoiceNumber', invoicePreview);
+  }, [invoicePreview, form]);
+
   React.useEffect(() => {
     const today = new Date();
     const futureDate = new Date();
     futureDate.setDate(today.getDate() + 30);
     
-    form.setValue('invoiceNumber', `INV-${Math.floor(Math.random() * 9000) + 1000}`);
     form.setValue('invoiceDate', today);
     form.setValue('dueDate', futureDate);
   }, []);
@@ -350,6 +377,43 @@ export function InvoiceForm() {
                     >
                         Currency & Exchange Rate
                     </DropdownMenuCheckboxItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>Invoice Numbering</DropdownMenuLabel>
+                  <div className="px-2 space-y-4">
+                     <FormItem className="flex flex-row items-center justify-between">
+                      <FormLabel className="text-sm font-normal">Change Every FY</FormLabel>
+                      <FormControl>
+                        <Switch
+                          checked={numberingSettings.changePrefixEveryYear}
+                          onCheckedChange={(checked) => setNumberingSettings(s => ({...s, changePrefixEveryYear: checked}))}
+                        />
+                      </FormControl>
+                    </FormItem>
+                    <FormItem>
+                      <FormLabel>Prefix Type</FormLabel>
+                       <Select value={numberingSettings.prefixType} onValueChange={(value: 'text' | 'financialYear') => setNumberingSettings(s => ({...s, prefixType: value}))}>
+                          <SelectTrigger><SelectValue/></SelectTrigger>
+                          <SelectContent>
+                              <SelectItem value="text">Text</SelectItem>
+                              <SelectItem value="financialYear">Financial Year</SelectItem>
+                          </SelectContent>
+                      </Select>
+                    </FormItem>
+                     <FormItem>
+                      <FormLabel>Prefix</FormLabel>
+                      <Input value={numberingSettings.prefixType === 'financialYear' ? currentFinancialYear : numberingSettings.prefixText} onChange={e => setNumberingSettings(s => ({...s, prefixText: e.target.value}))} readOnly={numberingSettings.prefixType === 'financialYear'}/>
+                    </FormItem>
+                     <FormItem>
+                      <FormLabel>Starting Number</FormLabel>
+                      <Input type="number" value={numberingSettings.startingNumber} onChange={e => setNumberingSettings(s => ({...s, startingNumber: Number(e.target.value)}))} />
+                    </FormItem>
+                     <FormItem>
+                      <FormLabel>Preview</FormLabel>
+                      <p className="text-sm font-mono p-2 bg-muted rounded-md border text-muted-foreground">{invoicePreview}</p>
+                    </FormItem>
+                  </div>
                 </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
