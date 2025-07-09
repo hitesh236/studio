@@ -60,11 +60,19 @@ import {
 } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuGroup, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu";
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -131,6 +139,8 @@ export function InvoiceForm() {
     dueDate: true,
     currency: true,
   });
+  
+  const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
   const [manualRoundOff, setManualRoundOff] = React.useState<number>(0);
   const [autoRoundOff, setAutoRoundOff] = React.useState(true);
@@ -317,106 +327,95 @@ export function InvoiceForm() {
               <CardTitle className="text-2xl">New Invoice</CardTitle>
               <CardDescription>Fill out the details below to create a new sales invoice.</CardDescription>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Settings className="h-5 w-5" />
-                  <span className="sr-only">Invoice Settings</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
-                 <DropdownMenuGroup>
-                    <DropdownMenuLabel>Invoice Mode</DropdownMenuLabel>
-                    <DropdownMenuRadioGroup value={invoiceCreationMode} onValueChange={(value) => setInvoiceCreationMode(value as any)}>
-                        <DropdownMenuRadioItem value="both">Items and Services</DropdownMenuRadioItem>
-                        <DropdownMenuRadioItem value="item">Items Only</DropdownMenuRadioItem>
-                        <DropdownMenuRadioItem value="service">Services Only</DropdownMenuRadioItem>
-                    </DropdownMenuRadioGroup>
-                 </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuLabel>Column Visibility</DropdownMenuLabel>
-                  <DropdownMenuCheckboxItem
-                    checked={columnVisibility.unit}
-                    onCheckedChange={(checked) =>
-                      setColumnVisibility((prev) => ({ ...prev, unit: !!checked }))
-                    }
-                    disabled={invoiceType === 'service'}
-                  >
-                    Unit
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuCheckboxItem
-                    checked={columnVisibility.hsn}
-                    onCheckedChange={(checked) =>
-                      setColumnVisibility((prev) => ({ ...prev, hsn: !!checked }))
-                    }
-                  >
-                    HSN/SAC Code
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuCheckboxItem
-                    checked={columnVisibility.discount}
-                    onCheckedChange={(checked) =>
-                      setColumnVisibility((prev) => ({ ...prev, discount: !!checked }))
-                    }
-                  >
-                    Discount (%)
-                  </DropdownMenuCheckboxItem>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                    <DropdownMenuLabel>Field Visibility</DropdownMenuLabel>
-                    <DropdownMenuCheckboxItem
-                        checked={formFieldVisibility.dueDate}
-                        onCheckedChange={(checked) => setFormFieldVisibility(prev => ({ ...prev, dueDate: !!checked }))}
-                    >
-                        Due Date
-                    </DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem
-                        checked={formFieldVisibility.currency}
-                        onCheckedChange={(checked) => setFormFieldVisibility(prev => ({ ...prev, currency: !!checked }))}
-                    >
-                        Currency & Exchange Rate
-                    </DropdownMenuCheckboxItem>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuLabel>Invoice Numbering</DropdownMenuLabel>
-                  <div className="px-2 space-y-4">
-                     <FormItem className="flex flex-row items-center justify-between">
-                      <FormLabel className="text-sm font-normal">Change Every FY</FormLabel>
-                      <FormControl>
-                        <Switch
-                          checked={numberingSettings.changePrefixEveryYear}
-                          onCheckedChange={(checked) => setNumberingSettings(s => ({...s, changePrefixEveryYear: checked}))}
-                        />
-                      </FormControl>
-                    </FormItem>
-                    <FormItem>
-                      <FormLabel>Prefix Type</FormLabel>
-                       <Select value={numberingSettings.prefixType} onValueChange={(value: 'text' | 'financialYear') => setNumberingSettings(s => ({...s, prefixType: value}))}>
-                          <SelectTrigger><SelectValue/></SelectTrigger>
-                          <SelectContent>
-                              <SelectItem value="text">Text</SelectItem>
-                              <SelectItem value="financialYear">Financial Year</SelectItem>
-                          </SelectContent>
-                      </Select>
-                    </FormItem>
-                     <FormItem>
-                      <FormLabel>Prefix</FormLabel>
-                      <Input value={numberingSettings.prefixType === 'financialYear' ? currentFinancialYear : numberingSettings.prefixText} onChange={e => setNumberingSettings(s => ({...s, prefixText: e.target.value}))} readOnly={numberingSettings.prefixType === 'financialYear'}/>
-                    </FormItem>
-                     <FormItem>
-                      <FormLabel>Starting Number</FormLabel>
-                      <Input type="number" value={numberingSettings.startingNumber} onChange={e => setNumberingSettings(s => ({...s, startingNumber: Number(e.target.value)}))} />
-                    </FormItem>
-                     <FormItem>
-                      <FormLabel>Preview</FormLabel>
-                      <p className="text-sm font-mono p-2 bg-muted rounded-md border text-muted-foreground">{invoicePreview}</p>
-                    </FormItem>
-                  </div>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                        <Settings className="h-5 w-5" />
+                        <span className="sr-only">Invoice Settings</span>
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Invoice Settings</DialogTitle>
+                        <DialogDescription>
+                            Customize your invoice creation experience.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="max-h-[70vh] overflow-y-auto p-1 pr-4">
+                        <Tabs defaultValue="numbering" className="w-full">
+                            <TabsList className="grid w-full grid-cols-4">
+                                <TabsTrigger value="numbering">Numbering</TabsTrigger>
+                                <TabsTrigger value="columns">Columns</TabsTrigger>
+                                <TabsTrigger value="fields">Fields</TabsTrigger>
+                                <TabsTrigger value="mode">Mode</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="numbering" className="py-4">
+                                <Card>
+                                    <CardHeader><CardTitle className="text-base">Invoice Numbering</CardTitle></CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="flex flex-row items-center justify-between rounded-lg border p-3">
+                                            <Label htmlFor="change-fy" className="text-sm font-normal">Change Every FY</Label>
+                                            <Switch id="change-fy" checked={numberingSettings.changePrefixEveryYear} onCheckedChange={(checked) => setNumberingSettings(s => ({...s, changePrefixEveryYear: checked}))} />
+                                        </div>
+                                        <div>
+                                            <Label>Prefix Type</Label>
+                                            <RadioGroup value={numberingSettings.prefixType} onValueChange={(value: 'text' | 'financialYear') => setNumberingSettings(s => ({...s, prefixType: value}))} className="mt-2 grid grid-cols-2 gap-4">
+                                                <div><RadioGroupItem value="text" id="text" className="peer sr-only" /><Label htmlFor="text" className="flex items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">Text</Label></div>
+                                                <div><RadioGroupItem value="financialYear" id="financialYear" className="peer sr-only" /><Label htmlFor="financialYear" className="flex items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">Financial Year</Label></div>
+                                            </RadioGroup>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <div className="space-y-2 col-span-2">
+                                                <Label>Prefix Value</Label>
+                                                <Input value={numberingSettings.prefixType === 'financialYear' ? currentFinancialYear : numberingSettings.prefixText} onChange={e => setNumberingSettings(s => ({...s, prefixText: e.target.value}))} readOnly={numberingSettings.prefixType === 'financialYear'}/>
+                                            </div>
+                                             <div className="space-y-2">
+                                                <Label>Starting No.</Label>
+                                                <Input type="number" value={numberingSettings.startingNumber} onChange={e => setNumberingSettings(s => ({...s, startingNumber: Number(e.target.value)}))} />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <Label>Preview</Label>
+                                            <p className="text-sm font-mono p-2 bg-muted rounded-md border text-muted-foreground">{invoicePreview}</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+                            <TabsContent value="columns" className="py-4">
+                                <Card>
+                                    <CardHeader><CardTitle className="text-base">Column Visibility</CardTitle></CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="flex flex-row items-center justify-between rounded-lg border p-3"><Label className="font-normal">Unit</Label><Switch checked={columnVisibility.unit} onCheckedChange={(checked) => setColumnVisibility((prev) => ({ ...prev, unit: !!checked }))} disabled={invoiceType === 'service'} /></div>
+                                        <div className="flex flex-row items-center justify-between rounded-lg border p-3"><Label className="font-normal">HSN/SAC Code</Label><Switch checked={columnVisibility.hsn} onCheckedChange={(checked) => setColumnVisibility((prev) => ({ ...prev, hsn: !!checked }))} /></div>
+                                        <div className="flex flex-row items-center justify-between rounded-lg border p-3"><Label className="font-normal">Discount (%)</Label><Switch checked={columnVisibility.discount} onCheckedChange={(checked) => setColumnVisibility((prev) => ({ ...prev, discount: !!checked }))} /></div>
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+                            <TabsContent value="fields" className="py-4">
+                                 <Card>
+                                    <CardHeader><CardTitle className="text-base">Field Visibility</CardTitle></CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="flex flex-row items-center justify-between rounded-lg border p-3"><Label className="font-normal">Due Date</Label><Switch checked={formFieldVisibility.dueDate} onCheckedChange={(checked) => setFormFieldVisibility(prev => ({ ...prev, dueDate: !!checked }))} /></div>
+                                        <div className="flex flex-row items-center justify-between rounded-lg border p-3"><Label className="font-normal">Currency & Exchange Rate</Label><Switch checked={formFieldVisibility.currency} onCheckedChange={(checked) => setFormFieldVisibility(prev => ({ ...prev, currency: !!checked }))} /></div>
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+                            <TabsContent value="mode" className="py-4">
+                                <Card>
+                                    <CardHeader><CardTitle className="text-base">Invoice Mode</CardTitle></CardHeader>
+                                    <CardContent>
+                                        <RadioGroup value={invoiceCreationMode} onValueChange={(value) => setInvoiceCreationMode(value as any)} className="space-y-2">
+                                            <div className="flex items-center space-x-2"><RadioGroupItem value="both" id="both" /><Label htmlFor="both">Items and Services</Label></div>
+                                            <div className="flex items-center space-x-2"><RadioGroupItem value="item" id="item" /><Label htmlFor="item">Items Only</Label></div>
+                                            <div className="flex items-center space-x-2"><RadioGroupItem value="service" id="service" /><Label htmlFor="service">Services Only</Label></div>
+                                        </RadioGroup>
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+                        </Tabs>
+                    </div>
+                </DialogContent>
+            </Dialog>
           </CardHeader>
           <CardContent className="space-y-6 p-4 pt-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
