@@ -210,18 +210,18 @@ function CompanySettingForm() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                     {/* Always visible fields */}
-                    <FormField name="legalName" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Legal Name</FormLabel>
-                            <FormControl><Input placeholder="Your Company Inc." {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                    
                     <FormField name="gstin" control={form.control} render={({ field }) => (
                         <FormItem>
                             <FormLabel>GSTIN</FormLabel>
                             <FormControl><Input placeholder="15-digit GSTIN" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                    
+                    <FormField name="legalName" control={form.control} render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Legal Name</FormLabel>
+                            <FormControl><Input placeholder="Your Company Inc." {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )} />
