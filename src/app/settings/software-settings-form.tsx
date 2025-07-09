@@ -32,6 +32,7 @@ import { Label } from '@/components/ui/label';
 const softwareSettingsSchema = z.object({
   enableTravelModule: z.boolean().default(false),
   showAdvancedAccounting: z.boolean().default(true),
+  integrateInventory: z.boolean().default(true),
   // Invoice Numbering
   changePrefixEveryYear: z.boolean().default(true),
   prefixType: z.enum(['text', 'financialYear']).default('financialYear'),
@@ -50,6 +51,7 @@ export function SoftwareSettingsForm() {
     defaultValues: {
       enableTravelModule: true,
       showAdvancedAccounting: true,
+      integrateInventory: true,
       changePrefixEveryYear: true,
       prefixType: 'financialYear',
       prefixText: '',
@@ -217,6 +219,26 @@ export function SoftwareSettingsForm() {
                     <FormLabel className="text-base">Advanced Accounting View</FormLabel>
                     <FormDescription>
                       Show detailed accounting views and reports.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="integrateInventory"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Integrate Inventory with Accounts</FormLabel>
+                    <FormDescription>
+                      Automatically create accounting entries for inventory transactions.
                     </FormDescription>
                   </div>
                   <FormControl>
