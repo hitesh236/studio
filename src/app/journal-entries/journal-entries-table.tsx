@@ -220,38 +220,38 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                       return (
                         <React.Fragment key={entry.id}>
                             {allLines.map((line, lineIndex) => (
-                                <TableRow key={line.id} className={cn(isEven ? 'bg-muted/30' : 'bg-transparent', "hover:bg-muted/60", lineIndex === 0 && 'border-t-2 border-primary', 'border-x')}>
+                                <TableRow key={line.id} className={cn(isEven ? 'bg-muted/30' : 'bg-transparent', "hover:bg-muted/60 border-x")}>
                                     {lineIndex === 0 && (
-                                        <TableCell rowSpan={rowCount} className="align-middle text-center p-2 border-b-2 border-primary">
-                                            {format(entry.date, 'dd-MMM-yy')}
+                                        <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border-t-2 border-primary", isEven ? "bg-muted/30" : "bg-transparent")}>
+                                            <div className="pt-2">{format(entry.date, 'dd-MMM-yy')}</div>
                                         </TableCell>
                                     )}
                                     {lineIndex === 0 && (
-                                        <TableCell rowSpan={rowCount} className="align-middle text-center p-2 border-b-2 border-primary">
-                                            <div className="flex flex-col items-center">
+                                        <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border-t-2 border-primary", isEven ? "bg-muted/30" : "bg-transparent")}>
+                                            <div className="flex flex-col items-center pt-2">
                                                 <span>{entry.entryNumber}</span>
                                                 <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => setViewingEntry(entry)}>View Details</Button>
                                             </div>
                                         </TableCell>
                                     )}
                                      {lineIndex === 0 && (
-                                        <TableCell rowSpan={rowCount} className="align-middle text-center p-2 border-b-2 border-primary">
-                                            {entry.voucherType}
+                                        <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border-t-2 border-primary", isEven ? "bg-muted/30" : "bg-transparent")}>
+                                            <div className="pt-2">{entry.voucherType}</div>
                                         </TableCell>
                                     )}
-                                    <TableCell className={cn('p-2', line.credit > 0 ? 'pl-8' : 'pl-2')}>
+                                    <TableCell className={cn('p-2 border-t', line.credit > 0 ? 'pl-8' : 'pl-2', lineIndex === 0 && 'border-t-2 border-primary')}>
                                         {line.credit > 0 && <span className="text-muted-foreground">To </span>}
                                         {line.account}
                                     </TableCell>
-                                    <TableCell className="text-right font-mono p-2 text-primary">
+                                    <TableCell className={cn("text-right font-mono p-2 text-primary border-t", lineIndex === 0 && 'border-t-2 border-primary')}>
                                         {line.debit > 0 ? formatCurrency(line.debit, 'INR') : null}
                                     </TableCell>
-                                    <TableCell className="text-right font-mono p-2 text-destructive">
+                                    <TableCell className={cn("text-right font-mono p-2 text-destructive border-t", lineIndex === 0 && 'border-t-2 border-primary')}>
                                         {line.credit > 0 ? formatCurrency(line.credit, 'INR') : null}
                                     </TableCell>
                                     {lineIndex === 0 && (
-                                        <TableCell rowSpan={rowCount} className="align-middle text-center border-b-2 border-primary p-2">
-                                           <div className="flex items-center justify-center gap-0">
+                                        <TableCell rowSpan={rowCount} className={cn("align-top text-center border-t-2 border-primary p-2", isEven ? "bg-muted/30" : "bg-transparent")}>
+                                           <div className="flex items-center justify-center gap-0 pt-2">
                                               <Tooltip><TooltipTrigger asChild>
                                                   <Button variant="ghost" size="icon" className="h-7 w-7"><Edit className="h-4 w-4" /></Button>
                                               </TooltipTrigger><TooltipContent><p>Edit Entry</p></TooltipContent></Tooltip>
@@ -339,5 +339,3 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
     </TooltipProvider>
   );
 }
-
-    
