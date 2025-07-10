@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -329,22 +330,22 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                       return (
                         <React.Fragment key={entry.id}>
                           {entry.lines.map((line, lineIndex) => (
-                            <TableRow key={line.id} className={cn(isEven ? 'bg-muted/30 hover:bg-muted/60' : 'bg-transparent hover:bg-muted/40')}>
-                              {lineIndex === 0 ? (
-                                <TableCell rowSpan={entry.lines.length + 1} className="align-top p-2 border-b">
+                            <TableRow key={line.id} className={cn(isEven ? 'bg-muted/30' : 'bg-transparent', "hover:bg-muted/60")}>
+                              {lineIndex === 0 && (
+                                <TableCell rowSpan={entry.lines.length + 1} className={cn("align-top p-2", isEven && "border-l-transparent", !isEven && "border-l-transparent", "border-b")}>
                                   {format(entry.date, 'dd-MMM-yy')}
                                 </TableCell>
-                              ) : null}
-                              {lineIndex === 0 ? (
+                              )}
+                              {lineIndex === 0 && (
                                 <TableCell rowSpan={entry.lines.length + 1} className="align-top p-2 border-b">
                                   {entry.entryNumber}
                                 </TableCell>
-                              ) : null}
-                              {lineIndex === 0 ? (
+                              )}
+                              {lineIndex === 0 && (
                                 <TableCell rowSpan={entry.lines.length + 1} className="align-top p-2 border-b">
                                   {entry.voucherType}
                                 </TableCell>
-                              ) : null}
+                              )}
                               <TableCell className={cn('p-2', line.credit > 0 ? 'pl-6' : '')}>
                                 {line.account}
                               </TableCell>
@@ -354,12 +355,12 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                               <TableCell className="text-right font-mono p-2 text-destructive">
                                 {line.credit > 0 ? formatCurrency(line.credit, 'INR') : ''}
                               </TableCell>
-                              {lineIndex === 0 ? (
+                              {lineIndex === 0 && (
                                 <TableCell rowSpan={entry.lines.length + 1} className="align-top p-2 border-b">
                                   {entry.createdBy}
                                 </TableCell>
-                              ) : null}
-                              {lineIndex === 0 ? (
+                              )}
+                              {lineIndex === 0 && (
                                 <TableCell rowSpan={entry.lines.length + 1} className="align-top border-b p-2 text-center">
                                    <div className="flex items-center justify-center gap-0">
                                       <Tooltip><TooltipTrigger asChild>
@@ -376,10 +377,10 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                                       </TooltipTrigger><TooltipContent><p>Delete Entry</p></TooltipContent></Tooltip>
                                   </div>
                                 </TableCell>
-                              ) : null}
+                              )}
                             </TableRow>
                           ))}
-                          <TableRow className={cn(isEven ? 'bg-muted/30 hover:bg-muted/60' : 'bg-transparent hover:bg-muted/40', "border-b")}>
+                          <TableRow className={cn(isEven ? 'bg-muted/30' : 'bg-transparent', "hover:bg-muted/60", "border-b")}>
                             <TableCell colSpan={3} className="py-1 px-2 text-xs italic text-muted-foreground">
                               {entry.description}
                             </TableCell>
