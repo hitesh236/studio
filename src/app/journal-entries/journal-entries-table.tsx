@@ -33,15 +33,6 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogClose,
-    DialogFooter,
-} from '@/components/ui/dialog';
 import { JournalEntryVoucherDialog, JournalEntryCard } from './journal-entry-components';
 
 export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
