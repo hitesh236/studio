@@ -218,37 +218,37 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                       return (
                         <React.Fragment key={entry.id}>
                             {allLines.map((line, lineIndex) => (
-                                <TableRow key={line.id} className={cn(isEven ? 'bg-muted/30' : 'bg-transparent', "hover:bg-muted/60 border-x")}>
-                                    {lineIndex === 0 && (
-                                        <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border-t-2 border-primary", isEven ? "bg-muted/30" : "bg-transparent")}>
+                                <TableRow key={line.id} className={cn(isEven ? 'bg-muted/30' : 'bg-transparent', "hover:bg-muted/60")}>
+                                    {lineIndex === 0 ? (
+                                        <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border", isEven ? "bg-muted/20" : "bg-transparent")}>
                                             <div className="pt-2">{format(entry.date, 'dd-MMM-yy')}</div>
                                         </TableCell>
-                                    )}
-                                    {lineIndex === 0 && (
-                                        <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border-t-2 border-primary", isEven ? "bg-muted/30" : "bg-transparent")}>
+                                    ) : null}
+                                    {lineIndex === 0 ? (
+                                        <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border", isEven ? "bg-muted/20" : "bg-transparent")}>
                                             <div className="flex flex-col items-center pt-2">
                                                 <span>{entry.entryNumber}</span>
                                                 <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => setViewingEntry(entry)}>View Details</Button>
                                             </div>
                                         </TableCell>
-                                    )}
-                                     {lineIndex === 0 && (
-                                        <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border-t-2 border-primary", isEven ? "bg-muted/30" : "bg-transparent")}>
+                                    ) : null}
+                                     {lineIndex === 0 ? (
+                                        <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border", isEven ? "bg-muted/20" : "bg-transparent")}>
                                             <div className="pt-2">{entry.voucherType}</div>
                                         </TableCell>
-                                    )}
-                                    <TableCell className={cn('p-2 border-t', line.credit > 0 ? 'pl-8' : 'pl-2', lineIndex === 0 && 'border-t-2 border-primary')}>
+                                     ) : null}
+                                    <TableCell className={cn('p-2 border', line.credit > 0 ? 'pl-8' : 'pl-2')}>
                                         {line.credit > 0 && <span className="text-muted-foreground">To </span>}
                                         {line.account}
                                     </TableCell>
-                                    <TableCell className={cn("text-right font-mono p-2 text-primary border-t", lineIndex === 0 && 'border-t-2 border-primary')}>
+                                    <TableCell className={cn("text-right font-mono p-2 text-primary border")}>
                                         {line.debit > 0 ? formatCurrency(line.debit, 'INR') : null}
                                     </TableCell>
-                                    <TableCell className={cn("text-right font-mono p-2 text-destructive border-t", lineIndex === 0 && 'border-t-2 border-primary')}>
+                                    <TableCell className={cn("text-right font-mono p-2 text-destructive border")}>
                                         {line.credit > 0 ? formatCurrency(line.credit, 'INR') : null}
                                     </TableCell>
-                                    {lineIndex === 0 && (
-                                        <TableCell rowSpan={rowCount} className={cn("align-top text-center border-t-2 border-primary p-2", isEven ? "bg-muted/30" : "bg-transparent")}>
+                                    {lineIndex === 0 ? (
+                                        <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border", isEven ? "bg-muted/20" : "bg-transparent")}>
                                            <div className="flex items-center justify-center gap-0 pt-2">
                                               <Tooltip><TooltipTrigger asChild>
                                                   <Button variant="ghost" size="icon" className="h-7 w-7"><Edit className="h-4 w-4" /></Button>
@@ -261,11 +261,11 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                                               </TooltipTrigger><TooltipContent><p>Delete Entry</p></TooltipContent></Tooltip>
                                           </div>
                                         </TableCell>
-                                    )}
+                                    ) : null}
                                 </TableRow>
                             ))}
-                             <TableRow className={cn(isEven ? 'bg-muted/30' : 'bg-transparent', "hover:bg-muted/60", "border-x border-b-2 border-primary")}>
-                                <TableCell colSpan={4} className="py-1 px-2 text-xs italic text-muted-foreground">
+                             <TableRow className={cn(isEven ? 'bg-muted/30' : 'bg-transparent', "hover:bg-muted/60")}>
+                                <TableCell colSpan={4} className="py-1 px-2 text-xs italic text-muted-foreground border">
                                     (Narration: {entry.description})
                                 </TableCell>
                             </TableRow>
