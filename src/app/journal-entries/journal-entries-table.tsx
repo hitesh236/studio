@@ -34,6 +34,7 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { JournalEntryVoucherDialog, JournalEntryCard } from './journal-entry-components';
+import Loading from '../loading';
 
 export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
   const [filter, setFilter] = React.useState('');
@@ -129,6 +130,9 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
     );
   };
 
+  if (!data) {
+    return <Loading />;
+  }
 
   return (
     <TooltipProvider>
