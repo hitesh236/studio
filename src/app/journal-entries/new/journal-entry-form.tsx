@@ -6,6 +6,8 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import {
   Calendar as CalendarIcon,
   X,
@@ -103,8 +105,9 @@ const voucherTypes = [
     'Sales Voucher', 'Purchase Voucher', 'Journal Voucher', 'Payment Voucher', 'Receipt Voucher'
 ];
 
-export function JournalEntryForm() {
+function JournalEntryFormComponent() {
     const { toast } = useToast();
+    const searchParams = useSearchParams();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [chartOfAccounts, setChartOfAccounts] = React.useState<Account[]>(initialChartOfAccounts);
 
@@ -115,7 +118,7 @@ export function JournalEntryForm() {
     const form = useForm<JournalEntryFormValues>({
       resolver: zodResolver(journalEntryFormSchema),
       defaultValues: {
-        // date will be set by useEffect
+        date: new Date(),
         voucherType: 'Journal Voucher',
         description: '',
         debitLines: [{ accountId: '', amount: 0 }],
@@ -127,10 +130,24 @@ export function JournalEntryForm() {
     
     // Client-side date initialization to avoid hydration errors
     React.useEffect(() => {
-        if (!form.getValues('date')) {
-            form.setValue('date', new Date());
+        const reverseData = searchParams.get('reverse');
+        if (reverseData) {
+            try {
+                const parsedData = JSON.parse(decodeURIComponent(reverseData));
+                form.reset({
+                    ...parsedData,
+                    date: new Date(parsedData.date),
+                });
+            } catch (error) {
+                console.error("Failed to parse reverse entry data:", error);
+                toast({
+                    title: "Error",
+                    description: "Could not load data for reversing the entry.",
+                    variant: "destructive",
+                });
+            }
         }
-    }, [form]);
+    }, [searchParams, form, toast]);
 
     const { fields: debitFields, append: appendDebit, remove: removeDebit } = useFieldArray({
         control: form.control,
@@ -157,7 +174,7 @@ export function JournalEntryForm() {
             accounts.forEach(acc => {
                 const label = parentName ? `${acc.name} (${parentName})` : acc.name;
                 if (acc.type === 'ledger') {
-                    list.push({ value: acc.id, label: label });
+                    list.push({ value: acc.id, label: acc.name });
                 }
                 if (acc.children) {
                     list = [...list, ...flatten(acc.children, acc.name)];
@@ -245,21 +262,31 @@ export function JournalEntryForm() {
 
     const AccountCombobox = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
         const [open, setOpen] = React.useState(false);
+        const findAccount = allLedgers.find(acc => acc.value === value || acc.label === value);
+        
         return (
             <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild><FormControl>
                     <Button variant="outline" role="combobox" className={cn("w-full justify-between", !value && "text-muted-foreground")}>
-                    {value ? allLedgers.find(acc => acc.value === value)?.label : "Select account"}
+                    {findAccount ? findAccount.label : "Select account"}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                 </FormControl></PopoverTrigger>
-                <PopoverContent className="w-[300px] p-0"><Command>
+                <PopoverContent className="w-[300px] p-0"><Command filter={(value, search) => {
+                    const account = allLedgers.find(acc => acc.value === value);
+                    if (account && account.label.toLowerCase().includes(search.toLowerCase())) return 1;
+                    return 0;
+                }}>
                     <CommandInput placeholder="Search accounts..." />
                     <CommandList>
                         <CommandEmpty>No account found.</CommandEmpty>
                         <CommandGroup>
                             {allLedgers.map(acc => (
-                                <CommandItem value={acc.value} key={acc.value} onSelect={(selectedValue) => { onChange(selectedValue); setOpen(false); }}>
+                                <CommandItem value={acc.value} key={acc.value} onSelect={(selectedValue) => { 
+                                    const account = allLedgers.find(a => a.value === selectedValue);
+                                    if(account) onChange(account.value);
+                                    setOpen(false); 
+                                }}>
                                     <Check className={cn("mr-2 h-4 w-4", acc.value === value ? "opacity-100" : "opacity-0")} />
                                     {acc.label}
                                 </CommandItem>
@@ -575,4 +602,12 @@ export function JournalEntryForm() {
             </CardContent>
         </Card>
     );
+}
+
+export function JournalEntryForm() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <JournalEntryFormComponent />
+        </Suspense>
+    )
 }

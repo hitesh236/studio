@@ -34,10 +34,11 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { JournalEntryVoucherDialog, JournalEntryCard } from './journal-entry-components';
-import Loading from '../loading';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useRouter } from 'next/navigation';
 
 export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
+  const router = useRouter();
   const [filter, setFilter] = React.useState('');
   const [density, setDensity] = React.useState<'normal' | 'compact'>('normal');
   const [page, setPage] = React.useState(0);
@@ -84,6 +85,18 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
     setRowsPerPageSelection(value);
     setPage(0);
   };
+
+  const handleReverseEntry = (entry: JournalEntry) => {
+    const reversedEntryData = {
+      description: `Reversal of J.E. #${entry.entryNumber}`,
+      date: new Date(entry.date.getTime() + 24 * 60 * 60 * 1000), // Next day
+      voucherType: entry.voucherType,
+      debitLines: entry.lines.filter(l => l.credit > 0).map(l => ({ accountId: l.account, amount: l.credit })),
+      creditLines: entry.lines.filter(l => l.debit > 0).map(l => ({ accountId: l.account, amount: l.debit })),
+    };
+    const query = encodeURIComponent(JSON.stringify(reversedEntryData));
+    router.push(`/journal-entries/new?reverse=${query}`);
+  }
 
   const getPaginationButtons = () => {
     if (totalPages <= 1) return null;
@@ -134,7 +147,7 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
   };
 
   if (!data) {
-    return <Loading />;
+    return null;
   }
 
   return (
@@ -254,7 +267,7 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                                                   <Button variant="ghost" size="icon" className="h-7 w-7"><Edit className="h-4 w-4" /></Button>
                                               </TooltipTrigger><TooltipContent><p>Edit Entry</p></TooltipContent></Tooltip>
                                               <Tooltip><TooltipTrigger asChild>
-                                                  <Button variant="ghost" size="icon" className="h-7 w-7"><Undo2 className="h-4 w-4" /></Button>
+                                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleReverseEntry(entry)}><Undo2 className="h-4 w-4" /></Button>
                                               </TooltipTrigger><TooltipContent><p>Reverse Entry</p></TooltipContent></Tooltip>
                                               <Tooltip><TooltipTrigger asChild>
                                                   <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>

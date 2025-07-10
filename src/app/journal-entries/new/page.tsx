@@ -1,3 +1,6 @@
+
+'use client';
+
 import { JournalEntryForm } from './journal-entry-form';
 
 export default function NewJournalEntryPage() {
