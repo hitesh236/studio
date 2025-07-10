@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { formatCurrency, cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -69,6 +70,11 @@ export const JournalEntryVoucherDialog = ({ entry, onOpenChange }: { entry: Jour
                     <span><strong>Date:</strong> {format(entry.date, 'PPP')}</span>
                     <span><strong>Type:</strong> {entry.voucherType}</span>
                 </div>
+                <div className="flex justify-between text-sm">
+                   <span><strong>Created By:</strong> {entry.createdBy}</span>
+                   <Badge variant={entry.status === 'Approved' ? 'default' : 'destructive'}>{entry.status}</Badge>
+                </div>
+
                 <Separator />
                 <div className="rounded-md border">
                     <Table>
@@ -106,7 +112,6 @@ export const JournalEntryVoucherDialog = ({ entry, onOpenChange }: { entry: Jour
                 </div>
                 <div>
                     <p className="text-sm"><strong>Narration:</strong> <span className="text-muted-foreground italic">{entry.description}</span></p>
-                    <p className="text-xs text-muted-foreground mt-2">Created by: {entry.createdBy}</p>
                 </div>
             </div>
         </DialogContent>

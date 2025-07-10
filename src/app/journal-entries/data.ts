@@ -14,6 +14,7 @@ export type JournalEntry = {
     description: string;
     lines: JournalEntryLine[];
     createdBy: string;
+    status: 'Approved' | 'Pending';
 };
 
 const accounts = ['Cash', "Owner's Equity", 'Office Supplies', 'Accounts Payable', 'Rent Expense', 'Accounts Receivable', 'Sales Revenue', 'Salaries', 'Inventory', 'Prepaid Insurance', 'Equipment', 'Accumulated Depreciation', 'Wages Payable', 'Unearned Revenue', 'Common Stock', 'Service Revenue', 'Advertising Expense', 'Utilities Expense'];
@@ -34,8 +35,10 @@ const descriptions = [
 ];
 const users = ['Admin', 'Jane Doe', 'John Smith', 'Alice Cooper', 'Bob Vance'];
 const voucherTypes = ['Journal', 'Payment', 'Receipt', 'Sales', 'Purchase'];
+const statuses = ['Approved', 'Pending'] as const;
 
-const getRandomElement = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
+const getRandomElement = <T>(arr: T[] | readonly T[]): T => arr[Math.floor(Math.random() * arr.length)];
 const getRandomDate = (start: Date, end: Date): Date => new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
 
 const generateRandomLines = (totalAmount: number): JournalEntryLine[] => {
@@ -90,7 +93,8 @@ export const generateJournalEntries = (count: number): JournalEntry[] => {
             voucherType: getRandomElement(voucherTypes),
             description: getRandomElement(descriptions),
             lines: generateRandomLines(totalAmount),
-            createdBy: getRandomElement(users)
+            createdBy: getRandomElement(users),
+            status: getRandomElement(statuses)
         };
         entries.push(entry);
     }

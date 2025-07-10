@@ -36,6 +36,7 @@ import {
 import { JournalEntryVoucherDialog, JournalEntryCard } from './journal-entry-components';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
 
 export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
   const router = useRouter();
@@ -218,6 +219,7 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                       <TableHead className={cn("p-2 h-10", density === 'compact' && 'p-1 h-8')}>Particulars</TableHead>
                       <TableHead className={cn("text-right p-2 h-10", density === 'compact' && 'p-1 h-8')}>Debit</TableHead>
                       <TableHead className={cn("text-right p-2 h-10", density === 'compact' && 'p-1 h-8')}>Credit</TableHead>
+                      <TableHead className={cn("w-[100px] text-center p-2 h-10", density === 'compact' && 'p-1 h-8')}>Status</TableHead>
                       <TableHead className={cn("w-[150px] text-center p-2 h-10", density === 'compact' && 'p-1 h-8')}>Actions</TableHead>
                   </TableRow>
                   </TableHeader>
@@ -260,6 +262,11 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                                     <TableCell className={cn("text-right font-mono p-2 text-destructive border")}>
                                         {line.credit > 0 ? formatCurrency(line.credit, 'INR') : null}
                                     </TableCell>
+                                     {lineIndex === 0 ? (
+                                        <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border", isEven ? "bg-muted/20" : "bg-transparent")}>
+                                            <Badge variant={entry.status === 'Approved' ? 'default' : 'destructive'}>{entry.status}</Badge>
+                                        </TableCell>
+                                     ) : null}
                                     {lineIndex === 0 ? (
                                         <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border", isEven ? "bg-muted/20" : "bg-transparent")}>
                                            <div className="flex items-center justify-center gap-0 pt-2">
