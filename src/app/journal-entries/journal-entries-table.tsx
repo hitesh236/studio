@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/tooltip';
 import { JournalEntryVoucherDialog, JournalEntryCard } from './journal-entry-components';
 import Loading from '../loading';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
   const [filter, setFilter] = React.useState('');
@@ -61,13 +62,15 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
   }, [data, filter]);
 
   const totalPages = React.useMemo(() => {
+    if (!data) return 1;
     if (rowsPerPageSelection === "all" || filteredData.length === 0) {
       return 1;
     }
     return Math.ceil(filteredData.length / Number(rowsPerPageSelection));
-  }, [filteredData.length, rowsPerPageSelection]);
+  }, [filteredData.length, rowsPerPageSelection, data]);
 
   const paginatedData = React.useMemo(() => {
+    if (!data) return [];
     if (rowsPerPageSelection === "all") {
       return filteredData;
     }
@@ -75,7 +78,7 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
     const start = page * rpp;
     const end = start + rpp;
     return filteredData.slice(start, end);
-  }, [filteredData, page, rowsPerPageSelection]);
+  }, [filteredData, page, rowsPerPageSelection, data]);
   
   const handleRowsPerPageChange = (value: string) => {
     setRowsPerPageSelection(value);
