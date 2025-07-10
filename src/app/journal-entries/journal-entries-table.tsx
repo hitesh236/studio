@@ -56,7 +56,7 @@ const JournalEntryVoucherDialog = ({ entry, onOpenChange }: { entry: JournalEntr
                 <DialogHeader>
                     <DialogTitle>Journal Voucher: {entry.entryNumber}</DialogTitle>
                     <DialogDescription>
-                        Date: {format(entry.date, 'PPP')}
+                        Date: {format(entry.date, 'PPP')} | Type: {entry.voucherType}
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
@@ -109,8 +109,9 @@ const JournalEntryCard = ({ entry, density, onViewClick }: { entry: JournalEntry
                 <div className="flex justify-between items-start">
                     <div>
                         <CardTitle className={cn("text-base", density === 'compact' && 'text-sm')}>{entry.entryNumber}</CardTitle>
-                        <CardDescription className={cn(density === 'compact' && 'text-xs')}>{format(entry.date, 'MMM d, yyyy')} &bull; {entry.createdBy}</CardDescription>
+                        <CardDescription className={cn("text-xs")}>{format(entry.date, 'MMM d, yyyy')} &bull; {entry.voucherType}</CardDescription>
                     </div>
+                     <CardDescription className={cn(density === 'compact' && 'text-xs')}>{entry.createdBy}</CardDescription>
                 </div>
                  <p className={cn("text-sm text-muted-foreground pt-2", density === 'compact' && 'text-xs pt-1')}>{entry.description}</p>
             </CardHeader>
@@ -170,10 +171,11 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
     return data.filter(entry => {
         const matchesDescription = entry.description.toLowerCase().includes(lowercasedFilter);
         const matchesEntryNumber = entry.entryNumber.toLowerCase().includes(lowercasedFilter);
+        const matchesVoucherType = entry.voucherType.toLowerCase().includes(lowercasedFilter);
         const matchesCreatedBy = entry.createdBy.toLowerCase().includes(lowercasedFilter);
         const matchesAccount = entry.lines.some(line => line.account.toLowerCase().includes(lowercasedFilter));
         
-        return matchesDescription || matchesEntryNumber || matchesCreatedBy || matchesAccount;
+        return matchesDescription || matchesEntryNumber || matchesVoucherType || matchesCreatedBy || matchesAccount;
     });
   }, [data, filter]);
 
@@ -312,6 +314,7 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                   <TableRow>
                       <TableHead className={cn("w-[100px] p-2 h-10", density === 'compact' && 'p-1 h-8')}>Date</TableHead>
                       <TableHead className={cn("w-[120px] p-2 h-10", density === 'compact' && 'p-1 h-8')}>Entry #</TableHead>
+                      <TableHead className={cn("w-[100px] p-2 h-10", density === 'compact' && 'p-1 h-8')}>Voucher Type</TableHead>
                       <TableHead className={cn("p-2 h-10", density === 'compact' && 'p-1 h-8')}>Account & Description</TableHead>
                       <TableHead className={cn("text-right p-2 h-10", density === 'compact' && 'p-1 h-8')}>Debit</TableHead>
                       <TableHead className={cn("text-right p-2 h-10", density === 'compact' && 'p-1 h-8')}>Credit</TableHead>
@@ -324,16 +327,19 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                       <React.Fragment key={entry.id}>
                       {entry.lines.map((line, lineIndex) => (
                           <TableRow key={line.id} className={cn('h-auto', entryIndex % 2 !== 0 && 'bg-muted/50')}>
-                          {lineIndex === 0 ? (
+                          {lineIndex === 0 && (
+                            <>
                               <TableCell rowSpan={entry.lines.length + 1} className={cn("align-top font-medium border-r p-2", density === 'compact' && 'p-1')}>
-                              {format(entry.date, 'dd-MMM-yy')}
+                                {format(entry.date, 'dd-MMM-yy')}
                               </TableCell>
-                          ) : null}
-                          {lineIndex === 0 ? (
                               <TableCell rowSpan={entry.lines.length + 1} className={cn("align-top text-muted-foreground border-r p-2", density === 'compact' && 'p-1')}>
-                              {entry.entryNumber}
+                                {entry.entryNumber}
                               </TableCell>
-                          ) : null}
+                              <TableCell rowSpan={entry.lines.length + 1} className={cn("align-top text-muted-foreground border-r p-2", density === 'compact' && 'p-1')}>
+                                {entry.voucherType}
+                              </TableCell>
+                            </>
+                          )}
                           
                           <TableCell className={cn('p-2', line.credit > 0 ? 'pl-6' : '', density === 'compact' && 'p-1', line.credit > 0 && density === 'compact' ? 'pl-4' : '')}>
                               {line.account}
@@ -345,13 +351,11 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                             {line.credit > 0 ? formatCurrency(line.credit, 'INR') : ''}
                           </TableCell>
 
-                          {lineIndex === 0 ? (
+                          {lineIndex === 0 && (
+                            <>
                               <TableCell rowSpan={entry.lines.length + 1} className={cn("align-top border-r p-2", density === 'compact' && 'p-1')}>
-                              {entry.createdBy}
+                                {entry.createdBy}
                               </TableCell>
-                          ) : null}
-
-                          {lineIndex === 0 ? (
                               <TableCell rowSpan={entry.lines.length + 1} className={cn("text-center align-top p-2", density === 'compact' && 'p-1')}>
                                 <div className="flex items-center justify-center gap-0">
                                     <Tooltip><TooltipTrigger asChild>
@@ -371,7 +375,8 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                                     </TooltipTrigger><TooltipContent><p>Delete Entry</p></TooltipContent></Tooltip>
                                 </div>
                               </TableCell>
-                          ) : null}
+                            </>
+                          )}
                           </TableRow>
                       ))}
                       <TableRow className={cn('h-auto text-muted-foreground', entryIndex % 2 !== 0 && 'bg-muted/50')}>
@@ -446,5 +451,3 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
     </TooltipProvider>
   );
 }
-
-    
