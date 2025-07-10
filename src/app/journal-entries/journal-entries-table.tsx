@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -11,15 +10,12 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  TableFooter
 } from "@/components/ui/table";
 import { format } from 'date-fns';
 import { formatCurrency, cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Edit, Undo2, Trash2, PlusCircle, Search, Filter, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Eye } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -46,116 +42,7 @@ import {
     DialogClose,
     DialogFooter,
 } from '@/components/ui/dialog';
-
-const JournalEntryVoucherDialog = ({ entry, onOpenChange }: { entry: JournalEntry | null; onOpenChange: (open: boolean) => void }) => {
-    if (!entry) return null;
-
-    const total = entry.lines.reduce((acc, line) => acc + line.debit, 0);
-
-    return (
-        <Dialog open={!!entry} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-lg">
-                <DialogHeader>
-                    <DialogTitle>Journal Voucher: {entry.entryNumber}</DialogTitle>
-                    <DialogDescription>
-                        Date: {format(entry.date, 'PPP')} | Type: {entry.voucherType}
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                    <p className="text-sm"><span className="font-semibold">Narration:</span> {entry.description}</p>
-                    <div className="rounded-md border">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Account</TableHead>
-                                    <TableHead className="text-right">Debit</TableHead>
-                                    <TableHead className="text-right">Credit</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {entry.lines.map(line => (
-                                    <TableRow key={line.id}>
-                                        <TableCell className={cn(line.credit > 0 && "pl-8")}>{line.account}</TableCell>
-                                        <TableCell className="text-right font-mono text-primary">{line.debit > 0 ? formatCurrency(line.debit, 'INR') : null}</TableCell>
-                                        <TableCell className="text-right font-mono text-destructive">{line.credit > 0 ? formatCurrency(line.credit, 'INR') : null}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                            <TableFooter>
-                                <TableRow>
-                                    <TableCell className="text-right font-bold">Total</TableCell>
-                                    <TableCell className="text-right font-bold font-mono">{formatCurrency(total, 'INR')}</TableCell>
-                                    <TableCell className="text-right font-bold font-mono">{formatCurrency(total, 'INR')}</TableCell>
-                                </TableRow>
-                            </TableFooter>
-                        </Table>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Created by: {entry.createdBy}</p>
-                </div>
-                <DialogFooter>
-                    <DialogClose asChild>
-                        <Button type="button" variant="outline">Close</Button>
-                    </DialogClose>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
-}
-
-const JournalEntryCard = ({ entry, density, onViewClick }: { entry: JournalEntry, density: 'normal' | 'compact', onViewClick: () => void }) => {
-    const totalDebits = entry.lines.reduce((acc, line) => acc + line.debit, 0);
-
-    return (
-        <Card className="flex h-full flex-col">
-            <CardHeader className={cn("p-4 pb-2", density === 'compact' && 'p-3 pb-1')}>
-                <div className="flex justify-between items-start">
-                    <div>
-                        <CardTitle className={cn("text-base", density === 'compact' && 'text-sm')}>{entry.entryNumber}</CardTitle>
-                        <CardDescription className={cn("text-xs")}>{format(entry.date, 'MMM d, yyyy')} &bull; {entry.voucherType}</CardDescription>
-                    </div>
-                     <CardDescription className={cn(density === 'compact' && 'text-xs')}>{entry.createdBy}</CardDescription>
-                </div>
-                 <p className={cn("text-sm text-muted-foreground pt-2", density === 'compact' && 'text-xs pt-1')}>{entry.description}</p>
-            </CardHeader>
-            <CardContent className={cn("flex-grow p-4 pt-2", density === 'compact' && 'p-3 pt-1')}>
-                <div className={cn("space-y-2 text-sm", density === 'compact' && 'space-y-1 text-xs')}>
-                    {entry.lines.map(line => (
-                        <div key={line.id} className="flex justify-between items-center">
-                            <span className={cn(line.credit > 0 && 'pl-4')}>{line.account}</span>
-                            <span className={cn("font-mono", line.debit > 0 ? "text-primary" : "text-destructive")}>
-                                {line.debit > 0 ? formatCurrency(line.debit, 'INR') : formatCurrency(line.credit, 'INR')}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-                 <Separator className={cn("my-2", density === 'compact' && 'my-1')} />
-                 <div className={cn("flex justify-between font-bold text-sm", density === 'compact' && 'text-xs')}>
-                    <span>Total</span>
-                    <span className="font-mono">{formatCurrency(totalDebits, 'INR')}</span>
-                 </div>
-            </CardContent>
-            <CardFooter className={cn("mt-auto border-t p-2", density === 'compact' && 'p-1')}>
-                <div className="flex w-full items-center justify-end gap-1">
-                    <Tooltip><TooltipTrigger asChild>
-                        <Button variant="ghost" size="sm" onClick={onViewClick}><Eye className="mr-1 h-4 w-4" />View</Button>
-                    </TooltipTrigger><TooltipContent><p>View Voucher</p></TooltipContent></Tooltip>
-                    
-                    <Tooltip><TooltipTrigger asChild>
-                        <Button variant="ghost" size="sm"><Edit className="mr-1 h-4 w-4" />Edit</Button>
-                    </TooltipTrigger><TooltipContent><p>Edit Entry</p></TooltipContent></Tooltip>
-
-                    <Tooltip><TooltipTrigger asChild>
-                        <Button variant="ghost" size="sm"><Undo2 className="mr-1 h-4 w-4" />Reverse</Button>
-                    </TooltipTrigger><TooltipContent><p>Reverse Entry</p></TooltipContent></Tooltip>
-
-                    <Tooltip><TooltipTrigger asChild>
-                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive"><Trash2 className="mr-1 h-4 w-4" />Delete</Button>
-                    </TooltipTrigger><TooltipContent><p>Delete Entry</p></TooltipContent></Tooltip>
-                </div>
-            </CardFooter>
-        </Card>
-    )
-}
+import { JournalEntryVoucherDialog, JournalEntryCard } from './journal-entry-components';
 
 export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
   const [filter, setFilter] = React.useState('');
@@ -317,74 +204,73 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                       <TableHead className={cn("w-[100px] p-2 h-10", density === 'compact' && 'p-1 h-8')}>Date</TableHead>
                       <TableHead className={cn("w-[120px] p-2 h-10", density === 'compact' && 'p-1 h-8')}>Entry #</TableHead>
                       <TableHead className={cn("w-[100px] p-2 h-10", density === 'compact' && 'p-1 h-8')}>Voucher Type</TableHead>
-                      <TableHead className={cn("p-2 h-10", density === 'compact' && 'p-1 h-8')}>Account</TableHead>
+                      <TableHead className={cn("p-2 h-10", density === 'compact' && 'p-1 h-8')}>Particulars</TableHead>
                       <TableHead className={cn("text-right p-2 h-10", density === 'compact' && 'p-1 h-8')}>Debit</TableHead>
                       <TableHead className={cn("text-right p-2 h-10", density === 'compact' && 'p-1 h-8')}>Credit</TableHead>
-                      <TableHead className={cn("w-[120px] p-2 h-10", density === 'compact' && 'p-1 h-8')}>Created By</TableHead>
                       <TableHead className={cn("w-[150px] text-center p-2 h-10", density === 'compact' && 'p-1 h-8')}>Actions</TableHead>
                   </TableRow>
                   </TableHeader>
                   <TableBody>
                     {paginatedData.map((entry, entryIndex) => {
                       const isEven = entryIndex % 2 === 0;
+                      const debitLines = entry.lines.filter(l => l.debit > 0);
+                      const creditLines = entry.lines.filter(l => l.credit > 0);
+                      const allLines = [...debitLines, ...creditLines];
+                      const rowCount = allLines.length + 1; // +1 for narration row
                       return (
                         <React.Fragment key={entry.id}>
-                          {entry.lines.map((line, lineIndex) => (
-                            <TableRow key={line.id} className={cn(isEven ? 'bg-muted/30' : 'bg-transparent', "hover:bg-muted/60")}>
-                              {lineIndex === 0 && (
-                                <TableCell rowSpan={entry.lines.length + 1} className={cn("align-top p-2", isEven && "border-l-transparent", !isEven && "border-l-transparent", "border-b")}>
-                                  {format(entry.date, 'dd-MMM-yy')}
+                            {allLines.map((line, lineIndex) => (
+                                <TableRow key={line.id} className={cn(isEven ? 'bg-muted/30' : 'bg-transparent', "hover:bg-muted/60", lineIndex === 0 && 'border-t-2 border-primary', 'border-x')}>
+                                    {lineIndex === 0 && (
+                                        <TableCell rowSpan={rowCount} className="align-middle text-center p-2 border-b-2 border-primary">
+                                            {format(entry.date, 'dd-MMM-yy')}
+                                        </TableCell>
+                                    )}
+                                    {lineIndex === 0 && (
+                                        <TableCell rowSpan={rowCount} className="align-middle text-center p-2 border-b-2 border-primary">
+                                            <div className="flex flex-col items-center">
+                                                <span>{entry.entryNumber}</span>
+                                                <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => setViewingEntry(entry)}>View Details</Button>
+                                            </div>
+                                        </TableCell>
+                                    )}
+                                     {lineIndex === 0 && (
+                                        <TableCell rowSpan={rowCount} className="align-middle text-center p-2 border-b-2 border-primary">
+                                            {entry.voucherType}
+                                        </TableCell>
+                                    )}
+                                    <TableCell className={cn('p-2', line.credit > 0 ? 'pl-8' : 'pl-2')}>
+                                        {line.credit > 0 && <span className="text-muted-foreground">To </span>}
+                                        {line.account}
+                                    </TableCell>
+                                    <TableCell className="text-right font-mono p-2 text-primary">
+                                        {line.debit > 0 ? formatCurrency(line.debit, 'INR') : null}
+                                    </TableCell>
+                                    <TableCell className="text-right font-mono p-2 text-destructive">
+                                        {line.credit > 0 ? formatCurrency(line.credit, 'INR') : null}
+                                    </TableCell>
+                                    {lineIndex === 0 && (
+                                        <TableCell rowSpan={rowCount} className="align-middle text-center border-b-2 border-primary p-2">
+                                           <div className="flex items-center justify-center gap-0">
+                                              <Tooltip><TooltipTrigger asChild>
+                                                  <Button variant="ghost" size="icon" className="h-7 w-7"><Edit className="h-4 w-4" /></Button>
+                                              </TooltipTrigger><TooltipContent><p>Edit Entry</p></TooltipContent></Tooltip>
+                                              <Tooltip><TooltipTrigger asChild>
+                                                  <Button variant="ghost" size="icon" className="h-7 w-7"><Undo2 className="h-4 w-4" /></Button>
+                                              </TooltipTrigger><TooltipContent><p>Reverse Entry</p></TooltipContent></Tooltip>
+                                              <Tooltip><TooltipTrigger asChild>
+                                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                                              </TooltipTrigger><TooltipContent><p>Delete Entry</p></TooltipContent></Tooltip>
+                                          </div>
+                                        </TableCell>
+                                    )}
+                                </TableRow>
+                            ))}
+                             <TableRow className={cn(isEven ? 'bg-muted/30' : 'bg-transparent', "hover:bg-muted/60", "border-x border-b-2 border-primary")}>
+                                <TableCell colSpan={4} className="py-1 px-2 text-xs italic text-muted-foreground">
+                                    (Narration: {entry.description})
                                 </TableCell>
-                              )}
-                              {lineIndex === 0 && (
-                                <TableCell rowSpan={entry.lines.length + 1} className="align-top p-2 border-b">
-                                  {entry.entryNumber}
-                                </TableCell>
-                              )}
-                              {lineIndex === 0 && (
-                                <TableCell rowSpan={entry.lines.length + 1} className="align-top p-2 border-b">
-                                  {entry.voucherType}
-                                </TableCell>
-                              )}
-                              <TableCell className={cn('p-2', line.credit > 0 ? 'pl-6' : '')}>
-                                {line.account}
-                              </TableCell>
-                              <TableCell className="text-right font-mono p-2 text-primary">
-                                {line.debit > 0 ? formatCurrency(line.debit, 'INR') : ''}
-                              </TableCell>
-                              <TableCell className="text-right font-mono p-2 text-destructive">
-                                {line.credit > 0 ? formatCurrency(line.credit, 'INR') : ''}
-                              </TableCell>
-                              {lineIndex === 0 && (
-                                <TableCell rowSpan={entry.lines.length + 1} className="align-top p-2 border-b">
-                                  {entry.createdBy}
-                                </TableCell>
-                              )}
-                              {lineIndex === 0 && (
-                                <TableCell rowSpan={entry.lines.length + 1} className="align-top border-b p-2 text-center">
-                                   <div className="flex items-center justify-center gap-0">
-                                      <Tooltip><TooltipTrigger asChild>
-                                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setViewingEntry(entry)}><Eye className="h-4 w-4" /></Button>
-                                      </TooltipTrigger><TooltipContent><p>View Voucher</p></TooltipContent></Tooltip>
-                                      <Tooltip><TooltipTrigger asChild>
-                                          <Button variant="ghost" size="icon" className="h-7 w-7"><Edit className="h-4 w-4" /></Button>
-                                      </TooltipTrigger><TooltipContent><p>Edit Entry</p></TooltipContent></Tooltip>
-                                      <Tooltip><TooltipTrigger asChild>
-                                          <Button variant="ghost" size="icon" className="h-7 w-7"><Undo2 className="h-4 w-4" /></Button>
-                                      </TooltipTrigger><TooltipContent><p>Reverse Entry</p></TooltipContent></Tooltip>
-                                      <Tooltip><TooltipTrigger asChild>
-                                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                                      </TooltipTrigger><TooltipContent><p>Delete Entry</p></TooltipContent></Tooltip>
-                                  </div>
-                                </TableCell>
-                              )}
                             </TableRow>
-                          ))}
-                          <TableRow className={cn(isEven ? 'bg-muted/30' : 'bg-transparent', "hover:bg-muted/60", "border-b")}>
-                            <TableCell colSpan={3} className="py-1 px-2 text-xs italic text-muted-foreground">
-                              {entry.description}
-                            </TableCell>
-                          </TableRow>
                         </React.Fragment>
                       );
                     })}
@@ -453,3 +339,5 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
     </TooltipProvider>
   );
 }
+
+    
