@@ -316,7 +316,7 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                       <TableHead className={cn("w-[100px] p-2 h-10", density === 'compact' && 'p-1 h-8')}>Date</TableHead>
                       <TableHead className={cn("w-[120px] p-2 h-10", density === 'compact' && 'p-1 h-8')}>Entry #</TableHead>
                       <TableHead className={cn("w-[100px] p-2 h-10", density === 'compact' && 'p-1 h-8')}>Voucher Type</TableHead>
-                      <TableHead className={cn("p-2 h-10", density === 'compact' && 'p-1 h-8')}>Account & Description</TableHead>
+                      <TableHead className={cn("p-2 h-10", density === 'compact' && 'p-1 h-8')}>Account</TableHead>
                       <TableHead className={cn("text-right p-2 h-10", density === 'compact' && 'p-1 h-8')}>Debit</TableHead>
                       <TableHead className={cn("text-right p-2 h-10", density === 'compact' && 'p-1 h-8')}>Credit</TableHead>
                       <TableHead className={cn("w-[120px] p-2 h-10", density === 'compact' && 'p-1 h-8')}>Created By</TableHead>
@@ -324,26 +324,24 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                   </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedData.map((entry) => {
-                      const totalDebit = entry.lines.reduce((sum, line) => sum + line.debit, 0);
-                      const totalCredit = entry.lines.reduce((sum, line) => sum + line.credit, 0);
-                      
+                    {paginatedData.map((entry, entryIndex) => {
+                      const isEven = entryIndex % 2 === 0;
                       return (
                         <React.Fragment key={entry.id}>
                           {entry.lines.map((line, lineIndex) => (
-                            <TableRow key={line.id} className="h-auto hover:bg-muted/20">
+                            <TableRow key={line.id} className={cn(isEven ? 'bg-muted/30 hover:bg-muted/60' : 'bg-transparent hover:bg-muted/40')}>
                               {lineIndex === 0 ? (
-                                <TableCell rowSpan={entry.lines.length} className="align-top border-b p-2">
+                                <TableCell rowSpan={entry.lines.length + 1} className="align-top p-2 border-b">
                                   {format(entry.date, 'dd-MMM-yy')}
                                 </TableCell>
                               ) : null}
                               {lineIndex === 0 ? (
-                                <TableCell rowSpan={entry.lines.length} className="align-top border-b p-2">
+                                <TableCell rowSpan={entry.lines.length + 1} className="align-top p-2 border-b">
                                   {entry.entryNumber}
                                 </TableCell>
                               ) : null}
                               {lineIndex === 0 ? (
-                                <TableCell rowSpan={entry.lines.length} className="align-top border-b p-2">
+                                <TableCell rowSpan={entry.lines.length + 1} className="align-top p-2 border-b">
                                   {entry.voucherType}
                                 </TableCell>
                               ) : null}
@@ -357,25 +355,22 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                                 {line.credit > 0 ? formatCurrency(line.credit, 'INR') : ''}
                               </TableCell>
                               {lineIndex === 0 ? (
-                                <TableCell rowSpan={entry.lines.length} className="align-top border-b p-2">
+                                <TableCell rowSpan={entry.lines.length + 1} className="align-top p-2 border-b">
                                   {entry.createdBy}
                                 </TableCell>
                               ) : null}
                               {lineIndex === 0 ? (
-                                <TableCell rowSpan={entry.lines.length} className="align-top border-b p-2 text-center">
+                                <TableCell rowSpan={entry.lines.length + 1} className="align-top border-b p-2 text-center">
                                    <div className="flex items-center justify-center gap-0">
                                       <Tooltip><TooltipTrigger asChild>
                                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setViewingEntry(entry)}><Eye className="h-4 w-4" /></Button>
                                       </TooltipTrigger><TooltipContent><p>View Voucher</p></TooltipContent></Tooltip>
-
                                       <Tooltip><TooltipTrigger asChild>
                                           <Button variant="ghost" size="icon" className="h-7 w-7"><Edit className="h-4 w-4" /></Button>
                                       </TooltipTrigger><TooltipContent><p>Edit Entry</p></TooltipContent></Tooltip>
-
                                       <Tooltip><TooltipTrigger asChild>
                                           <Button variant="ghost" size="icon" className="h-7 w-7"><Undo2 className="h-4 w-4" /></Button>
                                       </TooltipTrigger><TooltipContent><p>Reverse Entry</p></TooltipContent></Tooltip>
-
                                       <Tooltip><TooltipTrigger asChild>
                                           <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
                                       </TooltipTrigger><TooltipContent><p>Delete Entry</p></TooltipContent></Tooltip>
@@ -384,11 +379,8 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                               ) : null}
                             </TableRow>
                           ))}
-                          <TableRow className="bg-muted/30">
-                            <TableCell colSpan={3} className="py-1 px-2 text-xs font-semibold text-muted-foreground">
-                              Narration:
-                            </TableCell>
-                            <TableCell colSpan={5} className="py-1 px-2 text-xs text-muted-foreground">
+                          <TableRow className={cn(isEven ? 'bg-muted/30 hover:bg-muted/60' : 'bg-transparent hover:bg-muted/40', "border-b")}>
+                            <TableCell colSpan={3} className="py-1 px-2 text-xs italic text-muted-foreground">
                               {entry.description}
                             </TableCell>
                           </TableRow>
