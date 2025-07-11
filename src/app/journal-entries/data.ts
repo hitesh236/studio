@@ -46,34 +46,41 @@ const generateRandomLines = (totalAmount: number): JournalEntryLine[] => {
     let remainingDebit = totalAmount;
     let remainingCredit = totalAmount;
     let lineId = 1;
+    const usedAccounts = new Set<string>();
+
+    const getUniqueAccount = () => {
+        let account;
+        do {
+            account = getRandomElement(accounts);
+        } while (usedAccounts.has(account));
+        usedAccounts.add(account);
+        return account;
+    };
 
     // Generate debit lines
     while (remainingDebit > 0) {
-        const numDebitLines = Math.floor(Math.random() * 2) + 1; // 1 or 2 debit lines
-        const debitAmount = remainingDebit / numDebitLines;
-        for(let i = 0; i < numDebitLines; i++) {
-             if (remainingDebit <= 0) break;
-             const amount = (i === numDebitLines - 1) ? remainingDebit : Math.floor(Math.random() * remainingDebit * 0.8) + 1;
-             lines.push({ id: `line-${lineId++}`, account: getRandomElement(accounts), debit: amount, credit: 0 });
-             remainingDebit -= amount;
-        }
+        const amount = Math.random() < 0.7 && remainingDebit > 10 ? Math.floor(Math.random() * remainingDebit * 0.9) + 1 : remainingDebit;
+        const debitAmount = parseFloat(amount.toFixed(2));
+        lines.push({ 
+            id: `line-${lineId++}`, 
+            account: getUniqueAccount(), 
+            debit: debitAmount, 
+            credit: 0 
+        });
+        remainingDebit = parseFloat((remainingDebit - debitAmount).toFixed(2));
     }
 
     // Generate credit lines
     while (remainingCredit > 0) {
-        const numCreditLines = Math.floor(Math.random() * 2) + 1; // 1 or 2 credit lines
-        const creditAmount = remainingCredit / numCreditLines;
-        for(let i = 0; i < numCreditLines; i++) {
-            if (remainingCredit <= 0) break;
-            const amount = (i === numCreditLines - 1) ? remainingCredit : Math.floor(Math.random() * remainingCredit * 0.8) + 1;
-            let creditAccount = getRandomElement(accounts);
-            // Ensure credit account is not already used in a debit line
-            while (lines.some(l => l.account === creditAccount)) {
-                creditAccount = getRandomElement(accounts);
-            }
-            lines.push({ id: `line-${lineId++}`, account: creditAccount, debit: 0, credit: amount });
-            remainingCredit -= amount;
-        }
+        const amount = Math.random() < 0.7 && remainingCredit > 10 ? Math.floor(Math.random() * remainingCredit * 0.9) + 1 : remainingCredit;
+        const creditAmount = parseFloat(amount.toFixed(2));
+        lines.push({ 
+            id: `line-${lineId++}`, 
+            account: getUniqueAccount(), 
+            debit: 0, 
+            credit: creditAmount 
+        });
+        remainingCredit = parseFloat((remainingCredit - creditAmount).toFixed(2));
     }
 
     return lines;
