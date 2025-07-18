@@ -153,7 +153,7 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
 
   return (
     <TooltipProvider>
-        <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between gap-4 mb-4">
+          <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between gap-4 mb-4">
               <div className="relative w-full sm:w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -212,53 +212,48 @@ export function JournalEntriesTable({ data }: { data: JournalEntry[] | null }) {
                       const isEven = entryIndex % 2 === 0;
                       const debitLines = entry.lines.filter(l => l.debit > 0);
                       const creditLines = entry.lines.filter(l => l.credit > 0);
-                      const maxLines = Math.max(debitLines.length, creditLines.length);
-                      const allLines = Array.from({ length: maxLines }).map((_, i) => ({
-                          debit: debitLines[i],
-                          credit: creditLines[i],
-                      }));
+                      const rowCount = entry.lines.length + 1; // +1 for narration
                       
-                      const rowCount = maxLines + 1; // +1 for narration row
                       return (
                         <React.Fragment key={entry.id}>
-                            {allLines.map((line, lineIndex) => (
-                                <TableRow key={`${entry.id}-line-${lineIndex}`} className={cn(isEven ? 'bg-muted/30' : 'bg-transparent', "hover:bg-muted/60")}>
-                                    {lineIndex === 0 && (
-                                        <>
-                                            <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border", isEven ? "bg-muted/20" : "bg-transparent")}><div className="pt-2">{format(entry.date, 'dd-MMM-yy')}</div></TableCell>
-                                            <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border", isEven ? "bg-muted/20" : "bg-transparent")}><div className="flex flex-col items-center pt-2"><span>{entry.entryNumber}</span><Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => setViewingEntry(entry)}>View Details</Button></div></TableCell>
-                                            <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border", isEven ? "bg-muted/20" : "bg-transparent")}><div className="pt-2">{entry.voucherType}</div></TableCell>
-                                        </>
-                                    )}
-                                    <TableCell className={cn('p-2 border')}>
-                                        {line.debit?.account}
-                                    </TableCell>
-                                    <TableCell className={cn("text-right font-mono p-2 text-primary border")}>
-                                        {line.debit ? formatCurrency(line.debit.debit, 'INR') : null}
-                                    </TableCell>
-                                    <TableCell className={cn("text-right font-mono p-2 text-destructive border")}>
-                                         {line.credit ? formatCurrency(line.credit.credit, 'INR') : null}
-                                    </TableCell>
-                                    {lineIndex === 0 && (
-                                        <>
-                                            <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border", isEven ? "bg-muted/20" : "bg-transparent")}><Badge variant={entry.status === 'Approved' ? 'default' : 'destructive'}>{entry.status}</Badge></TableCell>
-                                            <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border", isEven ? "bg-muted/20" : "bg-transparent")}>
-                                               <div className="flex items-center justify-center gap-0 pt-2">
-                                                  <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><Edit className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Edit Entry</p></TooltipContent></Tooltip>
-                                                  <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleReverseEntry(entry)}><Undo2 className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Reverse Entry</p></TooltipContent></Tooltip>
-                                                  <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Delete Entry</p></TooltipContent></Tooltip>
-                                              </div>
-                                            </TableCell>
-                                        </>
-                                    )}
-                                </TableRow>
-                            ))}
-                             <TableRow className={cn(isEven ? 'bg-muted/30' : 'bg-transparent', "hover:bg-muted/60")}>
-                                <TableCell colSpan={3} className="py-1 px-2 text-xs italic text-muted-foreground border">
-                                    <span className="pl-4">To {entry.lines.filter(l => l.credit > 0).map(l => l.account).join(', ')}</span><br/>
-                                    (Narration: {entry.description})
-                                </TableCell>
+                          {debitLines.map((line, lineIndex) => (
+                            <TableRow key={line.id} className={cn(isEven ? 'bg-muted/30' : 'bg-transparent', "hover:bg-muted/60")}>
+                                {lineIndex === 0 && (
+                                    <>
+                                        <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border", isEven ? "bg-muted/20" : "bg-transparent")}><div className="pt-2">{format(entry.date, 'dd-MMM-yy')}</div></TableCell>
+                                        <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border", isEven ? "bg-muted/20" : "bg-transparent")}><div className="flex flex-col items-center pt-2"><span>{entry.entryNumber}</span><Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => setViewingEntry(entry)}>View Details</Button></div></TableCell>
+                                        <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border", isEven ? "bg-muted/20" : "bg-transparent")}><div className="pt-2">{entry.voucherType}</div></TableCell>
+                                    </>
+                                )}
+                                <TableCell className="p-2 border">{line.account}</TableCell>
+                                <TableCell className="text-right font-mono p-2 text-primary border">{formatCurrency(line.debit, 'INR')}</TableCell>
+                                <TableCell className="border"></TableCell>
+                                {lineIndex === 0 && (
+                                    <>
+                                        <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border", isEven ? "bg-muted/20" : "bg-transparent")}><Badge variant={entry.status === 'Approved' ? 'default' : 'destructive'}>{entry.status}</Badge></TableCell>
+                                        <TableCell rowSpan={rowCount} className={cn("align-top text-center p-2 border", isEven ? "bg-muted/20" : "bg-transparent")}>
+                                          <div className="flex items-center justify-center gap-0 pt-2">
+                                              <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><Edit className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Edit Entry</p></TooltipContent></Tooltip>
+                                              <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleReverseEntry(entry)}><Undo2 className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Reverse Entry</p></TooltipContent></Tooltip>
+                                              <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Delete Entry</p></TooltipContent></Tooltip>
+                                          </div>
+                                        </TableCell>
+                                    </>
+                                )}
                             </TableRow>
+                          ))}
+                          {creditLines.map((line, lineIndex) => (
+                             <TableRow key={line.id} className={cn(isEven ? 'bg-muted/30' : 'bg-transparent', "hover:bg-muted/60")}>
+                                <TableCell className="p-2 border pl-6 text-muted-foreground">To {line.account}</TableCell>
+                                <TableCell className="border"></TableCell>
+                                <TableCell className="text-right font-mono p-2 text-destructive border">{formatCurrency(line.credit, 'INR')}</TableCell>
+                            </TableRow>
+                          ))}
+                          <TableRow className={cn(isEven ? 'bg-muted/30' : 'bg-transparent', "hover:bg-muted/60")}>
+                            <TableCell colSpan={3} className="py-1 px-2 text-xs italic text-muted-foreground border">
+                                (Narration: {entry.description})
+                            </TableCell>
+                          </TableRow>
                         </React.Fragment>
                       );
                     })}
