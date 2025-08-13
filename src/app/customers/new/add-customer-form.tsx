@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Settings } from 'lucide-react';
+import { Loader2, Save, Settings, Search, PlusCircle, Trash2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -44,6 +44,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogClose,
+  } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -56,9 +66,17 @@ const indianStates = [
   'Ladakh', 'Lakshadweep', 'Puducherry',
 ];
 
+const bankAccountSchema = z.object({
+  bankName: z.string().optional(),
+  accountNumber: z.string().optional(),
+  ifscCode: z.string().optional(),
+});
+
 const customerFormSchema = z.object({
   // Core Information
+  gstinSearch: z.string().optional(),
   name: z.string().min(1, "Name is required."),
+  customerType: z.string().min(1, "Customer type is required"),
   mobile: z.string().optional(),
   openingBalance: z.coerce.number().optional().default(0),
   balanceType: z.enum(['debit', 'credit']).default('debit'),
@@ -72,10 +90,8 @@ const customerFormSchema = z.object({
   email: z.string().email("Invalid email address.").optional().or(z.literal('')),
 
   // Tax & Compliance
-  gstin: z.string().optional(),
   pan: z.string().optional(),
   tdsApplicable: z.boolean().default(false),
-  taxRegistrationNumber: z.string().optional(),
 
   // Financial Controls
   creditLimit: z.coerce.number().optional().default(0),
@@ -83,9 +99,7 @@ const customerFormSchema = z.object({
   maintainBillWise: z.boolean().default(false),
 
   // Banking Details
-  bankName: z.string().optional(),
-  accountNumber: z.string().optional(),
-  ifscCode: z.string().optional(),
+  bankAccounts: z.array(bankAccountSchema),
   
   // Additional Fields
   contactPerson: z.string().optional(),
@@ -108,16 +122,21 @@ export function AddCustomerForm({ onSuccess }: { onSuccess?: () => void }) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [visibleSections, setVisibleSections] = React.useState<Record<string, boolean>>({
     contactDetails: false,
-    taxCompliance: false,
+    taxCompliance: true,
     financialControls: false,
-    bankingDetails: false,
+    bankingDetails: true,
     additionalFields: false,
   });
+
+  const [customerTypes, setCustomerTypes] = React.useState(['Regular', 'B2B', 'B2C']);
+  const [isTypeDialogOpen, setIsTypeDialogOpen] = React.useState(false);
+  const [newCustomerType, setNewCustomerType] = React.useState('');
 
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerFormSchema),
     defaultValues: {
       name: '',
+      customerType: 'Regular',
       mobile: '',
       openingBalance: 0,
       balanceType: 'debit',
@@ -127,20 +146,21 @@ export function AddCustomerForm({ onSuccess }: { onSuccess?: () => void }) {
       country: 'India',
       pincode: '',
       email: '',
-      gstin: '',
       pan: '',
       tdsApplicable: false,
-      taxRegistrationNumber: '',
       creditLimit: 0,
       creditPeriod: 0,
       maintainBillWise: false,
-      bankName: '',
-      accountNumber: '',
-      ifscCode: '',
+      bankAccounts: [{ bankName: '', accountNumber: '', ifscCode: '' }],
       contactPerson: '',
       placeOfSupply: '',
       shipToAddress: '',
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "bankAccounts",
   });
 
   async function onSubmit(data: CustomerFormValues) {
@@ -156,6 +176,27 @@ export function AddCustomerForm({ onSuccess }: { onSuccess?: () => void }) {
     if (onSuccess) {
       onSuccess();
     }
+  }
+  
+  const handleAddNewCustomerType = () => {
+    if (newCustomerType && !customerTypes.includes(newCustomerType)) {
+        setCustomerTypes(prev => [...prev, newCustomerType]);
+        form.setValue('customerType', newCustomerType);
+        toast({ title: "Customer type added" });
+        setIsTypeDialogOpen(false);
+        setNewCustomerType('');
+    } else {
+        toast({ title: 'Error', description: 'Type is invalid or already exists.', variant: 'destructive'});
+    }
+  }
+  
+  const handleGstSearch = () => {
+    const gstin = form.getValues('gstinSearch');
+    toast({
+        title: 'Searching GSTIN...',
+        description: `Looking up details for ${gstin}. This is a placeholder.`
+    });
+    // Here you would typically make an API call
   }
 
   return (
@@ -191,13 +232,67 @@ export function AddCustomerForm({ onSuccess }: { onSuccess?: () => void }) {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             
+            {/* GST Search */}
+             <section>
+                <div className="flex items-end gap-2">
+                    <FormField control={form.control} name="gstinSearch" render={({ field }) => (
+                        <FormItem className="flex-1">
+                            <FormLabel>Search by GSTIN</FormLabel>
+                            <FormControl><Input placeholder="Enter 15-digit GSTIN to fetch details" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}/>
+                    <Button type="button" onClick={handleGstSearch}><Search className="mr-2 h-4 w-4" /> Search</Button>
+                </div>
+            </section>
+
             {/* Core Information */}
             <section>
                 <h3 className="text-lg font-medium mb-2">Core Information</h3>
                 <Separator className="mb-4" />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField control={form.control} name="name" render={({ field }) => (
-                        <FormItem className="md:col-span-2"><FormLabel>Name (Mandatory)</FormLabel><FormControl><Input placeholder="Customer's Full Name or Company Name" {...field} /></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel>Name (Mandatory)</FormLabel><FormControl><Input placeholder="Customer's Full Name or Company Name" {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                    <FormField control={form.control} name="customerType" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Customer Type</FormLabel>
+                            <div className="flex items-start gap-2">
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                    <SelectContent>
+                                        {customerTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+                                        <SelectItem value="add-new">
+                                            <span className="text-primary flex items-center gap-2"><PlusCircle className="h-4 w-4" /> Add New...</span>
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Dialog open={isTypeDialogOpen} onOpenChange={setIsTypeDialogOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={() => setIsTypeDialogOpen(true)}>
+                                            <PlusCircle className="h-4 w-4" />
+                                            <span className="sr-only">Add New Customer Type</span>
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Add New Customer Type</DialogTitle>
+                                        </DialogHeader>
+                                        <div className="grid gap-4 py-4">
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="new-type-name" className="text-right">Name</Label>
+                                                <Input id="new-type-name" value={newCustomerType} onChange={(e) => setNewCustomerType(e.target.value)} className="col-span-3" />
+                                            </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+                                            <Button onClick={handleAddNewCustomerType}>Add Type</Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
+                            <FormMessage />
+                        </FormItem>
                     )}/>
                     <FormField control={form.control} name="mobile" render={({ field }) => (
                         <FormItem><FormLabel>Mobile</FormLabel><FormControl><Input type="tel" placeholder="9876543210" {...field} /></FormControl><FormMessage /></FormItem>
@@ -247,14 +342,8 @@ export function AddCustomerForm({ onSuccess }: { onSuccess?: () => void }) {
                 <h3 className="text-lg font-medium mb-2">Tax & Compliance</h3>
                 <Separator className="mb-4" />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="gstin" render={({ field }) => (
-                        <FormItem><FormLabel>GSTIN/UIN</FormLabel><FormControl><Input placeholder="15-digit GSTIN" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
                      <FormField control={form.control} name="pan" render={({ field }) => (
                         <FormItem><FormLabel>PAN</FormLabel><FormControl><Input placeholder="10-digit PAN" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                     <FormField control={form.control} name="taxRegistrationNumber" render={({ field }) => (
-                        <FormItem><FormLabel>Tax Registration Number</FormLabel><FormControl><Input placeholder="If applicable" {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
                     <FormField control={form.control} name="tdsApplicable" render={({ field }) => (
                         <FormItem className="flex items-center space-x-2 pt-8"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel>TDS Applicable</FormLabel></FormItem>
@@ -285,17 +374,31 @@ export function AddCustomerForm({ onSuccess }: { onSuccess?: () => void }) {
             {visibleSections.bankingDetails && <section>
                 <h3 className="text-lg font-medium mb-2">Banking Details</h3>
                 <Separator className="mb-4" />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     <FormField control={form.control} name="bankName" render={({ field }) => (
-                        <FormItem><FormLabel>Bank Name</FormLabel><FormControl><Input placeholder="e.g. HDFC Bank" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                    <FormField control={form.control} name="accountNumber" render={({ field }) => (
-                        <FormItem><FormLabel>Account Number</FormLabel><FormControl><Input placeholder="Bank account number" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                    <FormField control={form.control} name="ifscCode" render={({ field }) => (
-                        <FormItem><FormLabel>IFSC Code</FormLabel><FormControl><Input placeholder="e.g. HDFC0000001" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                </div>
+                {fields.map((field, index) => (
+                    <div key={field.id} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_auto] gap-4 mb-4 items-end">
+                        <FormField control={form.control} name={`bankAccounts.${index}.bankName`} render={({ field }) => (
+                            <FormItem><FormLabel>Bank Name</FormLabel><FormControl><Input placeholder="e.g. HDFC Bank" {...field} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                        <FormField control={form.control} name={`bankAccounts.${index}.accountNumber`} render={({ field }) => (
+                            <FormItem><FormLabel>Account Number</FormLabel><FormControl><Input placeholder="Bank account number" {...field} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                        <FormField control={form.control} name={`bankAccounts.${index}.ifscCode`} render={({ field }) => (
+                            <FormItem><FormLabel>IFSC Code</FormLabel><FormControl><Input placeholder="e.g. HDFC0000001" {...field} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => remove(index)} disabled={fields.length <= 1}>
+                           <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </div>
+                ))}
+                 <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => append({ bankName: '', accountNumber: '', ifscCode: '' })}
+                >
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Another Bank
+                </Button>
             </section>}
 
              {/* Additional Fields */}
