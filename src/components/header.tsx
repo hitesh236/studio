@@ -75,9 +75,9 @@ const MegaMenu = () => (
             <div className="grid grid-cols-2 gap-2 p-2">
                 {componentMenuItems.map(item => (
                     <DropdownMenuItem key={item.href} asChild>
-                        <Link href={item.href} className="flex flex-col items-center justify-center gap-1 p-2 h-auto rounded-md text-center">
-                            <item.icon className="h-5 w-5 mb-1" />
-                            <span className="text-xs font-medium">{item.label}</span>
+                        <Link href={item.href} className="flex flex-row items-center justify-start gap-2 p-2 h-auto rounded-md text-left">
+                            <item.icon className="h-4 w-4" />
+                            <span className="text-sm font-medium">{item.label}</span>
                         </Link>
                     </DropdownMenuItem>
                 ))}
