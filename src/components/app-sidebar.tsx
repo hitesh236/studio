@@ -13,29 +13,18 @@ import {
   SidebarFooter,
   useSidebar,
   SidebarSeparator,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton
 } from '@/components/ui/sidebar';
 import {
     BookOpen,
-    Box,
     Briefcase,
-    Car,
     ChevronDown,
-    Database,
     Eye,
     FileSpreadsheet,
     FileText,
     Globe,
-    History,
-    Hotel,
     LayoutDashboard,
-    Luggage,
     Palette,
     Percent,
-    Plane,
-    PlusCircle,
     Receipt,
     Redo2,
     Scale,
@@ -59,19 +48,6 @@ export function AppSidebar() {
   const { state, isMobile, setOpenMobile } = useSidebar();
   const pathname = usePathname();
   const [activeMenu, setActiveMenu] = React.useState('accounting');
-  const [openTravelSubMenus, setOpenTravelSubMenus] = React.useState(new Set<string>());
-
-  const toggleTravelSubMenu = (id: string) => {
-    setOpenTravelSubMenus(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
 
   const handleLinkClick = () => {
     if (isMobile) {
@@ -332,77 +308,6 @@ export function AppSidebar() {
                   </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroup>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Travel Section */}
-        <SidebarMenu>
-            <SidebarMenuItem>
-                 <SidebarMenuButton 
-                    onClick={() => setActiveMenu(prev => prev === 'travel' ? '' : 'travel')}
-                    className="justify-between"
-                >
-                    <div className="flex items-center gap-2">
-                        <Plane />
-                        <span>Travel</span>
-                    </div>
-                    <ChevronDown className={`transition-transform duration-200 ${activeMenu === 'travel' ? 'rotate-180' : ''}`} />
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-        </SidebarMenu>
-        
-        <AnimatePresence initial={false}>
-          {activeMenu === 'travel' && (
-            <motion.div
-              key="travel-menu"
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              variants={menuVariants}
-            >
-                <SidebarGroup>
-                    <SidebarMenu>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton
-                                onClick={() => toggleTravelSubMenu('masters')}
-                                className="justify-between"
-                            >
-                                <div className="flex items-center gap-2">
-                                    <Database />
-                                    <span>Masters</span>
-                                </div>
-                                <ChevronDown
-                                    className={`transition-transform duration-200 ${
-                                        openTravelSubMenus.has('masters') ? 'rotate-180' : ''
-                                    }`}
-                                />
-                            </SidebarMenuButton>
-                            <AnimatePresence>
-                                {openTravelSubMenus.has('masters') && (
-                                    <motion.div
-                                        key="masters-submenu"
-                                        initial="hidden"
-                                        animate="visible"
-                                        exit="hidden"
-                                        variants={menuVariants}
-                                    >
-                                        <SidebarMenuSub>
-                                            <SidebarMenuSubItem>
-                                                <SidebarMenuSubButton tooltip="Hotel" isActive={pathname === '/hotels'} asChild>
-                                                    <Link href="/hotels" onClick={handleLinkClick}>
-                                                        <Hotel />
-                                                        <span>Hotel</span>
-                                                    </Link>
-                                                </SidebarMenuSubButton>
-                                            </SidebarMenuSubItem>
-                                        </SidebarMenuSub>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </SidebarMenuItem>
-                    </SidebarMenu>
-                </SidebarGroup>
             </motion.div>
           )}
         </AnimatePresence>
