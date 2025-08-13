@@ -62,7 +62,6 @@ const productFormSchema = z.object({
     b2c: z.coerce.number().min(0, "Price must be non-negative.").optional(),
     b2b: z.coerce.number().min(0, "Price must be non-negative.").optional(),
   }),
-  discount: z.coerce.number().min(0, "Discount must be non-negative.").optional().default(0),
   openingStock: z.coerce.number().min(0, "Opening stock must be non-negative.").default(0),
   hsnCode: z.string().optional(),
   gstRate: z.coerce.number().min(0).max(100),
@@ -122,7 +121,6 @@ export function AddProductForm() {
             b2c: 0,
             b2b: 0,
         },
-        discount: 0,
         openingStock: 0,
         gstRate: 18,
         customAttributes: [{ key: '', value: '' }],
@@ -238,6 +236,13 @@ export function AddProductForm() {
                      <FormField name="purchasePrice" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Purchase Price</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
+                    <FormField name="warehouseLocation" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Warehouse/Location</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select warehouse" /></SelectTrigger></FormControl><SelectContent>
+                            <SelectItem value="mumbai-wh">Mumbai Warehouse</SelectItem>
+                            <SelectItem value="delhi-wh">Delhi Warehouse</SelectItem>
+                            <SelectItem value="main-store">Main Storefront</SelectItem>
+                        </SelectContent></Select><FormMessage /></FormItem>
+                    )} />
                     
                     <div className="md:col-span-2">
                         <Label>Selling Prices</Label>
@@ -342,13 +347,6 @@ export function AddProductForm() {
                     )} />
                     <FormField name="reorderQty" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Reorder Quantity</FormLabel><FormControl><Input type="number" placeholder="e.g., 50" {...field} /></FormControl><FormDescription>Default quantity for purchase orders.</FormDescription><FormMessage /></FormItem>
-                    )} />
-                    <FormField name="warehouseLocation" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Warehouse/Location</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select warehouse" /></SelectTrigger></FormControl><SelectContent>
-                            <SelectItem value="mumbai-wh">Mumbai Warehouse</SelectItem>
-                            <SelectItem value="delhi-wh">Delhi Warehouse</SelectItem>
-                            <SelectItem value="main-store">Main Storefront</SelectItem>
-                        </SelectContent></Select><FormMessage /></FormItem>
                     )} />
                     <FormField name="barcode" control={form.control} render={({ field }) => (
                         <FormItem>
