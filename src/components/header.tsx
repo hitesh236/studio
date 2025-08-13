@@ -47,7 +47,6 @@ const pathToTitle: { [key: string]: string } = {
   '/vendors': 'Vendors',
   '/vendors/new': 'Add Vendor',
   '/hotels': 'Hotels',
-  '/hotels/new': 'Add Hotel',
   '/ledgers': 'Ledger Details',
   '/purchase-bills': 'New Purchase Bill',
 };

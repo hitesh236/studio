@@ -422,14 +422,6 @@ export function AppSidebar() {
                                                     </Link>
                                                 </SidebarMenuSubButton>
                                             </SidebarMenuSubItem>
-                                            <SidebarMenuSubItem>
-                                                <SidebarMenuSubButton tooltip="Add Hotel" isActive={pathname === '/hotels/new'} asChild>
-                                                    <Link href="/hotels/new" onClick={handleLinkClick}>
-                                                        <PlusCircle />
-                                                        <span>Add Hotel</span>
-                                                    </Link>
-                                                </SidebarMenuSubButton>
-                                            </SidebarMenuSubItem>
                                         </SidebarMenuSub>
                                     </motion.div>
                                 )}
