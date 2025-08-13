@@ -35,7 +35,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Settings, Upload, Image as ImageIcon, Tags, Barcode, Percent } from 'lucide-react';
+import { Loader2, Save, Settings, Upload, Image as ImageIcon, Tags, Barcode, Percent, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -69,7 +69,7 @@ const productFormSchema = z.object({
   
   // Ecommerce Details
   isListedOnWebsite: z.boolean().default(false),
-  productImage: z.any().optional(),
+  productImages: z.array(z.any()).optional(),
   webShortDescription: z.string().optional(),
   webLongDescription: z.string().optional(),
   seoTitle: z.string().optional(),
@@ -88,7 +88,8 @@ const optionalSectionsConfig = {
 export function AddProductForm() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [imagePreview, setImagePreview] = React.useState<string | null>(null);
+  const [imagePreviews, setImagePreviews] = React.useState<string[]>([]);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const [visibleSections, setVisibleSections] = React.useState<Record<string, boolean>>({
     additionalDetails: true,
@@ -121,16 +122,27 @@ export function AddProductForm() {
   }, [watchedSellingPrice, watchedDiscount]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (imagePreview) URL.revokeObjectURL(imagePreview);
-      setImagePreview(URL.createObjectURL(file));
-      form.setValue('productImage', file);
-    } else {
-      if (imagePreview) URL.revokeObjectURL(imagePreview);
-      setImagePreview(null);
-      form.setValue('productImage', null);
+    const files = e.target.files;
+    if (files) {
+      const currentFiles = form.getValues('productImages') || [];
+      const newFiles = Array.from(files);
+      const allFiles = [...currentFiles, ...newFiles];
+      form.setValue('productImages', allFiles);
+
+      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+      setImagePreviews(prev => [...prev, ...newPreviews]);
     }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    const currentFiles = form.getValues('productImages') || [];
+    const updatedFiles = currentFiles.filter((_, i) => i !== index);
+    form.setValue('productImages', updatedFiles);
+
+    const updatedPreviews = [...imagePreviews];
+    const removedUrl = updatedPreviews.splice(index, 1);
+    URL.revokeObjectURL(removedUrl[0]); // Clean up memory
+    setImagePreviews(updatedPreviews);
   };
 
   async function onSubmit(data: ProductFormValues) {
@@ -143,7 +155,8 @@ export function AddProductForm() {
     });
     setIsSubmitting(false);
     form.reset();
-    setImagePreview(null);
+    imagePreviews.forEach(url => URL.revokeObjectURL(url));
+    setImagePreviews([]);
   }
 
   return (
@@ -296,15 +309,65 @@ export function AddProductForm() {
                     )}
                 />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField name="productImage" control={form.control} render={() => (
-                        <FormItem className="md:col-span-2"><FormLabel>Product Image</FormLabel><div className="flex items-center gap-4">
-                            <Avatar className="h-24 w-24 rounded-md">
-                                <AvatarImage src={imagePreview ?? undefined} alt="Product image preview" className="object-cover" />
-                                <AvatarFallback className="rounded-md"><ImageIcon className="h-10 w-10 text-muted-foreground"/></AvatarFallback>
-                            </Avatar>
-                            <FormControl><Input type="file" accept="image/*" className="flex-1" onChange={handleImageChange} /></FormControl>
-                        </div><FormMessage /></FormItem>
+                    <FormField name="productImages" control={form.control} render={() => (
+                        <FormItem className="md:col-span-2">
+                            <FormLabel>Product Images</FormLabel>
+                            <FormControl>
+                                <div
+                                    className="relative flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50"
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    <Upload className="h-10 w-10 text-muted-foreground" />
+                                    <p className="mt-2 text-sm text-muted-foreground">
+                                        <span className="font-semibold">Click to upload</span> or drag and drop
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
+                                    <Input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        className="hidden"
+                                        onChange={handleImageChange}
+                                    />
+                                </div>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
                     )} />
+
+                    {imagePreviews.length > 0 && (
+                        <div className="md:col-span-2">
+                             <Label>Image Gallery Preview</Label>
+                            <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                {imagePreviews.map((src, index) => (
+                                    <div key={index} className="relative group aspect-square">
+                                        <img
+                                            src={src}
+                                            alt={`Preview ${index + 1}`}
+                                            className="w-full h-full object-cover rounded-md"
+                                            onLoad={() => {
+                                                // Optional: Check if we still need to revoke this URL later
+                                            }}
+                                        />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <Button
+                                                type="button"
+                                                variant="destructive"
+                                                size="icon"
+                                                className="h-8 w-8"
+                                                onClick={() => handleRemoveImage(index)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                                <span className="sr-only">Remove image</span>
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     <FormField name="webShortDescription" control={form.control} render={({ field }) => (
                         <FormItem className="md:col-span-2"><FormLabel>Short Description</FormLabel><FormControl><Textarea placeholder="A catchy, brief description for product listings." {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
