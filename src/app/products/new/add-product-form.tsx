@@ -41,6 +41,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMe
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
 
 
 const productFormSchema = z.object({
