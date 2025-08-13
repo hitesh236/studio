@@ -47,17 +47,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 export function AppSidebar() {
   const { state, isMobile, setOpenMobile } = useSidebar();
   const pathname = usePathname();
-  const [activeMenu, setActiveMenu] = React.useState('accounting');
 
   const handleLinkClick = () => {
     if (isMobile) {
       setOpenMobile(false);
     }
-  };
-
-  const menuVariants = {
-    hidden: { opacity: 0, height: 0, overflow: 'hidden' },
-    visible: { opacity: 1, height: 'auto', overflow: 'visible', transition: { duration: 0.3, ease: "easeInOut" } },
   };
 
   return (
@@ -73,245 +67,216 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        {/* Accounting Section */}
         <SidebarMenu>
-            <SidebarMenuItem>
-                 <SidebarMenuButton 
-                    onClick={() => setActiveMenu(prev => prev === 'accounting' ? '' : 'accounting')}
-                    className="justify-between"
-                >
-                    <div className="flex items-center gap-2">
-                        <Briefcase />
-                        <span>Accounting</span>
-                    </div>
-                    <ChevronDown className={`transition-transform duration-200 ${activeMenu === 'accounting' ? 'rotate-180' : ''}`} />
-                </SidebarMenuButton>
-            </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/'} asChild>
+                <Link href="/" onClick={handleLinkClick}>
+                    <LayoutDashboard />
+                    <span>Dashboard</span>
+                </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
         
-        <AnimatePresence initial={false}>
-          {activeMenu === 'accounting' && (
-            <motion.div
-              key="accounting-menu"
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              variants={menuVariants}
-            >
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/'} asChild>
-                      <Link href="/" onClick={handleLinkClick}>
-                          <LayoutDashboard />
-                          <span>Dashboard</span>
-                      </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-              
-              <SidebarGroup>
-                <SidebarGroupLabel>Component</SidebarGroupLabel>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                      <SidebarMenuButton tooltip="Ledgers" isActive={pathname.startsWith('/ledgers')} asChild>
-                          <Link href="/ledgers" onClick={handleLinkClick}>
-                              <BookOpen />
-                              <span>Ledgers</span>
-                          </Link>
-                      </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                      <SidebarMenuButton tooltip="Table 2" isActive={pathname.startsWith('/table2')} asChild>
-                          <Link href="/table2" onClick={handleLinkClick}>
-                              <FileText />
-                              <span>Table 2</span>
-                          </Link>
-                      </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                      <SidebarMenuButton tooltip="Invoice Preview" isActive={pathname.startsWith('/invoice-preview')} asChild>
-                          <Link href="/invoice-preview" onClick={handleLinkClick}>
-                              <Eye />
-                              <span>Invoice Preview</span>
-                          </Link>
-                      </SidebarMenuButton>
-                  </SidebarMenuItem>
-                   <SidebarMenuItem>
-                      <SidebarMenuButton tooltip="Invoice2" isActive={pathname.startsWith('/invoice2')} asChild>
-                          <Link href="/invoice2" onClick={handleLinkClick}>
-                              <FileText />
-                              <span>Invoice2</span>
-                          </Link>
-                      </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                      <SidebarMenuButton tooltip="Invoice Preview FC" isActive={pathname.startsWith('/invoice-preview-fc')} asChild>
-                          <Link href="/invoice-preview-fc" onClick={handleLinkClick}>
-                              <Globe />
-                              <span>Invoice Preview FC</span>
-                          </Link>
-                      </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                      <SidebarMenuButton tooltip="Customer Portfolio" isActive={pathname.startsWith('/customer-portfolio')} asChild>
-                          <Link href="/customer-portfolio" onClick={handleLinkClick}>
-                              <UserCircle />
-                              <span>Customer Portfolio</span>
-                          </Link>
-                      </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                      <SidebarMenuButton tooltip="UI Components" isActive={pathname.startsWith('/ui')} asChild>
-                          <Link href="/ui" onClick={handleLinkClick}>
-                              <Palette />
-                              <span>UI</span>
-                          </Link>
-                      </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Component</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Ledgers" isActive={pathname.startsWith('/ledgers')} asChild>
+                    <Link href="/ledgers" onClick={handleLinkClick}>
+                        <BookOpen />
+                        <span>Ledgers</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Table 2" isActive={pathname.startsWith('/table2')} asChild>
+                    <Link href="/table2" onClick={handleLinkClick}>
+                        <FileText />
+                        <span>Table 2</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Invoice Preview" isActive={pathname.startsWith('/invoice-preview')} asChild>
+                    <Link href="/invoice-preview" onClick={handleLinkClick}>
+                        <Eye />
+                        <span>Invoice Preview</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Invoice2" isActive={pathname.startsWith('/invoice2')} asChild>
+                    <Link href="/invoice2" onClick={handleLinkClick}>
+                        <FileText />
+                        <span>Invoice2</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Invoice Preview FC" isActive={pathname.startsWith('/invoice-preview-fc')} asChild>
+                    <Link href="/invoice-preview-fc" onClick={handleLinkClick}>
+                        <Globe />
+                        <span>Invoice Preview FC</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Customer Portfolio" isActive={pathname.startsWith('/customer-portfolio')} asChild>
+                    <Link href="/customer-portfolio" onClick={handleLinkClick}>
+                        <UserCircle />
+                        <span>Customer Portfolio</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton tooltip="UI Components" isActive={pathname.startsWith('/ui')} asChild>
+                    <Link href="/ui" onClick={handleLinkClick}>
+                        <Palette />
+                        <span>UI</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
 
-              <SidebarGroup>
-                <SidebarGroupLabel>Money In</SidebarGroupLabel>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                      <SidebarMenuButton tooltip="Customers" isActive={pathname.startsWith('/customers')} asChild>
-                          <Link href="/customers" onClick={handleLinkClick}>
-                              <Users />
-                              <span>Customers</span>
-                          </Link>
-                      </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                      <SidebarMenuButton tooltip="Sales Invoices" isActive={pathname.startsWith('/sales-invoices')} asChild>
-                          <Link href="/sales-invoices" onClick={handleLinkClick}>
-                              <FileText />
-                              <span>Sales Invoices</span>
-                          </Link>
-                      </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Invoice Returns (Sales)" isActive={pathname.startsWith('/sales-invoice-returns')} asChild>
-                      <Link href="/sales-invoice-returns" onClick={handleLinkClick}>
-                        <Undo2 />
-                        <span>Invoice Returns (Sales)</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroup>
-              
-              <SidebarGroup>
-                <SidebarGroupLabel>Money Out</SidebarGroupLabel>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                      <SidebarMenuButton tooltip="Vendors" isActive={pathname.startsWith('/vendors')} asChild>
-                          <Link href="/vendors" onClick={handleLinkClick}>
-                              <Store />
-                              <span>Vendors</span>
-                          </Link>
-                      </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Purchase Bills" isActive={pathname.startsWith('/purchase-bills')} asChild>
-                       <Link href="/purchase-bills" onClick={handleLinkClick}>
-                        <Receipt />
-                        <span>Purchase Bills</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Invoice Returns (Purchase)">
-                      <Redo2 />
-                      <span>Invoice Returns (Purchase)</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Money In</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Customers" isActive={pathname.startsWith('/customers')} asChild>
+                    <Link href="/customers" onClick={handleLinkClick}>
+                        <Users />
+                        <span>Customers</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Sales Invoices" isActive={pathname.startsWith('/sales-invoices')} asChild>
+                    <Link href="/sales-invoices" onClick={handleLinkClick}>
+                        <FileText />
+                        <span>Sales Invoices</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Invoice Returns (Sales)" isActive={pathname.startsWith('/sales-invoice-returns')} asChild>
+                <Link href="/sales-invoice-returns" onClick={handleLinkClick}>
+                  <Undo2 />
+                  <span>Invoice Returns (Sales)</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+        
+        <SidebarGroup>
+          <SidebarGroupLabel>Money Out</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Vendors" isActive={pathname.startsWith('/vendors')} asChild>
+                    <Link href="/vendors" onClick={handleLinkClick}>
+                        <Store />
+                        <span>Vendors</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Purchase Bills" isActive={pathname.startsWith('/purchase-bills')} asChild>
+                 <Link href="/purchase-bills" onClick={handleLinkClick}>
+                  <Receipt />
+                  <span>Purchase Bills</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Invoice Returns (Purchase)">
+                <Redo2 />
+                <span>Invoice Returns (Purchase)</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
 
-              <SidebarGroup>
-                <SidebarGroupLabel>Accounts &amp; Books</SidebarGroupLabel>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Groups & Ledgers" isActive={pathname.startsWith('/my-accounts')} asChild>
-                      <Link href="/my-accounts" onClick={handleLinkClick}>
-                          <Wallet />
-                          <span>Groups &amp; Ledgers</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="All Entries" isActive={pathname.startsWith('/journal-entries')} asChild>
-                      <Link href="/journal-entries" onClick={handleLinkClick}>
-                          <BookOpen />
-                          <span>All Entries</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Accounts &amp; Books</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Groups & Ledgers" isActive={pathname.startsWith('/my-accounts')} asChild>
+                <Link href="/my-accounts" onClick={handleLinkClick}>
+                    <Wallet />
+                    <span>Groups &amp; Ledgers</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="All Entries" isActive={pathname.startsWith('/journal-entries')} asChild>
+                <Link href="/journal-entries" onClick={handleLinkClick}>
+                    <BookOpen />
+                    <span>All Entries</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
 
-              <SidebarGroup>
-                <SidebarGroupLabel>Reports</SidebarGroupLabel>
-                <SidebarMenu>
-                   <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Profit &amp; Loss" isActive={pathname.startsWith('/profit-loss')} asChild>
-                      <Link href="/profit-loss" onClick={handleLinkClick}>
-                          <TrendingUp />
-                          <span>Profit &amp; Loss</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                   <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Balance Sheet" isActive={pathname.startsWith('/balance-sheet')} asChild>
-                      <Link href="/balance-sheet" onClick={handleLinkClick}>
-                          <Scale />
-                          <span>Balance Sheet</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                   <SidebarMenuItem>
-                      <SidebarMenuButton tooltip="GST Summary" isActive={pathname.startsWith('/gst-summary')} asChild>
-                          <Link href="/gst-summary" onClick={handleLinkClick}>
-                              <Percent />
-                              <span>GST Summary</span>
-                          </Link>
-                      </SidebarMenuButton>
-                  </SidebarMenuItem>
-                   <SidebarMenuItem>
-                      <SidebarMenuButton tooltip="GST Reports" isActive={pathname.startsWith('/gst-reports')} asChild>
-                          <Link href="/gst-reports" onClick={handleLinkClick}>
-                              <FileSpreadsheet />
-                              <span>GST Reports</span>
-                          </Link>
-                      </SidebarMenuButton>
-                  </SidebarMenuItem>
-                   <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Invoice Overviews">
-                      <BookOpen />
-                      <span>Invoice Overviews</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Reports</SidebarGroupLabel>
+          <SidebarMenu>
+             <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Profit &amp; Loss" isActive={pathname.startsWith('/profit-loss')} asChild>
+                <Link href="/profit-loss" onClick={handleLinkClick}>
+                    <TrendingUp />
+                    <span>Profit &amp; Loss</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Balance Sheet" isActive={pathname.startsWith('/balance-sheet')} asChild>
+                <Link href="/balance-sheet" onClick={handleLinkClick}>
+                    <Scale />
+                    <span>Balance Sheet</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+                <SidebarMenuButton tooltip="GST Summary" isActive={pathname.startsWith('/gst-summary')} asChild>
+                    <Link href="/gst-summary" onClick={handleLinkClick}>
+                        <Percent />
+                        <span>GST Summary</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+                <SidebarMenuButton tooltip="GST Reports" isActive={pathname.startsWith('/gst-reports')} asChild>
+                    <Link href="/gst-reports" onClick={handleLinkClick}>
+                        <FileSpreadsheet />
+                        <span>GST Reports</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Invoice Overviews">
+                <BookOpen />
+                <span>Invoice Overviews</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
 
-              <SidebarGroup>
-                <SidebarGroupLabel>GST Filing</SidebarGroupLabel>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                      <SidebarMenuButton tooltip="GSTR-1 Filing" isActive={pathname.startsWith('/gst-filing/gstr1')} asChild>
-                          <Link href="/gst-filing/gstr1" onClick={handleLinkClick}>
-                              <Send />
-                              <span>GSTR-1 Filing</span>
-                          </Link>
-                      </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroup>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
+        <SidebarGroup>
+          <SidebarGroupLabel>GST Filing</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton tooltip="GSTR-1 Filing" isActive={pathname.startsWith('/gst-filing/gstr1')} asChild>
+                    <Link href="/gst-filing/gstr1" onClick={handleLinkClick}>
+                        <Send />
+                        <span>GSTR-1 Filing</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
       </SidebarContent>
       
       <SidebarFooter>
