@@ -144,9 +144,11 @@ export function AppSidebar() {
           <SidebarGroupLabel>Stock</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Add Product">
-                <PackagePlus />
-                <span>Add Product</span>
+              <SidebarMenuButton tooltip="Add Product" isActive={pathname.startsWith('/products/new')} asChild>
+                <Link href="/products/new" onClick={handleLinkClick}>
+                    <PackagePlus />
+                    <span>Add Product</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
