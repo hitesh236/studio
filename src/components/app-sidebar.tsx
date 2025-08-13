@@ -414,14 +414,6 @@ export function AppSidebar() {
                                                     </Link>
                                                 </SidebarMenuSubButton>
                                             </SidebarMenuSubItem>
-                                            <SidebarMenuSubItem>
-                                                <SidebarMenuSubButton tooltip="Cabs" asChild>
-                                                    <Link href="#" onClick={handleLinkClick}>
-                                                        <Car />
-                                                        <span>Cabs</span>
-                                                    </Link>
-                                                </SidebarMenuSubButton>
-                                            </SidebarMenuSubItem>
                                         </SidebarMenuSub>
                                     </motion.div>
                                 )}
