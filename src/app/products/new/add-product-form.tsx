@@ -57,7 +57,11 @@ const productFormSchema = z.object({
   uom: z.string().min(1, "Unit of Measurement is required."),
   secondaryUom: z.string().optional(),
   purchasePrice: z.coerce.number().min(0, "Purchase price must be non-negative."),
-  sellingPrice: z.coerce.number().min(0, "Selling price must be non-negative."),
+  customerPrices: z.object({
+    regular: z.coerce.number().min(0, "Price must be non-negative.").optional(),
+    b2c: z.coerce.number().min(0, "Price must be non-negative.").optional(),
+    b2b: z.coerce.number().min(0, "Price must be non-negative.").optional(),
+  }),
   discount: z.coerce.number().min(0, "Discount must be non-negative.").optional().default(0),
   openingStock: z.coerce.number().min(0, "Opening stock must be non-negative.").default(0),
   hsnCode: z.string().optional(),
@@ -113,7 +117,11 @@ export function AddProductForm() {
         uom: '',
         secondaryUom: '',
         purchasePrice: 0,
-        sellingPrice: 0,
+        customerPrices: {
+            regular: 0,
+            b2c: 0,
+            b2b: 0,
+        },
         discount: 0,
         openingStock: 0,
         gstRate: 18,
@@ -125,15 +133,6 @@ export function AddProductForm() {
     control: form.control,
     name: "customAttributes",
   });
-
-  const watchedSellingPrice = form.watch('sellingPrice');
-  const watchedDiscount = form.watch('discount');
-  
-  const priceAfterDiscount = React.useMemo(() => {
-    const price = watchedSellingPrice || 0;
-    const discount = watchedDiscount || 0;
-    return price - (price * (discount / 100));
-  }, [watchedSellingPrice, watchedDiscount]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -239,18 +238,22 @@ export function AddProductForm() {
                      <FormField name="purchasePrice" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Purchase Price</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
-                    <div className="grid grid-cols-2 gap-2">
-                         <FormField name="sellingPrice" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Selling Price</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField name="discount" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Discount (%)</FormLabel><FormControl><Input type="number" placeholder="0" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <div className="md:col-span-2">
-                            <Label>Price After Discount</Label>
-                            <Input value={formatCurrency(priceAfterDiscount, 'INR')} readOnly className="font-semibold bg-muted" />
+                    
+                    <div className="md:col-span-2">
+                        <Label>Selling Prices</Label>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2 p-4 border rounded-md">
+                            <FormField name="customerPrices.regular" control={form.control} render={({ field }) => (
+                                <FormItem><FormLabel className="text-sm font-normal">Regular</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <FormField name="customerPrices.b2c" control={form.control} render={({ field }) => (
+                                <FormItem><FormLabel className="text-sm font-normal">B2C</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <FormField name="customerPrices.b2b" control={form.control} render={({ field }) => (
+                                <FormItem><FormLabel className="text-sm font-normal">B2B</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
                         </div>
                     </div>
+
                     <FormField name="openingStock" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Opening Stock</FormLabel><FormControl><Input type="number" placeholder="0" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
