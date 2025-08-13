@@ -16,13 +16,17 @@ import {
 } from '@/components/ui/sidebar';
 import {
     BookOpen,
+    Box,
     Briefcase,
     ChevronDown,
     Eye,
     FileSpreadsheet,
     FileText,
+    FolderPlus,
     Globe,
     LayoutDashboard,
+    LayoutGrid,
+    PackagePlus,
     Palette,
     Percent,
     Receipt,
@@ -131,6 +135,30 @@ export function AppSidebar() {
               <SidebarMenuButton tooltip="Invoice Returns (Purchase)">
                 <Redo2 />
                 <span>Invoice Returns (Purchase)</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Stock</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Add Product">
+                <PackagePlus />
+                <span>Add Product</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Add Category">
+                <FolderPlus />
+                <span>Add Category</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="UOM">
+                <Box />
+                <span>UOM</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
