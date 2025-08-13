@@ -364,24 +364,6 @@ export function AppSidebar() {
                 <SidebarGroup>
                     <SidebarMenu>
                         <SidebarMenuItem>
-                            <SidebarMenuButton tooltip="Customer">
-                                <Users />
-                                <span>Customer</span>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                         <SidebarMenuItem>
-                            <SidebarMenuButton tooltip="Trips">
-                                <Luggage />
-                                <span>Trips</span>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                         <SidebarMenuItem>
-                            <SidebarMenuButton tooltip="Packages">
-                                <Box />
-                                <span>Packages</span>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
                             <SidebarMenuButton
                                 onClick={() => toggleTravelSubMenu('masters')}
                                 className="justify-between"
