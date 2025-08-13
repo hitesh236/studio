@@ -45,7 +45,7 @@ const MegaMenu = () => (
                     <DropdownMenuItem key={item.href} asChild>
                         <Link href={item.href} className="flex flex-row items-center justify-start gap-2 p-2 h-auto rounded-md text-left">
                             <item.icon className="h-4 w-4" />
-                            <span className="text-sm font-medium">{item.label}</span>
+                            <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
                         </Link>
                     </DropdownMenuItem>
                 ))}

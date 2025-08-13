@@ -79,68 +79,6 @@ export function AppSidebar() {
         </SidebarMenu>
         
         <SidebarGroup>
-          <SidebarGroupLabel>Component</SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Ledgers" isActive={pathname.startsWith('/ledgers')} asChild>
-                    <Link href="/ledgers" onClick={handleLinkClick}>
-                        <BookOpen />
-                        <span>Ledgers</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Table 2" isActive={pathname.startsWith('/table2')} asChild>
-                    <Link href="/table2" onClick={handleLinkClick}>
-                        <FileText />
-                        <span>Table 2</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Invoice Preview" isActive={pathname.startsWith('/invoice-preview')} asChild>
-                    <Link href="/invoice-preview" onClick={handleLinkClick}>
-                        <Eye />
-                        <span>Invoice Preview</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Invoice2" isActive={pathname.startsWith('/invoice2')} asChild>
-                    <Link href="/invoice2" onClick={handleLinkClick}>
-                        <FileText />
-                        <span>Invoice2</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Invoice Preview FC" isActive={pathname.startsWith('/invoice-preview-fc')} asChild>
-                    <Link href="/invoice-preview-fc" onClick={handleLinkClick}>
-                        <Globe />
-                        <span>Invoice Preview FC</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Customer Portfolio" isActive={pathname.startsWith('/customer-portfolio')} asChild>
-                    <Link href="/customer-portfolio" onClick={handleLinkClick}>
-                        <UserCircle />
-                        <span>Customer Portfolio</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <SidebarMenuButton tooltip="UI Components" isActive={pathname.startsWith('/ui')} asChild>
-                    <Link href="/ui" onClick={handleLinkClick}>
-                        <Palette />
-                        <span>UI</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-
-        <SidebarGroup>
           <SidebarGroupLabel>Money In</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
