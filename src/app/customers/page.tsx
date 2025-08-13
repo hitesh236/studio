@@ -9,10 +9,19 @@ import { PlusCircle } from "lucide-react";
 import { motion } from 'framer-motion';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { AddCustomerForm } from './new/add-customer-form';
+import Loading from '../loading';
 
 export default function CustomersPage() {
-  const data: Customer[] = generateCustomerData();
+  const [data, setData] = React.useState<Customer[] | null>(null);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    setData(generateCustomerData());
+  }, []);
+
+  if (!data) {
+    return <Loading />;
+  }
 
   return (
     <div data-section="main-content" className="p-4 sm:p-6 lg:p-8">
