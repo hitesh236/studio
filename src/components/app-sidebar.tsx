@@ -79,7 +79,7 @@ export function AppSidebar() {
         </SidebarMenu>
         
         <SidebarGroup>
-          <SidebarGroupLabel>Money In</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-green-600 dark:text-green-500">Money In</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
                 <SidebarMenuButton tooltip="Customers" isActive={pathname.startsWith('/customers')} asChild>
@@ -109,7 +109,7 @@ export function AppSidebar() {
         </SidebarGroup>
         
         <SidebarGroup>
-          <SidebarGroupLabel>Money Out</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-destructive">Money Out</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
                 <SidebarMenuButton tooltip="Vendors" isActive={pathname.startsWith('/vendors')} asChild>
