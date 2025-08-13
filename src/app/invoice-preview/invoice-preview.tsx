@@ -126,6 +126,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                             <TableHead className="print:h-auto print:py-1 print:px-2 print:text-[10px]">Item & Description</TableHead>
                             <TableHead className="text-center print:h-auto print:py-1 print:px-2 print:text-[10px]">HSN</TableHead>
                             <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">Qty</TableHead>
+                            <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">Unit</TableHead>
                             <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">Rate</TableHead>
                             <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">GST</TableHead>
                             <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">Total</TableHead>
@@ -143,7 +144,8 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                                         <p className="font-medium print:text-[10px]">{item.name}</p>
                                     </TableCell>
                                     <TableCell className="text-center print:py-1 print:px-2 print:text-[10px]">{item.hsn}</TableCell>
-                                    <TableCell className="text-right print:py-1 print:px-2 print:text-[10px]">{item.quantity} {item.unit}</TableCell>
+                                    <TableCell className="text-right print:py-1 print:px-2 print:text-[10px]">{item.quantity}</TableCell>
+                                    <TableCell className="text-right print:py-1 print:px-2 print:text-[10px]">{item.unit}</TableCell>
                                     <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(item.rate, 'INR')}</TableCell>
                                     <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{item.gstRate}%</TableCell>
                                     <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(totalAmount, 'INR')}</TableCell>

@@ -126,10 +126,10 @@ export default function InvoicePreviewPage() {
   const isPaid = sampleInvoice.invoiceDetails.status === 'Paid';
   const { status } = sampleInvoice.invoiceDetails;
 
-  const getStatusVariant = (status: SampleInvoice['invoiceDetails']['status']): "default" | "secondary" | "destructive" | "outline" => {
+  const getStatusVariant = (status: SampleInvoice['invoiceDetails']['status']): "default" | "secondary" | "destructive" | "outline" | "warning" => {
     switch (status) {
         case 'Paid': return 'default';
-        case 'Partially Paid': return 'secondary';
+        case 'Partially Paid': return 'warning';
         case 'Unpaid': return 'destructive';
         default: return 'outline';
     }
@@ -142,7 +142,7 @@ export default function InvoicePreviewPage() {
           <h1 className="text-2xl font-bold text-center sm:text-left">Invoice Preview</h1>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant={getStatusVariant(status)} className="text-base">
+          <Badge variant={getStatusVariant(status)} className={cn(status === 'Partially Paid' && 'text-xs')}>
             {status}
           </Badge>
           {!isPaid && (
