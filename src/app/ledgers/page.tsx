@@ -75,7 +75,7 @@ export default function LedgersPage() {
     const selectedLedgerName = allLedgers.find(l => l.id === selectedLedgerId)?.name || 'Ledger';
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8">
+        <div data-section="main-content" className="p-4 sm:p-6 lg:p-8">
             <Card>
                 <CardHeader>
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

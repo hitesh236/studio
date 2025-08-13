@@ -12,7 +12,7 @@ export default function VendorsPage() {
   const data: Person[] = generateData(500);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div data-section="main-content" className="p-4 sm:p-6 lg:p-8">
       <HicksTableContainer data={data} />
 
       <motion.div

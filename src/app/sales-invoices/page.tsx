@@ -8,7 +8,7 @@ export default function SalesInvoicesPage() {
   const data: SalesInvoice[] = generateSalesInvoices(50);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div data-section="main-content" className="p-4 sm:p-6 lg:p-8">
       <div className="flex justify-end mb-4">
         <Link href="/sales-invoices/new" passHref>
           <Button>

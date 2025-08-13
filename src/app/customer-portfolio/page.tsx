@@ -452,7 +452,7 @@ const CustomerPortfolioContent = () => {
     }
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+        <div data-section="main-content" className="p-4 sm:p-6 lg:p-8 space-y-6">
             <Card>
                 <CardHeader>
                     <div className="flex items-start justify-between">

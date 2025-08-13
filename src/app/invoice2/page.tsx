@@ -136,7 +136,7 @@ export default function Invoice2Page() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 print:p-0">
+    <div data-section="main-content" className="p-4 sm:p-6 lg:p-8 print:p-0">
       <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold text-center sm:text-left">Invoice with Return</h1>

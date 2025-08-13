@@ -24,7 +24,7 @@ export default function ProfilePage() {
     const [isDetailsExpanded, setIsDetailsExpanded] = React.useState(false);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-4xl mx-auto">
+    <div data-section="main-content" className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-4xl mx-auto">
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between">

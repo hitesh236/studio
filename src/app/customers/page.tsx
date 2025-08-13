@@ -15,7 +15,7 @@ export default function CustomersPage() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div data-section="main-content" className="p-4 sm:p-6 lg:p-8">
       <CustomerTable data={data} />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

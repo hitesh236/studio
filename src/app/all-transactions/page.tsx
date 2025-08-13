@@ -9,7 +9,7 @@ export default function AllTransactionsPage() {
     const [journalEntries, setJournalEntries] = React.useState<JournalEntry[] | null>(null);
 
     React.useEffect(() => {
-        setJournalEntries(generateJournalEntries(50));
+        setJournalEntries(generateJournalEntries(2));
     }, []);
 
     if (!journalEntries) {
@@ -17,7 +17,7 @@ export default function AllTransactionsPage() {
     }
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8">
+        <div data-section="main-content" className="p-4 sm:p-6 lg:p-8">
             <JournalEntriesTable data={journalEntries} />
         </div>
     );

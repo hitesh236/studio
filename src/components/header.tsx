@@ -19,38 +19,6 @@ import Link from 'next/link';
 import { LogOut, User, LayoutGrid, BookOpen, FileText, Eye, Globe, UserCircle, Palette } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const pathToTitle: { [key: string]: string } = {
-  '/': 'Dashboard',
-  '/balance-sheet': 'Balance Sheet',
-  '/customer-portfolio': 'Customer Portfolio',
-  '/customers': 'Customers',
-  '/customers/new': 'Add Customer',
-  '/invoice-preview': 'Invoice Preview',
-  '/invoice-preview-fc': 'Invoice Preview FC',
-  '/invoice2': 'Invoice with Return',
-  '/journal-entries': 'All Entries',
-  '/journal-entries/new': 'New Journal Entry',
-  '/my-accounts': 'Groups & Ledgers',
-  '/profit-loss': 'Profit & Loss Statement',
-  '/sales-invoices': 'Sales Invoices',
-  '/sales-invoice-returns': 'Sales Invoice Returns',
-  '/sales-invoice-returns/new': 'New Sales Return',
-  '/sales-invoices/new': 'Create Invoice',
-  '/settings': 'Settings',
-  '/settings/user-roles': 'User Roles & Permissions',
-  '/settings/user-roles/new': 'Add New Role',
-  '/table2': 'Table 2',
-  '/gst-summary': 'GST Summary',
-  '/gst-reports': 'GST Reports',
-  '/gst-filing/gstr1': 'GSTR-1 B2B Filing',
-  '/ui': 'UI Components',
-  '/profile': 'My Profile',
-  '/vendors': 'Vendors',
-  '/vendors/new': 'Add Vendor',
-  '/ledgers': 'Ledger Details',
-  '/purchase-bills': 'New Purchase Bill',
-};
-
 const componentMenuItems = [
     { href: '/ledgers', icon: BookOpen, label: 'Ledgers' },
     { href: '/table2', icon: FileText, label: 'Table 2' },
@@ -87,17 +55,10 @@ const MegaMenu = () => (
 );
 
 export function Header() {
-  const pathname = usePathname();
-  const title = useMemo(() => {
-    return pathToTitle[pathname] || 'Dashboard';
-  }, [pathname]);
-
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/95 px-6 shrink-0 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-6 shrink-0">
       <SidebarTrigger className="flex" />
-      <div className="flex-1">
-        <h1 className="font-semibold text-lg">{title}</h1>
-      </div>
+      <div className="flex-1" />
       <div className="flex items-center gap-2">
         <ThemeToggle />
         <MegaMenu />
