@@ -16,7 +16,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, LayoutGrid, BookOpen, FileText, Eye, Globe, UserCircle, Palette } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const pathToTitle: { [key: string]: string } = {
   '/': 'Dashboard',
@@ -50,6 +51,41 @@ const pathToTitle: { [key: string]: string } = {
   '/purchase-bills': 'New Purchase Bill',
 };
 
+const componentMenuItems = [
+    { href: '/ledgers', icon: BookOpen, label: 'Ledgers' },
+    { href: '/table2', icon: FileText, label: 'Table 2' },
+    { href: '/invoice-preview', icon: Eye, label: 'Invoice Preview' },
+    { href: '/invoice2', icon: FileText, label: 'Invoice2' },
+    { href: '/invoice-preview-fc', icon: Globe, label: 'Invoice Preview FC' },
+    { href: '/customer-portfolio', icon: UserCircle, label: 'Customer Portfolio' },
+    { href: '/ui', icon: Palette, label: 'UI' },
+];
+
+const MegaMenu = () => (
+    <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+                <LayoutGrid />
+                <span className="sr-only">Open Components Menu</span>
+            </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-64" align="end">
+            <DropdownMenuLabel>Components</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <div className="grid grid-cols-2 gap-2 p-2">
+                {componentMenuItems.map(item => (
+                    <DropdownMenuItem key={item.href} asChild>
+                        <Link href={item.href} className="flex flex-col items-center justify-center gap-1 p-2 h-auto rounded-md text-center">
+                            <item.icon className="h-5 w-5 mb-1" />
+                            <span className="text-xs font-medium">{item.label}</span>
+                        </Link>
+                    </DropdownMenuItem>
+                ))}
+            </div>
+        </DropdownMenuContent>
+    </DropdownMenu>
+);
+
 export function Header() {
   const pathname = usePathname();
   const title = useMemo(() => {
@@ -64,6 +100,7 @@ export function Header() {
       </div>
       <div className="flex items-center gap-2">
         <ThemeToggle />
+        <MegaMenu />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
