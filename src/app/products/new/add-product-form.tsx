@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -35,7 +35,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Settings, Upload, Image as ImageIcon, Tags, Barcode, Percent, Trash2 } from 'lucide-react';
+import { Loader2, Save, Settings, Upload, Image as ImageIcon, Tags, Barcode, Percent, Trash2, PlusCircle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -43,6 +43,11 @@ import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 
+
+const customAttributeSchema = z.object({
+  key: z.string().optional(),
+  value: z.string().optional(),
+});
 
 const productFormSchema = z.object({
   // Core Information
@@ -57,6 +62,9 @@ const productFormSchema = z.object({
   openingStock: z.coerce.number().min(0, "Opening stock must be non-negative.").default(0),
   hsnCode: z.string().optional(),
   gstRate: z.coerce.number().min(0).max(100),
+  
+  // Custom Attributes
+  customAttributes: z.array(customAttributeSchema).optional(),
 
   // Additional Details
   productDescription: z.string().optional(),
@@ -109,9 +117,15 @@ export function AddProductForm() {
         discount: 0,
         openingStock: 0,
         gstRate: 18,
+        customAttributes: [{ key: '', value: '' }],
     },
   });
   
+  const { fields: customAttributeFields, append: appendCustomAttribute, remove: removeCustomAttribute } = useFieldArray({
+    control: form.control,
+    name: "customAttributes",
+  });
+
   const watchedSellingPrice = form.watch('sellingPrice');
   const watchedDiscount = form.watch('discount');
   
@@ -251,6 +265,61 @@ export function AddProductForm() {
                 </div>
             </section>
             
+            {/* Custom Attributes Section */}
+            <section>
+              <h3 className="text-lg font-medium mb-2">Custom Attributes</h3>
+              <Separator className="mb-4" />
+              <div className="space-y-4">
+                {customAttributeFields.map((field, index) => (
+                  <div key={field.id} className="flex items-center gap-4">
+                    <FormField
+                      control={form.control}
+                      name={`customAttributes.${index}.key`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input placeholder="Attribute Name (e.g., Color)" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`customAttributes.${index}.value`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input placeholder="Attribute Value (e.g., Red)" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive"
+                      onClick={() => removeCustomAttribute(index)}
+                      disabled={customAttributeFields.length <= 1}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                onClick={() => appendCustomAttribute({ key: '', value: '' })}
+              >
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Attribute
+              </Button>
+            </section>
+
             {/* Additional Details Section */}
             {visibleSections.additionalDetails && <section>
                 <h3 className="text-lg font-medium mb-2">Additional Details</h3>
