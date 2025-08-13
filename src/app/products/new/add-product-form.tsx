@@ -35,10 +35,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Settings, Upload, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Save, Settings, Upload, Image as ImageIcon, Tags, Barcode, Percent } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 
 
 const productFormSchema = z.object({
@@ -47,8 +49,10 @@ const productFormSchema = z.object({
   sku: z.string().min(1, "SKU is required."),
   category: z.string().min(1, "Category is required."),
   uom: z.string().min(1, "Unit of Measurement is required."),
+  secondaryUom: z.string().optional(),
   purchasePrice: z.coerce.number().min(0, "Purchase price must be non-negative."),
   sellingPrice: z.coerce.number().min(0, "Selling price must be non-negative."),
+  discount: z.coerce.number().min(0, "Discount must be non-negative.").optional().default(0),
   openingStock: z.coerce.number().min(0, "Opening stock must be non-negative.").default(0),
   hsnCode: z.string().optional(),
   gstRate: z.coerce.number().min(0).max(100),
@@ -57,6 +61,7 @@ const productFormSchema = z.object({
   productDescription: z.string().optional(),
   brand: z.string().optional(),
   model: z.string().optional(),
+  barcode: z.string().optional(),
   minStockLevel: z.coerce.number().optional(),
   reorderQty: z.coerce.number().optional(),
   warehouseLocation: z.string().optional(),
@@ -96,12 +101,23 @@ export function AddProductForm() {
         sku: '',
         category: '',
         uom: '',
+        secondaryUom: '',
         purchasePrice: 0,
         sellingPrice: 0,
+        discount: 0,
         openingStock: 0,
         gstRate: 18,
     },
   });
+  
+  const watchedSellingPrice = form.watch('sellingPrice');
+  const watchedDiscount = form.watch('discount');
+  
+  const priceAfterDiscount = React.useMemo(() => {
+    const price = watchedSellingPrice || 0;
+    const discount = watchedDiscount || 0;
+    return price - (price * (discount / 100));
+  }, [watchedSellingPrice, watchedDiscount]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -180,17 +196,33 @@ export function AddProductForm() {
                             <SelectItem value="electronics">Electronics</SelectItem><SelectItem value="accessories">Accessories</SelectItem>
                         </SelectContent></Select><FormMessage /></FormItem>
                     )} />
-                    <FormField name="uom" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Unit of Measurement (UOM)</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger></FormControl><SelectContent>
-                            <SelectItem value="pcs">Pieces (pcs)</SelectItem><SelectItem value="box">Box</SelectItem>
-                        </SelectContent></Select><FormMessage /></FormItem>
-                    )} />
+                    <div className="grid grid-cols-2 gap-2">
+                        <FormField name="uom" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Primary UOM</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger></FormControl><SelectContent>
+                                <SelectItem value="pcs">Pieces (pcs)</SelectItem><SelectItem value="box">Box</SelectItem><SelectItem value="kg">Kilogram (kg)</SelectItem>
+                            </SelectContent></Select><FormMessage /></FormItem>
+                        )} />
+                        <FormField name="secondaryUom" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Secondary UOM</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger></FormControl><SelectContent>
+                                <SelectItem value="pcs">Pieces (pcs)</SelectItem><SelectItem value="box">Box</SelectItem><SelectItem value="g">Gram (g)</SelectItem>
+                            </SelectContent></Select><FormMessage /></FormItem>
+                        )} />
+                    </div>
                      <FormField name="purchasePrice" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Purchase Price</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
-                     <FormField name="sellingPrice" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Selling Price</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
+                    <div className="grid grid-cols-2 gap-2">
+                         <FormField name="sellingPrice" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Selling Price</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField name="discount" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Discount (%)</FormLabel><FormControl><Input type="number" placeholder="0" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <div className="md:col-span-2">
+                            <Label>Price After Discount</Label>
+                            <Input value={formatCurrency(priceAfterDiscount, 'INR')} readOnly className="font-semibold bg-muted" />
+                        </div>
+                    </div>
                     <FormField name="openingStock" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Opening Stock</FormLabel><FormControl><Input type="number" placeholder="0" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
@@ -226,7 +258,21 @@ export function AddProductForm() {
                         <FormItem><FormLabel>Reorder Quantity</FormLabel><FormControl><Input type="number" placeholder="e.g., 50" {...field} /></FormControl><FormDescription>Default quantity for purchase orders.</FormDescription><FormMessage /></FormItem>
                     )} />
                     <FormField name="warehouseLocation" control={form.control} render={({ field }) => (
-                        <FormItem className="md:col-span-2"><FormLabel>Warehouse/Location</FormLabel><FormControl><Input placeholder="e.g., Shelf A-1, Mumbai Warehouse" {...field} /></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel>Warehouse/Location</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select warehouse" /></SelectTrigger></FormControl><SelectContent>
+                            <SelectItem value="mumbai-wh">Mumbai Warehouse</SelectItem>
+                            <SelectItem value="delhi-wh">Delhi Warehouse</SelectItem>
+                            <SelectItem value="main-store">Main Storefront</SelectItem>
+                        </SelectContent></Select><FormMessage /></FormItem>
+                    )} />
+                    <FormField name="barcode" control={form.control} render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Barcode</FormLabel>
+                            <div className="relative">
+                                <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <FormControl><Input placeholder="Scan or enter barcode" className="pl-10" {...field} /></FormControl>
+                            </div>
+                            <FormMessage />
+                        </FormItem>
                     )} />
                 </div>
             </section>}
@@ -271,7 +317,15 @@ export function AddProductForm() {
                         <FormItem><FormLabel>SEO Meta Description</FormLabel><FormControl><Input placeholder="Description for search engine results" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                      <FormField name="tags" control={form.control} render={({ field }) => (
-                        <FormItem className="md:col-span-2"><FormLabel>Tags/Keywords</FormLabel><FormControl><Input placeholder="e.g., wireless, bluetooth, ergonomic" {...field} /></FormControl><FormDescription>Comma-separated values.</FormDescription><FormMessage /></FormItem>
+                        <FormItem className="md:col-span-2">
+                           <FormLabel>Tags/Keywords</FormLabel>
+                            <div className="relative">
+                                <Tags className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <FormControl><Input placeholder="e.g., wireless, bluetooth, ergonomic" className="pl-10" {...field} /></FormControl>
+                            </div>
+                            <FormDescription>Comma-separated values.</FormDescription>
+                            <FormMessage />
+                        </FormItem>
                     )} />
                 </div>
              </section>}
