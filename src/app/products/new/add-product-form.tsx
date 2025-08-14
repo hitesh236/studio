@@ -57,14 +57,14 @@ const productFormSchema = z.object({
   uom: z.string().min(1, "Unit of Measurement is required."),
   secondaryUom: z.string().optional(),
   purchasePrice: z.coerce.number().min(0, "Purchase price must be non-negative."),
+  hsnCode: z.string().optional(),
+  gstRate: z.coerce.number().min(0).max(100),
   customerPrices: z.object({
     regular: z.coerce.number().min(0, "Price must be non-negative.").optional(),
     b2c: z.coerce.number().min(0, "Price must be non-negative.").optional(),
     b2b: z.coerce.number().min(0, "Price must be non-negative.").optional(),
   }),
   openingStock: z.coerce.number().min(0, "Opening stock must be non-negative.").default(0),
-  hsnCode: z.string().optional(),
-  gstRate: z.coerce.number().min(0).max(100),
   
   // Custom Attributes
   customAttributes: z.array(customAttributeSchema).optional(),
@@ -76,7 +76,6 @@ const productFormSchema = z.object({
   barcode: z.string().optional(),
   minStockLevel: z.coerce.number().optional(),
   reorderQty: z.coerce.number().optional(),
-  warehouseLocation: z.string().optional(),
   
   // Ecommerce Details
   isListedOnWebsite: z.boolean().default(false),
@@ -116,13 +115,14 @@ export function AddProductForm() {
         uom: '',
         secondaryUom: '',
         purchasePrice: 0,
+        hsnCode: '',
+        gstRate: 18,
         customerPrices: {
             regular: 0,
             b2c: 0,
             b2b: 0,
         },
         openingStock: 0,
-        gstRate: 18,
         customAttributes: [{ key: '', value: '' }],
     },
   });
@@ -236,14 +236,14 @@ export function AddProductForm() {
                      <FormField name="purchasePrice" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Purchase Price</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
-                    <FormField name="warehouseLocation" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Warehouse/Location</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select warehouse" /></SelectTrigger></FormControl><SelectContent>
-                            <SelectItem value="mumbai-wh">Mumbai Warehouse</SelectItem>
-                            <SelectItem value="delhi-wh">Delhi Warehouse</SelectItem>
-                            <SelectItem value="main-store">Main Storefront</SelectItem>
+                     <FormField name="hsnCode" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>HSN/SAC Code</FormLabel><FormControl><Input placeholder="e.g., 847160" {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField name="gstRate" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>GST Rate (%)</FormLabel><Select onValueChange={(v) => field.onChange(Number(v))} value={String(field.value)}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent>
+                            {[0, 5, 12, 18, 28].map(rate => <SelectItem key={rate} value={String(rate)}>{rate}%</SelectItem>)}
                         </SelectContent></Select><FormMessage /></FormItem>
                     )} />
-                    
                     <div className="md:col-span-2">
                         <Label>Selling Prices</Label>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2 p-4 border rounded-md">
@@ -261,14 +261,6 @@ export function AddProductForm() {
 
                     <FormField name="openingStock" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Opening Stock</FormLabel><FormControl><Input type="number" placeholder="0" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField name="gstRate" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>GST Rate (%)</FormLabel><Select onValueChange={(v) => field.onChange(Number(v))} value={String(field.value)}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent>
-                            {[0, 5, 12, 18, 28].map(rate => <SelectItem key={rate} value={String(rate)}>{rate}%</SelectItem>)}
-                        </SelectContent></Select><FormMessage /></FormItem>
-                    )} />
-                     <FormField name="hsnCode" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>HSN/SAC Code</FormLabel><FormControl><Input placeholder="e.g., 847160" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                 </div>
             </section>
