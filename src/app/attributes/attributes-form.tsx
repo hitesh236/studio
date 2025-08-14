@@ -257,11 +257,11 @@ export function AttributesTable({ category }: { category: { id: string; name: st
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="p-2 h-10">Attribute Name</TableHead>
-              <TableHead className="p-2 h-10">Data Type</TableHead>
-              <TableHead className="p-2 h-10">Searchable</TableHead>
-              <TableHead className="p-2 h-10">Filterable</TableHead>
-              <TableHead className="text-center p-2 h-10">Actions</TableHead>
+              <TableHead className="p-2 h-10 font-normal">Attribute Name</TableHead>
+              <TableHead className="p-2 h-10 font-normal">Data Type</TableHead>
+              <TableHead className="p-2 h-10 font-normal">Searchable</TableHead>
+              <TableHead className="p-2 h-10 font-normal">Filterable</TableHead>
+              <TableHead className="text-center p-2 h-10 font-normal">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
