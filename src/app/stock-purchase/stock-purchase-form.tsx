@@ -12,6 +12,8 @@ import {
   Trash2,
   Save,
   Loader2,
+  ChevronsUpDown,
+  Check,
 } from 'lucide-react';
 
 import { cn, formatCurrency } from '@/lib/utils';
@@ -54,6 +56,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import { useToast } from '@/hooks/use-toast';
 
 const indianStates = [
@@ -65,6 +75,14 @@ const indianStates = [
   'West Bengal', 'Andaman and Nicobar Islands', 'Chandigarh',
   'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu and Kashmir',
   'Ladakh', 'Lakshadweep', 'Puducherry',
+];
+
+const products = [
+  { value: 'wireless-mouse', label: 'Wireless Mouse' },
+  { value: 'wired-keyboard', label: 'Wired Keyboard' },
+  { value: 'hdmi-cable', label: 'HDMI Cable (3ft)' },
+  { value: 'usb-c-hub', label: 'USB-C Hub' },
+  { value: 'laptop-stand', label: 'Ergonomic Laptop Stand' },
 ];
 
 const purchaseItemSchema = z.object({
@@ -150,6 +168,29 @@ export function StockPurchaseForm() {
       items: [{ itemName: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 }],
     });
   }
+  
+  const ProductCombobox = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
+    const [open, setOpen] = React.useState(false);
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild><FormControl>
+                <Button variant="outline" role="combobox" className={cn("w-full justify-between", !value && "text-muted-foreground")}>
+                {value ? products.find(product => product.value === value)?.label : "Select item"}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+            </FormControl></PopoverTrigger>
+            <PopoverContent className="w-[300px] p-0"><Command><CommandInput placeholder="Search items..." />
+            <CommandList><CommandEmpty>No item found.</CommandEmpty><CommandGroup>
+                {products.map(product => (
+                    <CommandItem value={product.label} key={product.value} onSelect={() => { onChange(product.value); setOpen(false); }}>
+                        <Check className={cn("mr-2 h-4 w-4", product.value === value ? "opacity-100" : "opacity-0")} />
+                        {product.label}
+                    </CommandItem>
+                ))}
+            </CommandGroup></CommandList></Command></PopoverContent>
+        </Popover>
+    );
+  };
 
   return (
     <Form {...form}>
@@ -248,7 +289,18 @@ export function StockPurchaseForm() {
                 <TableBody>
                   {fields.map((field, index) => (
                     <TableRow key={field.id}>
-                      <TableCell><FormField control={form.control} name={`items.${index}.itemName`} render={({ field }) => <Input placeholder="Item name" {...field} />} /></TableCell>
+                      <TableCell>
+                        <FormField
+                            control={form.control}
+                            name={`items.${index}.itemName`}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <ProductCombobox value={field.value} onChange={field.onChange} />
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                      </TableCell>
                       <TableCell><FormField control={form.control} name={`items.${index}.hsnCode`} render={({ field }) => <Input placeholder="HSN Code" {...field} />} /></TableCell>
                       <TableCell><FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => <Input type="number" className="text-right min-w-[100px]" {...field} />} /></TableCell>
                       <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="number" className="text-right min-w-[100px]" {...field} />} /></TableCell>
