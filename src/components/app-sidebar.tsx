@@ -144,6 +144,14 @@ export function AppSidebar() {
           <SidebarGroupLabel>Stock</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Stock List" isActive={pathname.startsWith('/stock-list')} asChild>
+                <Link href="/stock-list" onClick={handleLinkClick}>
+                    <LayoutGrid />
+                    <span>Stock List</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
               <SidebarMenuButton tooltip="Add Product" isActive={pathname.startsWith('/products/new')} asChild>
                 <Link href="/products/new" onClick={handleLinkClick}>
                     <PackagePlus />
