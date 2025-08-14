@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -32,16 +32,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Settings, Upload, Image as ImageIcon, Tags, Barcode, Percent, Trash2, PlusCircle } from 'lucide-react';
+import { Loader2, Save, Settings, Upload, Image as ImageIcon, Tags, Barcode, Percent, Trash2, PlusCircle, X, ChevronsUpDown } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { formatCurrency } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 
 
 const customAttributeSchema = z.object({
@@ -61,6 +61,7 @@ const productFormSchema = z.object({
   purchasePrice: z.coerce.number().min(0, "Purchase price must be non-negative."),
   hsnCode: z.string().optional(),
   gstRate: z.coerce.number().min(0).max(100),
+  tags: z.array(z.string()).optional(),
   customerPrices: z.object({
     regular: z.coerce.number().min(0, "Price must be non-negative.").optional(),
     b2c: z.coerce.number().min(0, "Price must be non-negative.").optional(),
@@ -86,7 +87,6 @@ const productFormSchema = z.object({
   webLongDescription: z.string().optional(),
   seoTitle: z.string().optional(),
   seoMetaDescription: z.string().optional(),
-  tags: z.string().optional(),
 });
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
@@ -101,6 +101,9 @@ const categoryData = {
     'accessories': ['Keyboards', 'Mice', 'Cables', 'Headphones'],
     'clothing': ['T-Shirts', 'Jeans', 'Jackets'],
 };
+
+const predefinedTags = ['new-arrival', 'best-seller', 'featured', 'on-sale', 'clearance', 'eco-friendly', 'premium'];
+
 
 export function AddProductForm() {
   const { toast } = useToast();
@@ -126,6 +129,7 @@ export function AddProductForm() {
         purchasePrice: 0,
         hsnCode: '',
         gstRate: 18,
+        tags: [],
         customerPrices: {
             regular: 0,
             b2c: 0,
@@ -180,6 +184,107 @@ export function AddProductForm() {
     imagePreviews.forEach(url => URL.revokeObjectURL(url));
     setImagePreviews([]);
   }
+
+  const TagsInput = ({ field }: { field: any }) => {
+    const [inputValue, setInputValue] = React.useState('');
+    const [open, setOpen] = React.useState(false);
+    const inputRef = React.useRef<HTMLInputElement>(null);
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter' && inputValue.trim()) {
+        e.preventDefault();
+        if (!field.value.includes(inputValue.trim())) {
+          field.onChange([...field.value, inputValue.trim()]);
+        }
+        setInputValue('');
+      } else if (e.key === 'Backspace' && !inputValue && field.value.length > 0) {
+        field.onChange(field.value.slice(0, -1));
+      }
+    };
+
+    const removeTag = (tagToRemove: string) => {
+      field.onChange(field.value.filter((tag: string) => tag !== tagToRemove));
+    };
+
+    const filteredTags = predefinedTags.filter(
+      (tag) => !field.value.includes(tag) && tag.toLowerCase().includes(inputValue.toLowerCase())
+    );
+
+    return (
+        <Command>
+            <div className="group rounded-md border border-input px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                <div className="flex flex-wrap gap-1">
+                    {field.value.map((tag: string) => (
+                        <Badge key={tag} variant="secondary">
+                            {tag}
+                            <button
+                                type="button"
+                                className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                onClick={() => removeTag(tag)}
+                            >
+                                <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                            </button>
+                        </Badge>
+                    ))}
+                    <CommandInput
+                        ref={inputRef}
+                        placeholder="Add tags..."
+                        value={inputValue}
+                        onValueChange={setInputValue}
+                        onKeyDown={handleKeyDown}
+                        onFocus={() => setOpen(true)}
+                        onBlur={() => setOpen(false)}
+                        className="ml-2 flex-1 bg-transparent p-0 outline-none placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 border-0 h-auto"
+                    />
+                </div>
+            </div>
+            {open && (filteredTags.length > 0 || (inputValue && !predefinedTags.includes(inputValue))) && (
+                <div className="relative mt-2">
+                    <div className="absolute top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
+                        <CommandList>
+                            <CommandEmpty>No results found.</CommandEmpty>
+                            <CommandGroup>
+                                {filteredTags.map((tag) => (
+                                    <CommandItem
+                                        key={tag}
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }}
+                                        onSelect={() => {
+                                            if (!field.value.includes(tag)) {
+                                                field.onChange([...field.value, tag]);
+                                            }
+                                            setInputValue('');
+                                        }}
+                                    >
+                                        {tag}
+                                    </CommandItem>
+                                ))}
+                                {inputValue.trim() && !predefinedTags.includes(inputValue.trim()) && (
+                                     <CommandItem
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }}
+                                        onSelect={() => {
+                                            if (!field.value.includes(inputValue.trim())) {
+                                                field.onChange([...field.value, inputValue.trim()]);
+                                            }
+                                            setInputValue('');
+                                        }}
+                                    >
+                                        Create "{inputValue}"
+                                    </CommandItem>
+                                )}
+                            </CommandGroup>
+                        </CommandList>
+                    </div>
+                </div>
+            )}
+        </Command>
+    );
+};
 
   return (
     <Card className="max-w-4xl mx-auto">
@@ -270,6 +375,20 @@ export function AddProductForm() {
                             {[0, 5, 12, 18, 28].map(rate => <SelectItem key={rate} value={String(rate)}>{rate}%</SelectItem>)}
                         </SelectContent></Select><FormMessage /></FormItem>
                     )} />
+                    <FormField
+                      control={form.control}
+                      name="tags"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel>Tags/Keywords</FormLabel>
+                          <TagsInput field={field} />
+                          <FormDescription>
+                            Type a tag and press Enter. Suggestions will appear as you type.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <div className="md:col-span-2">
                         <Label>Selling Prices</Label>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2 p-4 border rounded-md">
@@ -468,17 +587,6 @@ export function AddProductForm() {
                      <FormField name="seoMetaDescription" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>SEO Meta Description</FormLabel><FormControl><Input placeholder="Description for search engine results" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
-                     <FormField name="tags" control={form.control} render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                           <FormLabel>Tags/Keywords</FormLabel>
-                            <div className="relative">
-                                <Tags className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <FormControl><Input placeholder="e.g., wireless, bluetooth, ergonomic" className="pl-10" {...field} /></FormControl>
-                            </div>
-                            <FormDescription>Comma-separated values.</FormDescription>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
                 </div>
              </section>}
             
@@ -494,3 +602,5 @@ export function AddProductForm() {
     </Card>
   );
 }
+
+    
