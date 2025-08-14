@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, Edit } from 'lucide-react';
+import { PlusCircle, Trash2, Edit, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -34,13 +34,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+
 
 type Attribute = {
   id: string;
   name: string;
-  dataType: 'Text' | 'Text Area' | 'Number' | 'Date';
+  dataType: 'Text' | 'Text Area' | 'Number' | 'Date' | 'Dropdown';
   isSearchable: boolean;
   isFilterable: boolean;
+  options?: string[];
 };
 
 const initialAttributes: Record<string, Attribute[]> = {
@@ -50,8 +54,8 @@ const initialAttributes: Record<string, Attribute[]> = {
     { id: 'attr-cos-3', name: 'colr', dataType: 'Text', isSearchable: true, isFilterable: false },
   ],
   apparel: [
-    { id: 'attr-app-1', name: 'Size', dataType: 'Text', isSearchable: true, isFilterable: true },
-    { id: 'attr-app-2', name: 'Color', dataType: 'Text', isSearchable: true, isFilterable: true },
+    { id: 'attr-app-1', name: 'Size', dataType: 'Dropdown', isSearchable: true, isFilterable: true, options: ['S', 'M', 'L', 'XL', 'XXL'] },
+    { id: 'attr-app-2', name: 'Color', dataType: 'Dropdown', isSearchable: true, isFilterable: true, options: ['Red', 'Blue', 'Green', 'Black', 'White'] },
     { id: 'attr-app-3', name: 'Material', dataType: 'Text Area', isSearchable: false, isFilterable: true },
   ],
   'motor-parts': [
@@ -59,6 +63,55 @@ const initialAttributes: Record<string, Attribute[]> = {
     { id: 'attr-mot-2', name: 'OEM', dataType: 'Text', isSearchable: true, isFilterable: true },
   ],
 };
+
+const TagInput = ({ value, onChange }: { value: string[]; onChange: (value: string[]) => void }) => {
+    const [inputValue, setInputValue] = React.useState('');
+    const inputRef = React.useRef<HTMLInputElement>(null);
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter' && inputValue.trim()) {
+        e.preventDefault();
+        if (!value.includes(inputValue.trim())) {
+          onChange([...value, inputValue.trim()]);
+        }
+        setInputValue('');
+      } else if (e.key === 'Backspace' && !inputValue && value.length > 0) {
+        onChange(value.slice(0, -1));
+      }
+    };
+
+    const removeTag = (tagToRemove: string) => {
+      onChange(value.filter((tag: string) => tag !== tagToRemove));
+    };
+
+    return (
+        <div className="group rounded-md border border-input px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+            <div className="flex flex-wrap gap-1">
+                {value.map((tag: string) => (
+                    <Badge key={tag} variant="secondary">
+                        {tag}
+                        <button
+                            type="button"
+                            className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                            onClick={() => removeTag(tag)}
+                        >
+                            <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                        </button>
+                    </Badge>
+                ))}
+                <Input
+                    ref={inputRef}
+                    placeholder="Add options..."
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className="ml-2 flex-1 bg-transparent p-0 outline-none placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 border-0 h-auto"
+                />
+            </div>
+        </div>
+    );
+};
+
 
 const AttributeDialog = ({
   attribute,
@@ -74,6 +127,7 @@ const AttributeDialog = ({
   const [dataType, setDataType] = React.useState<Attribute['dataType']>(attribute?.dataType || 'Text');
   const [isSearchable, setIsSearchable] = React.useState(attribute?.isSearchable || false);
   const [isFilterable, setIsFilterable] = React.useState(attribute?.isFilterable || false);
+  const [options, setOptions] = React.useState<string[]>(attribute?.options || []);
 
   React.useEffect(() => {
     if (isOpen) {
@@ -81,11 +135,18 @@ const AttributeDialog = ({
       setDataType(attribute?.dataType || 'Text');
       setIsSearchable(attribute?.isSearchable || false);
       setIsFilterable(attribute?.isFilterable || false);
+      setOptions(attribute?.options || []);
     }
   }, [isOpen, attribute]);
+  
+   React.useEffect(() => {
+    if (dataType !== 'Dropdown') {
+      setOptions([]);
+    }
+  }, [dataType]);
 
   const handleSave = () => {
-    onSave({ name, dataType, isSearchable, isFilterable });
+    onSave({ name, dataType, isSearchable, isFilterable, options });
     setIsOpen(false);
   };
 
@@ -113,9 +174,19 @@ const AttributeDialog = ({
                     <SelectItem value="Text Area">Text Area</SelectItem>
                     <SelectItem value="Number">Number</SelectItem>
                     <SelectItem value="Date">Date</SelectItem>
+                    <SelectItem value="Dropdown">Dropdown</SelectItem>
                 </SelectContent>
             </Select>
           </div>
+          {dataType === 'Dropdown' && (
+              <div className="grid grid-cols-4 items-start gap-4">
+                 <Label htmlFor="options" className="text-right pt-2">Options</Label>
+                 <div className="col-span-3 space-y-2">
+                    <TagInput value={options} onChange={setOptions} />
+                    <p className="text-xs text-muted-foreground">Type an option and press Enter to add it.</p>
+                 </div>
+              </div>
+          )}
            <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">Searchable</Label>
             <Switch checked={isSearchable} onCheckedChange={setIsSearchable} />
@@ -197,7 +268,18 @@ export function AttributesTable({ category }: { category: { id: string; name: st
             {attributes.length > 0 ? attributes.map(attr => (
               <TableRow key={attr.id}>
                 <TableCell className="font-medium p-2">{attr.name}</TableCell>
-                <TableCell className="p-2">{attr.dataType}</TableCell>
+                <TableCell className="p-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                       <span>{attr.dataType}</span>
+                       {attr.dataType === 'Dropdown' && attr.options && attr.options.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                             {attr.options.map(option => (
+                                <Badge key={option} variant="secondary" className="font-normal">{option}</Badge>
+                             ))}
+                          </div>
+                       )}
+                    </div>
+                </TableCell>
                 <TableCell className="p-2"><BooleanBadge value={attr.isSearchable} /></TableCell>
                 <TableCell className="p-2"><BooleanBadge value={attr.isFilterable} /></TableCell>
                 <TableCell className="text-center space-x-1 p-2">
