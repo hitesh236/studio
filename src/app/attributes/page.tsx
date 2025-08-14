@@ -77,7 +77,7 @@ const AddCategoryDialog = ({ onAdd }: { onAdd: (name: string) => void }) => {
 export default function AttributesPage() {
   const { toast } = useToast();
   const [categories, setCategories] = React.useState(initialCategories);
-  const [selectedCategory, setSelectedCategory] = React.useState(categories[2]); // Default to Cosmetics
+  const [selectedCategory, setSelectedCategory] = React.useState(categories[0]);
 
   const handleAddCategory = (name: string) => {
     const newCategory = {
@@ -95,8 +95,8 @@ export default function AttributesPage() {
 
   return (
     <div className="flex h-full min-h-[calc(100vh-theme(spacing.14))]">
-      <aside className="w-64 border-r p-4 flex flex-col">
-        <h2 className="text-lg font-semibold mb-4">Categories</h2>
+      <aside className="w-64 border-r p-4 flex flex-col bg-slate-50 dark:bg-slate-800/20">
+        <h2 className="text-base font-semibold mb-4">Categories</h2>
         <div className="space-y-2 flex-1">
           {categories.map((category) => (
             <Button

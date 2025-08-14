@@ -235,7 +235,7 @@ export function AttributesTable({ category }: { category: { id: string; name: st
   };
   
   const BooleanBadge = ({ value }: { value: boolean }) => (
-    <Badge variant={value ? 'default' : 'destructive'} className={value ? 'bg-green-600' : 'bg-red-600'}>
+    <Badge variant={value ? 'default' : 'destructive'} className={cn(value ? 'bg-green-600' : 'bg-red-600')}>
       {value ? 'Yes' : 'No'}
     </Badge>
   );
