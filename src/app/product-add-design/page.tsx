@@ -176,10 +176,12 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
           <span>{category.name}</span>
         </div>
         <div className="hidden group-hover:flex items-center gap-1">
-            <TooltipProvider><Tooltip>
-                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onAdd(category.id)}><PlusCircle className="h-4 w-4" /></Button></TooltipTrigger>
-                <TooltipContent><p>Add Sub-category</p></TooltipContent>
-            </Tooltip></TooltipProvider>
+            {level < 2 && (
+              <TooltipProvider><Tooltip>
+                  <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onAdd(category.id)}><PlusCircle className="h-4 w-4" /></Button></TooltipTrigger>
+                  <TooltipContent><p>Add Sub-category</p></TooltipContent>
+              </Tooltip></TooltipProvider>
+            )}
             <TooltipProvider><Tooltip>
                 <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(category)}><Edit2 className="h-4 w-4" /></Button></TooltipTrigger>
                 <TooltipContent><p>Edit Category</p></TooltipContent>
@@ -504,8 +506,8 @@ export default function ProductAddDesignPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8">
         <div className="text-center">
-            <h1 className="text-3xl font-bold">Category and Attribute Management UI</h1>
-            <p className="text-muted-foreground">A UI/UX design for managing hierarchical data structures.</p>
+            <h1 className="text-3xl font-bold">Category and Attribute Management</h1>
+            <p className="text-muted-foreground">An interactive UI for managing hierarchical data structures.</p>
         </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
