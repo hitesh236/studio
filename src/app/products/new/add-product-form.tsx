@@ -61,6 +61,7 @@ const productFormSchema = z.object({
   purchasePrice: z.coerce.number().min(0, "Purchase price must be non-negative."),
   hsnCode: z.string().optional(),
   gstRate: z.coerce.number().min(0).max(100),
+  minStockLevel: z.coerce.number().optional(),
   tags: z.array(z.string()).optional(),
   customerPrices: z.object({
     regular: z.coerce.number().min(0, "Price must be non-negative.").optional(),
@@ -77,7 +78,6 @@ const productFormSchema = z.object({
   brand: z.string().optional(),
   model: z.string().optional(),
   barcode: z.string().optional(),
-  minStockLevel: z.coerce.number().optional(),
   reorderQty: z.coerce.number().optional(),
   
   // Ecommerce Details
@@ -284,9 +284,11 @@ export function AddProductForm() {
                 </div>
             )}
         </Command>
-        <FormDescription>
-            Type a tag and press Enter. Suggestions will appear as you type.
-        </FormDescription>
+        <div className="relative">
+            <FormDescription>
+                Type a tag and press Enter. Suggestions will appear as you type.
+            </FormDescription>
+        </div>
         <FormMessage />
       </FormItem>
     );
@@ -380,6 +382,9 @@ export function AddProductForm() {
                         <FormItem><FormLabel>GST Rate (%)</FormLabel><Select onValueChange={(v) => field.onChange(Number(v))} value={String(field.value)}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent>
                             {[0, 5, 12, 18, 28].map(rate => <SelectItem key={rate} value={String(rate)}>{rate}%</SelectItem>)}
                         </SelectContent></Select><FormMessage /></FormItem>
+                    )} />
+                    <FormField name="minStockLevel" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Min. Stock Level</FormLabel><FormControl><Input type="number" placeholder="e.g., 10" {...field} /></FormControl><FormDescription>Receive alerts when stock falls below this level.</FormDescription><FormMessage /></FormItem>
                     )} />
                     <FormField
                       control={form.control}
@@ -480,9 +485,6 @@ export function AddProductForm() {
                     )} />
                     <FormField name="model" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Model</FormLabel><FormControl><Input placeholder="e.g., MX Master 3S" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField name="minStockLevel" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Min. Stock Level</FormLabel><FormControl><Input type="number" placeholder="e.g., 10" {...field} /></FormControl><FormDescription>Receive alerts when stock falls below this level.</FormDescription><FormMessage /></FormItem>
                     )} />
                     <FormField name="reorderQty" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Reorder Quantity</FormLabel><FormControl><Input type="number" placeholder="e.g., 50" {...field} /></FormControl><FormDescription>Default quantity for purchase orders.</FormDescription><FormMessage /></FormItem>
