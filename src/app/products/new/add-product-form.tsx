@@ -52,6 +52,7 @@ const customAttributeSchema = z.object({
 const productFormSchema = z.object({
   // Core Information
   productName: z.string().min(1, "Product name is required."),
+  alternateName: z.string().optional(),
   sku: z.string().min(1, "SKU is required."),
   category: z.string().min(1, "Category is required."),
   subCategory: z.string().optional(),
@@ -116,6 +117,7 @@ export function AddProductForm() {
     resolver: zodResolver(productFormSchema),
     defaultValues: {
         productName: '',
+        alternateName: '',
         sku: '',
         category: '',
         subCategory: '',
@@ -221,6 +223,9 @@ export function AddProductForm() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField name="productName" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Product Name</FormLabel><FormControl><Input placeholder="e.g., Wireless Mouse" {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField name="alternateName" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Alternate Name</FormLabel><FormControl><Input placeholder="Optional alternate name" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                     <FormField name="sku" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>SKU</FormLabel><FormControl><Input placeholder="Stock Keeping Unit" {...field} /></FormControl><FormMessage /></FormItem>
