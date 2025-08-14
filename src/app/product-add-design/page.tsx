@@ -56,7 +56,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 type Category = {
   id: string;
@@ -177,7 +177,7 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
             {hasChildren && (isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />)}
           </span>
           <Folder className="h-4 w-4 text-amber-500" />
-          <span className="font-normal">{category.name}</span>
+          <span>{category.name}</span>
         </div>
         <div className="hidden group-hover:flex items-center gap-1">
             {level < 2 && (
