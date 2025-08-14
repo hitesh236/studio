@@ -116,9 +116,13 @@ const initialCategories: Category[] = [
               { id: 'men-shirts', name: 'Shirts' },
             ],
           },
+           { id: 'men-bottoms', name: 'Bottoms' },
         ],
       },
-      { id: 'women', name: 'Women' },
+      { id: 'women', name: 'Women', children: [
+          { id: 'women-tops', name: 'Tops' },
+          { id: 'women-bottoms', name: 'Bottoms' },
+      ] },
     ],
   },
   { id: 'furniture', name: 'Furniture' },
@@ -166,14 +170,14 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
           "flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-muted/50 group",
           isSelected && "bg-muted/80"
         )}
-        style={{ paddingLeft: `${level * 1.5 + 0.5}rem` }}
+        style={{ paddingLeft: `${level * 1 + 0.5}rem` }}
       >
         <div className="flex items-center gap-2 flex-1 cursor-pointer" onClick={() => onSelectCategory(category)}>
           <span className="w-4 h-4 cursor-pointer" onClick={(e) => { e.stopPropagation(); hasChildren && setIsOpen(!isOpen); }}>
             {hasChildren && (isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />)}
           </span>
           <Folder className="h-4 w-4 text-amber-500" />
-          <span>{category.name}</span>
+          <span className="font-normal">{category.name}</span>
         </div>
         <div className="hidden group-hover:flex items-center gap-1">
             {level < 2 && (
@@ -505,49 +509,50 @@ export default function ProductAddDesignPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8">
-        <div className="text-center">
-            <h1 className="text-3xl font-bold">Category and Attribute Management</h1>
-            <p className="text-muted-foreground">An interactive UI for managing hierarchical data structures.</p>
-        </div>
+      <div className="text-center">
+        <h1 className="text-3xl font-bold">Category and Attribute Management</h1>
+        <p className="text-muted-foreground">An interactive UI for managing hierarchical data structures.</p>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      <div className="flex flex-col lg:flex-row gap-8 items-start">
         {/* Categories Management */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Categories Management</CardTitle>
-            <CardDescription>A tree view for hierarchical category relationships.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="p-2 border rounded-md min-h-[300px]">
+        <aside className="w-full lg:w-64 shrink-0">
+          <Card>
+            <CardHeader>
+              <CardTitle>Categories</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-1">
                 {categories.map(cat => (
-                    <CategoryNode 
-                        key={cat.id} 
-                        category={cat} 
-                        level={0}
-                        onAdd={(parentId) => { setEditingCategory(null); setParentCategoryId(parentId); setIsCategoryDialogOpen(true); }}
-                        onEdit={(category) => { setEditingCategory(category); setIsCategoryDialogOpen(true); }}
-                        onDelete={(category) => { /* Implement delete logic */ }}
-                        selectedCategory={selectedCategory}
-                        onSelectCategory={setSelectedCategory}
-                    />
+                  <CategoryNode
+                    key={cat.id}
+                    category={cat}
+                    level={0}
+                    onAdd={(parentId) => { setEditingCategory(null); setParentCategoryId(parentId); setIsCategoryDialogOpen(true); }}
+                    onEdit={(category) => { setEditingCategory(category); setIsCategoryDialogOpen(true); }}
+                    onDelete={(category) => { /* Implement delete logic */ }}
+                    selectedCategory={selectedCategory}
+                    onSelectCategory={setSelectedCategory}
+                  />
                 ))}
-            </div>
-             <div className="mt-4 flex justify-end">
+              </div>
+              <div className="mt-4 flex justify-end">
                 <Button onClick={() => { setEditingCategory(null); setParentCategoryId(null); setIsCategoryDialogOpen(true); }}><PlusCircle className="mr-2 h-4 w-4" /> Add Category</Button>
-            </div>
-            <CategoryDialog 
+              </div>
+              <CategoryDialog
                 open={isCategoryDialogOpen}
                 onOpenChange={setIsCategoryDialogOpen}
                 onSave={(name, parentId) => editingCategory ? handleEditCategory(name, parentId) : handleAddCategory(name, parentId)}
                 categories={categories}
                 editingCategory={editingCategory}
                 parentId={parentCategoryId}
-            />
-          </CardContent>
-        </Card>
+              />
+            </CardContent>
+          </Card>
+        </aside>
 
         {/* Attributes Management */}
-        <div className="space-y-8">
+        <main className="flex-1 space-y-8">
             <Card>
                 <CardHeader>
                     <CardTitle>Attributes for: <span className="text-primary">{selectedCategory?.name || 'Global'}</span></CardTitle>
@@ -602,7 +607,7 @@ export default function ProductAddDesignPage() {
                 editingAttribute={editingAttribute}
                 categories={categories}
             />
-        </div>
+        </main>
       </div>
         
         <div className="fixed bottom-8 right-8 z-50">
