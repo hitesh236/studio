@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
@@ -14,6 +14,7 @@ import {
   Loader2,
   ChevronsUpDown,
   Check,
+  Package,
 } from 'lucide-react';
 
 import { cn, formatCurrency } from '@/lib/utils';
@@ -65,6 +66,17 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { useToast } from '@/hooks/use-toast';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetClose,
+} from '@/components/ui/sheet';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -85,12 +97,20 @@ const products = [
   { value: 'laptop-stand', label: 'Ergonomic Laptop Stand' },
 ];
 
+const batchDetailSchema = z.object({
+  batchNumber: z.string().min(1, 'Batch number is required.'),
+  mfgDate: z.date().optional(),
+  expDate: z.date().optional(),
+  quantity: z.coerce.number().min(0.01, 'Quantity must be positive.'),
+});
+
 const purchaseItemSchema = z.object({
   itemName: z.string().min(1, 'Item name is required.'),
   hsnCode: z.string().optional(),
   quantity: z.coerce.number().min(0.01, 'Quantity must be positive.'),
   rate: z.coerce.number().min(0, 'Rate cannot be negative.'),
   gstRate: z.coerce.number().min(0).max(100).default(18),
+  batchDetails: z.array(batchDetailSchema).optional(),
 });
 
 const stockPurchaseSchema = z.object({
@@ -98,14 +118,136 @@ const stockPurchaseSchema = z.object({
   placeOfSupply: z.string().min(1, 'Place of supply is required.'),
   billNumber: z.string().min(1, 'Bill number is required.'),
   billDate: z.date(),
+  maintainBatches: z.boolean().default(false),
   items: z.array(purchaseItemSchema).min(1, 'At least one item is required.'),
+}).refine(data => {
+    if (!data.maintainBatches) return true;
+    for (const item of data.items) {
+        const itemQty = item.quantity;
+        const batchQty = item.batchDetails?.reduce((sum, batch) => sum + batch.quantity, 0) ?? 0;
+        if (Math.abs(itemQty - batchQty) > 0.001) return false;
+    }
+    return true;
+}, {
+    message: "Total batch quantity must match the item quantity for all items.",
+    path: ['items'],
 });
 
+
 type StockPurchaseValues = z.infer<typeof stockPurchaseSchema>;
+
+const BatchDetailsSheet = ({ 
+    itemIndex, 
+    itemName, 
+    control,
+    onSave
+}: { 
+    itemIndex: number;
+    itemName: string;
+    control: any;
+    onSave: (totalQuantity: number) => void;
+}) => {
+    const { fields, append, remove, update } = useFieldArray({
+        control,
+        name: `items.${itemIndex}.batchDetails`
+    });
+
+    const watchedBatches = useWatch({ control, name: `items.${itemIndex}.batchDetails` });
+    const totalBatchQuantity = React.useMemo(() => {
+        return watchedBatches?.reduce((sum: number, batch: { quantity: number }) => sum + (batch.quantity || 0), 0) ?? 0;
+    }, [watchedBatches]);
+
+    return (
+        <SheetContent className="sm:max-w-xl">
+            <SheetHeader>
+                <SheetTitle>Batch Details for: {itemName || 'Item'}</SheetTitle>
+                <SheetDescription>
+                    Add or edit batch information for this item. The total batch quantity must match the item quantity on the bill.
+                </SheetDescription>
+            </SheetHeader>
+            <div className="py-4 space-y-4 max-h-[70vh] overflow-y-auto">
+                {fields.map((field, index) => (
+                    <Card key={field.id} className="p-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                                control={control}
+                                name={`items.${itemIndex}.batchDetails.${index}.batchNumber`}
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Batch No.</FormLabel>
+                                    <FormControl><Input {...field} placeholder="Batch/Lot Number" /></FormControl>
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={control}
+                                name={`items.${itemIndex}.batchDetails.${index}.quantity`}
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Quantity</FormLabel>
+                                    <FormControl><Input type="number" {...field} placeholder="0.00" /></FormControl>
+                                </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={control}
+                                name={`items.${itemIndex}.batchDetails.${index}.mfgDate`}
+                                render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                    <FormLabel>Mfg. Date</FormLabel>
+                                    <Popover><PopoverTrigger asChild><FormControl>
+                                        <Button variant="outline" className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                        </Button>
+                                    </FormControl></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover>
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={control}
+                                name={`items.${itemIndex}.batchDetails.${index}.expDate`}
+                                render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                    <FormLabel>Exp. Date</FormLabel>
+                                    <Popover><PopoverTrigger asChild><FormControl>
+                                        <Button variant="outline" className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                        </Button>
+                                    </FormControl></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover>
+                                </FormItem>
+                                )}
+                            />
+                        </div>
+                        <div className="flex justify-end mt-2">
+                             <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => remove(index)}>
+                                <Trash2 className="h-4 w-4"/>
+                            </Button>
+                        </div>
+                    </Card>
+                ))}
+                <Button type="button" variant="outline" className="w-full" onClick={() => append({ batchNumber: '', quantity: 0 })}>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Batch
+                </Button>
+            </div>
+            <SheetFooter className="pt-4 border-t">
+                <div className="flex justify-between items-center w-full">
+                    <p className="text-sm">Total Batch Quantity: <span className="font-bold">{totalBatchQuantity}</span></p>
+                    <SheetClose asChild>
+                        <Button type="button" onClick={() => onSave(totalBatchQuantity)}>Done</Button>
+                    </SheetClose>
+                </div>
+            </SheetFooter>
+        </SheetContent>
+    );
+};
+
 
 export function StockPurchaseForm() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [activeSheetIndex, setActiveSheetIndex] = React.useState<number | null>(null);
 
   const [vendors, setVendors] = React.useState([
     { id: 'vend1', name: 'Cloud Services LLC', gstin: '27AAAAA0000A1Z5', address: '789 Cloud Ave, Pune, Maharashtra' },
@@ -119,7 +261,8 @@ export function StockPurchaseForm() {
       vendorName: '',
       billNumber: '',
       billDate: new Date(),
-      items: [{ itemName: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 }],
+      maintainBatches: false,
+      items: [{ itemName: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18, batchDetails: [] }],
     },
   });
 
@@ -130,6 +273,7 @@ export function StockPurchaseForm() {
   
   const watchedItems = form.watch('items');
   const watchedPlaceOfSupply = form.watch('placeOfSupply');
+  const maintainBatches = form.watch('maintainBatches');
 
   const totals = React.useMemo(() => {
     let subtotal = 0;
@@ -165,7 +309,7 @@ export function StockPurchaseForm() {
       vendorName: '',
       billNumber: '',
       billDate: new Date(),
-      items: [{ itemName: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 }],
+      items: [{ itemName: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18, batchDetails: [] }],
     });
   }
   
@@ -195,12 +339,26 @@ export function StockPurchaseForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <Card className="max-w-4xl mx-auto">
+        <Card className="max-w-5xl mx-auto">
           <CardHeader>
             <CardTitle className="text-2xl">New Stock Purchase</CardTitle>
             <CardDescription>Enter the details for the items you have purchased.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+             <FormField
+              control={form.control}
+              name="maintainBatches"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Maintain Batch/Serial No.</FormLabel>
+                    <FormDescription>Enable to track items by batch, including Mfg & Exp dates.</FormDescription>
+                  </div>
+                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                </FormItem>
+              )}
+            />
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <FormField
@@ -273,48 +431,75 @@ export function StockPurchaseForm() {
 
             <Separator />
 
-            <div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-1/3">Item</TableHead>
-                    <TableHead>HSN/SAC</TableHead>
-                    <TableHead className="text-right">Qty</TableHead>
-                    <TableHead className="text-right">Rate</TableHead>
-                    <TableHead className="text-right">GST%</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {fields.map((field, index) => (
-                    <TableRow key={field.id}>
-                      <TableCell>
-                        <FormField
-                            control={form.control}
-                            name={`items.${index}.itemName`}
-                            render={({ field }) => (
-                                <FormItem>
-                                    <ProductCombobox value={field.value} onChange={field.onChange} />
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                      </TableCell>
-                      <TableCell><FormField control={form.control} name={`items.${index}.hsnCode`} render={({ field }) => <Input placeholder="HSN Code" {...field} />} /></TableCell>
-                      <TableCell><FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => <Input type="number" className="text-right min-w-[100px]" {...field} />} /></TableCell>
-                      <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="number" className="text-right min-w-[100px]" {...field} />} /></TableCell>
-                      <TableCell><FormField control={form.control} name={`items.${index}.gstRate`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
-                      <TableCell className="text-right font-mono">{formatCurrency((watchedItems[index]?.quantity || 0) * (watchedItems[index]?.rate || 0), 'INR')}</TableCell>
-                      <TableCell><Button variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <Button type="button" variant="outline" className="mt-4" onClick={() => append({ itemName: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 })}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Item
-              </Button>
-            </div>
+            <Sheet>
+                <div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-1/3">Item</TableHead>
+                        <TableHead>HSN/SAC</TableHead>
+                        <TableHead className="text-right">Qty</TableHead>
+                        <TableHead className="text-right">Rate</TableHead>
+                        <TableHead className="text-right">GST%</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {fields.map((field, index) => {
+                        const itemQty = watchedItems[index]?.quantity || 0;
+                        const batchQty = watchedItems[index]?.batchDetails?.reduce((sum, b) => sum + b.quantity, 0) || 0;
+                        const isQtyMismatched = maintainBatches && itemQty > 0 && Math.abs(itemQty - batchQty) > 0.001;
+                        return (
+                          <TableRow key={field.id}>
+                            <TableCell>
+                              <FormField
+                                  control={form.control}
+                                  name={`items.${index}.itemName`}
+                                  render={({ field }) => (
+                                      <FormItem>
+                                          <ProductCombobox value={field.value} onChange={field.onChange} />
+                                          <FormMessage />
+                                      </FormItem>
+                                  )}
+                              />
+                            </TableCell>
+                            <TableCell><FormField control={form.control} name={`items.${index}.hsnCode`} render={({ field }) => <Input placeholder="HSN Code" {...field} />} /></TableCell>
+                            <TableCell><FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => <Input type="number" className="text-right min-w-[100px]" {...field} readOnly={maintainBatches} />} /></TableCell>
+                            <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="number" className="text-right min-w-[100px]" {...field} />} /></TableCell>
+                            <TableCell><FormField control={form.control} name={`items.${index}.gstRate`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
+                            <TableCell className="text-right font-mono">{formatCurrency((watchedItems[index]?.quantity || 0) * (watchedItems[index]?.rate || 0), 'INR')}</TableCell>
+                            <TableCell className="flex items-center">
+                                {maintainBatches && (
+                                    <Button variant={isQtyMismatched ? "destructive" : "outline"} size="icon" className="h-8 w-8" onClick={() => setActiveSheetIndex(index)}>
+                                        <Package className="h-4 w-4" />
+                                    </Button>
+                                )}
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => remove(index)}>
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                  <Button type="button" variant="outline" className="mt-4" onClick={() => append({ itemName: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18, batchDetails: [] })}>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Item
+                  </Button>
+                </div>
+                {activeSheetIndex !== null && (
+                    <BatchDetailsSheet
+                        itemIndex={activeSheetIndex}
+                        itemName={watchedItems[activeSheetIndex]?.itemName || ''}
+                        control={form.control}
+                        onSave={(totalQuantity) => {
+                            form.setValue(`items.${activeSheetIndex}.quantity`, totalQuantity, { shouldValidate: true });
+                            setActiveSheetIndex(null);
+                        }}
+                    />
+                )}
+            </Sheet>
 
             <Separator />
             
