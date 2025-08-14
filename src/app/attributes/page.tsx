@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
-import { AttributesTable } from './attributes-form';
+import { AttributesTable, initialAttributes } from './attributes-form';
 import { PlusCircle } from 'lucide-react';
 import {
   Dialog,
@@ -92,6 +92,10 @@ export default function AttributesPage() {
     setSelectedCategory(newCategory);
     toast({ title: 'Category Added', description: `Successfully added "${name}".`});
   };
+  
+  const getAttributeCount = (categoryId: string) => {
+    return initialAttributes[categoryId]?.length || 0;
+  }
 
   return (
     <div className="flex h-full min-h-[calc(100vh-theme(spacing.14))]">
@@ -105,7 +109,7 @@ export default function AttributesPage() {
               className="w-full justify-start"
               onClick={() => setSelectedCategory(category)}
             >
-              {category.name}
+              {category.name} ({getAttributeCount(category.id)})
             </Button>
           ))}
         </div>

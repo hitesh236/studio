@@ -47,7 +47,7 @@ type Attribute = {
   options?: string[];
 };
 
-const initialAttributes: Record<string, Attribute[]> = {
+export const initialAttributes: Record<string, Attribute[]> = {
   cosmetics: [
     { id: 'attr-cos-1', name: 'Shade Name', dataType: 'Text', isSearchable: true, isFilterable: false },
     { id: 'attr-cos-2', name: 'Ingredients', dataType: 'Text Area', isSearchable: false, isFilterable: false },
