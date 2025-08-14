@@ -36,6 +36,7 @@ import {
     Settings,
     Shield,
     Store,
+    Tags,
     TrendingUp,
     Undo2,
     UserCircle,
@@ -164,6 +165,14 @@ export function AppSidebar() {
                 <Link href="/stock-purchase" onClick={handleLinkClick}>
                     <Briefcase />
                     <span>Stock Purchase</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Attributes" isActive={pathname.startsWith('/attributes')} asChild>
+                <Link href="/attributes" onClick={handleLinkClick}>
+                  <Tags />
+                  <span>Attributes</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
