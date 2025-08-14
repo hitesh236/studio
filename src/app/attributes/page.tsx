@@ -96,7 +96,7 @@ export default function AttributesPage() {
   return (
     <div className="flex h-full min-h-[calc(100vh-theme(spacing.14))]">
       <aside className="bg-slate-50 dark:bg-slate-800/20 border-r flex flex-col p-4 w-64">
-        <h2 className="text-base font-semibold mb-4">Categories</h2>
+        <h2 className="text-lg font-semibold mb-4">Categories</h2>
         <div className="space-y-2 flex-1">
           {categories.map((category) => (
             <Button
