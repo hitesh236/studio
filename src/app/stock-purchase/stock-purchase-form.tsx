@@ -432,7 +432,7 @@ export function StockPurchaseForm() {
 
             <Separator />
 
-            <Sheet>
+            <Sheet open={activeSheetIndex !== null} onOpenChange={(open) => !open && setActiveSheetIndex(null)}>
                 <div>
                   <Table>
                     <TableHeader>
