@@ -37,13 +37,13 @@ const MegaMenu = () => (
                 <span className="sr-only">Open Components Menu</span>
             </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56" align="end">
+        <DropdownMenuContent className="w-64 sm:w-[400px] md:w-[550px]" align="end">
             <DropdownMenuLabel>Components</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <div className="flex flex-col space-y-1 p-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1 p-1">
                 {componentMenuItems.map(item => (
                     <DropdownMenuItem key={item.href} asChild>
-                        <Link href={item.href} className="flex items-center gap-2">
+                        <Link href={item.href} className="flex items-center gap-2 p-2">
                             <item.icon className="h-4 w-4 text-muted-foreground" />
                             <span>{item.label}</span>
                         </Link>
