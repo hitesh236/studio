@@ -2,13 +2,6 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -30,148 +23,209 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 type Attribute = {
   id: string;
   name: string;
-  values: string[];
+  dataType: 'Text' | 'Text Area' | 'Number' | 'Date';
+  isSearchable: boolean;
+  isFilterable: boolean;
 };
 
-const initialAttributes: Attribute[] = [
-  { id: 'attr1', name: 'Color', values: ['Red', 'Green', 'Blue', 'Black', 'White'] },
-  { id: 'attr2', name: 'Size', values: ['S', 'M', 'L', 'XL', 'XXL'] },
-  { id: 'attr3', name: 'Material', values: ['Cotton', 'Polyester', 'Leather', 'Metal'] },
-];
+const initialAttributes: Record<string, Attribute[]> = {
+  cosmetics: [
+    { id: 'attr-cos-1', name: 'Shade Name', dataType: 'Text', isSearchable: true, isFilterable: false },
+    { id: 'attr-cos-2', name: 'Ingredients', dataType: 'Text Area', isSearchable: false, isFilterable: false },
+    { id: 'attr-cos-3', name: 'colr', dataType: 'Text', isSearchable: true, isFilterable: false },
+  ],
+  apparel: [
+    { id: 'attr-app-1', name: 'Size', dataType: 'Text', isSearchable: true, isFilterable: true },
+    { id: 'attr-app-2', name: 'Color', dataType: 'Text', isSearchable: true, isFilterable: true },
+    { id: 'attr-app-3', name: 'Material', dataType: 'Text Area', isSearchable: false, isFilterable: true },
+  ],
+  'motor-parts': [
+    { id: 'attr-mot-1', name: 'Part Number', dataType: 'Text', isSearchable: true, isFilterable: false },
+    { id: 'attr-mot-2', name: 'OEM', dataType: 'Text', isSearchable: true, isFilterable: true },
+  ],
+};
 
-export function AttributesForm() {
-  const { toast } = useToast();
-  const [attributes, setAttributes] = React.useState<Attribute[]>(initialAttributes);
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [newAttributeName, setNewAttributeName] = React.useState('');
-  const [newAttributeValues, setNewAttributeValues] = React.useState('');
+const AttributeDialog = ({
+  attribute,
+  onSave,
+  children,
+}: {
+  attribute?: Attribute | null;
+  onSave: (attr: Omit<Attribute, 'id'>) => void;
+  children: React.ReactNode;
+}) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [name, setName] = React.useState(attribute?.name || '');
+  const [dataType, setDataType] = React.useState<Attribute['dataType']>(attribute?.dataType || 'Text');
+  const [isSearchable, setIsSearchable] = React.useState(attribute?.isSearchable || false);
+  const [isFilterable, setIsFilterable] = React.useState(attribute?.isFilterable || false);
 
-  const handleAddAttribute = () => {
-    if (!newAttributeName.trim() || !newAttributeValues.trim()) {
-      toast({
-        variant: 'destructive',
-        title: 'Missing Information',
-        description: 'Attribute name and at least one value are required.',
-      });
-      return;
+  React.useEffect(() => {
+    if (isOpen) {
+      setName(attribute?.name || '');
+      setDataType(attribute?.dataType || 'Text');
+      setIsSearchable(attribute?.isSearchable || false);
+      setIsFilterable(attribute?.isFilterable || false);
     }
+  }, [isOpen, attribute]);
 
-    const newAttribute: Attribute = {
-      id: `attr-${Date.now()}`,
-      name: newAttributeName.trim(),
-      values: newAttributeValues.split(',').map(v => v.trim()).filter(Boolean),
-    };
+  const handleSave = () => {
+    onSave({ name, dataType, isSearchable, isFilterable });
+    setIsOpen(false);
+  };
 
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{attribute ? 'Edit' : 'Add'} Attribute</DialogTitle>
+          <DialogDescription>
+            {attribute ? 'Edit the details of this attribute.' : 'Define a new attribute for this category.'}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="name" className="text-right">Name</Label>
+            <Input id="name" value={name} onChange={e => setName(e.target.value)} className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="data-type" className="text-right">Data Type</Label>
+            <Select value={dataType} onValueChange={(value: Attribute['dataType']) => setDataType(value)}>
+                <SelectTrigger id="data-type" className="col-span-3"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="Text">Text</SelectItem>
+                    <SelectItem value="Text Area">Text Area</SelectItem>
+                    <SelectItem value="Number">Number</SelectItem>
+                    <SelectItem value="Date">Date</SelectItem>
+                </SelectContent>
+            </Select>
+          </div>
+           <div className="grid grid-cols-4 items-center gap-4">
+            <Label className="text-right">Searchable</Label>
+            <Switch checked={isSearchable} onCheckedChange={setIsSearchable} />
+          </div>
+           <div className="grid grid-cols-4 items-center gap-4">
+            <Label className="text-right">Filterable</Label>
+            <Switch checked={isFilterable} onCheckedChange={setIsFilterable} />
+          </div>
+        </div>
+        <DialogFooter>
+          <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+          <Button onClick={handleSave}>Save</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+
+export function AttributesTable({ category }: { category: { id: string; name: string } }) {
+  const { toast } = useToast();
+  const [attributes, setAttributes] = React.useState<Attribute[]>(initialAttributes[category.id] || []);
+
+  const handleAddAttribute = (newAttrData: Omit<Attribute, 'id'>) => {
+    if (!newAttrData.name.trim()) {
+        toast({ variant: 'destructive', title: 'Attribute name is required.' });
+        return;
+    }
+    const newAttribute: Attribute = { ...newAttrData, id: `attr-${Date.now()}` };
     setAttributes(prev => [...prev, newAttribute]);
-    toast({ title: 'Attribute Added', description: `Successfully added the "${newAttribute.name}" attribute.` });
+    toast({ title: 'Attribute Added', description: `Successfully added "${newAttribute.name}".` });
+  };
 
-    setNewAttributeName('');
-    setNewAttributeValues('');
-    setIsDialogOpen(false);
+  const handleEditAttribute = (id: string) => (updatedAttrData: Omit<Attribute, 'id'>) => {
+    if (!updatedAttrData.name.trim()) {
+        toast({ variant: 'destructive', title: 'Attribute name is required.' });
+        return;
+    }
+    setAttributes(prev => prev.map(attr => attr.id === id ? { ...attr, ...updatedAttrData } : attr));
+    toast({ title: 'Attribute Updated', description: `Successfully updated "${updatedAttrData.name}".` });
   };
 
   const handleDeleteAttribute = (id: string) => {
     setAttributes(prev => prev.filter(attr => attr.id !== id));
     toast({ title: 'Attribute Removed' });
   };
+  
+  const BooleanBadge = ({ value }: { value: boolean }) => (
+    <Badge variant={value ? 'default' : 'destructive'} className={value ? 'bg-green-600' : 'bg-red-600'}>
+      {value ? 'Yes' : 'No'}
+    </Badge>
+  );
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Product Attributes</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
+        <h2 className="text-2xl font-bold">
+          Attributes for: <span className="text-primary">{category.name}</span>
+        </h2>
+        <AttributeDialog onSave={handleAddAttribute}>
+             <Button>
               <PlusCircle className="mr-2 h-4 w-4" />
-              Add New Attribute
+              Add Attribute
             </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add New Attribute</DialogTitle>
-              <DialogDescription>
-                Define a new attribute and its possible values.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="attr-name" className="text-right">Name</Label>
-                <Input
-                  id="attr-name"
-                  value={newAttributeName}
-                  onChange={e => setNewAttributeName(e.target.value)}
-                  className="col-span-3"
-                  placeholder="e.g., Color"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="attr-values" className="text-right pt-2">Values</Label>
-                <Textarea
-                  id="attr-values"
-                  value={newAttributeValues}
-                  onChange={e => setNewAttributeValues(e.target.value)}
-                  className="col-span-3"
-                  placeholder="e.g., Red, Green, Blue"
-                />
-              </div>
-               <p className="col-start-2 col-span-3 text-xs text-muted-foreground -mt-2">
-                Enter comma-separated values.
-              </p>
-            </div>
-            <DialogFooter>
-              <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-              <Button onClick={handleAddAttribute}>Add Attribute</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        </AttributeDialog>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Manage Attributes</CardTitle>
-          <CardDescription>
-            Define attributes like color, size, or material to create product variations.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Attribute Name</TableHead>
-                  <TableHead>Values</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {attributes.map(attr => (
-                  <TableRow key={attr.id}>
-                    <TableCell className="font-medium">{attr.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{attr.values.join(', ')}</TableCell>
-                    <TableCell className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => handleDeleteAttribute(attr.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Attribute Name</TableHead>
+              <TableHead>Data Type</TableHead>
+              <TableHead>Searchable</TableHead>
+              <TableHead>Filterable</TableHead>
+              <TableHead className="text-center">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {attributes.length > 0 ? attributes.map(attr => (
+              <TableRow key={attr.id}>
+                <TableCell className="font-medium">{attr.name}</TableCell>
+                <TableCell>{attr.dataType}</TableCell>
+                <TableCell><BooleanBadge value={attr.isSearchable} /></TableCell>
+                <TableCell><BooleanBadge value={attr.isFilterable} /></TableCell>
+                <TableCell className="text-center space-x-1">
+                  <AttributeDialog attribute={attr} onSave={handleEditAttribute(attr.id)}>
+                    <Button variant="ghost" size="icon" className="text-blue-600 hover:text-blue-700">
+                      <Edit className="h-4 w-4" />
+                      <span className="sr-only">Edit</span>
+                    </Button>
+                  </AttributeDialog>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => handleDeleteAttribute(attr.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">Delete</span>
+                  </Button>
+                </TableCell>
+              </TableRow>
+            )) : (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center">No attributes found for this category.</TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
