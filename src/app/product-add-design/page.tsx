@@ -96,11 +96,26 @@ export default function ProductAddDesignPage() {
                         <CategoryNode name="Feature Phones" level={2} />
                     </CategoryNode>
                     <CategoryNode name="Laptops" level={1} />
-                    <CategoryNode name="Accessories" level={1} />
+                    <CategoryNode name="Accessories" level={1}>
+                        <CategoryNode name="Keyboards" level={2} />
+                        <CategoryNode name="Mice" level={2} />
+                    </CategoryNode>
                 </CategoryNode>
                 <CategoryNode name="Apparel" level={0}>
-                     <CategoryNode name="Men" level={1} />
-                     <CategoryNode name="Women" level={1} />
+                     <CategoryNode name="Men" level={1}>
+                        <CategoryNode name="Tops" level={2}>
+                            <CategoryNode name="T-Shirts" level={3} />
+                            <CategoryNode name="Shirts" level={3} />
+                        </CategoryNode>
+                        <CategoryNode name="Bottoms" level={2}>
+                            <CategoryNode name="Jeans" level={3} />
+                            <CategoryNode name="Trousers" level={3} />
+                        </CategoryNode>
+                     </CategoryNode>
+                     <CategoryNode name="Women" level={1}>
+                        <CategoryNode name="Tops" level={2} />
+                        <CategoryNode name="Bottoms" level={2} />
+                     </CategoryNode>
                 </CategoryNode>
                 <CategoryNode name="Furniture" level={0} />
             </div>
