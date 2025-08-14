@@ -37,15 +37,15 @@ const MegaMenu = () => (
                 <span className="sr-only">Open Components Menu</span>
             </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-64" align="end">
+        <DropdownMenuContent className="w-56" align="end">
             <DropdownMenuLabel>Components</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <div className="grid grid-cols-2 gap-2 p-2">
+            <div className="flex flex-col space-y-1 p-1">
                 {componentMenuItems.map(item => (
                     <DropdownMenuItem key={item.href} asChild>
-                        <Link href={item.href} className="flex flex-row items-center justify-start gap-2 p-2 h-auto rounded-md text-left">
-                            <item.icon className="h-4 w-4" />
-                            <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
+                        <Link href={item.href} className="flex items-center gap-2">
+                            <item.icon className="h-4 w-4 text-muted-foreground" />
+                            <span>{item.label}</span>
                         </Link>
                     </DropdownMenuItem>
                 ))}
