@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, Edit, X } from 'lucide-react';
+import { PlusCircle, Trash2, Edit, X, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -36,6 +36,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 type Attribute = {
@@ -51,7 +52,7 @@ export const initialAttributes: Record<string, Attribute[]> = {
   cosmetics: [
     { id: 'attr-cos-1', name: 'Shade Name', dataType: 'Text', isSearchable: true, isFilterable: false },
     { id: 'attr-cos-2', name: 'Ingredients', dataType: 'Text Area', isSearchable: false, isFilterable: false },
-    { id: 'attr-cos-3', name: 'colr', dataType: 'Text', isSearchable: true, isFilterable: false },
+    { id: 'attr-cos-3', name: 'Color', dataType: 'Text', isSearchable: true, isFilterable: false },
   ],
   apparel: [
     { id: 'attr-app-1', name: 'Size', dataType: 'Dropdown', isSearchable: true, isFilterable: true, options: ['S', 'M', 'L', 'XL', 'XXL'] },
@@ -154,52 +155,66 @@ const AttributeDialog = ({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{attribute ? 'Edit' : 'Add'} Attribute</DialogTitle>
-          <DialogDescription>
-            {attribute ? 'Edit the details of this attribute.' : 'Define a new attribute for this category.'}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">Name</Label>
-            <Input id="name" value={name} onChange={e => setName(e.target.value)} className="col-span-3" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="data-type" className="text-right">Data Type</Label>
-            <Select value={dataType} onValueChange={(value: Attribute['dataType']) => setDataType(value)}>
-                <SelectTrigger id="data-type" className="col-span-3"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="Text">Text</SelectItem>
-                    <SelectItem value="Text Area">Text Area</SelectItem>
-                    <SelectItem value="Number">Number</SelectItem>
-                    <SelectItem value="Date">Date</SelectItem>
-                    <SelectItem value="Dropdown">Dropdown</SelectItem>
-                </SelectContent>
-            </Select>
-          </div>
-          {dataType === 'Dropdown' && (
-              <div className="grid grid-cols-4 items-start gap-4">
-                 <Label htmlFor="options" className="text-right pt-2">Options</Label>
-                 <div className="col-span-3 space-y-2">
-                    <TagInput value={options} onChange={setOptions} />
-                    <p className="text-xs text-muted-foreground">Type an option and press Enter to add it.</p>
-                 </div>
-              </div>
-          )}
-           <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right">Searchable</Label>
-            <Switch checked={isSearchable} onCheckedChange={setIsSearchable} />
-          </div>
-           <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right">Filterable</Label>
-            <Switch checked={isFilterable} onCheckedChange={setIsFilterable} />
-          </div>
-        </div>
-        <DialogFooter>
-          <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-          <Button onClick={handleSave}>Save</Button>
-        </DialogFooter>
+        <TooltipProvider>
+            <DialogHeader>
+            <DialogTitle>{attribute ? 'Edit' : 'Add'} Attribute</DialogTitle>
+            <DialogDescription>
+                {attribute ? 'Edit the details of this attribute.' : 'Define a new attribute for this category.'}
+            </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">Name</Label>
+                <Input id="name" value={name} onChange={e => setName(e.target.value)} className="col-span-3" />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="data-type" className="text-right">Data Type</Label>
+                <Select value={dataType} onValueChange={(value: Attribute['dataType']) => setDataType(value)}>
+                    <SelectTrigger id="data-type" className="col-span-3"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Text">Text</SelectItem>
+                        <SelectItem value="Text Area">Text Area</SelectItem>
+                        <SelectItem value="Number">Number</SelectItem>
+                        <SelectItem value="Date">Date</SelectItem>
+                        <SelectItem value="Dropdown">Dropdown</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            {dataType === 'Dropdown' && (
+                <div className="grid grid-cols-4 items-start gap-4">
+                    <Label htmlFor="options" className="text-right pt-2">Options</Label>
+                    <div className="col-span-3 space-y-2">
+                        <TagInput value={options} onChange={setOptions} />
+                        <p className="text-xs text-muted-foreground">Type an option and press Enter to add it.</p>
+                    </div>
+                </div>
+            )}
+            <div className="grid grid-cols-4 items-center gap-4">
+                <div className="flex items-center justify-end gap-1 col-start-1">
+                    <Label className="text-right">Searchable</Label>
+                    <Tooltip>
+                        <TooltipTrigger asChild><Info className="h-4 w-4 text-muted-foreground" /></TooltipTrigger>
+                        <TooltipContent><p>Allows this attribute to be used in product search.</p></TooltipContent>
+                    </Tooltip>
+                </div>
+                <Switch checked={isSearchable} onCheckedChange={setIsSearchable} />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+                <div className="flex items-center justify-end gap-1 col-start-1">
+                     <Label className="text-right">Filterable</Label>
+                     <Tooltip>
+                        <TooltipTrigger asChild><Info className="h-4 w-4 text-muted-foreground" /></TooltipTrigger>
+                        <TooltipContent><p>Allows filtering products by this attribute.</p></TooltipContent>
+                    </Tooltip>
+                </div>
+                <Switch checked={isFilterable} onCheckedChange={setIsFilterable} />
+            </div>
+            </div>
+            <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+            <Button onClick={handleSave}>Save</Button>
+            </DialogFooter>
+        </TooltipProvider>
       </DialogContent>
     </Dialog>
   );
@@ -243,7 +258,7 @@ export function AttributesTable({ category }: { category: { id: string; name: st
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">
+        <h2 className="text-lg font-bold">
           Attributes for: <span className="text-primary">{category.name}</span>
         </h2>
         <AttributeDialog onSave={handleAddAttribute}>
