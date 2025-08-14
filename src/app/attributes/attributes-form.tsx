@@ -268,16 +268,16 @@ export function AttributesTable({ category }: { category: { id: string; name: st
             {attributes.length > 0 ? attributes.map(attr => (
               <TableRow key={attr.id}>
                 <TableCell className="font-medium p-2">{attr.name}</TableCell>
-                <TableCell className="p-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                       <span>{attr.dataType}</span>
-                       {attr.dataType === 'Dropdown' && attr.options && attr.options.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                             {attr.options.map(option => (
+                <TableCell className="p-2 align-top">
+                    <div>
+                        <span>{attr.dataType}</span>
+                        {attr.dataType === 'Dropdown' && attr.options && attr.options.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                                {attr.options.map(option => (
                                 <Badge key={option} variant="secondary" className="font-normal">{option}</Badge>
-                             ))}
-                          </div>
-                       )}
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </TableCell>
                 <TableCell className="p-2"><BooleanBadge value={attr.isSearchable} /></TableCell>
