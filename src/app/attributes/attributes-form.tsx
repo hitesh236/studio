@@ -182,25 +182,25 @@ export function AttributesTable({ category }: { category: { id: string; name: st
             </Button>
         </AttributeDialog>
       </div>
-      <div className="rounded-md border">
+      <div className="rounded-md border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Attribute Name</TableHead>
-              <TableHead>Data Type</TableHead>
-              <TableHead>Searchable</TableHead>
-              <TableHead>Filterable</TableHead>
-              <TableHead className="text-center">Actions</TableHead>
+              <TableHead className="p-2 h-10">Attribute Name</TableHead>
+              <TableHead className="p-2 h-10">Data Type</TableHead>
+              <TableHead className="p-2 h-10">Searchable</TableHead>
+              <TableHead className="p-2 h-10">Filterable</TableHead>
+              <TableHead className="text-center p-2 h-10">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {attributes.length > 0 ? attributes.map(attr => (
               <TableRow key={attr.id}>
-                <TableCell className="font-medium">{attr.name}</TableCell>
-                <TableCell>{attr.dataType}</TableCell>
-                <TableCell><BooleanBadge value={attr.isSearchable} /></TableCell>
-                <TableCell><BooleanBadge value={attr.isFilterable} /></TableCell>
-                <TableCell className="text-center space-x-1">
+                <TableCell className="font-medium p-2">{attr.name}</TableCell>
+                <TableCell className="p-2">{attr.dataType}</TableCell>
+                <TableCell className="p-2"><BooleanBadge value={attr.isSearchable} /></TableCell>
+                <TableCell className="p-2"><BooleanBadge value={attr.isFilterable} /></TableCell>
+                <TableCell className="text-center space-x-1 p-2">
                   <AttributeDialog attribute={attr} onSave={handleEditAttribute(attr.id)}>
                     <Button variant="ghost" size="icon" className="text-blue-600 hover:text-blue-700">
                       <Edit className="h-4 w-4" />
@@ -220,7 +220,7 @@ export function AttributesTable({ category }: { category: { id: string; name: st
               </TableRow>
             )) : (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">No attributes found for this category.</TableCell>
+                <TableCell colSpan={5} className="h-24 text-center p-2">No attributes found for this category.</TableCell>
               </TableRow>
             )}
           </TableBody>
