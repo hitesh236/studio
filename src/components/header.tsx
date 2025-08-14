@@ -27,6 +27,7 @@ const componentMenuItems = [
     { href: '/invoice-preview-fc', icon: Globe, label: 'Invoice Preview FC' },
     { href: '/customer-portfolio', icon: UserCircle, label: 'Customer Portfolio' },
     { href: '/ui', icon: Palette, label: 'UI' },
+    { href: '/product-add-design', icon: Palette, label: 'Product Add Design' },
 ];
 
 const MegaMenu = () => (
