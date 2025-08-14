@@ -167,12 +167,12 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
     <div>
       <div
         className={cn(
-          "flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-muted/50 group",
+          "flex items-center gap-1.5 py-1.5 px-2 rounded-md hover:bg-muted/50 group",
           isSelected && "bg-muted/80"
         )}
-        style={{ paddingLeft: `${level * 1 + 0.5}rem` }}
+        style={{ paddingLeft: `${level * 0.75 + 0.5}rem` }}
       >
-        <div className="flex items-center gap-2 flex-1 cursor-pointer" onClick={() => onSelectCategory(category)}>
+        <div className="flex items-center gap-1.5 flex-1 cursor-pointer" onClick={() => onSelectCategory(category)}>
           <span className="w-4 h-4 cursor-pointer" onClick={(e) => { e.stopPropagation(); hasChildren && setIsOpen(!isOpen); }}>
             {hasChildren && (isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />)}
           </span>
@@ -508,7 +508,7 @@ export default function ProductAddDesignPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
+    <div className="p-2.5 space-y-8">
       <div className="text-center">
         <h1 className="text-3xl font-bold">Category and Attribute Management</h1>
         <p className="text-muted-foreground">An interactive UI for managing hierarchical data structures.</p>
@@ -519,7 +519,7 @@ export default function ProductAddDesignPage() {
         <aside className="w-full lg:w-64 shrink-0">
           <Card>
             <CardHeader>
-              <CardTitle>Categories</CardTitle>
+              <CardTitle className="text-[20px]">Categories</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-1">
