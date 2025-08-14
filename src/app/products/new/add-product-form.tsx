@@ -211,36 +211,37 @@ export function AddProductForm() {
     );
 
     return (
-        <div className="relative">
-            <Command>
-                <div className="group rounded-md border border-input px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                    <div className="flex flex-wrap gap-1">
-                        {field.value.map((tag: string) => (
-                            <Badge key={tag} variant="secondary">
-                                {tag}
-                                <button
-                                    type="button"
-                                    className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                    onClick={() => removeTag(tag)}
-                                >
-                                    <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                                </button>
-                            </Badge>
-                        ))}
-                        <CommandInput
-                            ref={inputRef}
-                            placeholder="Add tags..."
-                            value={inputValue}
-                            onValueChange={setInputValue}
-                            onKeyDown={handleKeyDown}
-                            onFocus={() => setOpen(true)}
-                            onBlur={() => setOpen(false)}
-                            className="ml-2 flex-1 bg-transparent p-0 outline-none placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 border-0 h-auto"
-                        />
-                    </div>
+      <FormItem>
+        <Command>
+            <div className="group rounded-md border border-input px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                <div className="flex flex-wrap gap-1">
+                    {field.value.map((tag: string) => (
+                        <Badge key={tag} variant="secondary">
+                            {tag}
+                            <button
+                                type="button"
+                                className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                onClick={() => removeTag(tag)}
+                            >
+                                <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                            </button>
+                        </Badge>
+                    ))}
+                    <CommandInput
+                        ref={inputRef}
+                        placeholder="Add tags..."
+                        value={inputValue}
+                        onValueChange={setInputValue}
+                        onKeyDown={handleKeyDown}
+                        onFocus={() => setOpen(true)}
+                        onBlur={() => setOpen(false)}
+                        className="ml-2 flex-1 bg-transparent p-0 outline-none placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 border-0 h-auto"
+                    />
                 </div>
-                {open && (filteredTags.length > 0 || (inputValue && !predefinedTags.includes(inputValue))) && (
-                    <div className="absolute top-full mt-2 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
+            </div>
+            {open && (filteredTags.length > 0 || (inputValue && !predefinedTags.includes(inputValue))) && (
+                <div className="relative">
+                    <div className="absolute top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
                         <CommandList className="max-h-40">
                             <CommandEmpty>No results found.</CommandEmpty>
                             <CommandGroup>
@@ -280,9 +281,14 @@ export function AddProductForm() {
                             </CommandGroup>
                         </CommandList>
                     </div>
-                )}
-            </Command>
-        </div>
+                </div>
+            )}
+        </Command>
+        <FormDescription>
+            Type a tag and press Enter. Suggestions will appear as you type.
+        </FormDescription>
+        <FormMessage />
+      </FormItem>
     );
 };
 
@@ -379,14 +385,10 @@ export function AddProductForm() {
                       control={form.control}
                       name="tags"
                       render={({ field }) => (
-                        <FormItem className="md:col-span-2">
+                        <div className="md:col-span-2">
                           <FormLabel>Tags/Keywords</FormLabel>
                           <TagsInput field={field} />
-                          <FormDescription>
-                            Type a tag and press Enter. Suggestions will appear as you type.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
+                        </div>
                       )}
                     />
                     <div className="md:col-span-2">
