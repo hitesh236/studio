@@ -126,8 +126,9 @@ const initialCategories: Category[] = [
 
 const initialAttributes: Attribute[] = [
     { id: 'attr-1', name: 'Color', type: 'dropdown', options: ['Red', 'Green', 'Blue'], isGlobal: true, assignedCategories: [] },
-    { id: 'attr-2', name: 'Size', type: 'dropdown', options: ['S', 'M', 'L', 'XL'], isGlobal: false, assignedCategories: ['apparel'] },
-    { id: 'attr-3', name: 'Screen Size', type: 'text', isGlobal: false, assignedCategories: ['electronics'] },
+    { id: 'attr-2', name: 'Size', type: 'dropdown', options: ['S', 'M', 'L', 'XL'], isGlobal: false, assignedCategories: ['apparel', 'men', 'women', 'men-tops', 'men-tshirts', 'men-shirts'] },
+    { id: 'attr-3', name: 'Screen Size', type: 'text', isGlobal: false, assignedCategories: ['electronics', 'mobile', 'laptops', 'smartphones'] },
+    { id: 'attr-4', name: 'Material', type: 'dropdown', options: ['Cotton', 'Polyester', 'Wood', 'Metal'], isGlobal: false, assignedCategories: ['apparel', 'furniture'] },
 ];
 
 const flattenCategories = (cats: Category[], level = 0): { value: string, label: string }[] => {
@@ -153,18 +154,22 @@ const getCategoryNameById = (categories: Category[], id: string): string | null 
 };
 
 
-const CategoryNode = ({ category, level, onAdd, onEdit, onDelete }: { category: Category; level: number; onAdd: (parentId: string) => void; onEdit: (category: Category) => void; onDelete: (category: Category) => void; }) => {
+const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCategory, onSelectCategory }: { category: Category; level: number; onAdd: (parentId: string) => void; onEdit: (category: Category) => void; onDelete: (category: Category) => void; selectedCategory: Category | null; onSelectCategory: (category: Category) => void; }) => {
   const [isOpen, setIsOpen] = React.useState(true);
   const hasChildren = category.children && category.children.length > 0;
+  const isSelected = selectedCategory?.id === category.id;
 
   return (
     <div>
       <div
-        className="flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-muted/50 group"
+        className={cn(
+          "flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-muted/50 group",
+          isSelected && "bg-muted/80"
+        )}
         style={{ paddingLeft: `${level * 1.5 + 0.5}rem` }}
       >
-        <div className="flex items-center gap-2 flex-1 cursor-pointer" onClick={() => hasChildren && setIsOpen(!isOpen)}>
-          <span className="w-4 h-4">
+        <div className="flex items-center gap-2 flex-1 cursor-pointer" onClick={() => onSelectCategory(category)}>
+          <span className="w-4 h-4 cursor-pointer" onClick={(e) => { e.stopPropagation(); hasChildren && setIsOpen(!isOpen); }}>
             {hasChildren && (isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />)}
           </span>
           <Folder className="h-4 w-4 text-amber-500" />
@@ -188,7 +193,7 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete }: { category: 
       {isOpen && hasChildren && (
         <div>
             {category.children?.map(child => (
-                <CategoryNode key={child.id} category={child} level={level + 1} onAdd={onAdd} onEdit={onEdit} onDelete={onDelete} />
+                <CategoryNode key={child.id} category={child} level={level + 1} onAdd={onAdd} onEdit={onEdit} onDelete={onDelete} selectedCategory={selectedCategory} onSelectCategory={onSelectCategory} />
             ))}
         </div>
       )}
@@ -409,12 +414,19 @@ export default function ProductAddDesignPage() {
   const [categories, setCategories] = React.useState<Category[]>(initialCategories);
   const [attributes, setAttributes] = React.useState<Attribute[]>(initialAttributes);
   
+  const [selectedCategory, setSelectedCategory] = React.useState<Category | null>(initialCategories[0]);
+
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = React.useState(false);
   const [editingCategory, setEditingCategory] = React.useState<Category | null>(null);
   const [parentCategoryId, setParentCategoryId] = React.useState<string | null>(null);
 
   const [isAttributeDialogOpen, setIsAttributeDialogOpen] = React.useState(false);
   const [editingAttribute, setEditingAttribute] = React.useState<Attribute | null>(null);
+
+  const displayedAttributes = React.useMemo(() => {
+    if (!selectedCategory) return attributes.filter(attr => attr.isGlobal);
+    return attributes.filter(attr => attr.isGlobal || attr.assignedCategories.includes(selectedCategory.id));
+  }, [attributes, selectedCategory]);
 
 
   const handleAddCategory = (name: string, parentId: string | null) => {
@@ -513,6 +525,8 @@ export default function ProductAddDesignPage() {
                         onAdd={(parentId) => { setEditingCategory(null); setParentCategoryId(parentId); setIsCategoryDialogOpen(true); }}
                         onEdit={(category) => { setEditingCategory(category); setIsCategoryDialogOpen(true); }}
                         onDelete={(category) => { /* Implement delete logic */ }}
+                        selectedCategory={selectedCategory}
+                        onSelectCategory={setSelectedCategory}
                     />
                 ))}
             </div>
@@ -534,8 +548,8 @@ export default function ProductAddDesignPage() {
         <div className="space-y-8">
             <Card>
                 <CardHeader>
-                    <CardTitle>Attributes Management</CardTitle>
-                    <CardDescription>A table displaying all attributes and their assignments.</CardDescription>
+                    <CardTitle>Attributes for: <span className="text-primary">{selectedCategory?.name || 'Global'}</span></CardTitle>
+                    <CardDescription>A table displaying attributes for the selected category.</CardDescription>
                 </CardHeader>
                 <CardContent>
                      <div className="rounded-md border">
@@ -549,7 +563,7 @@ export default function ProductAddDesignPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {attributes.map(attr => (
+                                {displayedAttributes.map(attr => (
                                     <TableRow key={attr.id}>
                                         <TableCell className="font-medium">{attr.name}</TableCell>
                                         <TableCell className="capitalize">{attr.type}</TableCell>
@@ -558,9 +572,8 @@ export default function ProductAddDesignPage() {
                                                 <Badge variant="secondary">Global</Badge>
                                             ) : (
                                                 <div className="flex flex-wrap gap-1">
-                                                    {attr.assignedCategories.map(catId => (
-                                                        <Badge key={catId}>{getCategoryNameById(categories, catId) || 'N/A'}</Badge>
-                                                    ))}
+                                                   <Badge>{getCategoryNameById(categories, attr.assignedCategories[0]) || 'N/A'}</Badge>
+                                                   {attr.assignedCategories.length > 1 && <Badge variant="outline">+{attr.assignedCategories.length - 1}</Badge>}
                                                 </div>
                                             )}
                                         </TableCell>
