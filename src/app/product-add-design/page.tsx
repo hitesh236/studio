@@ -76,7 +76,7 @@ type Attribute = {
 };
 
 
-const initialCategories: Category[] = [
+const initialCategoriesData: Category[] = [
   {
     id: 'electronics',
     name: 'Electronics',
@@ -417,10 +417,10 @@ const AttributeDialog = ({
 
 export default function ProductAddDesignPage() {
   const { toast } = useToast();
-  const [categories, setCategories] = React.useState<Category[]>(initialCategories);
+  const [categories, setCategories] = React.useState<Category[]>(initialCategoriesData);
   const [attributes, setAttributes] = React.useState<Attribute[]>(initialAttributes);
   
-  const [selectedCategory, setSelectedCategory] = React.useState<Category | null>(initialCategories[0]);
+  const [selectedCategory, setSelectedCategory] = React.useState<Category | null>(initialCategoriesData[0]);
 
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = React.useState(false);
   const [editingCategory, setEditingCategory] = React.useState<Category | null>(null);
@@ -431,6 +431,8 @@ export default function ProductAddDesignPage() {
 
   const displayedAttributes = React.useMemo(() => {
     if (!selectedCategory) return attributes.filter(attr => attr.isGlobal);
+    // This logic needs to be more complex to handle inheritance.
+    // For now, it's a direct match or global.
     return attributes.filter(attr => attr.isGlobal || attr.assignedCategories.includes(selectedCategory.id));
   }, [attributes, selectedCategory]);
 
