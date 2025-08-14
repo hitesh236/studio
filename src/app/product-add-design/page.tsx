@@ -27,6 +27,8 @@ import {
   ChevronDown,
   ChevronRight,
   Info,
+  ChevronsUpDown,
+  Check,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -40,10 +42,78 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose
+} from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 
-const CategoryNode = ({ name, level, children }: { name: string; level: number; children?: React.ReactNode }) => {
+type Category = {
+  id: string;
+  name: string;
+  children?: Category[];
+};
+
+const initialCategories: Category[] = [
+  {
+    id: 'electronics',
+    name: 'Electronics',
+    children: [
+      {
+        id: 'mobile',
+        name: 'Mobile Phones',
+        children: [
+          { id: 'smartphones', name: 'Smartphones' },
+          { id: 'featurephones', name: 'Feature Phones' },
+        ],
+      },
+      { id: 'laptops', name: 'Laptops' },
+      {
+        id: 'accessories',
+        name: 'Accessories',
+        children: [
+          { id: 'keyboards', name: 'Keyboards' },
+          { id: 'mice', name: 'Mice' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'apparel',
+    name: 'Apparel',
+    children: [
+      {
+        id: 'men',
+        name: 'Men',
+        children: [
+          {
+            id: 'men-tops',
+            name: 'Tops',
+            children: [
+              { id: 'men-tshirts', name: 'T-Shirts' },
+              { id: 'men-shirts', name: 'Shirts' },
+            ],
+          },
+        ],
+      },
+      { id: 'women', name: 'Women' },
+    ],
+  },
+  { id: 'furniture', name: 'Furniture' },
+];
+
+const CategoryNode = ({ category, level }: { category: Category; level: number }) => {
   const [isOpen, setIsOpen] = React.useState(true);
-  const hasChildren = React.Children.count(children) > 0;
+  const hasChildren = category.children && category.children.length > 0;
 
   return (
     <div>
@@ -56,7 +126,7 @@ const CategoryNode = ({ name, level, children }: { name: string; level: number; 
             {hasChildren && (isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />)}
           </span>
           <Folder className="h-4 w-4 text-amber-500" />
-          <span>{name}</span>
+          <span>{category.name}</span>
         </div>
         <div className="hidden group-hover:flex items-center gap-1">
             <Button variant="ghost" size="icon" className="h-7 w-7"><PlusCircle className="h-4 w-4" /></Button>
@@ -64,15 +134,135 @@ const CategoryNode = ({ name, level, children }: { name: string; level: number; 
             <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"><Trash2 className="h-4 w-4" /></Button>
         </div>
       </div>
-      {isOpen && children}
+      {isOpen && hasChildren && (
+        <div>
+            {category.children?.map(child => (
+                <CategoryNode key={child.id} category={child} level={level + 1} />
+            ))}
+        </div>
+      )}
     </div>
   );
 };
 
+const AddCategoryDialog = ({ onAdd, categories }: { onAdd: (name: string, parentId: string | null) => void; categories: Category[] }) => {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const [name, setName] = React.useState('');
+    const [selectedParent, setSelectedParent] = React.useState<string | null>(null);
+
+    const flattenedCategories = React.useMemo(() => {
+        const flatten = (cats: Category[], level = 0): { value: string, label: string }[] => {
+            let list: { value: string, label: string }[] = [];
+            cats.forEach(cat => {
+                list.push({ value: cat.id, label: `${'— '.repeat(level)}${cat.name}` });
+                if (cat.children) {
+                    list = [...list, ...flatten(cat.children, level + 1)];
+                }
+            });
+            return list;
+        }
+        return flatten(categories);
+    }, [categories]);
+    
+    const handleAdd = () => {
+        if (name.trim()) {
+            onAdd(name.trim(), selectedParent);
+            setIsOpen(false);
+            setName('');
+            setSelectedParent(null);
+        }
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+                <Button><PlusCircle className="mr-2 h-4 w-4" /> Add Category</Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Add New Category</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="category-name" className="text-right">Name</Label>
+                        <Input id="category-name" value={name} onChange={(e) => setName(e.target.value)} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="parent-category" className="text-right">Parent</Label>
+                        <div className="col-span-3">
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant="outline" role="combobox" className="w-full justify-between">
+                                        {selectedParent ? flattenedCategories.find(cat => cat.value === selectedParent)?.label.replace(/— /g, '') : "Select parent..."}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                    <Command>
+                                        <CommandInput placeholder="Search category..." />
+                                        <CommandList>
+                                            <CommandEmpty>No category found.</CommandEmpty>
+                                            <CommandGroup>
+                                                 <CommandItem onSelect={() => setSelectedParent(null)}>
+                                                    <Check className={cn('mr-2 h-4 w-4', !selectedParent ? 'opacity-100' : 'opacity-0')} />
+                                                    (No Parent)
+                                                </CommandItem>
+                                                {flattenedCategories.map((cat) => (
+                                                    <CommandItem key={cat.value} value={cat.value} onSelect={(currentValue) => {
+                                                        setSelectedParent(currentValue === selectedParent ? null : currentValue);
+                                                    }}>
+                                                        <Check className={cn('mr-2 h-4 w-4', selectedParent === cat.value ? 'opacity-100' : 'opacity-0')} />
+                                                        {cat.label}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+                    <Button onClick={handleAdd}>Add</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 export default function ProductAddDesignPage() {
+  const { toast } = useToast();
   const [isGlobal, setIsGlobal] = React.useState(false);
   const [attributeType, setAttributeType] = React.useState('text');
+  const [categories, setCategories] = React.useState<Category[]>(initialCategories);
+
+  const handleAddCategory = (name: string, parentId: string | null) => {
+    const newCategory: Category = {
+      id: name.toLowerCase().replace(/\s+/g, '-'),
+      name: name,
+    };
+
+    if (parentId === null) {
+      setCategories(prev => [...prev, newCategory]);
+    } else {
+      const addCategoryToParent = (cats: Category[], pId: string): Category[] => {
+        return cats.map(cat => {
+          if (cat.id === pId) {
+            return { ...cat, children: [...(cat.children || []), newCategory] };
+          }
+          if (cat.children) {
+            return { ...cat, children: addCategoryToParent(cat.children, pId) };
+          }
+          return cat;
+        });
+      };
+      setCategories(prev => addCategoryToParent(prev, parentId));
+    }
+    toast({ title: "Category Added", description: `"${name}" has been successfully added.` });
+  };
+
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8">
@@ -90,37 +280,12 @@ export default function ProductAddDesignPage() {
           </CardHeader>
           <CardContent>
             <div className="p-2 border rounded-md min-h-[300px]">
-                <CategoryNode name="Electronics" level={0}>
-                    <CategoryNode name="Mobile Phones" level={1}>
-                        <CategoryNode name="Smartphones" level={2} />
-                        <CategoryNode name="Feature Phones" level={2} />
-                    </CategoryNode>
-                    <CategoryNode name="Laptops" level={1} />
-                    <CategoryNode name="Accessories" level={1}>
-                        <CategoryNode name="Keyboards" level={2} />
-                        <CategoryNode name="Mice" level={2} />
-                    </CategoryNode>
-                </CategoryNode>
-                <CategoryNode name="Apparel" level={0}>
-                     <CategoryNode name="Men" level={1}>
-                        <CategoryNode name="Tops" level={2}>
-                            <CategoryNode name="T-Shirts" level={3} />
-                            <CategoryNode name="Shirts" level={3} />
-                        </CategoryNode>
-                        <CategoryNode name="Bottoms" level={2}>
-                            <CategoryNode name="Jeans" level={3} />
-                            <CategoryNode name="Trousers" level={3} />
-                        </CategoryNode>
-                     </CategoryNode>
-                     <CategoryNode name="Women" level={1}>
-                        <CategoryNode name="Tops" level={2} />
-                        <CategoryNode name="Bottoms" level={2} />
-                     </CategoryNode>
-                </CategoryNode>
-                <CategoryNode name="Furniture" level={0} />
+                {categories.map(cat => (
+                    <CategoryNode key={cat.id} category={cat} level={0} />
+                ))}
             </div>
              <div className="mt-4 flex justify-end">
-                <Button><PlusCircle className="mr-2 h-4 w-4" /> Add Root Category</Button>
+                <AddCategoryDialog onAdd={handleAddCategory} categories={categories} />
             </div>
           </CardContent>
         </Card>
