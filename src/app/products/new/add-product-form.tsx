@@ -54,6 +54,7 @@ const productFormSchema = z.object({
   productName: z.string().min(1, "Product name is required."),
   sku: z.string().min(1, "SKU is required."),
   category: z.string().min(1, "Category is required."),
+  subCategory: z.string().optional(),
   uom: z.string().min(1, "Unit of Measurement is required."),
   secondaryUom: z.string().optional(),
   purchasePrice: z.coerce.number().min(0, "Purchase price must be non-negative."),
@@ -94,6 +95,11 @@ const optionalSectionsConfig = {
     ecommerce: 'E-commerce Details'
 };
 
+const categoryData = {
+    'electronics': ['Smartphones', 'Laptops', 'Accessories'],
+    'accessories': ['Keyboards', 'Mice', 'Cables', 'Headphones'],
+    'clothing': ['T-Shirts', 'Jeans', 'Jackets'],
+};
 
 export function AddProductForm() {
   const { toast } = useToast();
@@ -112,6 +118,7 @@ export function AddProductForm() {
         productName: '',
         sku: '',
         category: '',
+        subCategory: '',
         uom: '',
         secondaryUom: '',
         purchasePrice: 0,
@@ -126,6 +133,8 @@ export function AddProductForm() {
         customAttributes: [{ key: '', value: '' }],
     },
   });
+
+  const watchedCategory = form.watch('category');
   
   const { fields: customAttributeFields, append: appendCustomAttribute, remove: removeCustomAttribute } = useFieldArray({
     control: form.control,
@@ -217,8 +226,20 @@ export function AddProductForm() {
                         <FormItem><FormLabel>SKU</FormLabel><FormControl><Input placeholder="Stock Keeping Unit" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                      <FormField name="category" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Category</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger></FormControl><SelectContent>
-                            <SelectItem value="electronics">Electronics</SelectItem><SelectItem value="accessories">Accessories</SelectItem>
+                        <FormItem><FormLabel>Category</FormLabel><Select onValueChange={(value) => {
+                            field.onChange(value);
+                            form.setValue('subCategory', ''); // Reset sub-category on category change
+                        }} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger></FormControl><SelectContent>
+                            {Object.keys(categoryData).map(cat => (
+                                <SelectItem key={cat} value={cat} className="capitalize">{cat}</SelectItem>
+                            ))}
+                        </SelectContent></Select><FormMessage /></FormItem>
+                    )} />
+                    <FormField name="subCategory" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Sub Category</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={!watchedCategory}><FormControl><SelectTrigger><SelectValue placeholder="Select sub-category" /></SelectTrigger></FormControl><SelectContent>
+                            {watchedCategory && categoryData[watchedCategory as keyof typeof categoryData]?.map(subCat => (
+                                <SelectItem key={subCat} value={subCat}>{subCat}</SelectItem>
+                            ))}
                         </SelectContent></Select><FormMessage /></FormItem>
                     )} />
                     <div className="grid grid-cols-2 gap-2">
