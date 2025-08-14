@@ -169,17 +169,11 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Attributes" isActive={pathname.startsWith('/attributes')} asChild>
+              <SidebarMenuButton tooltip="Category and Attributes" isActive={pathname.startsWith('/attributes')} asChild>
                 <Link href="/attributes" onClick={handleLinkClick}>
                   <Tags />
-                  <span>Attributes</span>
+                  <span>Category and Attributes</span>
                 </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Add Category">
-                <FolderPlus />
-                <span>Add Category</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
