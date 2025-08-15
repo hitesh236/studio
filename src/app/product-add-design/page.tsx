@@ -135,6 +135,23 @@ const initialAttributes: Attribute[] = [
     { id: 'attr-4', name: 'Material', type: 'dropdown', options: ['Cotton', 'Polyester', 'Wood', 'Metal'], isGlobal: false, assignedCategories: ['apparel', 'furniture'] },
 ];
 
+// Dummy data for product counts
+const productCounts: Record<string, number> = {
+    'smartphones': 12,
+    'laptops': 5,
+    'men-tshirts': 25,
+    'men-shirts': 18,
+    'furniture': 7
+};
+
+const getCategoryProductCount = (category: Category): number => {
+    let count = productCounts[category.id] || 0;
+    if (category.children) {
+        count += category.children.reduce((sum, child) => sum + getCategoryProductCount(child), 0);
+    }
+    return count;
+};
+
 const flattenCategories = (cats: Category[], level = 0): { value: string, label: string }[] => {
     let list: { value: string, label: string }[] = [];
     cats.forEach(cat => {
@@ -158,7 +175,7 @@ const getCategoryNameById = (categories: Category[], id: string): string | null 
 };
 
 
-const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCategory, onSelectCategory }: { category: Category; level: number; onAdd: (parentId: string) => void; onEdit: (category: Category) => void; onDelete: (category: Category) => void; selectedCategory: Category | null; onSelectCategory: (category: Category) => void; }) => {
+const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCategory, onSelectCategory, productCount }: { category: Category; level: number; onAdd: (parentId: string) => void; onEdit: (category: Category) => void; onDelete: (category: Category) => void; selectedCategory: Category | null; onSelectCategory: (category: Category) => void; productCount: number; }) => {
   const [isOpen, setIsOpen] = React.useState(true);
   const hasChildren = category.children && category.children.length > 0;
   const isSelected = selectedCategory?.id === category.id;
@@ -177,7 +194,7 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
             {hasChildren && (isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />)}
           </span>
           <Folder className="h-4 w-4 text-amber-500" />
-          <span className="text-[13px]">{category.name}</span>
+          <span className="text-[13px]">{category.name} ({productCount})</span>
         </div>
         <div className="hidden group-hover:flex items-center gap-1">
             {level < 2 && (
@@ -190,16 +207,18 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
                 <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onEdit(category)}><Edit2 className="h-4 w-4" /></Button></TooltipTrigger>
                 <TooltipContent><p>Edit Category</p></TooltipContent>
             </Tooltip></TooltipProvider>
-            <TooltipProvider><Tooltip>
-                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => onDelete(category)}><Trash2 className="h-4 w-4" /></Button></TooltipTrigger>
-                <TooltipContent><p>Delete Category</p></TooltipContent>
-            </Tooltip></TooltipProvider>
+            {productCount === 0 && (
+                <TooltipProvider><Tooltip>
+                    <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => onDelete(category)}><Trash2 className="h-4 w-4" /></Button></TooltipTrigger>
+                    <TooltipContent><p>Delete Category</p></TooltipContent>
+                </Tooltip></TooltipProvider>
+            )}
         </div>
       </div>
       {isOpen && hasChildren && (
         <div>
             {category.children?.map(child => (
-                <CategoryNode key={child.id} category={child} level={level + 1} onAdd={onAdd} onEdit={onEdit} onDelete={onDelete} selectedCategory={selectedCategory} onSelectCategory={onSelectCategory} />
+                <CategoryNode key={child.id} category={child} level={level + 1} onAdd={onAdd} onEdit={onEdit} onDelete={onDelete} selectedCategory={selectedCategory} onSelectCategory={onSelectCategory} productCount={getCategoryProductCount(child)} />
             ))}
         </div>
       )}
@@ -541,6 +560,7 @@ export default function ProductAddDesignPage() {
                     onDelete={(category) => { /* Implement delete logic */ }}
                     selectedCategory={selectedCategory}
                     onSelectCategory={setSelectedCategory}
+                    productCount={getCategoryProductCount(cat)}
                   />
                 ))}
               </div>
