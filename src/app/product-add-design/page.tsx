@@ -168,7 +168,7 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
       <div
         className={cn(
           "flex items-center gap-1.5 py-1.5 px-2 rounded-md hover:bg-muted/50 group",
-          isSelected && "bg-muted/80"
+          isSelected && "bg-primary text-primary-foreground"
         )}
         style={{ paddingLeft: `${level * 0.75 + 0.5}rem` }}
       >
@@ -177,21 +177,21 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
             {hasChildren && (isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />)}
           </span>
           <Folder className="h-4 w-4 text-amber-500" />
-          <span className="text-[13px]">{category.name}</span>
+          <span className="text-[13px] font-normal">{category.name}</span>
         </div>
         <div className="hidden group-hover:flex items-center gap-1">
             {level < 2 && (
               <TooltipProvider><Tooltip>
-                  <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onAdd(category.id)}><PlusCircle className="h-4 w-4" /></Button></TooltipTrigger>
+                  <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => onAdd(category.id)}><PlusCircle className="h-4 w-4" /></Button></TooltipTrigger>
                   <TooltipContent><p>Add Sub-category</p></TooltipContent>
               </Tooltip></TooltipProvider>
             )}
             <TooltipProvider><Tooltip>
-                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(category)}><Edit2 className="h-4 w-4" /></Button></TooltipTrigger>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => onEdit(category)}><Edit2 className="h-4 w-4" /></Button></TooltipTrigger>
                 <TooltipContent><p>Edit Category</p></TooltipContent>
             </Tooltip></TooltipProvider>
             <TooltipProvider><Tooltip>
-                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onDelete(category)}><Trash2 className="h-4 w-4" /></Button></TooltipTrigger>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="text-destructive" onClick={() => onDelete(category)}><Trash2 className="h-4 w-4" /></Button></TooltipTrigger>
                 <TooltipContent><p>Delete Category</p></TooltipContent>
             </Tooltip></TooltipProvider>
         </div>
@@ -305,12 +305,14 @@ const AttributeDialog = ({
   onSave,
   editingAttribute,
   categories,
+  selectedCategory,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (attr: Omit<Attribute, 'id'>, id?: string) => void;
   editingAttribute?: Attribute | null;
   categories: Category[];
+  selectedCategory: Category | null;
 }) => {
   const [name, setName] = React.useState('');
   const [type, setType] = React.useState<AttributeType>('text');
@@ -332,10 +334,10 @@ const AttributeDialog = ({
         setType('text');
         setOptions('');
         setIsGlobal(false);
-        setAssigned([]);
+        setAssigned(selectedCategory ? [selectedCategory.id] : []);
       }
     }
-  }, [open, editingAttribute]);
+  }, [open, editingAttribute, selectedCategory]);
 
   const handleSave = () => {
     onSave(
@@ -352,12 +354,16 @@ const AttributeDialog = ({
   };
   
   const flattenedCategories = React.useMemo(() => flattenCategories(categories), [categories]);
+  
+  const dialogTitle = editingAttribute 
+    ? 'Edit Attribute' 
+    : `Add Attribute to: ${selectedCategory ? getCategoryNameById(categories, selectedCategory.id) : 'Global'}`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{editingAttribute ? 'Edit' : 'Add'} Attribute</DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
         </DialogHeader>
         <div className="space-y-6 py-4">
           <div className="space-y-2">
@@ -566,7 +572,7 @@ export default function ProductAddDesignPage() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Attribute Name</TableHead>
-                                    <TableHead>Type</TableHead>
+                                    <TableHead>Data Type</TableHead>
                                     <TableHead>Assigned To</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
@@ -575,7 +581,18 @@ export default function ProductAddDesignPage() {
                                 {displayedAttributes.map(attr => (
                                     <TableRow key={attr.id}>
                                         <TableCell className="font-medium">{attr.name}</TableCell>
-                                        <TableCell className="capitalize">{attr.type}</TableCell>
+                                        <TableCell className="capitalize align-top">
+                                            <div>
+                                                <span>{attr.type}</span>
+                                                {attr.type === 'dropdown' && attr.options && attr.options.length > 0 && (
+                                                    <div className="flex flex-wrap gap-1 mt-1">
+                                                        {attr.options.map(option => (
+                                                        <Badge key={option} variant="secondary" className="font-normal">{option}</Badge>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </TableCell>
                                         <TableCell>
                                             {attr.isGlobal ? (
                                                 <Badge variant="secondary">Global</Badge>
@@ -609,14 +626,15 @@ export default function ProductAddDesignPage() {
                 onSave={handleSaveAttribute}
                 editingAttribute={editingAttribute}
                 categories={categories}
+                selectedCategory={selectedCategory}
             />
         </main>
       </div>
         
         <div className="fixed bottom-8 right-8 z-50">
-            <Button className="rounded-full shadow-lg h-14 w-14" onClick={() => { setEditingAttribute(null); setIsAttributeDialogOpen(true); }}>
-                <PlusCircle className="h-6 w-6" />
-                 <span className="sr-only">Add Attribute</span>
+            <Button className="rounded-full shadow-lg h-14" onClick={() => { setEditingAttribute(null); setIsAttributeDialogOpen(true); }}>
+                <PlusCircle className="h-6 w-6 mr-2" />
+                <span className="sr-only sm:not-sr-only">Add Attribute</span>
             </Button>
         </div>
     </div>
