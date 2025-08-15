@@ -34,7 +34,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Settings, Upload, Image as ImageIcon, Tags, Barcode, Percent, Trash2, PlusCircle, X, ChevronsUpDown } from 'lucide-react';
+import { Loader2, Save, Settings, Upload, Image as ImageIcon, Tags, Barcode, Percent, Trash2, PlusCircle, X, ChevronsUpDown, Check, Info } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
@@ -42,11 +42,15 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import { initialCategoriesData } from '@/lib/categories';
+import { initialAttributes } from '@/lib/attributes';
+import type { Category, Attribute } from '@/lib/types';
 
 
 const customAttributeSchema = z.object({
-  key: z.string().optional(),
-  value: z.string().optional(),
+  attributeId: z.string(),
+  value: z.any(),
 });
 
 const productFormSchema = z.object({
@@ -54,8 +58,7 @@ const productFormSchema = z.object({
   productName: z.string().min(1, "Product name is required."),
   alternateName: z.string().optional(),
   sku: z.string().min(1, "SKU is required."),
-  category: z.string().min(1, "Category is required."),
-  subCategory: z.string().optional(),
+  categoryPath: z.array(z.string()).min(1, "Category is required."),
   uom: z.string().min(1, "Unit of Measurement is required."),
   secondaryUom: z.string().optional(),
   purchasePrice: z.coerce.number().min(0, "Purchase price must be non-negative."),
@@ -70,8 +73,8 @@ const productFormSchema = z.object({
   }),
   openingStock: z.coerce.number().min(0, "Opening stock must be non-negative.").default(0),
   
-  // Custom Attributes
-  customAttributes: z.array(customAttributeSchema).optional(),
+  // Dynamic Attributes
+  dynamicAttributes: z.array(customAttributeSchema).optional(),
 
   // Additional Details
   productDescription: z.string().optional(),
@@ -91,15 +94,78 @@ const productFormSchema = z.object({
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
 
+// Helper function to find a category by its path
+const findCategoryByPath = (path: string[], categories: Category[]): Category | null => {
+    if (!path || path.length === 0) return null;
+    let currentLevel = categories;
+    let foundCategory: Category | null = null;
+    for (const id of path) {
+        const nextCategory = currentLevel.find(c => c.id === id);
+        if (nextCategory) {
+            foundCategory = nextCategory;
+            currentLevel = nextCategory.children || [];
+        } else {
+            return null; // Path is invalid
+        }
+    }
+    return foundCategory;
+};
+
+// Helper function to get all parent categories
+const getCategoryHierarchy = (categoryId: string, categories: Category[]): Category[] => {
+    const path: Category[] = [];
+    
+    function findPath(currentCategory: Category, currentPath: Category[]): boolean {
+        const newPath = [...currentPath, currentCategory];
+        if (currentCategory.id === categoryId) {
+            path.push(...newPath);
+            return true;
+        }
+        if (currentCategory.children) {
+            for (const child of currentCategory.children) {
+                if (findPath(child, newPath)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    for (const rootCategory of categories) {
+        if (findPath(rootCategory, [])) {
+            break;
+        }
+    }
+    return path;
+};
+
+// Helper function to find all attributes for a category, including inherited ones
+const getAttributesForCategory = (categoryId: string | null, categories: Category[], allAttributes: Attribute[]): Attribute[] => {
+    if (!categoryId) return allAttributes.filter(a => a.isGlobal);
+    
+    const hierarchy = getCategoryHierarchy(categoryId, categories);
+    const applicableAttributes = new Map<string, Attribute>();
+
+    // Add global attributes first
+    allAttributes.filter(a => a.isGlobal).forEach(attr => {
+        applicableAttributes.set(attr.id, attr);
+    });
+
+    // Add attributes from the hierarchy, parents first
+    hierarchy.forEach(categoryInHierarchy => {
+        allAttributes
+            .filter(attr => attr.assignedCategories.includes(categoryInHierarchy.id))
+            .forEach(attr => {
+                applicableAttributes.set(attr.id, attr);
+            });
+    });
+
+    return Array.from(applicableAttributes.values());
+};
+
 const optionalSectionsConfig = {
     additionalDetails: 'Additional Details',
     ecommerce: 'E-commerce Details'
-};
-
-const categoryData = {
-    'electronics': ['Smartphones', 'Laptops', 'Accessories'],
-    'accessories': ['Keyboards', 'Mice', 'Cables', 'Headphones'],
-    'clothing': ['T-Shirts', 'Jeans', 'Jackets'],
 };
 
 const predefinedTags = ['new-arrival', 'best-seller', 'featured', 'on-sale', 'clearance', 'eco-friendly', 'premium'];
@@ -122,8 +188,7 @@ export function AddProductForm() {
         productName: '',
         alternateName: '',
         sku: '',
-        category: '',
-        subCategory: '',
+        categoryPath: [],
         uom: '',
         secondaryUom: '',
         purchasePrice: 0,
@@ -136,16 +201,51 @@ export function AddProductForm() {
             b2b: 0,
         },
         openingStock: 0,
-        customAttributes: [{ key: '', value: '' }],
+        dynamicAttributes: [],
     },
   });
 
-  const watchedCategory = form.watch('category');
+  const watchedCategoryPath = form.watch('categoryPath');
+  const lastSelectedCategoryId = watchedCategoryPath.length > 0 ? watchedCategoryPath[watchedCategoryPath.length - 1] : null;
+
+  const displayedAttributes = React.useMemo(
+    () => getAttributesForCategory(lastSelectedCategoryId, initialCategoriesData, initialAttributes),
+    [lastSelectedCategoryId]
+  );
   
-  const { fields: customAttributeFields, append: appendCustomAttribute, remove: removeCustomAttribute } = useFieldArray({
+  // Sync form state with displayed attributes
+  React.useEffect(() => {
+    const existingAttributes = form.getValues('dynamicAttributes') || [];
+    const newAttributeIds = new Set(displayedAttributes.map(a => a.id));
+    const existingAttributeIds = new Set(existingAttributes.map(a => a.attributeId));
+
+    // Remove attributes that are no longer applicable
+    const attributesToRemove = existingAttributes.filter(a => !newAttributeIds.has(a.attributeId));
+    if (attributesToRemove.length > 0) {
+      const updatedAttributes = existingAttributes.filter(a => newAttributeIds.has(a.attributeId));
+      form.setValue('dynamicAttributes', updatedAttributes);
+    }
+    
+    // Add new applicable attributes
+    const attributesToAdd = displayedAttributes.filter(a => !existingAttributeIds.has(a.id));
+    if (attributesToAdd.length > 0) {
+      const newFormAttributes = attributesToAdd.map(attr => ({
+        attributeId: attr.id,
+        value: attr.type === 'checkbox' ? false : ''
+      }));
+      form.setValue('dynamicAttributes', [...existingAttributes, ...newFormAttributes]);
+    }
+  }, [displayedAttributes, form]);
+
+  const { fields: dynamicAttributeFields } = useFieldArray({
     control: form.control,
-    name: "customAttributes",
+    name: "dynamicAttributes",
   });
+  
+  const attributeMap = React.useMemo(() => 
+    new Map(initialAttributes.map(attr => [attr.id, attr])), 
+  [initialAttributes]);
+
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -343,23 +443,51 @@ export function AddProductForm() {
                     <FormField name="sku" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>SKU</FormLabel><FormControl><Input placeholder="Stock Keeping Unit" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
-                     <FormField name="category" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Category</FormLabel><Select onValueChange={(value) => {
-                            field.onChange(value);
-                            form.setValue('subCategory', ''); // Reset sub-category on category change
-                        }} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger></FormControl><SelectContent>
-                            {Object.keys(categoryData).map(cat => (
-                                <SelectItem key={cat} value={cat} className="capitalize">{cat}</SelectItem>
-                            ))}
-                        </SelectContent></Select><FormMessage /></FormItem>
-                    )} />
-                    <FormField name="subCategory" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Sub Category</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={!watchedCategory}><FormControl><SelectTrigger><SelectValue placeholder="Select sub-category" /></SelectTrigger></FormControl><SelectContent>
-                            {watchedCategory && categoryData[watchedCategory as keyof typeof categoryData]?.map(subCat => (
-                                <SelectItem key={subCat} value={subCat}>{subCat}</SelectItem>
-                            ))}
-                        </SelectContent></Select><FormMessage /></FormItem>
-                    )} />
+                    <FormField
+                        name="categoryPath"
+                        control={form.control}
+                        render={({ field }) => {
+                            const selectedCategory = findCategoryByPath(field.value, initialCategoriesData);
+                            return (
+                                <FormItem className="md:col-span-2">
+                                    <FormLabel>Category</FormLabel>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {[0, 1, 2].map(level => {
+                                            const parentPath = field.value.slice(0, level);
+                                            const parentCategory = findCategoryByPath(parentPath, initialCategoriesData);
+                                            const options = level === 0 ? initialCategoriesData : (parentCategory?.children || []);
+
+                                            if (options.length === 0 && level > 0) return null;
+
+                                            return (
+                                                <Select
+                                                    key={level}
+                                                    value={field.value[level] || ''}
+                                                    onValueChange={(value) => {
+                                                        const newPath = [...field.value.slice(0, level), value];
+                                                        field.onChange(newPath);
+                                                    }}
+                                                    disabled={level > 0 && !field.value[level - 1]}
+                                                >
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder={`Select Level ${level + 1}`} />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        {options.map(cat => (
+                                                            <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            );
+                                        })}
+                                    </div>
+                                    <FormMessage />
+                                </FormItem>
+                            );
+                        }}
+                    />
                     <div className="grid grid-cols-2 gap-2">
                         <FormField name="uom" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Primary UOM</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger></FormControl><SelectContent>
@@ -417,60 +545,57 @@ export function AddProductForm() {
                 </div>
             </section>
             
-            {/* Custom Attributes Section */}
-            <section>
-              <h3 className="text-lg font-medium mb-2">Custom Attributes</h3>
-              <Separator className="mb-4" />
-              <div className="space-y-4">
-                {customAttributeFields.map((field, index) => (
-                  <div key={field.id} className="flex items-center gap-4">
-                    <FormField
-                      control={form.control}
-                      name={`customAttributes.${index}.key`}
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormControl>
-                            <Input placeholder="Attribute Name (e.g., Color)" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`customAttributes.${index}.value`}
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormControl>
-                            <Input placeholder="Attribute Value (e.g., Red)" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive"
-                      onClick={() => removeCustomAttribute(index)}
-                      disabled={customAttributeFields.length <= 1}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-4"
-                onClick={() => appendCustomAttribute({ key: '', value: '' })}
-              >
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Attribute
-              </Button>
-            </section>
+             {/* Dynamic Attributes Section */}
+            {displayedAttributes.length > 0 && <section>
+                <h3 className="text-lg font-medium mb-2">Attributes</h3>
+                <Separator className="mb-4" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {dynamicAttributeFields.map((field, index) => {
+                      const attributeInfo = attributeMap.get(field.attributeId);
+                      if (!attributeInfo || !displayedAttributes.some(a => a.id === attributeInfo.id)) return null;
+
+                      return (
+                          <FormField
+                              key={field.id}
+                              control={form.control}
+                              name={`dynamicAttributes.${index}.value`}
+                              render={({ field: itemField }) => {
+                                  if (attributeInfo.type === 'dropdown' && attributeInfo.options) {
+                                      return (
+                                          <FormItem>
+                                              <FormLabel>{attributeInfo.name}</FormLabel>
+                                              <Select onValueChange={itemField.onChange} defaultValue={itemField.value}>
+                                                  <FormControl><SelectTrigger><SelectValue placeholder={`Select ${attributeInfo.name}`} /></SelectTrigger></FormControl>
+                                                  <SelectContent>
+                                                      {attributeInfo.options.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                                                  </SelectContent>
+                                              </Select>
+                                              <FormMessage />
+                                          </FormItem>
+                                      );
+                                  }
+                                  if (attributeInfo.type === 'checkbox') {
+                                    return (
+                                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                          <FormLabel>{attributeInfo.name}</FormLabel>
+                                          <FormControl><Switch checked={itemField.value} onCheckedChange={itemField.onChange} /></FormControl>
+                                      </FormItem>
+                                    );
+                                  }
+                                  return (
+                                    <FormItem>
+                                        <FormLabel>{attributeInfo.name}</FormLabel>
+                                        <FormControl><Input type={attributeInfo.type} {...itemField} /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                  )
+                              }}
+                          />
+                      );
+                  })}
+                </div>
+            </section>}
+
 
             {/* Additional Details Section */}
             {visibleSections.additionalDetails && <section>
