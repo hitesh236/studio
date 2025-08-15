@@ -217,25 +217,21 @@ export function AddProductForm() {
   React.useEffect(() => {
     const existingAttributes = form.getValues('dynamicAttributes') || [];
     const newAttributeIds = new Set(displayedAttributes.map(a => a.id));
-    const existingAttributeIds = new Set(existingAttributes.map(a => a.attributeId));
-
-    // Remove attributes that are no longer applicable
-    const attributesToRemove = existingAttributes.filter(a => !newAttributeIds.has(a.attributeId));
-    if (attributesToRemove.length > 0) {
-      const updatedAttributes = existingAttributes.filter(a => newAttributeIds.has(a.attributeId));
-      form.setValue('dynamicAttributes', updatedAttributes);
-    }
     
-    // Add new applicable attributes
-    const attributesToAdd = displayedAttributes.filter(a => !existingAttributeIds.has(a.id));
-    if (attributesToAdd.length > 0) {
-      const newFormAttributes = attributesToAdd.map(attr => ({
+    // This combines add and remove logic into one `setValue` call.
+    const newAttributes = displayedAttributes.map(attr => {
+      const existing = existingAttributes.find(a => a.attributeId === attr.id);
+      return existing || {
         attributeId: attr.id,
         value: attr.type === 'checkbox' ? false : ''
-      }));
-      form.setValue('dynamicAttributes', [...existingAttributes, ...newFormAttributes]);
+      };
+    });
+
+    // Only update if there's a change in the attributes themselves
+    if (newAttributes.length !== existingAttributes.length || !newAttributes.every(attr => existingAttributes.some(e => e.attributeId === attr.attributeId))) {
+        form.setValue('dynamicAttributes', newAttributes, { shouldValidate: true });
     }
-  }, [displayedAttributes, form]);
+  }, [displayedAttributes, form.getValues, form.setValue]);
 
   const { fields: dynamicAttributeFields } = useFieldArray({
     control: form.control,
