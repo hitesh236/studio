@@ -168,7 +168,7 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
       <div
         className={cn(
           "flex items-center gap-1.5 py-1.5 px-2 rounded-md hover:bg-muted/50 group",
-          isSelected && "bg-primary text-primary-foreground"
+          isSelected && "bg-primary text-primary-foreground hover:bg-primary/90"
         )}
         style={{ paddingLeft: `${level * 0.75 + 0.5}rem` }}
       >
@@ -177,7 +177,7 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
             {hasChildren && (isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />)}
           </span>
           <Folder className="h-4 w-4 text-amber-500" />
-          <span className="text-[13px] font-normal">{category.name}</span>
+          <span className="text-[13px]">{category.name}</span>
         </div>
         <div className="hidden group-hover:flex items-center gap-1">
             {level < 2 && (
@@ -605,10 +605,10 @@ export default function ProductAddDesignPage() {
                                             )}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingAttribute(attr); setIsAttributeDialogOpen(true); }}>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditingAttribute(attr); setIsAttributeDialogOpen(true); }}>
                                                 <Edit2 className="h-4 w-4"/>
                                             </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteAttribute(attr.id)}>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleDeleteAttribute(attr.id)}>
                                                 <Trash2 className="h-4 w-4"/>
                                             </Button>
                                         </TableCell>
