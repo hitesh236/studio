@@ -177,7 +177,7 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
             {hasChildren && (isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />)}
           </span>
           <Folder className="h-4 w-4 text-amber-500" />
-          <span>{category.name}</span>
+          <span className="text-[13px]">{category.name}</span>
         </div>
         <div className="hidden group-hover:flex items-center gap-1">
             {level < 2 && (
