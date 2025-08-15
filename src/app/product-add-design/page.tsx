@@ -581,8 +581,9 @@ export default function ProductAddDesignPage() {
                                                 <Badge variant="secondary">Global</Badge>
                                             ) : (
                                                 <div className="flex flex-wrap gap-1">
-                                                   <Badge>{getCategoryNameById(categories, attr.assignedCategories[0]) || 'N/A'}</Badge>
-                                                   {attr.assignedCategories.length > 1 && <Badge variant="outline">+{attr.assignedCategories.length - 1}</Badge>}
+                                                   {attr.assignedCategories.map(catId => (
+                                                        <Badge key={catId}>{getCategoryNameById(categories, catId) || catId}</Badge>
+                                                   ))}
                                                 </div>
                                             )}
                                         </TableCell>
