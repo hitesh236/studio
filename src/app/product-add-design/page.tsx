@@ -168,7 +168,7 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
       <div
         className={cn(
           "flex items-center gap-1.5 py-1.5 px-2 rounded-md hover:bg-muted/50 group",
-          isSelected && "bg-primary text-primary-foreground hover:bg-primary/90"
+          isSelected && "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-black"
         )}
         style={{ paddingLeft: `${level * 0.75 + 0.5}rem` }}
       >
@@ -182,16 +182,16 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
         <div className="hidden group-hover:flex items-center gap-1">
             {level < 2 && (
               <TooltipProvider><Tooltip>
-                  <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => onAdd(category.id)}><PlusCircle className="h-4 w-4" /></Button></TooltipTrigger>
+                  <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onAdd(category.id)}><PlusCircle className="h-4 w-4" /></Button></TooltipTrigger>
                   <TooltipContent><p>Add Sub-category</p></TooltipContent>
               </Tooltip></TooltipProvider>
             )}
             <TooltipProvider><Tooltip>
-                <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => onEdit(category)}><Edit2 className="h-4 w-4" /></Button></TooltipTrigger>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onEdit(category)}><Edit2 className="h-4 w-4" /></Button></TooltipTrigger>
                 <TooltipContent><p>Edit Category</p></TooltipContent>
             </Tooltip></TooltipProvider>
             <TooltipProvider><Tooltip>
-                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="text-destructive" onClick={() => onDelete(category)}><Trash2 className="h-4 w-4" /></Button></TooltipTrigger>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => onDelete(category)}><Trash2 className="h-4 w-4" /></Button></TooltipTrigger>
                 <TooltipContent><p>Delete Category</p></TooltipContent>
             </Tooltip></TooltipProvider>
         </div>
