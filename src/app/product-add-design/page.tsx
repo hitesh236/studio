@@ -110,7 +110,7 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
   const isSelected = selectedCategory?.id === category.id;
 
   return (
-    <div>
+    <div className={cn(level === 0 && "mt-2 pt-2 border-t")}>
       <div
         className={cn(
           "flex items-center gap-1.5 py-1.5 px-2 rounded-md hover:bg-muted/50 group",
@@ -123,15 +123,13 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
             {hasChildren && (isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />)}
           </span>
           <Folder className="h-4 w-4 text-amber-500 shrink-0" />
-          <span className="text-sm truncate">{category.name} ({productCount})</span>
+          <span className={cn("text-sm truncate", level === 0 && "font-semibold")}>{category.name} ({productCount})</span>
         </div>
         <div className="hidden group-hover:flex items-center gap-1">
-            {level < 2 && (
-              <TooltipProvider><Tooltip>
-                  <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onAdd(category.id)}><PlusCircle className="h-4 w-4" /></Button></TooltipTrigger>
-                  <TooltipContent><p>Add Sub-category</p></TooltipContent>
-              </Tooltip></TooltipProvider>
-            )}
+            <TooltipProvider><Tooltip>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onAdd(category.id)}><PlusCircle className="h-4 w-4" /></Button></TooltipTrigger>
+                <TooltipContent><p>Add Sub-category</p></TooltipContent>
+            </Tooltip></TooltipProvider>
             <TooltipProvider><Tooltip>
                 <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onEdit(category)}><Edit2 className="h-4 w-4" /></Button></TooltipTrigger>
                 <TooltipContent><p>Edit Category</p></TooltipContent>
@@ -600,7 +598,7 @@ export default function ProductAddDesignPage() {
                         Filter Industries ({selectedIndustries.length})
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56">
+                <DropdownMenuContent className="w-56" onPointerDownOutside={(e) => e.preventDefault()}>
                     <DropdownMenuLabel>Show Industries</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {industries.map(industry => (
@@ -608,7 +606,6 @@ export default function ProductAddDesignPage() {
                             key={industry.id}
                             checked={selectedIndustries.includes(industry.id)}
                             onCheckedChange={() => handleToggleIndustry(industry.id)}
-                            onSelect={(e) => e.preventDefault()}
                         >
                             {industry.name}
                         </DropdownMenuCheckboxItem>
