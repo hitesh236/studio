@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { Search, Barcode, Plus, Minus, Trash2, X, CreditCard, Printer } from 'lucide-react';
+import { Search, Barcode, Plus, Minus, Trash2, X, CreditCard, Printer, Package, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -232,7 +232,7 @@ export default function PosPage() {
                  <ScrollArea className="flex-1 p-4">
                     <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {filteredProducts.map(p => (
-                            <ProductCard key={p.id} product={p} onAddToCart={addToCart} />
+                            <ProductCard key={p.id} product={p} onAddToCart={onAddToCart} />
                         ))}
                     </div>
                  </ScrollArea>
