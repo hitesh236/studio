@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
-import { LogOut, User, LayoutGrid, BookOpen, FileText, Eye, Globe, UserCircle, Palette } from 'lucide-react';
+import { LogOut, User, LayoutGrid, BookOpen, FileText, Eye, Globe, UserCircle, Palette, MonitorPlay } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const componentMenuItems = [
@@ -61,6 +61,12 @@ export function Header() {
       <SidebarTrigger className="flex" />
       <div className="flex-1" />
       <div className="flex items-center gap-2">
+        <Button asChild variant="outline">
+            <Link href="/pos">
+                <MonitorPlay className="mr-2 h-4 w-4" />
+                POS
+            </Link>
+        </Button>
         <ThemeToggle />
         <MegaMenu />
         <DropdownMenu>
