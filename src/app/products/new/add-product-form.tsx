@@ -216,9 +216,7 @@ export function AddProductForm() {
   // Sync form state with displayed attributes
   React.useEffect(() => {
     const existingAttributes = form.getValues('dynamicAttributes') || [];
-    const newAttributeIds = new Set(displayedAttributes.map(a => a.id));
     
-    // This combines add and remove logic into one `setValue` call.
     const newAttributes = displayedAttributes.map(attr => {
       const existing = existingAttributes.find(a => a.attributeId === attr.id);
       return existing || {
@@ -231,7 +229,7 @@ export function AddProductForm() {
     if (newAttributes.length !== existingAttributes.length || !newAttributes.every(attr => existingAttributes.some(e => e.attributeId === attr.attributeId))) {
         form.setValue('dynamicAttributes', newAttributes, { shouldValidate: true });
     }
-  }, [displayedAttributes, form.getValues, form.setValue]);
+  }, [displayedAttributes, form]);
 
   const { fields: dynamicAttributeFields } = useFieldArray({
     control: form.control,
@@ -439,51 +437,6 @@ export function AddProductForm() {
                     <FormField name="sku" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>SKU</FormLabel><FormControl><Input placeholder="Stock Keeping Unit" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
-                    <FormField
-                        name="categoryPath"
-                        control={form.control}
-                        render={({ field }) => {
-                            const selectedCategory = findCategoryByPath(field.value, initialCategoriesData);
-                            return (
-                                <FormItem className="md:col-span-2">
-                                    <FormLabel>Category</FormLabel>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {[0, 1, 2].map(level => {
-                                            const parentPath = field.value.slice(0, level);
-                                            const parentCategory = findCategoryByPath(parentPath, initialCategoriesData);
-                                            const options = level === 0 ? initialCategoriesData : (parentCategory?.children || []);
-
-                                            if (options.length === 0 && level > 0) return null;
-
-                                            return (
-                                                <Select
-                                                    key={level}
-                                                    value={field.value[level] || ''}
-                                                    onValueChange={(value) => {
-                                                        const newPath = [...field.value.slice(0, level), value];
-                                                        field.onChange(newPath);
-                                                    }}
-                                                    disabled={level > 0 && !field.value[level - 1]}
-                                                >
-                                                    <FormControl>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder={`Select Level ${level + 1}`} />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        {options.map(cat => (
-                                                            <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            );
-                                        })}
-                                    </div>
-                                    <FormMessage />
-                                </FormItem>
-                            );
-                        }}
-                    />
                     <div className="grid grid-cols-2 gap-2">
                         <FormField name="uom" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Primary UOM</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger></FormControl><SelectContent>
@@ -538,6 +491,50 @@ export function AddProductForm() {
                     <FormField name="openingStock" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Opening Stock</FormLabel><FormControl><Input type="number" placeholder="0" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
+                     <FormField
+                        name="categoryPath"
+                        control={form.control}
+                        render={({ field }) => {
+                            return (
+                                <FormItem className="md:col-span-2">
+                                    <FormLabel>Category</FormLabel>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {[0, 1, 2].map(level => {
+                                            const parentPath = field.value.slice(0, level);
+                                            const parentCategory = findCategoryByPath(parentPath, initialCategoriesData);
+                                            const options = level === 0 ? initialCategoriesData : (parentCategory?.children || []);
+
+                                            if (options.length === 0 && level > 0) return null;
+
+                                            return (
+                                                <Select
+                                                    key={level}
+                                                    value={field.value[level] || ''}
+                                                    onValueChange={(value) => {
+                                                        const newPath = [...field.value.slice(0, level), value];
+                                                        field.onChange(newPath);
+                                                    }}
+                                                    disabled={level > 0 && !field.value[level - 1]}
+                                                >
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder={`Select Level ${level + 1}`} />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        {options.map(cat => (
+                                                            <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            );
+                                        })}
+                                    </div>
+                                    <FormMessage />
+                                </FormItem>
+                            );
+                        }}
+                    />
                 </div>
             </section>
             
