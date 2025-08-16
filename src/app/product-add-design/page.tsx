@@ -118,11 +118,11 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
         )}
         style={{ paddingLeft: `${level * 0.75 + 0.5}rem` }}
       >
-        <div className="flex items-center gap-1.5 flex-1 cursor-pointer" onClick={() => onSelectCategory(category)}>
+        <div className="flex items-center gap-1.5 flex-1 cursor-pointer truncate" onClick={() => onSelectCategory(category)}>
           <span className="w-4 h-4 cursor-pointer" onClick={(e) => { e.stopPropagation(); hasChildren && setIsOpen(!isOpen); }}>
             {hasChildren && (isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />)}
           </span>
-          <Folder className="h-4 w-4 text-amber-500" />
+          <Folder className="h-4 w-4 text-amber-500 shrink-0" />
           <span className="text-sm truncate">{category.name} ({productCount})</span>
         </div>
         <div className="hidden group-hover:flex items-center gap-1">
@@ -153,6 +153,37 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
       )}
     </div>
   );
+};
+
+const AddIndustryDialog = ({ open, onOpenChange, onSave }: { open: boolean, onOpenChange: (open: boolean) => void, onSave: (name: string) => void }) => {
+    const [name, setName] = React.useState('');
+    
+    React.useEffect(() => {
+        if (!open) setName('');
+    }, [open]);
+
+    const handleSave = () => {
+        if (name.trim()) {
+            onSave(name.trim());
+            onOpenChange(false);
+        }
+    };
+    
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader><DialogTitle>Add New Industry</DialogTitle></DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <Label htmlFor="industry-name">Industry Name</Label>
+                    <Input id="industry-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Fashion" />
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                    <Button onClick={handleSave}>Save Industry</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
 };
 
 
@@ -374,10 +405,10 @@ export default function ProductAddDesignPage() {
   const [categories, setCategories] = React.useState<Category[]>(initialCategoriesData);
   const [attributes, setAttributes] = React.useState<Attribute[]>(initialAttributes);
   
-  const industries = React.useMemo(() => categories.map(cat => ({id: cat.id, name: cat.name})), [categories]);
+  const [industries, setIndustries] = React.useState(() => initialCategoriesData.map(cat => ({id: cat.id, name: cat.name})));
   const [selectedIndustries, setSelectedIndustries] = React.useState<string[]>(industries.map(i => i.id));
   
-  const [selectedCategory, setSelectedCategory] = React.useState<Category | null>(initialCategoriesData[0]);
+  const [selectedCategory, setSelectedCategory] = React.useState<Category | null>(null);
 
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = React.useState(false);
   const [editingCategory, setEditingCategory] = React.useState<Category | null>(null);
@@ -385,6 +416,9 @@ export default function ProductAddDesignPage() {
 
   const [isAttributeDialogOpen, setIsAttributeDialogOpen] = React.useState(false);
   const [editingAttribute, setEditingAttribute] = React.useState<Attribute | null>(null);
+
+  const [isIndustryDialogOpen, setIsIndustryDialogOpen] = React.useState(false);
+
 
   const displayedCategories = React.useMemo(() => {
     return categories.filter(cat => selectedIndustries.includes(cat.id));
@@ -433,6 +467,19 @@ export default function ProductAddDesignPage() {
     }
     return null;
   }
+  
+  const handleAddIndustry = (name: string) => {
+    const newIndustry: Category = {
+        id: name.toLowerCase().replace(/\s+/g, '-'),
+        name: name,
+        children: [],
+    };
+    setCategories(prev => [...prev, newIndustry]);
+    setIndustries(prev => [...prev, { id: newIndustry.id, name: newIndustry.name }]);
+    setSelectedIndustries(prev => [...prev, newIndustry.id]);
+    toast({ title: 'Industry Added' });
+  };
+
 
   const handleSaveCategory = (name: string, parentId: string | null) => {
     const newCategory: Category = {
@@ -492,7 +539,18 @@ export default function ProductAddDesignPage() {
     } else {
         // Add logic
         if (!parentId) {
-            setCategories(prev => [...prev, newCategory]);
+            if (selectedIndustries.length !== 1) {
+                toast({ variant: 'destructive', title: 'Please select one industry to add a top-level category to.'});
+                return;
+            }
+            const industryId = selectedIndustries[0];
+             setCategories(prev => prev.map(ind => {
+                if (ind.id === industryId) {
+                    return { ...ind, children: [...(ind.children || []), newCategory] };
+                }
+                return ind;
+            }));
+
         } else {
             const addRecursive = (cats: Category[]): Category[] => {
                 return cats.map(cat => {
@@ -534,28 +592,35 @@ export default function ProductAddDesignPage() {
             <h1 className="text-2xl font-bold">Category and Attribute Management</h1>
             <p className="text-muted-foreground">Select industries to filter categories and manage their attributes.</p>
         </div>
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                    <ListFilter className="mr-2 h-4 w-4" />
-                    Filter Industries ({selectedIndustries.length})
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" onPointerDownOutside={(e) => e.preventDefault()} onFocusOutside={(e) => e.preventDefault()}>
-                <DropdownMenuLabel>Show Industries</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {industries.map(industry => (
-                    <DropdownMenuCheckboxItem
-                        key={industry.id}
-                        checked={selectedIndustries.includes(industry.id)}
-                        onCheckedChange={() => handleToggleIndustry(industry.id)}
-                        onSelect={(e) => e.preventDefault()}
-                    >
-                        {industry.name}
-                    </DropdownMenuCheckboxItem>
-                ))}
-            </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-2">
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                        <ListFilter className="mr-2 h-4 w-4" />
+                        Filter Industries ({selectedIndustries.length})
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" onPointerDownOutside={(e) => e.preventDefault()} onFocusOutside={(e) => e.preventDefault()}>
+                    <DropdownMenuLabel>Show Industries</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {industries.map(industry => (
+                        <DropdownMenuCheckboxItem
+                            key={industry.id}
+                            checked={selectedIndustries.includes(industry.id)}
+                            onCheckedChange={() => handleToggleIndustry(industry.id)}
+                            onSelect={(e) => e.preventDefault()}
+                        >
+                            {industry.name}
+                        </DropdownMenuCheckboxItem>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
+             <Button onClick={() => setIsIndustryDialogOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Industry
+            </Button>
+            <AddIndustryDialog open={isIndustryDialogOpen} onOpenChange={setIsIndustryDialogOpen} onSave={handleAddIndustry} />
+        </div>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8 items-start">
@@ -681,3 +746,4 @@ export default function ProductAddDesignPage() {
     </div>
   );
 }
+
