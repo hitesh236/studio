@@ -506,12 +506,12 @@ export default function PosPage() {
     };
 
     return (
-        <div className="h-screen flex flex-col print:block print:p-0">
-            <div className="flex-1 grid md:grid-cols-[1fr_420px] gap-6 p-4 bg-muted/40 overflow-hidden">
+        <div className="h-screen flex flex-col print:block print:p-0 bg-muted/40">
+            <div className="flex-1 grid md:grid-cols-[1fr_420px] gap-4 p-4 overflow-hidden">
                 {/* Left Side - Products */}
                 <div className="flex flex-col h-full bg-card rounded-lg shadow-sm print:hidden overflow-hidden">
                     <div className="p-4 border-b space-y-4">
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                             <div className="relative flex-1">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input autoFocus placeholder="Search by name or SKU..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
@@ -576,13 +576,13 @@ export default function PosPage() {
                                                 <p className="font-semibold text-sm line-clamp-2">{item.productName}</p>
                                                 <p className="text-sm font-mono">{formatCurrency(item.sellingPrice, 'INR')}</p>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateQuantity(item.id, -1)}><Minus className="h-3 w-3" /></Button>
+                                                    <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => updateQuantity(item.id, -1)}><Minus className="h-4 w-4" /></Button>
                                                     <span className="w-6 text-center font-mono">{item.quantity}</span>
-                                                    <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateQuantity(item.id, 1)}><Plus className="h-3 w-3" /></Button>
+                                                    <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => updateQuantity(item.id, 1)}><Plus className="h-4 w-4" /></Button>
                                                     <div className="flex items-center rounded-md border">
-                                                        <Input type="number" value={item.discount} onChange={e => updateDiscount(item.id, parseInt(e.target.value) || 0)} className="h-6 w-16 pl-2 pr-1 text-xs text-right border-0 focus-visible:ring-0" placeholder="Disc" />
-                                                        <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => toggleDiscountType(item.id)}>
-                                                            {item.discountType === '%' ? <Percent className="h-3 w-3" /> : <Receipt className="h-3 w-3" />}
+                                                        <Input type="number" value={item.discount} onChange={e => updateDiscount(item.id, parseInt(e.target.value) || 0)} className="h-8 w-16 pl-2 pr-1 text-sm text-right border-0 focus-visible:ring-0" placeholder="Disc" />
+                                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleDiscountType(item.id)}>
+                                                            {item.discountType === '%' ? <Percent className="h-4 w-4" /> : <Receipt className="h-4 w-4" />}
                                                         </Button>
                                                     </div>
                                                 </div>
