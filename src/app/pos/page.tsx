@@ -232,7 +232,7 @@ export default function PosPage() {
                  <ScrollArea className="flex-1 p-4">
                     <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {filteredProducts.map(p => (
-                            <ProductCard key={p.id} product={p} onAddToCart={onAddToCart} />
+                            <ProductCard key={p.id} product={p} onAddToCart={addToCart} />
                         ))}
                     </div>
                  </ScrollArea>
