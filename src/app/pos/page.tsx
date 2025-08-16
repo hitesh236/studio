@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { Search, Barcode, Plus, Minus, Trash2, X, CreditCard, Printer, Package, CheckCircle2, PlusCircle } from 'lucide-react';
+import { Search, Barcode, Plus, Minus, Trash2, X, CreditCard, Printer, Package, CheckCircle2, PlusCircle, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,8 @@ import {
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { format } from 'date-fns';
+
 
 type CartItem = StockItem & { quantity: number };
 
@@ -137,6 +139,94 @@ const PaymentDialog = ({ open, onOpenChange, totalAmount, onPaymentSuccess }: { 
     );
 };
 
+const BillPreviewDialog = ({
+    open,
+    onOpenChange,
+    cart,
+    totals,
+    customerName,
+  }: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    cart: CartItem[];
+    totals: { subtotal: number; gst: number; total: number };
+    customerName: string;
+  }) => {
+    const handlePrint = () => {
+      // A bit of a hack to print just the dialog content
+      const printContents = document.getElementById('bill-preview-content')?.innerHTML;
+      const originalContents = document.body.innerHTML;
+      if (printContents) {
+        document.body.innerHTML = printContents;
+        window.print();
+        document.body.innerHTML = originalContents;
+        window.location.reload(); // Reload to restore event listeners
+      }
+    };
+  
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <div id="bill-preview-content" className="text-sm font-mono bg-white text-black p-4">
+            <h3 className="text-center font-bold text-lg">Hicks Inc.</h3>
+            <p className="text-center text-xs">{new Date().toLocaleString()}</p>
+            <Separator className="my-2 border-black" />
+            <p>Date: {format(new Date(), 'dd-MMM-yyyy')}</p>
+            <p>Customer: {customerName}</p>
+            <Separator className="my-2 border-black" />
+            <table className="w-full">
+              <thead>
+                <tr>
+                  <th className="text-left">Item</th>
+                  <th className="text-center">Qty</th>
+                  <th className="text-right">Price</th>
+                  <th className="text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cart.map(item => (
+                  <tr key={item.id}>
+                    <td>{item.productName}</td>
+                    <td className="text-center">{item.quantity}</td>
+                    <td className="text-right">{item.sellingPrice.toFixed(2)}</td>
+                    <td className="text-right">{(item.quantity * item.sellingPrice).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <Separator className="my-2 border-black border-dashed" />
+            <div className="flex justify-end">
+              <div className="w-48">
+                <div className="flex justify-between">
+                  <span>Subtotal:</span>
+                  <span>{totals.subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>GST:</span>
+                  <span>{totals.gst.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between font-bold text-base mt-1">
+                  <span>TOTAL:</span>
+                  <span>{totals.total.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+            <Separator className="my-2 border-black" />
+            <p className="text-center">Thank you!</p>
+          </div>
+          <DialogFooter className="print:hidden">
+            <Button variant="outline" onClick={handlePrint}>
+              <Printer className="mr-2 h-4 w-4" /> Print
+            </Button>
+            <DialogClose asChild>
+              <Button>Close</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
 export default function PosPage() {
     const { toast } = useToast();
     const [products, setProducts] = React.useState<StockItem[]>([]);
@@ -146,6 +236,8 @@ export default function PosPage() {
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false);
     const [isOrderComplete, setIsOrderComplete] = React.useState(false);
     const [isClearCartAlertOpen, setIsClearCartAlertOpen] = React.useState(false);
+    const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
+    const [customerName, setCustomerName] = React.useState('Walk-in Customer');
 
     React.useEffect(() => {
         const productData = generateStockListData(50);
@@ -207,6 +299,7 @@ export default function PosPage() {
         setCart([]);
         setIsOrderComplete(false);
         setSearchTerm('');
+        setCustomerName('Walk-in Customer');
     };
     
     const handlePrintReceipt = () => {
@@ -246,6 +339,10 @@ export default function PosPage() {
                         {cart.length > 0 && (
                             <Button variant="destructive" size="sm" onClick={() => setIsClearCartAlertOpen(true)}>Clear Cart</Button>
                         )}
+                    </div>
+                    <div className="pt-2">
+                        <Label htmlFor="customer-name">Customer</Label>
+                        <Input id="customer-name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
                     </div>
                 </CardHeader>
                 <CardContent className="flex-1 p-4 pt-0">
@@ -297,10 +394,16 @@ export default function PosPage() {
                                 <span className="font-mono">{formatCurrency(cartTotals.total, 'INR')}</span>
                             </div>
                         </div>
-                        <Button size="lg" className="w-full mt-4" onClick={() => setIsPaymentDialogOpen(true)}>
-                            <CreditCard className="mr-2 h-5 w-5" />
-                            Pay Now
-                        </Button>
+                        <div className="flex gap-2 w-full mt-4">
+                             <Button size="lg" variant="outline" className="w-full" onClick={() => setIsPreviewOpen(true)}>
+                                <Eye className="mr-2 h-5 w-5" />
+                                Preview
+                            </Button>
+                            <Button size="lg" className="w-full" onClick={() => setIsPaymentDialogOpen(true)}>
+                                <CreditCard className="mr-2 h-5 w-5" />
+                                Pay Now
+                            </Button>
+                        </div>
                     </CardFooter>
                 )}
             </div>
@@ -329,6 +432,14 @@ export default function PosPage() {
                 onOpenChange={setIsPaymentDialogOpen} 
                 totalAmount={cartTotals.total} 
                 onPaymentSuccess={handlePaymentSuccess}
+            />
+            
+            <BillPreviewDialog
+                open={isPreviewOpen}
+                onOpenChange={setIsPreviewOpen}
+                cart={cart}
+                totals={cartTotals}
+                customerName={customerName}
             />
 
             <AlertDialog open={isClearCartAlertOpen} onOpenChange={setIsClearCartAlertOpen}>
