@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -114,11 +115,10 @@ const PaymentDialog = ({ open, onOpenChange, totalAmount, onPaymentSuccess }: { 
     };
 
     const handleConfirmPayment = () => {
-        if (Math.abs(remainingAmount) > 0.01) {
-            toast({ title: 'Payment Mismatch', description: 'The total paid amount does not match the total due.', variant: 'destructive' });
+        if (Math.abs(remainingAmount) > 0.01 && !payments.some(p => p.method === 'pay-later')) {
+            toast({ title: 'Payment Mismatch', description: 'The total paid amount does not match the total due. Use "Pay Later" for credit sales.', variant: 'destructive' });
             return;
         }
-        toast({ title: 'Payment Successful!', description: `Paid ${formatCurrency(totalAmount, 'INR')}.` });
         onPaymentSuccess(payments);
         onOpenChange(false);
     }
@@ -198,7 +198,7 @@ const PaymentDialog = ({ open, onOpenChange, totalAmount, onPaymentSuccess }: { 
                 </div>
                 <DialogFooter>
                     <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-                    <Button onClick={handleConfirmPayment} disabled={Math.abs(remainingAmount) > 0.01}>
+                    <Button onClick={handleConfirmPayment}>
                         Confirm Payment
                     </Button>
                 </DialogFooter>
@@ -213,12 +213,14 @@ const BillPreviewDialog = ({
     cart,
     totals,
     customerName,
+    documentType
   }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     cart: CartItem[];
     totals: { subtotal: number; itemDiscount: number, orderDiscount: number, gst: number; total: number };
     customerName: string;
+    documentType: 'Invoice' | 'Receipt';
   }) => {
     const handlePrint = () => {
       // A bit of a hack to print just the dialog content
@@ -236,7 +238,9 @@ const BillPreviewDialog = ({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
           <div id="bill-preview-content" className="text-sm font-mono bg-white text-black p-4">
-            <h3 className="text-center font-bold text-lg">Hicks Inc.</h3>
+            <h3 className="text-center font-bold text-lg">
+                {documentType === 'Invoice' ? 'Tax Invoice' : 'Hicks Inc.'}
+            </h3>
             <p className="text-center text-xs">{new Date().toLocaleString()}</p>
             <Separator className="my-2 border-black" />
             <p>Date: {format(new Date(), 'dd-MMM-yyyy')}</p>
@@ -363,7 +367,7 @@ const CustomerCombobox = ({
     const [open, setOpen] = React.useState(false);
     const [isAddCustomerOpen, setIsAddCustomerOpen] = React.useState(false);
     const [search, setSearch] = React.useState('');
-    const walkInCustomer = { id: 'walk-in', company: 'Walk-in Customer', phone: '' };
+    const walkInCustomer = { id: 'walk-in', company: 'Walk-in Customer', phone: '', gstin: '' };
     
     const displayValue = value === 'walk-in' ? 'Walk-in Customer' : customers.find(c => c.id === value)?.company || value;
 
@@ -429,6 +433,7 @@ export default function PosPage() {
     const [selectedCustomerId, setSelectedCustomerId] = React.useState('walk-in');
     const [orderNotes, setOrderNotes] = React.useState('');
     const [activeCategory, setActiveCategory] = React.useState('All');
+    const [finalDocumentType, setFinalDocumentType] = React.useState<'Invoice' | 'Receipt'>('Receipt');
     
     const [orderDiscount, setOrderDiscount] = React.useState(0);
     const [orderDiscountType, setOrderDiscountType] = React.useState<'%' | 'fixed'>('%');
@@ -436,6 +441,11 @@ export default function PosPage() {
     const customerName = selectedCustomerId === 'walk-in'
         ? 'Walk-in Customer'
         : customers.find(c => c.id === selectedCustomerId)?.company || 'Walk-in Customer';
+
+    const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
+    const hasGstin = !!(selectedCustomer && selectedCustomer.gstin && selectedCustomer.gstin !== '-');
+    const isPaidInFull = !cart.some(p => p.discountType === 'fixed'); // simplified logic
+    const shouldGenerateInvoice = hasGstin || !isPaidInFull;
 
 
     React.useEffect(() => {
@@ -544,8 +554,17 @@ export default function PosPage() {
     }, [cart, orderDiscount, orderDiscountType]);
 
     const handlePaymentSuccess = (payments: Payment[]) => {
-        // Here you would typically save the order to a database
-        console.log('Order completed with payments:', payments);
+        const customer = customers.find(c => c.id === selectedCustomerId);
+        const hasGstin = !!(customer && customer.gstin && customer.gstin !== '-');
+        const isPaidInFull = !payments.some(p => p.method === 'pay-later');
+        
+        const docType: 'Invoice' | 'Receipt' = (hasGstin || !isPaidInFull) ? 'Invoice' : 'Receipt';
+        setFinalDocumentType(docType);
+
+        toast({
+            title: `${docType} Created!`,
+            description: `Paid ${formatCurrency(cartTotals.total, 'INR')}.`
+        });
         setIsOrderComplete(true);
     };
 
@@ -723,12 +742,12 @@ export default function PosPage() {
                  <div className={cn("flex-col h-full bg-card rounded-lg shadow-sm print:hidden", isOrderComplete ? 'flex' : 'hidden')}>
                     <CardContent className="flex-1 flex flex-col items-center justify-center text-center p-6">
                         <CheckCircle2 className="h-16 w-16 text-green-500 mb-4" />
-                        <h2 className="text-2xl font-semibold">Payment Successful!</h2>
-                        <p className="text-muted-foreground mt-2">The order has been completed.</p>
+                        <h2 className="text-2xl font-semibold">{finalDocumentType} Created!</h2>
+                        <p className="text-muted-foreground mt-2">The order has been completed successfully.</p>
                          <div className="flex gap-4 mt-8">
                             <Button size="lg" variant="outline" onClick={handlePrintReceipt}>
                                 <Printer className="mr-2 h-4 w-4" />
-                                Print Receipt
+                                Print {finalDocumentType}
                             </Button>
                              <Button size="lg" onClick={handleNewOrder}>
                                 <PlusCircle className="mr-2 h-4 w-4" />
@@ -753,6 +772,7 @@ export default function PosPage() {
                 cart={cart}
                 totals={cartTotals}
                 customerName={customerName}
+                documentType={shouldGenerateInvoice ? 'Invoice' : 'Receipt'}
             />
 
             <AlertDialog open={isClearCartAlertOpen} onOpenChange={setIsClearCartAlertOpen}>
@@ -776,3 +796,4 @@ export default function PosPage() {
         </div>
     );
 }
+
