@@ -214,7 +214,8 @@ const BillPreviewDialog = ({
     cart,
     totals,
     customerName,
-    documentType
+    documentType,
+    documentNumber,
   }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -222,6 +223,7 @@ const BillPreviewDialog = ({
     totals: { subtotal: number; itemDiscount: number, orderDiscount: number, gst: number; total: number };
     customerName: string;
     documentType: 'Invoice' | 'Receipt';
+    documentNumber: string;
   }) => {
     const handlePrint = () => {
       // A bit of a hack to print just the dialog content
@@ -242,9 +244,9 @@ const BillPreviewDialog = ({
             <h3 className="text-center font-bold text-lg">
                 {documentType === 'Invoice' ? 'Tax Invoice' : 'Hicks Inc.'}
             </h3>
-            <p className="text-center text-xs">{new Date().toLocaleString()}</p>
+            <p className="text-center text-xs">{documentType} #: {documentNumber}</p>
+            <p className="text-center text-xs">Date: {format(new Date(), 'dd-MMM-yyyy')}</p>
             <Separator className="my-2 border-black" />
-            <p>Date: {format(new Date(), 'dd-MMM-yyyy')}</p>
             <p>Customer: {customerName}</p>
             <Separator className="my-2 border-black" />
             <table className="w-full">
@@ -746,26 +748,24 @@ export default function PosPage() {
                                     <div className="flex justify-between items-center text-lg font-bold">
                                         <div className="flex items-center gap-1.5">
                                             <span>Total</span>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground">
-                                                        <Eye className="h-4 w-4" />
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p>{documentType} No: {documentNumber}</p>
-                                                </TooltipContent>
-                                            </Tooltip>
+                                            <DialogTrigger asChild>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground" onClick={() => setIsPreviewOpen(true)}>
+                                                                <Eye className="h-4 w-4" />
+                                                            </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>{documentType} No: {documentNumber}</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </DialogTrigger>
                                         </div>
                                         <span className="font-mono">{formatCurrency(cartTotals.total, 'INR')}</span>
                                     </div>
                                 </div>
-                                <div className="flex gap-2 w-full mt-4">
-                                    <Button size="lg" variant="outline" className="w-full" onClick={() => setIsPreviewOpen(true)}>
-                                        <Eye className="mr-2 h-5 w-5" />
-                                        Preview {documentType}
-                                    </Button>
-                                    <Button size="lg" className="w-full" onClick={() => setIsPaymentDialogOpen(true)}>
+                                <div className="w-full mt-4">
+                                     <Button size="lg" className="w-full" onClick={() => setIsPaymentDialogOpen(true)}>
                                         <CreditCard className="mr-2 h-5 w-5" />
                                         Pay Now
                                     </Button>
@@ -808,6 +808,7 @@ export default function PosPage() {
                     totals={cartTotals}
                     customerName={customerName}
                     documentType={documentType}
+                    documentNumber={documentNumber}
                 />
 
                 <AlertDialog open={isClearCartAlertOpen} onOpenChange={setIsClearCartAlertOpen}>
