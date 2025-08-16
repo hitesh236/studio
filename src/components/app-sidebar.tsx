@@ -50,8 +50,14 @@ import * as React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 export function AppSidebar() {
-  const { state, isMobile, setOpenMobile } = useSidebar();
+  const { state, isMobile, setOpen, setOpenMobile } = useSidebar();
   const pathname = usePathname();
+
+  React.useEffect(() => {
+    if (pathname === '/pos') {
+      setOpen(false);
+    }
+  }, [pathname, setOpen]);
 
   const handleLinkClick = () => {
     if (isMobile) {
@@ -288,7 +294,7 @@ export function AppSidebar() {
             </SidebarMenu>
         </SidebarGroup>
         <SidebarSeparator />
-        <div className="flex items-center gap-2 p-2">
+        <div className="flex items-center gap-2 p-2.5">
             <Avatar className="h-8 w-8">
                 <AvatarImage src="https://placehold.co/40x40.png" alt="@shadcn" data-ai-hint="profile picture" />
                 <AvatarFallback>JD</AvatarFallback>
