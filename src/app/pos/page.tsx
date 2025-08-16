@@ -2,11 +2,12 @@
 'use client';
 
 import * as React from 'react';
-import { Search, Barcode, Plus, Minus, Trash2, X, CreditCard, Printer, Package, CheckCircle2, PlusCircle, Eye } from 'lucide-react';
+import { Search, Barcode, Plus, Minus, Trash2, X, CreditCard, Printer, Package, CheckCircle2, PlusCircle, Eye, ChevronsUpDown, Check as CheckIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { generateStockListData, type StockItem } from '@/app/stock-list/data';
+import { generateData, type Person } from '@/lib/data';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -19,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogClose,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -34,6 +36,8 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 
 type CartItem = StockItem & { quantity: number };
@@ -225,11 +229,125 @@ const BillPreviewDialog = ({
         </DialogContent>
       </Dialog>
     );
-  };
+};
+
+const AddCustomerDialog = ({ open, onOpenChange, onCustomerAdd }: { open: boolean, onOpenChange: (open: boolean) => void, onCustomerAdd: (customer: Person) => void }) => {
+    const [name, setName] = React.useState('');
+    const [phone, setPhone] = React.useState('');
+
+    const handleSave = () => {
+        const newCustomer: Person = {
+            id: `cust-${Date.now()}`,
+            firstName: name.split(' ')[0] || '',
+            lastName: name.split(' ').slice(1).join(' ') || '',
+            email: '',
+            company: name,
+            phone: phone,
+            saleAmount: 0,
+            rating: 0,
+            status: 'Active',
+            address: { street: '', city: '', state: '', zip: '' },
+            bio: 'Customer added from POS.',
+        };
+        onCustomerAdd(newCustomer);
+        onOpenChange(false);
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Add New Customer</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="new-cust-name" className="text-right">Name</Label>
+                        <Input id="new-cust-name" value={name} onChange={e => setName(e.target.value)} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="new-cust-phone" className="text-right">Phone</Label>
+                        <Input id="new-cust-phone" value={phone} onChange={e => setPhone(e.target.value)} className="col-span-3" />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                    <Button onClick={handleSave}>Save Customer</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+const CustomerCombobox = ({
+    value,
+    onChange,
+    customers,
+    onCustomerAdd,
+}: {
+    value: string;
+    onChange: (value: string) => void;
+    customers: Person[];
+    onCustomerAdd: (customer: Person) => void;
+}) => {
+    const [open, setOpen] = React.useState(false);
+    const [isAddCustomerOpen, setIsAddCustomerOpen] = React.useState(false);
+    const [search, setSearch] = React.useState('');
+    const walkInCustomer = { id: 'walk-in', company: 'Walk-in Customer', phone: '' };
+    
+    const displayValue = value === 'walk-in' ? 'Walk-in Customer' : customers.find(c => c.id === value)?.company || value;
+
+    return (
+        <>
+            <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                    <Button variant="outline" role="combobox" className="w-full justify-between">
+                        {displayValue}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                    <Command filter={(value, search) => {
+                        const customer = customers.find(c => c.id === value);
+                        if (customer?.company.toLowerCase().includes(search.toLowerCase()) || customer?.phone.includes(search)) return 1;
+                        return 0;
+                    }}>
+                        <CommandInput placeholder="Search by name or phone..." onValueChange={setSearch} />
+                        <CommandList>
+                            <CommandEmpty>
+                                <Button variant="ghost" className="w-full" onClick={() => { setIsAddCustomerOpen(true); setOpen(false); }}>
+                                    <PlusCircle className="mr-2 h-4 w-4" /> Add "{search}" as a new customer
+                                </Button>
+                            </CommandEmpty>
+                            <CommandGroup>
+                                {[walkInCustomer, ...customers].map(customer => (
+                                    <CommandItem
+                                        key={customer.id}
+                                        value={customer.id}
+                                        onSelect={(currentValue) => {
+                                            onChange(currentValue);
+                                            setOpen(false);
+                                        }}
+                                    >
+                                        <CheckIcon className={cn("mr-2 h-4 w-4", value === customer.id ? "opacity-100" : "opacity-0")} />
+                                        <span>{customer.company}</span>
+                                        {customer.phone && <span className="ml-2 text-muted-foreground text-xs">{customer.phone}</span>}
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
+            <AddCustomerDialog open={isAddCustomerOpen} onOpenChange={setIsAddCustomerOpen} onCustomerAdd={onCustomerAdd} />
+        </>
+    );
+};
+
 
 export default function PosPage() {
     const { toast } = useToast();
     const [products, setProducts] = React.useState<StockItem[]>([]);
+    const [customers, setCustomers] = React.useState<Person[]>([]);
     const [filteredProducts, setFilteredProducts] = React.useState<StockItem[]>([]);
     const [searchTerm, setSearchTerm] = React.useState('');
     const [cart, setCart] = React.useState<CartItem[]>([]);
@@ -237,11 +355,18 @@ export default function PosPage() {
     const [isOrderComplete, setIsOrderComplete] = React.useState(false);
     const [isClearCartAlertOpen, setIsClearCartAlertOpen] = React.useState(false);
     const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
-    const [customerName, setCustomerName] = React.useState('Walk-in Customer');
+    const [selectedCustomerId, setSelectedCustomerId] = React.useState('walk-in');
+    
+    const customerName = selectedCustomerId === 'walk-in'
+        ? 'Walk-in Customer'
+        : customers.find(c => c.id === selectedCustomerId)?.company || 'Walk-in Customer';
+
 
     React.useEffect(() => {
         const productData = generateStockListData(50);
+        const customerData = generateData(20);
         setProducts(productData);
+        setCustomers(customerData);
         setFilteredProducts(productData);
     }, []);
 
@@ -281,6 +406,11 @@ export default function PosPage() {
     const removeFromCart = (productId: string) => {
         setCart(prevCart => prevCart.filter(item => item.id !== productId));
     };
+    
+    const handleCustomerAdd = (newCustomer: Person) => {
+        setCustomers(prev => [...prev, newCustomer]);
+        setSelectedCustomerId(newCustomer.id);
+    };
 
     const cartTotals = React.useMemo(() => {
         const subtotal = cart.reduce((acc, item) => acc + (item.sellingPrice * item.quantity), 0);
@@ -299,7 +429,7 @@ export default function PosPage() {
         setCart([]);
         setIsOrderComplete(false);
         setSearchTerm('');
-        setCustomerName('Walk-in Customer');
+        setSelectedCustomerId('walk-in');
     };
     
     const handlePrintReceipt = () => {
@@ -342,7 +472,12 @@ export default function PosPage() {
                     </div>
                     <div className="pt-2">
                         <Label htmlFor="customer-name">Customer</Label>
-                        <Input id="customer-name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+                        <CustomerCombobox
+                            value={selectedCustomerId}
+                            onChange={setSelectedCustomerId}
+                            customers={customers}
+                            onCustomerAdd={handleCustomerAdd}
+                        />
                     </div>
                 </CardHeader>
                 <CardContent className="flex-1 p-4 pt-0">
