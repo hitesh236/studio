@@ -39,6 +39,7 @@ import { format } from 'date-fns';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 type CartItem = StockItem & { 
@@ -70,76 +71,134 @@ const ProductCard = ({ product, onAddToCart }: { product: StockItem, onAddToCart
     )
 }
 
-const PaymentDialog = ({ open, onOpenChange, totalAmount, onPaymentSuccess }: { open: boolean, onOpenChange: (open: boolean) => void, totalAmount: number, onPaymentSuccess: (method: string) => void }) => {
+type Payment = {
+    id: number;
+    method: 'cash' | 'card' | 'upi' | 'pay-later';
+    amount: number;
+};
+
+const PaymentDialog = ({ open, onOpenChange, totalAmount, onPaymentSuccess }: { open: boolean, onOpenChange: (open: boolean) => void, totalAmount: number, onPaymentSuccess: (payments: Payment[]) => void }) => {
     const { toast } = useToast();
-    const [paymentMethod, setPaymentMethod] = React.useState('cash');
-    const [amountReceived, setAmountReceived] = React.useState<number | string>('');
-    const [change, setChange] = React.useState(0);
+    const [payments, setPayments] = React.useState<Payment[]>([]);
 
     React.useEffect(() => {
         if (open) {
-            setAmountReceived(totalAmount.toFixed(2));
-            setChange(0);
+            setPayments([{ id: 1, method: 'cash', amount: totalAmount }]);
+        } else {
+            setPayments([]);
         }
     }, [open, totalAmount]);
+
+    const totalPaid = React.useMemo(() => payments.reduce((sum, p) => sum + p.amount, 0), [payments]);
+    const remainingAmount = totalAmount - totalPaid;
+
+    const handleAddPayment = () => {
+        setPayments(prev => [...prev, { id: Date.now(), method: 'card', amount: 0 }]);
+    };
+
+    const handleRemovePayment = (id: number) => {
+        setPayments(prev => prev.filter(p => p.id !== id));
+    };
     
-    React.useEffect(() => {
-        const received = parseFloat(String(amountReceived));
-        if (!isNaN(received) && received >= totalAmount) {
-            setChange(received - totalAmount);
-        } else {
-            setChange(0);
-        }
-    }, [amountReceived, totalAmount]);
+    const handleUpdatePayment = (id: number, field: 'method' | 'amount', value: string | number) => {
+        setPayments(prev => prev.map(p => {
+            if (p.id === id) {
+                 const newPayment = { ...p, [field]: value };
+                 if (field === 'method' && value === 'pay-later') {
+                    newPayment.amount = totalAmount - payments.filter(pay => pay.id !== id).reduce((sum, pay) => sum + pay.amount, 0);
+                 }
+                 return newPayment;
+            }
+            return p;
+        }));
+    };
 
     const handleConfirmPayment = () => {
-        if (!paymentMethod) {
-            toast({ title: 'Payment method required', variant: 'destructive' });
+        if (Math.abs(remainingAmount) > 0.01) {
+            toast({ title: 'Payment Mismatch', description: 'The total paid amount does not match the total due.', variant: 'destructive' });
             return;
         }
-        toast({ title: 'Payment Successful!', description: `Paid ${formatCurrency(totalAmount, 'INR')} via ${paymentMethod}.` });
-        onPaymentSuccess(paymentMethod);
+        toast({ title: 'Payment Successful!', description: `Paid ${formatCurrency(totalAmount, 'INR')}.` });
+        onPaymentSuccess(payments);
         onOpenChange(false);
     }
     
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Complete Payment</DialogTitle>
-                    <DialogDescription>Select a payment method and confirm the transaction.</DialogDescription>
                 </DialogHeader>
-                <div className="space-y-6 py-4">
-                    <div className="text-center">
-                        <p className="text-sm text-muted-foreground">Total Amount Due</p>
-                        <p className="text-5xl font-bold font-mono tracking-tight">{formatCurrency(totalAmount, 'INR')}</p>
+                <div className="space-y-4 py-4">
+                    <div className="flex justify-between items-baseline bg-muted p-4 rounded-lg">
+                        <span className="text-muted-foreground">Total Amount Due</span>
+                        <span className="text-2xl font-bold font-mono tracking-tight">{formatCurrency(totalAmount, 'INR')}</span>
                     </div>
-                     <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="grid grid-cols-3 gap-4">
-                        {(['Cash', 'Card', 'UPI'] as const).map(method => (
-                            <div key={method}>
-                                <RadioGroupItem value={method.toLowerCase()} id={method.toLowerCase()} className="peer sr-only" />
-                                <Label htmlFor={method.toLowerCase()} className="flex items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
-                                   {method}
-                                </Label>
+
+                    <div className="space-y-3">
+                        {payments.map((payment) => (
+                            <div key={payment.id} className="flex items-end gap-2">
+                                <div className="flex-1">
+                                    <Label htmlFor={`method-${payment.id}`}>Payment Method</Label>
+                                    <Select
+                                        value={payment.method}
+                                        onValueChange={(value) => handleUpdatePayment(payment.id, 'method', value)}
+                                    >
+                                        <SelectTrigger id={`method-${payment.id}`}>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="cash">Cash</SelectItem>
+                                            <SelectItem value="card">Card</SelectItem>
+                                            <SelectItem value="upi">UPI</SelectItem>
+                                            <SelectItem value="pay-later">Pay Later</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="w-32">
+                                     <Label htmlFor={`amount-${payment.id}`}>Amount</Label>
+                                     <Input
+                                        id={`amount-${payment.id}`}
+                                        type="number"
+                                        value={payment.amount}
+                                        onChange={(e) => handleUpdatePayment(payment.id, 'amount', parseFloat(e.target.value) || 0)}
+                                        placeholder="0.00"
+                                        readOnly={payment.method === 'pay-later'}
+                                     />
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-destructive shrink-0"
+                                    onClick={() => handleRemovePayment(payment.id)}
+                                    disabled={payments.length <= 1}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
                             </div>
                         ))}
-                    </RadioGroup>
-                    {paymentMethod === 'cash' && (
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="amount-received">Amount Received</Label>
-                                <Input id="amount-received" type="number" value={amountReceived} onChange={(e) => setAmountReceived(e.target.value)} placeholder="0.00" />
-                            </div>
-                             <div className="space-y-2">
-                                <Label>Change to Return</Label>
-                                <Input value={formatCurrency(change, 'INR')} readOnly className="font-mono" />
-                            </div>
-                        </div>
+                    </div>
+
+                    {remainingAmount > 0.01 && (
+                         <Button variant="outline" className="w-full" onClick={handleAddPayment}>
+                            <PlusCircle className="mr-2 h-4 w-4" /> Add Payment Method
+                        </Button>
                     )}
+
+                    <div className={cn(
+                        "flex justify-between items-baseline p-4 rounded-lg",
+                        remainingAmount > 0.01 ? "bg-red-100 dark:bg-red-900/50 text-red-600" : "bg-green-100 dark:bg-green-900/50 text-green-600"
+                    )}>
+                        <span className="font-medium">
+                             {remainingAmount > 0.01 ? "Remaining Amount" : "Change"}
+                        </span>
+                        <span className="text-2xl font-bold font-mono tracking-tight">{formatCurrency(Math.abs(remainingAmount), 'INR')}</span>
+                    </div>
+
                 </div>
                 <DialogFooter>
                     <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-                    <Button onClick={handleConfirmPayment} disabled={!paymentMethod || (paymentMethod === 'cash' && parseFloat(String(amountReceived)) < totalAmount)}>
+                    <Button onClick={handleConfirmPayment} disabled={Math.abs(remainingAmount) > 0.01}>
                         Confirm Payment
                     </Button>
                 </DialogFooter>
@@ -484,9 +543,9 @@ export default function PosPage() {
         return { subtotal, itemDiscount, orderDiscount: orderDiscountAmount, gst, total };
     }, [cart, orderDiscount, orderDiscountType]);
 
-    const handlePaymentSuccess = (method: string) => {
+    const handlePaymentSuccess = (payments: Payment[]) => {
         // Here you would typically save the order to a database
-        console.log('Order completed with payment method:', method);
+        console.log('Order completed with payments:', payments);
         setIsOrderComplete(true);
     };
 
@@ -717,4 +776,3 @@ export default function PosPage() {
         </div>
     );
 }
-
