@@ -38,9 +38,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Textarea } from '@/components/ui/textarea';
 
 
-type CartItem = StockItem & { quantity: number };
+type CartItem = StockItem & { quantity: number; discount: number; };
 
 const ProductCard = ({ product, onAddToCart }: { product: StockItem, onAddToCart: (product: StockItem) => void }) => {
     return (
@@ -153,7 +154,7 @@ const BillPreviewDialog = ({
     open: boolean;
     onOpenChange: (open: boolean) => void;
     cart: CartItem[];
-    totals: { subtotal: number; gst: number; total: number };
+    totals: { subtotal: number; discount: number, gst: number; total: number };
     customerName: string;
   }) => {
     const handlePrint = () => {
@@ -205,6 +206,12 @@ const BillPreviewDialog = ({
                   <span>Subtotal:</span>
                   <span>{totals.subtotal.toFixed(2)}</span>
                 </div>
+                {totals.discount > 0 && (
+                    <div className="flex justify-between">
+                        <span>Discount:</span>
+                        <span>- {totals.discount.toFixed(2)}</span>
+                    </div>
+                )}
                 <div className="flex justify-between">
                   <span>GST:</span>
                   <span>{totals.gst.toFixed(2)}</span>
@@ -356,6 +363,8 @@ export default function PosPage() {
     const [isClearCartAlertOpen, setIsClearCartAlertOpen] = React.useState(false);
     const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
     const [selectedCustomerId, setSelectedCustomerId] = React.useState('walk-in');
+    const [orderNotes, setOrderNotes] = React.useState('');
+    const [activeCategory, setActiveCategory] = React.useState('All');
     
     const customerName = selectedCustomerId === 'walk-in'
         ? 'Walk-in Customer'
@@ -370,13 +379,24 @@ export default function PosPage() {
         setFilteredProducts(productData);
     }, []);
 
+    const productCategories = React.useMemo(() => {
+        const cats = new Set(products.map(p => p.category));
+        return ['All', ...Array.from(cats)];
+    }, [products]);
+
     React.useEffect(() => {
-        const results = products.filter(p => 
-            p.productName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-            p.sku.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+        let results = products;
+        if (activeCategory !== 'All') {
+            results = results.filter(p => p.category === activeCategory);
+        }
+        if (searchTerm) {
+            results = results.filter(p => 
+                p.productName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                p.sku.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
         setFilteredProducts(results);
-    }, [searchTerm, products]);
+    }, [searchTerm, products, activeCategory]);
     
     const addToCart = (product: StockItem) => {
         setCart(prevCart => {
@@ -386,7 +406,7 @@ export default function PosPage() {
                     item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
                 );
             } else {
-                return [...prevCart, { ...product, quantity: 1 }];
+                return [...prevCart, { ...product, quantity: 1, discount: 0 }];
             }
         });
     };
@@ -402,6 +422,14 @@ export default function PosPage() {
             }).filter(Boolean) as CartItem[];
         });
     };
+    
+    const updateDiscount = (productId: string, discount: number) => {
+        setCart(prevCart => 
+            prevCart.map(item => 
+                item.id === productId ? { ...item, discount: Math.max(0, Math.min(100, discount)) } : item
+            )
+        );
+    };
 
     const removeFromCart = (productId: string) => {
         setCart(prevCart => prevCart.filter(item => item.id !== productId));
@@ -414,9 +442,11 @@ export default function PosPage() {
 
     const cartTotals = React.useMemo(() => {
         const subtotal = cart.reduce((acc, item) => acc + (item.sellingPrice * item.quantity), 0);
-        const gst = subtotal * 0.18; // Assume flat 18% GST for simplicity
-        const total = subtotal + gst;
-        return { subtotal, gst, total };
+        const discount = cart.reduce((acc, item) => acc + (item.sellingPrice * item.quantity * (item.discount / 100)), 0);
+        const taxableAmount = subtotal - discount;
+        const gst = taxableAmount * 0.18; // Assume flat 18% GST for simplicity
+        const total = taxableAmount + gst;
+        return { subtotal, discount, gst, total };
     }, [cart]);
 
     const handlePaymentSuccess = (method: string) => {
@@ -430,6 +460,8 @@ export default function PosPage() {
         setIsOrderComplete(false);
         setSearchTerm('');
         setSelectedCustomerId('walk-in');
+        setOrderNotes('');
+        setActiveCategory('All');
     };
     
     const handlePrintReceipt = () => {
@@ -440,17 +472,26 @@ export default function PosPage() {
         <div className="h-[calc(100vh-theme(spacing.14))] grid md:grid-cols-[2fr_1fr] gap-6 p-4 bg-muted/40 print:block print:p-0">
             {/* Left Side - Products */}
             <div className="flex flex-col h-full bg-card rounded-lg shadow-sm print:hidden">
-                <div className="p-4 border-b">
+                <div className="p-4 border-b space-y-4">
                     <div className="flex gap-2">
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="Search by name or SKU..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
+                            <Input autoFocus placeholder="Search by name or SKU..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
                         </div>
                         <div className="relative">
                             <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input placeholder="Scan Barcode" className="pl-10" />
                         </div>
                     </div>
+                    <ScrollArea className="w-full whitespace-nowrap">
+                        <div className="flex gap-2 pb-2">
+                            {productCategories.map(cat => (
+                                <Button key={cat} variant={activeCategory === cat ? 'default' : 'outline'} onClick={() => setActiveCategory(cat)}>
+                                    {cat}
+                                </Button>
+                            ))}
+                        </div>
+                    </ScrollArea>
                 </div>
                  <ScrollArea className="flex-1 p-4">
                     <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -500,14 +541,23 @@ export default function PosPage() {
                                                 <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateQuantity(item.id, -1)}><Minus className="h-3 w-3" /></Button>
                                                 <span className="w-6 text-center font-mono">{item.quantity}</span>
                                                 <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateQuantity(item.id, 1)}><Plus className="h-3 w-3" /></Button>
+                                                <div className="relative w-20 ml-2">
+                                                    <Input type="number" value={item.discount} onChange={e => updateDiscount(item.id, parseInt(e.target.value) || 0)} className="h-6 pl-2 pr-5 text-xs text-right" placeholder="Disc %" />
+                                                    <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">%</span>
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="font-mono font-semibold">{formatCurrency(item.sellingPrice * item.quantity, 'INR')}</p>
+                                            <p className="font-mono font-semibold">{formatCurrency(item.sellingPrice * item.quantity * (1 - item.discount / 100), 'INR')}</p>
                                             <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground mt-2" onClick={() => removeFromCart(item.id)}><X className="h-4 w-4" /></Button>
                                         </div>
                                     </div>
                                 ))}
+                                <Separator />
+                                <div className="space-y-2">
+                                    <Label htmlFor="order-notes">Order Notes</Label>
+                                    <Textarea id="order-notes" value={orderNotes} onChange={e => setOrderNotes(e.target.value)} placeholder="e.g., No onions" rows={2} />
+                                </div>
                             </div>
                         </ScrollArea>
                     )}
@@ -519,6 +569,12 @@ export default function PosPage() {
                                 <span className="text-muted-foreground">Subtotal</span>
                                 <span className="font-mono">{formatCurrency(cartTotals.subtotal, 'INR')}</span>
                             </div>
+                            {cartTotals.discount > 0 && (
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Discount</span>
+                                    <span className="font-mono text-destructive">- {formatCurrency(cartTotals.discount, 'INR')}</span>
+                                </div>
+                            )}
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">GST (18%)</span>
                                 <span className="font-mono">{formatCurrency(cartTotals.gst, 'INR')}</span>
