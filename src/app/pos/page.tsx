@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { Search, Barcode, Plus, Minus, Trash2, X, CreditCard, Printer, Package, CheckCircle2, PlusCircle, Eye, ChevronsUpDown, Check as CheckIcon } from 'lucide-react';
+import { Search, Barcode, Plus, Minus, Trash2, X, CreditCard, Printer, Eye, ChevronsUpDown, Check as CheckIcon, Package, CheckCircle2, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -255,6 +255,7 @@ const AddCustomerDialog = ({ open, onOpenChange, onCustomerAdd }: { open: boolea
             status: 'Active',
             address: { street: '', city: '', state: '', zip: '' },
             bio: 'Customer added from POS.',
+            gstin: '',
         };
         onCustomerAdd(newCustomer);
         onOpenChange(false);
@@ -315,7 +316,7 @@ const CustomerCombobox = ({
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                     <Command filter={(value, search) => {
                         const customer = customers.find(c => c.id === value);
-                        if (customer?.company.toLowerCase().includes(search.toLowerCase()) || customer?.phone.includes(search)) return 1;
+                        if (customer?.company.toLowerCase().includes(search.toLowerCase()) || customer?.phone?.includes(search)) return 1;
                         return 0;
                     }}>
                         <CommandInput placeholder="Search by name or phone..." onValueChange={setSearch} />
@@ -469,67 +470,67 @@ export default function PosPage() {
     };
 
     return (
-        <div className="h-[calc(100vh-theme(spacing.14))] grid md:grid-cols-[2fr_1fr] gap-6 p-4 bg-muted/40 print:block print:p-0">
-            {/* Left Side - Products */}
-            <div className="flex flex-col h-full bg-card rounded-lg shadow-sm print:hidden">
-                <div className="p-4 border-b space-y-4">
-                    <div className="flex gap-2">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input autoFocus placeholder="Search by name or SKU..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
+        <div className="h-screen flex flex-col print:block print:p-0">
+            <div className="flex-1 grid md:grid-cols-[1fr_420px] gap-6 p-4 bg-muted/40 overflow-hidden">
+                {/* Left Side - Products */}
+                <div className="flex flex-col h-full bg-card rounded-lg shadow-sm print:hidden overflow-hidden">
+                    <div className="p-4 border-b space-y-4">
+                        <div className="flex gap-2">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input autoFocus placeholder="Search by name or SKU..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
+                            </div>
+                            <div className="relative">
+                                <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input placeholder="Scan Barcode" className="pl-10" />
+                            </div>
                         </div>
-                        <div className="relative">
-                            <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="Scan Barcode" className="pl-10" />
-                        </div>
+                        <ScrollArea className="w-full whitespace-nowrap">
+                            <div className="flex gap-2 pb-2">
+                                {productCategories.map(cat => (
+                                    <Button key={cat} variant={activeCategory === cat ? 'default' : 'outline'} onClick={() => setActiveCategory(cat)}>
+                                        {cat}
+                                    </Button>
+                                ))}
+                            </div>
+                        </ScrollArea>
                     </div>
-                    <ScrollArea className="w-full whitespace-nowrap">
-                        <div className="flex gap-2 pb-2">
-                            {productCategories.map(cat => (
-                                <Button key={cat} variant={activeCategory === cat ? 'default' : 'outline'} onClick={() => setActiveCategory(cat)}>
-                                    {cat}
-                                </Button>
+                     <ScrollArea className="flex-1 p-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            {filteredProducts.map(p => (
+                                <ProductCard key={p.id} product={p} onAddToCart={addToCart} />
                             ))}
                         </div>
-                    </ScrollArea>
+                     </ScrollArea>
                 </div>
-                 <ScrollArea className="flex-1 p-4">
-                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {filteredProducts.map(p => (
-                            <ProductCard key={p.id} product={p} onAddToCart={addToCart} />
-                        ))}
-                    </div>
-                 </ScrollArea>
-            </div>
 
-            {/* Right Side - Cart */}
-            <div className={cn("flex-col h-full bg-card rounded-lg shadow-sm", isOrderComplete ? 'hidden print:flex' : 'flex')}>
-                <CardHeader>
-                    <div className="flex justify-between items-center">
-                        <CardTitle>Current Order</CardTitle>
-                        {cart.length > 0 && (
-                            <Button variant="destructive" size="sm" onClick={() => setIsClearCartAlertOpen(true)}>Clear Cart</Button>
-                        )}
-                    </div>
-                    <div className="pt-2">
-                        <Label htmlFor="customer-name">Customer</Label>
-                        <CustomerCombobox
-                            value={selectedCustomerId}
-                            onChange={setSelectedCustomerId}
-                            customers={customers}
-                            onCustomerAdd={handleCustomerAdd}
-                        />
-                    </div>
-                </CardHeader>
-                <CardContent className="flex-1 p-4 pt-0">
-                    {cart.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-                            <Package className="h-12 w-12 mb-4" />
-                            <p>Your cart is empty.</p>
-                            <p className="text-xs">Select products to get started.</p>
+                {/* Right Side - Cart */}
+                <div className={cn("flex flex-col h-full bg-card rounded-lg shadow-sm overflow-hidden", isOrderComplete ? 'hidden print:flex' : 'flex')}>
+                    <CardHeader>
+                        <div className="flex justify-between items-center">
+                            <CardTitle>Current Order</CardTitle>
+                            {cart.length > 0 && (
+                                <Button variant="destructive" size="sm" onClick={() => setIsClearCartAlertOpen(true)}>Clear Cart</Button>
+                            )}
                         </div>
-                    ) : (
-                         <ScrollArea className="h-full pr-4 -mr-4">
+                        <div className="pt-2">
+                            <Label htmlFor="customer-name">Customer</Label>
+                            <CustomerCombobox
+                                value={selectedCustomerId}
+                                onChange={setSelectedCustomerId}
+                                customers={customers}
+                                onCustomerAdd={handleCustomerAdd}
+                            />
+                        </div>
+                    </CardHeader>
+                    <CardContent className="flex-1 p-4 pt-0 overflow-y-auto">
+                        {cart.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                                <Package className="h-12 w-12 mb-4" />
+                                <p>Your cart is empty.</p>
+                                <p className="text-xs">Select products to get started.</p>
+                            </div>
+                        ) : (
                             <div className="space-y-4">
                                 {cart.map(item => (
                                     <div key={item.id} className="flex items-start gap-4">
@@ -559,64 +560,65 @@ export default function PosPage() {
                                     <Textarea id="order-notes" value={orderNotes} onChange={e => setOrderNotes(e.target.value)} placeholder="e.g., No onions" rows={2} />
                                 </div>
                             </div>
-                        </ScrollArea>
-                    )}
-                </CardContent>
-                {cart.length > 0 && (
-                    <CardFooter className="flex-col !p-4 border-t">
-                        <div className="w-full space-y-1 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Subtotal</span>
-                                <span className="font-mono">{formatCurrency(cartTotals.subtotal, 'INR')}</span>
-                            </div>
-                            {cartTotals.discount > 0 && (
+                        )}
+                    </CardContent>
+                    {cart.length > 0 && (
+                        <CardFooter className="flex-col !p-4 border-t mt-auto">
+                            <div className="w-full space-y-1 text-sm">
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Discount</span>
-                                    <span className="font-mono text-destructive">- {formatCurrency(cartTotals.discount, 'INR')}</span>
+                                    <span className="text-muted-foreground">Subtotal</span>
+                                    <span className="font-mono">{formatCurrency(cartTotals.subtotal, 'INR')}</span>
                                 </div>
-                            )}
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">GST (18%)</span>
-                                <span className="font-mono">{formatCurrency(cartTotals.gst, 'INR')}</span>
+                                {cartTotals.discount > 0 && (
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Discount</span>
+                                        <span className="font-mono text-destructive">- {formatCurrency(cartTotals.discount, 'INR')}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">GST (18%)</span>
+                                    <span className="font-mono">{formatCurrency(cartTotals.gst, 'INR')}</span>
+                                </div>
+                                <Separator className="my-2" />
+                                <div className="flex justify-between text-lg font-bold">
+                                    <span>Total</span>
+                                    <span className="font-mono">{formatCurrency(cartTotals.total, 'INR')}</span>
+                                </div>
                             </div>
-                            <Separator className="my-2" />
-                            <div className="flex justify-between text-lg font-bold">
-                                <span>Total</span>
-                                <span className="font-mono">{formatCurrency(cartTotals.total, 'INR')}</span>
+                            <div className="flex gap-2 w-full mt-4">
+                                 <Button size="lg" variant="outline" className="w-full" onClick={() => setIsPreviewOpen(true)}>
+                                    <Eye className="mr-2 h-5 w-5" />
+                                    Preview
+                                </Button>
+                                <Button size="lg" className="w-full" onClick={() => setIsPaymentDialogOpen(true)}>
+                                    <CreditCard className="mr-2 h-5 w-5" />
+                                    Pay Now
+                                </Button>
                             </div>
-                        </div>
-                        <div className="flex gap-2 w-full mt-4">
-                             <Button size="lg" variant="outline" className="w-full" onClick={() => setIsPreviewOpen(true)}>
-                                <Eye className="mr-2 h-5 w-5" />
-                                Preview
+                        </CardFooter>
+                    )}
+                </div>
+
+                {/* Post-Order Screen */}
+                 <div className={cn("flex-col h-full bg-card rounded-lg shadow-sm print:hidden", isOrderComplete ? 'flex' : 'hidden')}>
+                    <CardContent className="flex-1 flex flex-col items-center justify-center text-center p-6">
+                        <CheckCircle2 className="h-16 w-16 text-green-500 mb-4" />
+                        <h2 className="text-2xl font-semibold">Payment Successful!</h2>
+                        <p className="text-muted-foreground mt-2">The order has been completed.</p>
+                         <div className="flex gap-4 mt-8">
+                            <Button size="lg" variant="outline" onClick={handlePrintReceipt}>
+                                <Printer className="mr-2 h-4 w-4" />
+                                Print Receipt
                             </Button>
-                            <Button size="lg" className="w-full" onClick={() => setIsPaymentDialogOpen(true)}>
-                                <CreditCard className="mr-2 h-5 w-5" />
-                                Pay Now
+                             <Button size="lg" onClick={handleNewOrder}>
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                New Order
                             </Button>
                         </div>
-                    </CardFooter>
-                )}
+                    </CardContent>
+                </div>
             </div>
 
-            {/* Post-Order Screen */}
-             <div className={cn("flex-col h-full bg-card rounded-lg shadow-sm print:hidden", isOrderComplete ? 'flex' : 'hidden')}>
-                <CardContent className="flex-1 flex flex-col items-center justify-center text-center p-6">
-                    <CheckCircle2 className="h-16 w-16 text-green-500 mb-4" />
-                    <h2 className="text-2xl font-semibold">Payment Successful!</h2>
-                    <p className="text-muted-foreground mt-2">The order has been completed.</p>
-                     <div className="flex gap-4 mt-8">
-                        <Button size="lg" variant="outline" onClick={handlePrintReceipt}>
-                            <Printer className="mr-2 h-4 w-4" />
-                            Print Receipt
-                        </Button>
-                         <Button size="lg" onClick={handleNewOrder}>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            New Order
-                        </Button>
-                    </div>
-                </CardContent>
-            </div>
 
             <PaymentDialog 
                 open={isPaymentDialogOpen} 
