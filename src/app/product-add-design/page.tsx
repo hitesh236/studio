@@ -600,7 +600,7 @@ export default function ProductAddDesignPage() {
                         Filter Industries ({selectedIndustries.length})
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" onPointerDownOutside={(e) => e.preventDefault()} onFocusOutside={(e) => e.preventDefault()}>
+                <DropdownMenuContent className="w-56">
                     <DropdownMenuLabel>Show Industries</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {industries.map(industry => (
@@ -746,4 +746,3 @@ export default function ProductAddDesignPage() {
     </div>
   );
 }
-
