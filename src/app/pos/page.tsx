@@ -305,9 +305,17 @@ const BillPreviewDialog = ({
     );
 };
 
-const AddCustomerDialog = ({ open, onOpenChange, onCustomerAdd }: { open: boolean, onOpenChange: (open: boolean) => void, onCustomerAdd: (customer: Person) => void }) => {
+const AddCustomerDialog = ({ open, onOpenChange, onCustomerAdd, initialValue }: { open: boolean, onOpenChange: (open: boolean) => void, onCustomerAdd: (customer: Person) => void, initialValue?: string }) => {
     const [name, setName] = React.useState('');
     const [phone, setPhone] = React.useState('');
+
+    React.useEffect(() => {
+        if (open) {
+            const isPhoneNumber = initialValue && /^\d{10,}$/.test(initialValue);
+            setName(isPhoneNumber ? '' : initialValue || '');
+            setPhone(isPhoneNumber ? initialValue || '' : '');
+        }
+    }, [open, initialValue]);
 
     const handleSave = () => {
         const newCustomer: Person = {
@@ -322,7 +330,7 @@ const AddCustomerDialog = ({ open, onOpenChange, onCustomerAdd }: { open: boolea
             status: 'Active',
             address: { street: '', city: '', state: '', zip: '' },
             bio: 'Customer added from POS.',
-            gstin: '',
+            gstin: '-',
         };
         onCustomerAdd(newCustomer);
         onOpenChange(false);
@@ -413,7 +421,7 @@ const CustomerCombobox = ({
                     </Command>
                 </PopoverContent>
             </Popover>
-            <AddCustomerDialog open={isAddCustomerOpen} onOpenChange={setIsAddCustomerOpen} onCustomerAdd={onCustomerAdd} />
+            <AddCustomerDialog open={isAddCustomerOpen} onOpenChange={setIsAddCustomerOpen} onCustomerAdd={onCustomerAdd} initialValue={search} />
         </>
     );
 };
@@ -444,8 +452,11 @@ export default function PosPage() {
 
     const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
     const hasGstin = !!(selectedCustomer && selectedCustomer.gstin && selectedCustomer.gstin !== '-');
-    const isPaidInFull = !cart.some(p => p.discountType === 'fixed'); // simplified logic
-    const shouldGenerateInvoice = hasGstin || !isPaidInFull;
+    
+    const shouldGenerateInvoice = (payments: Payment[]) => {
+        const isPaidInFull = !payments.some(p => p.method === 'pay-later');
+        return hasGstin || !isPaidInFull;
+    };
 
 
     React.useEffect(() => {
@@ -523,6 +534,10 @@ export default function PosPage() {
     const handleCustomerAdd = (newCustomer: Person) => {
         setCustomers(prev => [...prev, newCustomer]);
         setSelectedCustomerId(newCustomer.id);
+        toast({
+            title: "Customer Added",
+            description: `${newCustomer.company} has been added successfully.`
+        });
     };
 
     const cartTotals = React.useMemo(() => {
@@ -554,11 +569,7 @@ export default function PosPage() {
     }, [cart, orderDiscount, orderDiscountType]);
 
     const handlePaymentSuccess = (payments: Payment[]) => {
-        const customer = customers.find(c => c.id === selectedCustomerId);
-        const hasGstin = !!(customer && customer.gstin && customer.gstin !== '-');
-        const isPaidInFull = !payments.some(p => p.method === 'pay-later');
-        
-        const docType: 'Invoice' | 'Receipt' = (hasGstin || !isPaidInFull) ? 'Invoice' : 'Receipt';
+        const docType = shouldGenerateInvoice(payments) ? 'Invoice' : 'Receipt';
         setFinalDocumentType(docType);
 
         toast({
@@ -772,7 +783,7 @@ export default function PosPage() {
                 cart={cart}
                 totals={cartTotals}
                 customerName={customerName}
-                documentType={shouldGenerateInvoice ? 'Invoice' : 'Receipt'}
+                documentType={shouldGenerateInvoice([]) ? 'Invoice' : 'Receipt'}
             />
 
             <AlertDialog open={isClearCartAlertOpen} onOpenChange={setIsClearCartAlertOpen}>
@@ -796,4 +807,3 @@ export default function PosPage() {
         </div>
     );
 }
-
