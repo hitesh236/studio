@@ -587,7 +587,7 @@ export default function ProductAddDesignPage() {
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
-            <h1 className="text-2xl font-bold">Category and Attribute Management</h1>
+            <h1 className="text-2xl font-bold">Product Structuring</h1>
             <p className="text-muted-foreground">Select industries to filter categories and manage their attributes.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -624,7 +624,7 @@ export default function ProductAddDesignPage() {
         <aside className="w-full lg:w-72 shrink-0">
           <Card>
             <CardHeader>
-              <CardTitle className="text-[20px]">Categories</CardTitle>
+              <CardTitle className="text-[20px]">Product Categories</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-1">
@@ -659,9 +659,15 @@ export default function ProductAddDesignPage() {
 
         <main className="flex-1 space-y-8 w-full">
             <Card>
-                <CardHeader>
-                    <CardTitle>Attributes for: <span className="text-primary">{selectedCategory?.name || '...'}</span></CardTitle>
-                    <CardDescription>A table displaying attributes for the selected category.</CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle>Attributes for: <span className="text-primary">{selectedCategory?.name || '...'}</span></CardTitle>
+                        <CardDescription>A table displaying attributes for the selected category.</CardDescription>
+                    </div>
+                     <Button onClick={() => { setEditingAttribute(null); setIsAttributeDialogOpen(true); }}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Attribute
+                    </Button>
                 </CardHeader>
                 <CardContent>
                      <div className="rounded-md border">
@@ -733,13 +739,6 @@ export default function ProductAddDesignPage() {
             />
         </main>
       </div>
-        
-        <div className="fixed bottom-8 right-8 z-50">
-            <Button className="rounded-full shadow-lg h-14" onClick={() => { setEditingAttribute(null); setIsAttributeDialogOpen(true); }}>
-                <PlusCircle className="h-6 w-6" />
-                <span className="sr-only sm:not-sr-only sm:ml-2">Add Attribute</span>
-            </Button>
-        </div>
     </div>
   );
 }
