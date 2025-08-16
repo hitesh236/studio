@@ -114,7 +114,7 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
       <div
         className={cn(
           "flex items-center gap-1.5 py-1.5 px-2 rounded-md hover:bg-muted/50 group",
-          isSelected && "bg-primary text-primary-foreground hover:bg-primary/90"
+          isSelected && "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-black"
         )}
         style={{ paddingLeft: `${level * 0.75 + 0.5}rem` }}
       >
@@ -210,7 +210,7 @@ const CategoryDialog = ({ open, onOpenChange, onSave, categories, editingCategor
                             <Popover>
                                 <PopoverTrigger asChild>
                                     <Button variant="outline" role="combobox" className="w-full justify-between">
-                                        {selectedParent ? flattenedCategories.find(cat => cat.value === selectedParent)?.label.replace(/— /g, '') : "Select parent..."}
+                                        {selectedParent ? flattenedCategories.find(cat => cat.value === selectedParent)?.label.replace(/— /g, '') : "(No Parent)"}
                                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                     </Button>
                                 </PopoverTrigger>
@@ -371,7 +371,7 @@ const AttributeDialog = ({
 
 export default function ProductAddDesignPage() {
   const { toast } = useToast();
-  const [categories] = React.useState<Category[]>(initialCategoriesData);
+  const [categories, setCategories] = React.useState<Category[]>(initialCategoriesData);
   const [attributes, setAttributes] = React.useState<Attribute[]>(initialAttributes);
   
   const industries = React.useMemo(() => categories.map(cat => ({id: cat.id, name: cat.name})), [categories]);
@@ -434,21 +434,81 @@ export default function ProductAddDesignPage() {
     return null;
   }
 
-  const handleAddCategory = (name: string, parentId: string | null) => {
+  const handleSaveCategory = (name: string, parentId: string | null) => {
     const newCategory: Category = {
       id: name.toLowerCase().replace(/\s+/g, '-'),
       name: name,
+      children: [],
     };
-    // This part of the logic needs to be updated to handle the new categories state.
-    // For now, it's a placeholder.
-    toast({ title: "Category Added (placeholder)" });
-  };
-  
-  const handleEditCategory = (name: string, parentId: string | null) => {
-    if (!editingCategory) return;
-    // This part of the logic needs to be updated to handle editing.
-    // For now, it's a placeholder.
-    toast({ title: "Category Updated (placeholder)" });
+
+    if (editingCategory) {
+        // Edit logic
+        setCategories(prev => {
+            // Remove the old category first
+            const withoutOld = JSON.parse(JSON.stringify(prev));
+            let categoryToMove: Category | null = null;
+            
+            const findAndRemove = (cats: Category[]): Category[] => {
+                return cats.filter(c => {
+                    if (c.id === editingCategory.id) {
+                        categoryToMove = c;
+                        return false;
+                    }
+                    if (c.children) {
+                        c.children = findAndRemove(c.children);
+                    }
+                    return true;
+                });
+            }
+            const updatedCategories = findAndRemove(withoutOld);
+
+            if (!categoryToMove) return prev; // Should not happen
+            
+            // Update the category details
+            categoryToMove.name = name;
+            categoryToMove.id = name.toLowerCase().replace(/\s+/g, '-');
+            
+            // Add it to the new parent
+            if (!parentId) {
+                updatedCategories.push(categoryToMove);
+            } else {
+                 const addToParent = (cats: Category[]): boolean => {
+                    for (let cat of cats) {
+                        if (cat.id === parentId) {
+                            cat.children = [...(cat.children || []), categoryToMove as Category];
+                            return true;
+                        }
+                        if (cat.children && addToParent(cat.children)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                addToParent(updatedCategories);
+            }
+            return updatedCategories;
+        });
+        toast({ title: 'Category Updated' });
+    } else {
+        // Add logic
+        if (!parentId) {
+            setCategories(prev => [...prev, newCategory]);
+        } else {
+            const addRecursive = (cats: Category[]): Category[] => {
+                return cats.map(cat => {
+                    if (cat.id === parentId) {
+                        return { ...cat, children: [...(cat.children || []), newCategory] };
+                    }
+                    if (cat.children) {
+                        return { ...cat, children: addRecursive(cat.children) };
+                    }
+                    return cat;
+                });
+            }
+            setCategories(prev => addRecursive(prev));
+        }
+        toast({ title: 'Category Added' });
+    }
   };
 
   const handleSaveAttribute = (attrData: Omit<Attribute, 'id'>, id?: string) => {
@@ -526,7 +586,7 @@ export default function ProductAddDesignPage() {
               <CategoryDialog
                 open={isCategoryDialogOpen}
                 onOpenChange={setIsCategoryDialogOpen}
-                onSave={(name, parentId) => editingCategory ? handleEditCategory(name, parentId) : handleAddCategory(name, parentId)}
+                onSave={handleSaveCategory}
                 categories={categories}
                 editingCategory={editingCategory}
                 parentId={parentCategoryId}
