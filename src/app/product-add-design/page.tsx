@@ -114,7 +114,7 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
       <div
         className={cn(
           "flex items-center gap-1.5 py-1.5 px-2 rounded-md hover:bg-muted/50 group",
-          isSelected && "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+          isSelected && "bg-primary text-primary-foreground hover:bg-primary/90"
         )}
         style={{ paddingLeft: `${level * 0.75 + 0.5}rem` }}
       >
@@ -489,6 +489,7 @@ export default function ProductAddDesignPage() {
                         key={industry.id}
                         checked={selectedIndustries.includes(industry.id)}
                         onCheckedChange={() => handleToggleIndustry(industry.id)}
+                        onSelect={(e) => e.preventDefault()}
                     >
                         {industry.name}
                     </DropdownMenuCheckboxItem>
