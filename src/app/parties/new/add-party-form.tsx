@@ -64,48 +64,41 @@ const indianStates = [
 ];
 
 const partyFormSchema = z.object({
-  // Party Type
   partyType: z.enum(['customer', 'vendor', 'both']),
   gstinSearch: z.string().optional(),
-
-  // Common Fields
+  
+  // Basic Info
   businessName: z.string().min(1, 'Business Name is required.'),
   displayName: z.string().optional(),
   contactPerson: z.string().optional(),
-  phone: z.string().min(10, "Phone number must be at least 10 digits.").optional().or(z.literal('')),
+  phone: z.string().optional(),
   email: z.string().email("Invalid email address.").optional().or(z.literal('')),
   website: z.string().url('Invalid URL.').optional().or(z.literal('')),
+
+  // Address
   billingAddress: z.string().optional(),
   state: z.string().optional(),
   isShippingSame: z.boolean().default(true),
   shippingAddress: z.string().optional(),
+
+  // Tax
   gstin: z.string().length(15, "GSTIN must be 15 characters.").optional().or(z.literal('')),
   pan: z.string().length(10, 'PAN must be 10 characters.').optional().or(z.literal('')),
   placeOfSupply: z.string().optional(),
+  
+  // Accounting
   openingBalance: z.coerce.number().optional().default(0),
   balanceType: z.enum(['debit', 'credit']).default('debit'),
-  currency: z.string().optional(),
-  creditLimitDays: z.coerce.number().optional(),
-  notes: z.string().optional(),
-
-  // Customer-Specific
-  customerType: z.string().optional(),
-  salesPerson: z.string().optional(),
-  priceList: z.string().optional(),
   creditLimit: z.coerce.number().optional(),
-  loyaltyId: z.string().optional(),
+  creditLimitDays: z.coerce.number().int().optional(),
+  paymentTerms: z.string().optional(),
+  currency: z.string().optional(),
 
-  // Vendor-Specific
-  vendorType: z.string().optional(),
-  purchaseCategory: z.string().optional(),
-  defaultExpenseLedger: z.string().optional(),
-  paymentCycle: z.string().optional(),
-  bankDetails: z.object({
-    accountNumber: z.string().optional(),
-    ifsc: z.string().optional(),
-    swiftCode: z.string().optional(),
-  }).optional(),
-  tdsPercentage: z.coerce.number().optional(),
+  // Sales & CRM
+  customerType: z.string().optional(),
+
+  // Notes
+  notes: z.string().optional(),
 });
 
 type PartyFormValues = z.infer<typeof partyFormSchema>;
@@ -235,36 +228,36 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
 
             <Card>
                 <CardHeader>
-                    <h3 className="text-lg font-bold">Common Details</h3>
+                    <h3 className="text-lg font-bold">Basic Information</h3>
                 </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField name="businessName" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Customer Name</FormLabel><FormControl><Input placeholder="e.g., Innovate Inc." {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                    <FormField name="displayName" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Display Name</FormLabel><FormControl><Input placeholder="e.g., Innovate" {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                    <FormField name="contactPerson" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Contact Person</FormLabel><FormControl><Input placeholder="e.g., John Doe" {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                    <FormField name="phone" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Phone Number(s)</FormLabel><FormControl><Input type="tel" placeholder="+91 12345 67890" {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                    <FormField name="email" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Email Address</FormLabel><FormControl><Input type="email" placeholder="contact@example.com" {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                    <FormField name="website" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Website URL</FormLabel><FormControl><Input placeholder="https://example.com" {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                </CardContent>
+            </Card>
+            
+            <Card>
+                <CardHeader><h3 className="text-lg font-bold">Address</h3></CardHeader>
                 <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField name="businessName" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Name / Business Name</FormLabel><FormControl><Input placeholder="e.g., Innovate Inc." {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                        <FormField name="displayName" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Display Name</FormLabel><FormControl><Input placeholder="e.g., Innovate" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                        <FormField name="contactPerson" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Contact Person</FormLabel><FormControl><Input placeholder="e.g., John Doe" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                        <FormField name="phone" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input type="tel" placeholder="+91 12345 67890" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                        <FormField name="email" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" placeholder="contact@example.com" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                        <FormField name="website" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Website</FormLabel><FormControl><Input placeholder="https://example.com" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                    </div>
-
-                    <Separator />
-
-                    <h4 className="text-md font-medium">Billing Address</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                          <FormField name="billingAddress" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Street, City, Pincode</FormLabel><FormControl><Textarea placeholder="123 Main St, Mumbai, 400001" {...field} rows={3}/></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Billing Address</FormLabel><FormControl><Textarea placeholder="Full billing address" {...field} rows={3}/></FormControl><FormMessage /></FormItem>
                         )}/>
                         <FormField name="state" control={form.control} render={({ field }) => (
                             <FormItem>
@@ -305,8 +298,7 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                             </FormItem>
                         )}/>
                     </div>
-
-                    <FormField
+                     <FormField
                         control={form.control}
                         name="isShippingSame"
                         render={({ field }) => (
@@ -316,32 +308,32 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                             </FormItem>
                         )}
                     />
-                    
                     <SectionWrapper isVisible={!isShippingSame}>
-                        <h4 className="text-md font-medium">Shipping Address</h4>
-                        <div className="grid grid-cols-1 gap-6">
-                            <FormField name="shippingAddress" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Street, City, State, Pincode</FormLabel><FormControl><Textarea placeholder="123 Shipping St, Mumbai, Maharashtra, 400001" {...field} rows={3}/></FormControl><FormMessage /></FormItem>
-                            )}/>
-                        </div>
+                        <FormField name="shippingAddress" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Shipping Address</FormLabel><FormControl><Textarea placeholder="Full shipping address" {...field} rows={3}/></FormControl><FormMessage /></FormItem>
+                        )}/>
                     </SectionWrapper>
-                    
-                    <Separator />
+                </CardContent>
+            </Card>
 
-                    <h4 className="text-md font-medium">Tax & Compliance</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField name="pan" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>PAN</FormLabel><FormControl><Input placeholder="10-digit PAN" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                        <FormField name="placeOfSupply" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Place of Supply</FormLabel><FormControl><Input placeholder="State" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                    </div>
+            <Card>
+                <CardHeader><h3 className="text-lg font-bold">Tax & Compliance</h3></CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField name="gstin" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>GSTIN / VAT / Tax ID</FormLabel><FormControl><Input placeholder="15-digit ID" {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                    <FormField name="pan" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>PAN / Legal ID</FormLabel><FormControl><Input placeholder="10-digit PAN" {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                    <FormField name="placeOfSupply" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Place of Supply</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger></FormControl><SelectContent>{indianStates.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
+                    )}/>
+                </CardContent>
+            </Card>
 
-                    <Separator />
-                    
-                    <h4 className="text-md font-medium">Accounting</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+                <CardHeader><h3 className="text-lg font-bold">Accounting & Financial</h3></CardHeader>
+                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="flex items-end gap-2">
                                 <FormField name="openingBalance" control={form.control} render={({ field }) => (
                                 <FormItem className="flex-1"><FormLabel>Opening Balance</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
@@ -351,49 +343,39 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                                     <RadioGroup onValueChange={field.onChange} value={field.value} className="flex items-center space-x-4">
                                         <FormItem className="flex items-center space-x-2 space-y-0">
                                             <FormControl><RadioGroupItem value="debit" /></FormControl>
-                                            <FormLabel className="font-normal flex items-baseline gap-1.5">Dr <span className="text-xs text-muted-foreground">(To Collect)</span></FormLabel>
+                                            <FormLabel className="font-normal flex items-baseline gap-1.5">Dr</FormLabel>
                                         </FormItem>
                                         <FormItem className="flex items-center space-x-2 space-y-0">
                                             <FormControl><RadioGroupItem value="credit" /></FormControl>
-                                            <FormLabel className="font-normal flex items-baseline gap-1.5">Cr <span className="text-xs text-muted-foreground">(To Pay)</span></FormLabel>
+                                            <FormLabel className="font-normal flex items-baseline gap-1.5">Cr</FormLabel>
                                         </FormItem>
                                     </RadioGroup>
                                 </FormControl><FormMessage /></FormItem>
                             )}/>
                         </div>
-                        <FormField name="currency" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Currency</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                        <FormField name="creditLimit" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Credit Limit (Amount)</FormLabel><FormControl><Input type="number" placeholder="e.g., 50000" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                         <FormField name="creditLimitDays" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Credit Limit (Days)</FormLabel><FormControl><Input type="number" placeholder="e.g., 30" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                        <FormField name="notes" control={form.control} render={({ field }) => (
-                            <FormItem className="md:col-span-2"><FormLabel>Notes</FormLabel><FormControl><Textarea placeholder="Any other remarks" {...field} /></FormControl><FormMessage /></FormItem>
+                        <FormField name="paymentTerms" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Payment Terms</FormLabel><FormControl><Textarea placeholder="e.g., Net 30, advance, etc." {...field} rows={2} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                    </div>
-                </CardContent>
+                        <FormField name="currency" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Currency</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                    </CardContent>
             </Card>
 
             <SectionWrapper isVisible={isCustomer}>
                 <Card>
                     <CardHeader>
-                        <h3 className="text-lg font-bold">Customer Details</h3>
+                        <h3 className="text-lg font-bold">Sales & CRM</h3>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField name="customerType" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Customer Type</FormLabel><FormControl><Input placeholder="e.g., Retailer" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                        <FormField name="salesPerson" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Assigned Sales Person</FormLabel><FormControl><Input placeholder="e.g., Jane Smith" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                        <FormField name="priceList" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Price List / Discount</FormLabel><FormControl><Input placeholder="e.g., Wholesale Price" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                        <FormField name="creditLimit" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Credit Limit</FormLabel><FormControl><Input type="number" placeholder="50000" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                        <FormField name="loyaltyId" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Loyalty ID</FormLabel><FormControl><Input placeholder="e.g., CUST-001" {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Customer Type</FormLabel><FormControl><Input placeholder="e.g., Retailer, Dealer" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                     </CardContent>
                 </Card>
@@ -404,40 +386,23 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                     <CardHeader>
                          <h3 className="text-lg font-bold">Vendor Details</h3>
                     </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <FormField name="vendorType" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Vendor Type</FormLabel><FormControl><Input placeholder="e.g., Manufacturer" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                            <FormField name="purchaseCategory" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Purchase Category</FormLabel><FormControl><Input placeholder="e.g., Raw Materials" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                            <FormField name="defaultExpenseLedger" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Default Expense Ledger</FormLabel><FormControl><Input placeholder="e.g., Cost of Goods Sold" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                            <FormField name="paymentCycle" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Payment Cycle</FormLabel><FormControl><Input placeholder="e.g., Weekly" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                        </div>
-                        <Separator />
-                        <h4 className="text-md font-medium">Bank Details</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <FormField name="bankDetails.accountNumber" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                            <FormField name="bankDetails.ifsc" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>IFSC Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                            <FormField name="bankDetails.swiftCode" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>SWIFT Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                            <FormField name="tdsPercentage" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>TDS %</FormLabel><FormControl><Input type="number" placeholder="e.g., 10" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                        </div>
+                    {/* Vendor specific fields would go here */}
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground">Vendor-specific fields will be shown here.</p>
                     </CardContent>
                 </Card>
             </SectionWrapper>
+
+             <Card>
+                <CardHeader>
+                    <h3 className="text-lg font-bold">Notes & Miscellaneous</h3>
+                </CardHeader>
+                <CardContent>
+                    <FormField name="notes" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Remarks / Notes</FormLabel><FormControl><Textarea placeholder="Any other special instructions or comments..." {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                </CardContent>
+             </Card>
             
             <div className="flex justify-end pt-4">
                 <Button type="submit" disabled={isSubmitting} size="lg">

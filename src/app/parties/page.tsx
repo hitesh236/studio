@@ -64,7 +64,7 @@ export default function PartiesPage() {
                         Add Party
                       </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-4xl p-0 bg-background">
+                  <DialogContent className="max-w-4xl p-0 bg-muted/50">
                       <div className="max-h-[90vh] overflow-y-auto">
                         <AddPartyForm onSuccess={() => setIsDialogOpen(false)} />
                       </div>
