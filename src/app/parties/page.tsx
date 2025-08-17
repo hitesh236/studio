@@ -55,7 +55,7 @@ export default function PartiesPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
             >
-                <Link href="/customers/new" passHref>
+                <Link href="/parties/new" passHref>
                     <Button>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add Party
