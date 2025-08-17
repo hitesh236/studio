@@ -30,6 +30,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Save, Trash2, PlusCircle, Check, ChevronsUpDown, Search } from 'lucide-react';
@@ -37,6 +50,18 @@ import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { AnimatePresence, motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
+
+const indianStates = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya',
+  'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim',
+  'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand',
+  'West Bengal', 'Andaman and Nicobar Islands', 'Chandigarh',
+  'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu and Kashmir',
+  'Ladakh', 'Lakshadweep', 'Puducherry',
+];
 
 const partyFormSchema = z.object({
   // Party Type
@@ -52,6 +77,7 @@ const partyFormSchema = z.object({
   email: z.string().email("Invalid email address.").optional().or(z.literal('')),
   website: z.string().url('Invalid URL.').optional().or(z.literal('')),
   billingAddress: z.string().optional(),
+  state: z.string().optional(),
   isShippingSame: z.boolean().default(true),
   shippingAddress: z.string().optional(),
   gstin: z.string().length(15, "GSTIN must be 15 characters.").optional().or(z.literal('')),
@@ -60,8 +86,7 @@ const partyFormSchema = z.object({
   openingBalance: z.coerce.number().optional().default(0),
   balanceType: z.enum(['debit', 'credit']).default('debit'),
   currency: z.string().optional(),
-  paymentTerms: z.string().optional(),
-  preferredPaymentMode: z.string().optional(),
+  creditLimitDays: z.coerce.number().optional(),
   notes: z.string().optional(),
 
   // Customer-Specific
@@ -171,7 +196,7 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
                 <CardHeader>
-                    <h3 className="text-base font-bold">Party Type</h3>
+                    <h3 className="text-lg font-bold">Party Type</h3>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
@@ -215,7 +240,7 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
 
             <Card>
                 <CardHeader>
-                    <h3 className="text-base font-bold">Common Details</h3>
+                    <h3 className="text-lg font-bold">Common Details</h3>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -242,9 +267,47 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                     <Separator />
 
                     <h4 className="text-md font-medium">Billing Address</h4>
-                    <div className="grid grid-cols-1 gap-6">
-                        <FormField name="billingAddress" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Street, City, State, Pincode</FormLabel><FormControl><Textarea placeholder="123 Main St, Mumbai, Maharashtra, 400001" {...field} rows={3}/></FormControl><FormMessage /></FormItem>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                         <FormField name="billingAddress" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Street, City, Pincode</FormLabel><FormControl><Textarea placeholder="123 Main St, Mumbai, 400001" {...field} rows={3}/></FormControl><FormMessage /></FormItem>
+                        )}/>
+                        <FormField name="state" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>State</FormLabel>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <FormControl>
+                                            <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
+                                                {field.value ? indianStates.find(state => state === field.value) : "Select state"}
+                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                        <Command>
+                                            <CommandInput placeholder="Search state..." />
+                                            <CommandList>
+                                                <CommandEmpty>No state found.</CommandEmpty>
+                                                <CommandGroup>
+                                                    {indianStates.map(state => (
+                                                        <CommandItem
+                                                            value={state}
+                                                            key={state}
+                                                            onSelect={() => {
+                                                                form.setValue("state", state)
+                                                            }}
+                                                        >
+                                                            <Check className={cn("mr-2 h-4 w-4", state === field.value ? "opacity-100" : "opacity-0")} />
+                                                            {state}
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                            </FormItem>
                         )}/>
                     </div>
 
@@ -272,9 +335,6 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
 
                     <h4 className="text-md font-medium">Tax & Compliance</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField name="gstin" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>GSTIN</FormLabel><FormControl><Input placeholder="15-digit GSTIN" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
                         <FormField name="pan" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>PAN</FormLabel><FormControl><Input placeholder="10-digit PAN" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
@@ -309,11 +369,8 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                         <FormField name="currency" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Currency</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                        <FormField name="paymentTerms" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Payment Terms</FormLabel><FormControl><Input placeholder="e.g., Net 30" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                        <FormField name="preferredPaymentMode" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Preferred Payment Mode</FormLabel><FormControl><Input placeholder="e.g., Bank Transfer" {...field} /></FormControl><FormMessage /></FormItem>
+                        <FormField name="creditLimitDays" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Credit Limit (Days)</FormLabel><FormControl><Input type="number" placeholder="e.g., 30" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                         <FormField name="notes" control={form.control} render={({ field }) => (
                             <FormItem className="md:col-span-2"><FormLabel>Notes</FormLabel><FormControl><Textarea placeholder="Any other remarks" {...field} /></FormControl><FormMessage /></FormItem>
@@ -325,7 +382,7 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
             <SectionWrapper isVisible={isCustomer}>
                 <Card>
                     <CardHeader>
-                        <h3 className="text-base font-bold">Customer Details</h3>
+                        <h3 className="text-lg font-bold">Customer Details</h3>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField name="customerType" control={form.control} render={({ field }) => (
@@ -350,7 +407,7 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
             <SectionWrapper isVisible={isVendor}>
                  <Card>
                     <CardHeader>
-                         <h3 className="text-base font-bold">Vendor Details</h3>
+                         <h3 className="text-lg font-bold">Vendor Details</h3>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
