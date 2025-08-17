@@ -208,14 +208,19 @@ export function UomManagement() {
   };
 
   const handleToggleStatus = (id: string) => {
-    setSimpleUnits(prev => prev.map(unit => {
-      if (unit.id === id) {
-        const newStatus = unit.status === 'disabled' ? 'active' : 'disabled';
-        toast({ title: `Unit ${newStatus === 'active' ? 'Enabled' : 'Disabled'}`, description: `${unit.name} is now ${newStatus}.` });
-        return { ...unit, status: newStatus };
-      }
-      return unit;
-    }));
+    const unit = simpleUnits.find(u => u.id === id);
+    if (!unit) return;
+
+    const newStatus = unit.status === 'disabled' ? 'active' : 'disabled';
+    
+    toast({
+      title: `Unit ${newStatus === 'active' ? 'Enabled' : 'Disabled'}`,
+      description: `${unit.name} is now ${newStatus}.`,
+    });
+
+    setSimpleUnits(prev =>
+      prev.map(u => (u.id === id ? { ...u, status: newStatus } : u))
+    );
   };
 
   return (
