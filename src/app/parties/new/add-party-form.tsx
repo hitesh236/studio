@@ -184,29 +184,28 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
         <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
-                <CardHeader>
-                    <h3 className="text-lg font-bold">Party Type</h3>
-                </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                     <div className="space-y-4">
                         <FormField
                             control={form.control}
                             name="partyType"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Select Party Type</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select a party type" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            <SelectItem value="customer">Customer</SelectItem>
-                                            <SelectItem value="vendor">Vendor</SelectItem>
-                                            <SelectItem value="both">Both (Customer & Vendor)</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="flex items-center gap-4">
+                                        <FormLabel className="whitespace-nowrap">Select Party Type</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select a party type" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="customer">Customer</SelectItem>
+                                                <SelectItem value="vendor">Vendor</SelectItem>
+                                                <SelectItem value="both">Both (Customer & Vendor)</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                     <FormMessage />
                                 </FormItem>
                             )}
