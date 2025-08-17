@@ -46,6 +46,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { initialCategoriesData } from '@/lib/categories';
 import { initialAttributes } from '@/lib/attributes';
 import type { Category, Attribute } from '@/lib/types';
+import { initialSimpleUnits } from '@/lib/uom-data';
 
 
 const customAttributeSchema = z.object({
@@ -440,12 +441,12 @@ export function AddProductForm() {
                     <div className="grid grid-cols-2 gap-2">
                         <FormField name="uom" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Primary UOM</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger></FormControl><SelectContent>
-                                <SelectItem value="pcs">Pieces (pcs)</SelectItem><SelectItem value="box">Box</SelectItem><SelectItem value="kg">Kilogram (kg)</SelectItem>
+                                {initialSimpleUnits.map(unit => <SelectItem key={unit.id} value={unit.abbreviation}>{unit.name} ({unit.abbreviation})</SelectItem>)}
                             </SelectContent></Select><FormMessage /></FormItem>
                         )} />
                         <FormField name="secondaryUom" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Secondary UOM</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger></FormControl><SelectContent>
-                                <SelectItem value="pcs">Pieces (pcs)</SelectItem><SelectItem value="box">Box</SelectItem><SelectItem value="g">Gram (g)</SelectItem>
+                               {initialSimpleUnits.map(unit => <SelectItem key={unit.id} value={unit.abbreviation}>{unit.name} ({unit.abbreviation})</SelectItem>)}
                             </SelectContent></Select><FormMessage /></FormItem>
                         )} />
                     </div>
