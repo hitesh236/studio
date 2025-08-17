@@ -65,8 +65,7 @@ const indianStates = [
 
 const partyFormSchema = z.object({
   // Party Type
-  isCustomer: z.boolean().default(false),
-  isVendor: z.boolean().default(false),
+  partyType: z.enum(['customer', 'vendor', 'both']),
   gstinSearch: z.string().optional(),
 
   // Common Fields
@@ -107,9 +106,6 @@ const partyFormSchema = z.object({
     swiftCode: z.string().optional(),
   }).optional(),
   tdsPercentage: z.coerce.number().optional(),
-}).refine(data => data.isCustomer || data.isVendor, {
-  message: 'Please select at least one party type (Customer or Vendor).',
-  path: ['isCustomer'],
 });
 
 type PartyFormValues = z.infer<typeof partyFormSchema>;
@@ -136,8 +132,7 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
   const form = useForm<PartyFormValues>({
     resolver: zodResolver(partyFormSchema),
     defaultValues: {
-      isCustomer: true,
-      isVendor: false,
+      partyType: 'customer',
       businessName: '',
       displayName: '',
       isShippingSame: true,
@@ -148,8 +143,9 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
   });
 
   const { watch } = form;
-  const isCustomer = watch('isCustomer');
-  const isVendor = watch('isVendor');
+  const partyType = watch('partyType');
+  const isCustomer = partyType === 'customer' || partyType === 'both';
+  const isVendor = partyType === 'vendor' || partyType === 'both';
   const isShippingSame = watch('isShippingSame');
 
   const handleGstSearch = () => {
@@ -200,29 +196,28 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        <div className="flex items-center gap-8">
-                            <FormField
-                                control={form.control}
-                                name="isCustomer"
-                                render={({ field }) => (
-                                    <FormItem className="flex items-center space-x-2 space-y-0">
-                                        <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                                        <FormLabel className="font-normal">Customer</FormLabel>
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="isVendor"
-                                render={({ field }) => (
-                                    <FormItem className="flex items-center space-x-2 space-y-0">
-                                        <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                                        <FormLabel className="font-normal">Vendor</FormLabel>
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-                        <FormMessage>{form.formState.errors.isCustomer?.message}</FormMessage>
+                        <FormField
+                            control={form.control}
+                            name="partyType"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Select Party Type</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a party type" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="customer">Customer</SelectItem>
+                                            <SelectItem value="vendor">Vendor</SelectItem>
+                                            <SelectItem value="both">Both (Customer & Vendor)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                          <Separator className="my-4"/>
                          <div className="flex items-end gap-2">
                             <FormField control={form.control} name="gstinSearch" render={({ field }) => (
