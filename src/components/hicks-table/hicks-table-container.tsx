@@ -110,29 +110,6 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
   const uniqueStatuses = useMemo(() => Array.from(new Set(data.map((p) => p.status))).sort(), [data]);
   const uniqueCompanies = useMemo(() => Array.from(new Set(data.map((p) => p.company))).sort(), [data]);
 
-
-  const summaryStats = useMemo(() => {
-    const totalRecords = data.length;
-    const averageSale =
-      data.reduce((acc, person) => acc + person.saleAmount, 0) / totalRecords;
-    const averageRating =
-      data.reduce((acc, person) => acc + person.rating, 0) / totalRecords;
-
-    const sortedBySale = [...data].sort((a, b) => b.saleAmount - a.saleAmount);
-    const top10PercentCount = Math.floor(totalRecords * 0.1);
-    const top10PercentSales = sortedBySale.slice(0, top10PercentCount);
-    const top10PercentAverageSale =
-      top10PercentSales.reduce((acc, person) => acc + person.saleAmount, 0) /
-      (top10PercentCount || 1);
-
-    return {
-      totalRecords,
-      averageSale,
-      averageRating,
-      top10PercentAverageSale,
-    };
-  }, [data]);
-
   const filteredData = useMemo(() => {
     let results = data.filter((person) => {
       const searchTerm = filter.toLowerCase();
@@ -503,30 +480,6 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <SummaryCard
-          icon={Users}
-          title="Total Records"
-          value={summaryStats.totalRecords.toLocaleString()}
-          variant="primary"
-        />
-        <SummaryCard
-          icon={DollarSign}
-          title="Average Sale"
-          value={formatCurrency(summaryStats.averageSale)}
-        />
-        <SummaryCard
-          icon={TrendingUp}
-          title="Top 10% Avg. Sale"
-          value={formatCurrency(summaryStats.top10PercentAverageSale)}
-        />
-        <SummaryCard
-          icon={Star}
-          title="Average Rating"
-          value={`${summaryStats.averageRating.toFixed(1)} / 5.0`}
-        />
-      </div>
-
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4 flex-1">
           <div className="relative w-full md:max-w-sm">
