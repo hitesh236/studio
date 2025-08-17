@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -10,7 +10,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardFooter,
   CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,26 +29,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Trash2, PlusCircle, Check, ChevronsUpDown, Search } from 'lucide-react';
+import { Loader2, Save, Search, Check, ChevronsUpDown, PlusCircle, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const indianStates = [
@@ -63,57 +49,38 @@ const indianStates = [
   'Ladakh', 'Lakshadweep', 'Puducherry',
 ];
 
+const contactSchema = z.object({
+    name: z.string().optional(),
+    contact: z.string().optional(),
+});
+
 const partyFormSchema = z.object({
   partyType: z.enum(['customer', 'vendor', 'both']),
   gstinSearch: z.string().optional(),
   
   // Basic Info
   businessName: z.string().min(1, 'Business Name is required.'),
-  displayName: z.string().optional(),
-  contactPerson: z.string().optional(),
-  phone: z.string().optional(),
+  phone: z.string().min(1, 'At least one phone number is required.'),
   email: z.string().email("Invalid email address.").optional().or(z.literal('')),
-  website: z.string().url('Invalid URL.').optional().or(z.literal('')),
-
-  // Address
   billingAddress: z.string().optional(),
   state: z.string().optional(),
-
-  // Tax
-  pan: z.string().length(10, 'PAN must be 10 characters.').optional().or(z.literal('')),
-  placeOfSupply: z.string().optional(),
-  
-  // Accounting
   openingBalance: z.coerce.number().optional().default(0),
   balanceType: z.enum(['debit', 'credit']).default('debit'),
-  creditLimit: z.coerce.number().optional(),
-  creditLimitDays: z.coerce.number().int().optional(),
-  paymentTerms: z.string().optional(),
-  currency: z.string().optional(),
-
-  // Sales & CRM
   customerType: z.string().optional(),
 
-  // Notes
+  // Miscellaneous
+  contactPerson: z.string().optional(),
+  creditLimit: z.coerce.number().optional(),
+  creditLimitDays: z.coerce.number().int().optional(),
+  gstin: z.string().length(15, 'GSTIN must be 15 characters.').optional().or(z.literal('')),
+  multipleContacts: z.array(contactSchema).optional(),
   notes: z.string().optional(),
+  attachments: z.any().optional(),
+  industry: z.string().optional(),
 });
 
 type PartyFormValues = z.infer<typeof partyFormSchema>;
 
-const SectionWrapper = ({ children, isVisible }: { children: React.ReactNode; isVisible: boolean }) => (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.3 }}
-        >
-          {children}
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
 
 export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
   const { toast } = useToast();
@@ -124,17 +91,21 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
     defaultValues: {
       partyType: 'customer',
       businessName: '',
-      displayName: '',
+      phone: '',
+      email: '',
       openingBalance: 0,
       balanceType: 'debit',
-      currency: 'INR'
+      multipleContacts: [{ name: '', contact: '' }],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'multipleContacts',
   });
 
   const { watch } = form;
   const partyType = watch('partyType');
-  const isCustomer = partyType === 'customer' || partyType === 'both';
-  const isVendor = partyType === 'vendor' || partyType === 'both';
 
   const handleGstSearch = () => {
     const gstin = form.getValues('gstinSearch');
@@ -143,11 +114,8 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
             title: 'Searching GSTIN...',
             description: `Looking up details for ${gstin}. This is a placeholder for a real API call.`
         });
-        // In a real app, you would make an API call here.
-        // For now, let's pre-fill some dummy data.
         form.setValue('businessName', 'GSTIN Fetched Company');
         form.setValue('billingAddress', '123 GST Street, Mumbai, Maharashtra, 400001');
-        form.setValue('placeOfSupply', 'Maharashtra');
     } else {
         toast({
             variant: 'destructive',
@@ -180,7 +148,7 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-                        <FormField
+                       <FormField
                             control={form.control}
                             name="partyType"
                             render={({ field }) => (
@@ -225,157 +193,139 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                         <FormItem><FormLabel>Customer Name</FormLabel><FormControl><Input placeholder="e.g., Innovate Inc." {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
                     <FormField name="phone" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Phone Number(s)</FormLabel><FormControl><Input type="tel" placeholder="+91 12345 67890" {...field} /></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input type="tel" placeholder="+91 12345 67890" {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
-                    <FormField name="contactPerson" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Contact Person</FormLabel><FormControl><Input placeholder="e.g., John Doe" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                    <FormField name="email" control={form.control} render={({ field }) => (
+                     <FormField name="email" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Email Address</FormLabel><FormControl><Input type="email" placeholder="contact@example.com" {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
-                    <FormField name="displayName" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Alternate/Legal Name</FormLabel><FormControl><Input placeholder="e.g., Innovate" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                    <FormField name="website" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Website URL</FormLabel><FormControl><Input placeholder="https://example.com" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                </CardContent>
-            </Card>
-            
-            <Card>
-                <CardHeader><h3 className="text-lg font-bold">Address</h3></CardHeader>
-                <CardContent className="space-y-6">
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                         <FormField name="billingAddress" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Billing Address</FormLabel><FormControl><Textarea placeholder="Full billing address" {...field} rows={3}/></FormControl><FormMessage /></FormItem>
+                     <div className="flex items-end gap-2">
+                        <FormField name="openingBalance" control={form.control} render={({ field }) => (
+                            <FormItem className="flex-1"><FormLabel>Opening Balance</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                        <FormField name="state" control={form.control} render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>State</FormLabel>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <FormControl>
-                                            <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
-                                                {field.value ? indianStates.find(state => state === field.value) : "Select state"}
-                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                            </Button>
-                                        </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                                        <Command>
-                                            <CommandInput placeholder="Search state..." />
-                                            <CommandList>
-                                                <CommandEmpty>No state found.</CommandEmpty>
-                                                <CommandGroup>
-                                                    {indianStates.map(state => (
-                                                        <CommandItem
-                                                            value={state}
-                                                            key={state}
-                                                            onSelect={() => {
-                                                                form.setValue("state", state)
-                                                            }}
-                                                        >
-                                                            <Check className={cn("mr-2 h-4 w-4", state === field.value ? "opacity-100" : "opacity-0")} />
-                                                            {state}
-                                                        </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                </Popover>
-                                <FormMessage />
-                            </FormItem>
+                        <FormField name="balanceType" control={form.control} render={({ field }) => (
+                            <FormItem className="space-y-3"><FormControl>
+                                <RadioGroup onValueChange={field.onChange} value={field.value} className="flex items-center space-x-4">
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                        <FormControl><RadioGroupItem value="debit" /></FormControl>
+                                        <FormLabel className="font-normal flex items-baseline gap-1.5">
+                                            <span>Debit</span>
+                                            <span className="text-xs text-muted-foreground">(To collect)</span>
+                                        </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                        <FormControl><RadioGroupItem value="credit" /></FormControl>
+                                        <FormLabel className="font-normal flex items-baseline gap-1.5">
+                                            <span>Credit</span>
+                                            <span className="text-xs text-muted-foreground">(To Pay)</span>
+                                        </FormLabel>
+                                    </FormItem>
+                                </RadioGroup>
+                            </FormControl><FormMessage /></FormItem>
                         )}/>
                     </div>
+                     <FormField name="customerType" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Customer Type</FormLabel>
+                         <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
+                            <SelectContent>
+                                <SelectItem value="individual">Individual</SelectItem>
+                                <SelectItem value="business">Business</SelectItem>
+                                <SelectItem value="dealer">Dealer</SelectItem>
+                                <SelectItem value="retailer">Retailer</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage /></FormItem>
+                    )}/>
+                    <FormField name="billingAddress" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Billing Address</FormLabel><FormControl><Textarea placeholder="Full billing address" {...field} rows={3}/></FormControl><FormMessage /></FormItem>
+                    )}/>
+                    <FormField name="state" control={form.control} render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>State</FormLabel>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <FormControl>
+                                        <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
+                                            {field.value ? indianStates.find(state => state === field.value) : "Select state"}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                    <Command>
+                                        <CommandInput placeholder="Search state..." />
+                                        <CommandList>
+                                            <CommandEmpty>No state found.</CommandEmpty>
+                                            <CommandGroup>
+                                                {indianStates.map(state => (
+                                                    <CommandItem
+                                                        value={state}
+                                                        key={state}
+                                                        onSelect={() => form.setValue("state", state)}
+                                                    >
+                                                        <Check className={cn("mr-2 h-4 w-4", state === field.value ? "opacity-100" : "opacity-0")} />
+                                                        {state}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                        </FormItem>
+                    )}/>
                 </CardContent>
             </Card>
 
-            <Card>
-                <CardHeader><h3 className="text-lg font-bold">Tax & Compliance</h3></CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField name="pan" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>PAN / Legal ID</FormLabel><FormControl><Input placeholder="10-digit PAN" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                    <FormField name="placeOfSupply" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Place of Supply</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger></FormControl><SelectContent>{indianStates.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
-                    )}/>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader><h3 className="text-lg font-bold">Accounting & Financial</h3></CardHeader>
-                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="flex items-end gap-2">
-                                <FormField name="openingBalance" control={form.control} render={({ field }) => (
-                                <FormItem className="flex-1"><FormLabel>Opening Balance</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                            <FormField name="balanceType" control={form.control} render={({ field }) => (
-                                <FormItem className="space-y-3"><FormControl>
-                                    <RadioGroup onValueChange={field.onChange} value={field.value} className="flex items-center space-x-4">
-                                        <FormItem className="flex items-center space-x-2 space-y-0">
-                                            <FormControl><RadioGroupItem value="debit" /></FormControl>
-                                            <FormLabel className="font-normal flex items-baseline gap-1.5">
-                                                <span>Debit</span>
-                                                <span className="text-xs text-muted-foreground">(To collect)</span>
-                                            </FormLabel>
-                                        </FormItem>
-                                        <FormItem className="flex items-center space-x-2 space-y-0">
-                                            <FormControl><RadioGroupItem value="credit" /></FormControl>
-                                            <FormLabel className="font-normal flex items-baseline gap-1.5">
-                                                <span>Credit</span>
-                                                <span className="text-xs text-muted-foreground">(To Pay)</span>
-                                            </FormLabel>
-                                        </FormItem>
-                                    </RadioGroup>
-                                </FormControl><FormMessage /></FormItem>
-                            )}/>
-                        </div>
+             <Card>
+                <CardHeader>
+                    <h3 className="text-lg font-bold">Miscellaneous</h3>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField name="contactPerson" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Contact Person</FormLabel><FormControl><Input placeholder="e.g., John Doe" {...field} /></FormControl><FormMessage /></FormItem>
+                        )}/>
                         <FormField name="creditLimit" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Credit Limit (Amount)</FormLabel><FormControl><Input type="number" placeholder="e.g., 50000" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                         <FormField name="creditLimitDays" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Credit Limit (Days)</FormLabel><FormControl><Input type="number" placeholder="e.g., 30" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                        <FormField name="paymentTerms" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Payment Terms</FormLabel><FormControl><Textarea placeholder="e.g., Net 30, advance, etc." {...field} rows={2} /></FormControl><FormMessage /></FormItem>
+                         <FormField name="gstin" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>GSTIN / Tax ID</FormLabel><FormControl><Input placeholder="Optional GSTIN" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                        <FormField name="currency" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Currency</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                         <FormField name="industry" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Industry / Segment</FormLabel><FormControl><Input placeholder="e.g., IT, Manufacturing" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                    </CardContent>
-            </Card>
+                         <FormField name="attachments" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Attachments</FormLabel><FormControl><Input type="file" {...field} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                    </div>
 
-            <SectionWrapper isVisible={isCustomer}>
-                <Card>
-                    <CardHeader>
-                        <h3 className="text-lg font-bold">Sales & CRM</h3>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField name="customerType" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Customer Type</FormLabel><FormControl><Input placeholder="e.g., Retailer, Dealer" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                    </CardContent>
-                </Card>
-            </SectionWrapper>
-            
-            <SectionWrapper isVisible={isVendor}>
-                 <Card>
-                    <CardHeader>
-                         <h3 className="text-lg font-bold">Vendor Details</h3>
-                    </CardHeader>
-                    {/* Vendor specific fields would go here */}
-                    <CardContent>
-                        <p className="text-sm text-muted-foreground">Vendor-specific fields will be shown here.</p>
-                    </CardContent>
-                </Card>
-            </SectionWrapper>
+                    <div>
+                        <Label>Multiple Contacts</Label>
+                        <div className="space-y-2 mt-2">
+                             {fields.map((field, index) => (
+                                <div key={field.id} className="flex items-center gap-2">
+                                    <FormField name={`multipleContacts.${index}.name`} control={form.control} render={({ field }) => (
+                                        <Input {...field} placeholder="Contact Name" />
+                                    )} />
+                                    <FormField name={`multipleContacts.${index}.contact`} control={form.control} render={({ field }) => (
+                                        <Input {...field} placeholder="Phone or Email" />
+                                    )} />
+                                    <Button type="button" variant="ghost" size="icon" className="text-destructive shrink-0" onClick={() => remove(index)}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                        <Button type="button" variant="link" size="sm" className="mt-2" onClick={() => append({ name: '', contact: '' })}>
+                            <PlusCircle className="mr-2 h-4 w-4" /> Add More
+                        </Button>
+                    </div>
 
-             <Card>
-                <CardHeader>
-                    <h3 className="text-lg font-bold">Notes & Miscellaneous</h3>
-                </CardHeader>
-                <CardContent>
                     <FormField name="notes" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Remarks / Notes</FormLabel><FormControl><Textarea placeholder="Any other special instructions or comments..." {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
