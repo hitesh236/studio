@@ -3,6 +3,7 @@
 
 import { HicksTableContainer } from "@/components/hicks-table/hicks-table-container";
 import { generateData, Person } from "@/lib/data";
+import { generateCustomerData, type Customer as CustomerType } from "@/app/customers/data";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Users, TrendingUp, TrendingDown } from "lucide-react";
 import { motion } from 'framer-motion';
@@ -19,7 +20,35 @@ export default function PartiesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
-    setData(generateData(500));
+    const customerData = generateCustomerData();
+    const vendorData = generateData(50); // Assuming this is the source for vendors
+
+    const transformedCustomerData: Person[] = customerData.map(c => ({
+        id: c.id,
+        firstName: c.name.split(' ')[0],
+        lastName: c.name.split(' ').slice(1).join(' '),
+        email: c.contact.email || '',
+        company: c.company || c.name,
+        phone: c.contact.phone || '',
+        balance: c.balanceDue,
+        status: 'Active', // Default status
+        type: 'Customer',
+        // --- Defaulting other Person fields ---
+        saleAmount: c.balanceDue > 0 ? c.balanceDue : Math.random() * 10000,
+        rating: Math.round((Math.random() * 4 + 1) * 10) / 10,
+        address: {
+            street: c.placeOfSupply.state,
+            city: c.placeOfSupply.state,
+            state: c.placeOfSupply.state,
+            zip: ''
+        },
+        bio: 'Customer from customer data.',
+        gstin: c.gstin,
+    }));
+
+    const filteredVendorData = vendorData.map(v => ({...v, type: 'Vendor' as const, balance: v.balance < 0 ? v.balance : -v.balance }));
+
+    setData([...transformedCustomerData, ...filteredVendorData]);
   }, []);
 
   const filteredData = useMemo(() => {
