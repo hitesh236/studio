@@ -51,19 +51,9 @@ const partyFormSchema = z.object({
   phone: z.string().min(10, "Phone number must be at least 10 digits.").optional().or(z.literal('')),
   email: z.string().email("Invalid email address.").optional().or(z.literal('')),
   website: z.string().url('Invalid URL.').optional().or(z.literal('')),
-  billingAddress: z.object({
-    street: z.string().optional(),
-    city: z.string().optional(),
-    state: z.string().optional(),
-    zip: z.string().optional(),
-  }),
+  billingAddress: z.string().optional(),
   isShippingSame: z.boolean().default(true),
-  shippingAddress: z.object({
-    street: z.string().optional(),
-    city: z.string().optional(),
-    state: z.string().optional(),
-    zip: z.string().optional(),
-  }).optional(),
+  shippingAddress: z.string().optional(),
   gstin: z.string().length(15, "GSTIN must be 15 characters.").optional().or(z.literal('')),
   pan: z.string().length(10, 'PAN must be 10 characters.').optional().or(z.literal('')),
   placeOfSupply: z.string().optional(),
@@ -114,7 +104,7 @@ const SectionWrapper = ({ children, isVisible }: { children: React.ReactNode; is
     </AnimatePresence>
   );
 
-export function AddPartyForm() {
+export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -146,13 +136,13 @@ export function AddPartyForm() {
       description: `${data.businessName} has been successfully added.`,
     });
     setIsSubmitting(false);
-    form.reset();
+    if(onSuccess) onSuccess();
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <Card>
+        <Card className="shadow-none border-none">
             <CardHeader>
                 <CardTitle>Create New Party</CardTitle>
                 <CardDescription>Add a new customer, vendor, or both to your system.</CardDescription>
@@ -211,18 +201,9 @@ export function AddPartyForm() {
                     </div>
 
                     <h4 className="text-md font-medium">Billing Address</h4>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField name="billingAddress.street" control={form.control} render={({ field }) => (
-                            <FormItem className="md:col-span-2"><FormLabel>Street</FormLabel><FormControl><Input placeholder="123 Main St" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                         <FormField name="billingAddress.city" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>City</FormLabel><FormControl><Input placeholder="Mumbai" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                         <FormField name="billingAddress.state" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>State</FormLabel><FormControl><Input placeholder="Maharashtra" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                         <FormField name="billingAddress.zip" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Pincode</FormLabel><FormControl><Input placeholder="400001" {...field} /></FormControl><FormMessage /></FormItem>
+                     <div className="grid grid-cols-1 gap-6">
+                        <FormField name="billingAddress" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Street, City, State, Pincode</FormLabel><FormControl><Textarea placeholder="123 Main St, Mumbai, Maharashtra, 400001" {...field} rows={3}/></FormControl><FormMessage /></FormItem>
                         )}/>
                     </div>
 
@@ -239,18 +220,9 @@ export function AddPartyForm() {
                     
                      <SectionWrapper isVisible={!isShippingSame}>
                         <h4 className="text-md font-medium">Shipping Address</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                           <FormField name="shippingAddress.street" control={form.control} render={({ field }) => (
-                                <FormItem className="md:col-span-2"><FormLabel>Street</FormLabel><FormControl><Input placeholder="123 Main St" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                            <FormField name="shippingAddress.city" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>City</FormLabel><FormControl><Input placeholder="Mumbai" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                            <FormField name="shippingAddress.state" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>State</FormLabel><FormControl><Input placeholder="Maharashtra" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                            <FormField name="shippingAddress.zip" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Pincode</FormLabel><FormControl><Input placeholder="400001" {...field} /></FormControl><FormMessage /></FormItem>
+                        <div className="grid grid-cols-1 gap-6">
+                           <FormField name="shippingAddress" control={form.control} render={({ field }) => (
+                                <FormItem><FormLabel>Street, City, State, Pincode</FormLabel><FormControl><Textarea placeholder="123 Shipping St, Mumbai, Maharashtra, 400001" {...field} rows={3}/></FormControl><FormMessage /></FormItem>
                             )}/>
                         </div>
                     </SectionWrapper>

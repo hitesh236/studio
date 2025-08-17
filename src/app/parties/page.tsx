@@ -5,15 +5,17 @@ import { HicksTableContainer } from "@/components/hicks-table/hicks-table-contai
 import { generateData, Person } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Users, TrendingUp, TrendingDown } from "lucide-react";
-import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { SummaryCard } from "@/components/hicks-table/summary-card";
 import { useMemo, useState } from 'react';
 import { formatCurrency } from "@/lib/utils";
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { AddPartyForm } from "./new/add-party-form";
 
 export default function PartiesPage() {
   const data: Person[] = useMemo(() => generateData(500), []);
   const [filter, setFilter] = useState<'all' | 'customer' | 'vendor'>('all');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const filteredData = useMemo(() => {
     if (filter === 'all') {
@@ -55,12 +57,19 @@ export default function PartiesPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
             >
-                <Link href="/parties/new" passHref>
-                    <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Party
-                    </Button>
-                </Link>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                      <Button>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Party
+                      </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-4xl p-0">
+                      <div className="max-h-[90vh] overflow-y-auto">
+                        <AddPartyForm onSuccess={() => setIsDialogOpen(false)} />
+                      </div>
+                  </DialogContent>
+                </Dialog>
             </motion.div>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
