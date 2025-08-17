@@ -321,6 +321,26 @@ export function InvoiceForm() {
     
     console.log("Deducting stock for items:", data.items.map(item => ({ id: item.productId, quantity: item.quantity })));
     
+    const journalEntry = {
+        id: `JE-${data.invoiceNumber}`,
+        date: data.invoiceDate,
+        entryNumber: `JRNL-${data.invoiceNumber}`,
+        voucherType: 'Sales',
+        description: `Sales to ${data.customerName} against invoice ${data.invoiceNumber}`,
+        lines: [
+            { id: 'line-1', account: `${data.customerName} A/c`, debit: totals.grandTotal, credit: 0 },
+            { id: 'line-2', account: 'Sales A/c', debit: 0, credit: totals.totalTaxableValue },
+            ...(totals.totalCgst > 0 ? [{ id: 'line-3', account: 'CGST Payable A/c', debit: 0, credit: totals.totalCgst }] : []),
+            ...(totals.totalSgst > 0 ? [{ id: 'line-4', account: 'SGST Payable A/c', debit: 0, credit: totals.totalSgst }] : []),
+            ...(totals.totalIgst > 0 ? [{ id: 'line-5', account: 'IGST Payable A/c', debit: 0, credit: totals.totalIgst }] : []),
+        ],
+        createdBy: 'Admin',
+        status: 'Approved'
+    };
+
+    console.log('--- GENERATED JOURNAL ENTRY ---');
+    console.log(JSON.stringify(journalEntry, null, 2));
+    
     await new Promise(resolve => setTimeout(resolve, 1500));
     console.log('Form Submitted', { data, totals });
     toast({
