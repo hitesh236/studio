@@ -14,6 +14,8 @@ import {
   Send,
   Loader2,
   Settings,
+  ChevronsUpDown,
+  Check
 } from 'lucide-react';
 
 import { cn, formatCurrency } from '@/lib/utils';
@@ -21,7 +23,6 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -73,6 +74,8 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { generateStockListData, type StockItem } from '@/app/stock-list/data';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -94,6 +97,7 @@ const sellerDetails = {
 };
 
 const invoiceItemSchema = z.object({
+  productId: z.string().min(1, 'Item selection is required.'),
   itemName: z.string().min(1, 'Item name is required.'),
   hsnCode: z.string().optional(),
   quantity: z.coerce.number().min(0.01, 'Quantity must be positive.'),
@@ -159,6 +163,12 @@ export function InvoiceForm() {
   ]);
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = React.useState(false);
   const [newCustomer, setNewCustomer] = React.useState({ name: '', gstin: '', address: '' });
+  
+  const [products, setProducts] = React.useState<StockItem[]>([]);
+
+  React.useEffect(() => {
+    setProducts(generateStockListData(50));
+  }, []);
 
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
@@ -171,7 +181,7 @@ export function InvoiceForm() {
       dueDate: undefined,
       currency: 'INR',
       exchangeRate: 1,
-      items: [{ itemName: '', hsnCode: '', quantity: 1, rate: 0, discount: 0, gstRate: 18, unit: 'pcs' }],
+      items: [{ productId: '', itemName: '', hsnCode: '', quantity: 1, rate: 0, discount: 0, gstRate: 18, unit: 'pcs' }],
       notes: 'Thank you for your business. All payments are due within 30 days.',
       paymentReceived: 0,
       paymentMode: '',
@@ -206,7 +216,7 @@ export function InvoiceForm() {
     
     form.setValue('invoiceDate', today);
     form.setValue('dueDate', futureDate);
-  }, []);
+  }, [form]);
   
   React.useEffect(() => {
     if (invoiceCreationMode === 'item') {
@@ -308,7 +318,9 @@ export function InvoiceForm() {
   
   async function onSubmit(data: InvoiceFormValues) {
     setIsSubmitting(true);
-    // Simulate API call
+    
+    console.log("Deducting stock for items:", data.items.map(item => ({ id: item.productId, quantity: item.quantity })));
+    
     await new Promise(resolve => setTimeout(resolve, 1500));
     console.log('Form Submitted', { data, totals });
     toast({
@@ -317,6 +329,47 @@ export function InvoiceForm() {
     });
     setIsSubmitting(false);
   }
+
+  const ProductCombobox = ({ value, onChange, onProductSelect }: { value: string; onChange: (value: string) => void; onProductSelect: (product: StockItem) => void; }) => {
+    const [open, setOpen] = React.useState(false);
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild><FormControl>
+                <Button variant="outline" role="combobox" className={cn("w-full justify-between", !value && "text-muted-foreground")}>
+                {value ? products.find(product => product.id === value)?.productName : "Select item"}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+            </FormControl></PopoverTrigger>
+            <PopoverContent className="w-full p-0" style={{minWidth: 'var(--radix-popover-trigger-width)'}}>
+                <Command filter={(value, search) => {
+                    const product = products.find(p => p.id === value);
+                    if (product?.productName.toLowerCase().includes(search.toLowerCase()) || product?.sku.toLowerCase().includes(search)) return 1;
+                    return 0;
+                }}>
+                    <CommandInput placeholder="Search items..." />
+                    <CommandList>
+                        <CommandEmpty>No item found.</CommandEmpty>
+                        <CommandGroup>
+                            {products.map(product => (
+                                <CommandItem value={product.id} key={product.id} onSelect={() => { 
+                                    onChange(product.id);
+                                    onProductSelect(product);
+                                    setOpen(false); 
+                                }}>
+                                    <Check className={cn("mr-2 h-4 w-4", product.id === value ? "opacity-100" : "opacity-0")} />
+                                    <div className="flex justify-between w-full">
+                                        <span>{product.productName}</span>
+                                        <span className="text-muted-foreground text-xs">{product.sku}</span>
+                                    </div>
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    </CommandList>
+                </Command>
+            </PopoverContent>
+        </Popover>
+    );
+  };
 
   return (
     <Form {...form}>
@@ -766,17 +819,18 @@ export function InvoiceForm() {
                                     <TableCell>
                                         <FormField
                                             control={form.control}
-                                            name={`items.${index}.itemName`}
+                                            name={`items.${index}.productId`}
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormControl>
-                                                        <Textarea
-                                                            placeholder={invoiceType === 'item' ? 'Item name and description' : 'Service description'}
-                                                            {...field}
-                                                            rows={1}
-                                                            className="min-h-[38px]"
-                                                        />
-                                                    </FormControl>
+                                                    <ProductCombobox
+                                                        value={field.value}
+                                                        onChange={field.onChange}
+                                                        onProductSelect={(product) => {
+                                                            form.setValue(`items.${index}.itemName`, product.productName);
+                                                            form.setValue(`items.${index}.rate`, product.sellingPrice);
+                                                            form.setValue(`items.${index}.unit`, product.uom);
+                                                        }}
+                                                    />
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
@@ -926,13 +980,19 @@ export function InvoiceForm() {
                                     <div className="space-y-4">
                                         <FormField
                                             control={form.control}
-                                            name={`items.${index}.itemName`}
+                                            name={`items.${index}.productId`}
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>{invoiceType === 'item' ? 'Item Name / Description' : 'Service Description'}</FormLabel>
-                                                    <FormControl>
-                                                        <Textarea placeholder={invoiceType === 'item' ? 'Item name...' : 'Service details...'} {...field} rows={1} />
-                                                    </FormControl>
+                                                    <FormLabel>{invoiceType === 'item' ? 'Item Name' : 'Service Description'}</FormLabel>
+                                                    <ProductCombobox
+                                                        value={field.value}
+                                                        onChange={field.onChange}
+                                                        onProductSelect={(product) => {
+                                                            form.setValue(`items.${index}.itemName`, product.productName);
+                                                            form.setValue(`items.${index}.rate`, product.sellingPrice);
+                                                            form.setValue(`items.${index}.unit`, product.uom);
+                                                        }}
+                                                    />
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
@@ -1036,7 +1096,7 @@ export function InvoiceForm() {
                     <Button
                         type="button"
                         variant="outline"
-                        onClick={() => append({ itemName: '', hsnCode: '', quantity: 1, rate: 0, discount: 0, gstRate: 18, unit: 'pcs' })}
+                        onClick={() => append({ productId: '', itemName: '', hsnCode: '', quantity: 1, rate: 0, discount: 0, gstRate: 18, unit: 'pcs' })}
                     >
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Add Another Line
