@@ -90,14 +90,6 @@ export function AppSidebar() {
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
-             <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Add Party" isActive={pathname.startsWith('/parties/new')} asChild>
-                    <Link href="/parties/new" onClick={handleLinkClick}>
-                        <FolderPlus />
-                        <span>Add Party</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
         </SidebarMenu>
         
         <SidebarGroup>
