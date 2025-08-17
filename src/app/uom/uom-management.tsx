@@ -258,6 +258,7 @@ export function UomManagement() {
                                 checked={unit.status !== 'disabled'}
                                 onCheckedChange={() => handleToggleStatus(unit.id)}
                                 aria-label={`Toggle ${unit.name}`}
+                                className="h-5 w-9 data-[state=checked]:translate-x-4 data-[state=unchecked]:translate-x-0 [&>span]:h-4 [&>span]:w-4"
                            />
                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenDialog('simple', unit)}>
                                <Edit className="h-4 w-4" />
