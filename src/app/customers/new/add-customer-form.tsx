@@ -304,8 +304,20 @@ export function AddCustomerForm({ onSuccess }: { onSuccess?: () => void }) {
                     <FormField control={form.control} name="balanceType" render={({ field }) => (
                         <FormItem className="space-y-3"><FormLabel>Balance Type</FormLabel><FormControl>
                             <RadioGroup onValueChange={field.onChange} value={field.value} className="flex items-center space-x-4">
-                                <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="debit" /></FormControl><FormLabel className="font-normal">Debit</FormLabel></FormItem>
-                                <FormItem className="flex items-center space-x-2 space-y-0"><FormControl><RadioGroupItem value="credit" /></FormControl><FormLabel className="font-normal">Credit</FormLabel></FormItem>
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                    <FormControl><RadioGroupItem value="debit" /></FormControl>
+                                    <FormLabel className="font-normal flex items-baseline gap-1.5">
+                                        <span>Debit</span>
+                                        <span className="text-xs text-muted-foreground">(To collect)</span>
+                                    </FormLabel>
+                                </FormItem>
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                    <FormControl><RadioGroupItem value="credit" /></FormControl>
+                                    <FormLabel className="font-normal flex items-baseline gap-1.5">
+                                        <span>Credit</span>
+                                        <span className="text-xs text-muted-foreground">(To Pay)</span>
+                                    </FormLabel>
+                                </FormItem>
                             </RadioGroup>
                         </FormControl><FormMessage /></FormItem>
                     )}/>
