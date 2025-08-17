@@ -431,6 +431,74 @@ const CustomerCombobox = ({
     );
 };
 
+// New Printable Receipt Component
+const PrintableReceipt = React.forwardRef<HTMLDivElement, {
+    cart: CartItem[];
+    totals: { subtotal: number; itemDiscount: number, orderDiscount: number, gst: number; total: number };
+    customerName: string;
+    documentType: 'Invoice' | 'Receipt';
+    documentNumber: string;
+}>(({ cart, totals, customerName, documentType, documentNumber }, ref) => {
+    return (
+        <div ref={ref} className="text-sm font-mono bg-white text-black p-4">
+            <h3 className="text-center font-bold text-lg">
+                {documentType === 'Invoice' ? 'Tax Invoice' : 'Hicks Inc.'}
+            </h3>
+            <p className="text-center text-xs">{documentType} #: {documentNumber}</p>
+            <p className="text-center text-xs">Date: {format(new Date(), 'dd-MMM-yyyy')}</p>
+            <Separator className="my-2 border-black" />
+            <p>Customer: {customerName}</p>
+            <Separator className="my-2 border-black" />
+            <table className="w-full">
+              <thead>
+                <tr>
+                  <th className="text-left">Item</th>
+                  <th className="text-center">Qty</th>
+                  <th className="text-right">Price</th>
+                  <th className="text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cart.map(item => (
+                  <tr key={item.id}>
+                    <td>{item.productName}</td>
+                    <td className="text-center">{item.quantity}</td>
+                    <td className="text-right">{item.sellingPrice.toFixed(2)}</td>
+                    <td className="text-right">{(item.quantity * item.sellingPrice).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <Separator className="my-2 border-black border-dashed" />
+            <div className="flex justify-end">
+              <div className="w-48">
+                <div className="flex justify-between">
+                  <span>Subtotal:</span>
+                  <span>{totals.subtotal.toFixed(2)}</span>
+                </div>
+                {(totals.itemDiscount + totals.orderDiscount) > 0 && (
+                    <div className="flex justify-between">
+                        <span>Discount:</span>
+                        <span>- {(totals.itemDiscount + totals.orderDiscount).toFixed(2)}</span>
+                    </div>
+                )}
+                <div className="flex justify-between">
+                  <span>GST:</span>
+                  <span>{totals.gst.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between font-bold text-base mt-1">
+                  <span>TOTAL:</span>
+                  <span>{totals.total.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+            <Separator className="my-2 border-black" />
+            <p className="text-center">Thank you!</p>
+        </div>
+    );
+});
+PrintableReceipt.displayName = "PrintableReceipt";
+
 
 export default function PosPage() {
     const { toast } = useToast();
@@ -450,6 +518,7 @@ export default function PosPage() {
     const [documentNumber, setDocumentNumber] = React.useState('');
     const [editingDiscountId, setEditingDiscountId] = React.useState<string | null>(null);
     const [discountInputValue, setDiscountInputValue] = React.useState<string>('');
+    const printRef = React.useRef<HTMLDivElement>(null);
     
     const [orderDiscount, setOrderDiscount] = React.useState(0);
     const [orderDiscountType, setOrderDiscountType] = React.useState<'%' | 'fixed'>('%');
@@ -609,7 +678,15 @@ export default function PosPage() {
     };
     
     const handlePrintReceipt = () => {
-        window.print();
+        const printContent = printRef.current;
+        if (printContent) {
+          const originalContents = document.body.innerHTML;
+          const printContents = printContent.innerHTML;
+          document.body.innerHTML = printContents;
+          window.print();
+          document.body.innerHTML = originalContents;
+          window.location.reload();
+        }
     };
 
     return (
@@ -767,18 +844,18 @@ export default function PosPage() {
                                         <div className="flex items-center gap-1.5">
                                             <span>Total</span>
                                             <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <DialogTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground">
-                                                                <Eye className="h-4 w-4" />
-                                                            </Button>
-                                                        </DialogTrigger>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>{documentType} No: {documentNumber}</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
+                                              <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                  <DialogTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground">
+                                                      <Eye className="h-4 w-4" />
+                                                    </Button>
+                                                  </DialogTrigger>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                  <p>{documentType} No: {documentNumber}</p>
+                                                </TooltipContent>
+                                              </Tooltip>
                                             </Dialog>
                                         </div>
                                         <span className="font-mono">{formatCurrency(cartTotals.total, 'INR')}</span>
@@ -849,6 +926,17 @@ export default function PosPage() {
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
+
+                <div className="hidden print:block">
+                     <PrintableReceipt
+                        ref={printRef}
+                        cart={cart}
+                        totals={cartTotals}
+                        customerName={customerName}
+                        documentType={finalDocumentType}
+                        documentNumber={documentNumber}
+                    />
+                </div>
             </div>
         </TooltipProvider>
     );
