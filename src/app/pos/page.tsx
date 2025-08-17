@@ -42,6 +42,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { numberToWords } from '@/lib/utils';
 
 
 type CartItem = StockItem & { 
@@ -220,7 +222,7 @@ const BillPreviewDialog = ({
     open: boolean;
     onOpenChange: (open: boolean) => void;
     cart: CartItem[];
-    totals: { subtotal: number; itemDiscount: number, orderDiscount: number, gst: number; total: number };
+    totals: { subtotal: number; itemDiscount: number, orderDiscount: number, totalTax: number; total: number };
     customerName: string;
     documentType: 'Invoice' | 'Receipt';
     documentNumber: string;
@@ -284,7 +286,7 @@ const BillPreviewDialog = ({
                 )}
                 <div className="flex justify-between">
                   <span>GST:</span>
-                  <span>{totals.gst.toFixed(2)}</span>
+                  <span>{totals.totalTax.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-base mt-1">
                   <span>TOTAL:</span>
@@ -434,7 +436,16 @@ const CustomerCombobox = ({
 // New Printable Receipt Component
 const PrintableReceipt = React.forwardRef<HTMLDivElement, {
     cart: CartItem[];
-    totals: { subtotal: number; itemDiscount: number, orderDiscount: number, gst: number; total: number };
+    totals: { 
+        subtotal: number; 
+        itemDiscount: number;
+        orderDiscount: number;
+        totalTax: number;
+        cgst: number;
+        sgst: number;
+        igst: number;
+        total: number;
+    };
     customerName: string;
     documentType: 'Invoice' | 'Receipt';
     documentNumber: string;
@@ -482,10 +493,9 @@ const PrintableReceipt = React.forwardRef<HTMLDivElement, {
                         <span>- {(totals.itemDiscount + totals.orderDiscount).toFixed(2)}</span>
                     </div>
                 )}
-                <div className="flex justify-between">
-                  <span>GST:</span>
-                  <span>{totals.gst.toFixed(2)}</span>
-                </div>
+                 {totals.cgst > 0 && <div className="flex justify-between"><span>CGST:</span><span>{totals.cgst.toFixed(2)}</span></div>}
+                 {totals.sgst > 0 && <div className="flex justify-between"><span>SGST:</span><span>{totals.sgst.toFixed(2)}</span></div>}
+                 {totals.igst > 0 && <div className="flex justify-between"><span>IGST:</span><span>{totals.igst.toFixed(2)}</span></div>}
                 <div className="flex justify-between font-bold text-base mt-1">
                   <span>TOTAL:</span>
                   <span>{totals.total.toFixed(2)}</span>
@@ -652,8 +662,13 @@ export default function PosPage() {
         const gst = taxableAmount * 0.18; // Assume flat 18% GST for simplicity
         const total = taxableAmount + gst;
 
-        return { subtotal, itemDiscount, orderDiscount: orderDiscountAmount, gst, total };
-    }, [cart, orderDiscount, orderDiscountType]);
+        const isIntraState = selectedCustomer?.address.state === 'Maharashtra'; // Assuming seller is in MH
+        const cgst = isIntraState ? gst / 2 : 0;
+        const sgst = isIntraState ? gst / 2 : 0;
+        const igst = !isIntraState ? gst : 0;
+
+        return { subtotal, itemDiscount, orderDiscount: orderDiscountAmount, totalTax: gst, cgst, sgst, igst, total };
+    }, [cart, orderDiscount, orderDiscountType, selectedCustomer]);
 
     const handlePaymentSuccess = (payments: Payment[]) => {
         const docType = shouldGenerateInvoice(payments) ? 'Invoice' : 'Receipt';
@@ -837,7 +852,7 @@ export default function PosPage() {
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">GST (18%)</span>
-                                        <span className="font-mono">{formatCurrency(cartTotals.gst, 'INR')}</span>
+                                        <span className="font-mono">{formatCurrency(cartTotals.totalTax, 'INR')}</span>
                                     </div>
                                     <Separator className="my-2" />
                                     <div className="flex justify-between items-center text-lg font-bold">

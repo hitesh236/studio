@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -52,12 +53,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 export function AppSidebar() {
   const { state, isMobile, setOpen, setOpenMobile } = useSidebar();
   const pathname = usePathname();
-
-  React.useEffect(() => {
-    if (pathname === '/pos') {
-      setOpen(false);
-    }
-  }, [pathname, setOpen]);
 
   const handleLinkClick = () => {
     if (isMobile) {
