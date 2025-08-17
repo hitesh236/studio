@@ -155,7 +155,7 @@ export function CustomerTable({ data }: { data: Customer[] }) {
     const uniqueStates = React.useMemo(() => {
         const statesMap = new Map<string, { code: string; name: string }>();
         data.forEach(c => {
-            if (!statesMap.has(c.placeOfSupply.state)) {
+            if (c.placeOfSupply && !statesMap.has(c.placeOfSupply.state)) {
                 statesMap.set(c.placeOfSupply.state, { code: c.placeOfSupply.code, name: c.placeOfSupply.state });
             }
         });
@@ -172,12 +172,12 @@ export function CustomerTable({ data }: { data: Customer[] }) {
                 customer.gstin.toLowerCase().includes(lowercasedFilter) ||
                 customer.contact.email?.toLowerCase().includes(lowercasedFilter) ||
                 customer.contact.phone?.toLowerCase().includes(lowercasedFilter) ||
-                customer.placeOfSupply.state.toLowerCase().includes(lowercasedFilter)
+                (customer.placeOfSupply && customer.placeOfSupply.state.toLowerCase().includes(lowercasedFilter))
             );
         }
 
         if (activeFilters.has("placeOfSupply") && filterValues.placesOfSupply.length > 0) {
-            baseData = baseData.filter(c => filterValues.placesOfSupply.includes(c.placeOfSupply.state));
+            baseData = baseData.filter(c => c.placeOfSupply && filterValues.placesOfSupply.includes(c.placeOfSupply.state));
         }
 
         if (activeFilters.has("customerType") && filterValues.customerType !== 'all') {
