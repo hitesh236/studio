@@ -334,6 +334,8 @@ const AddCustomerDialog = ({ open, onOpenChange, onCustomerAdd, initialValue }: 
             address: { street: '', city: '', state: '', zip: '' },
             bio: 'Customer added from POS.',
             gstin: '-',
+            type: 'Customer',
+            balance: 0,
         };
         onCustomerAdd(newCustomer);
         onOpenChange(false);
@@ -446,6 +448,8 @@ export default function PosPage() {
     const [activeCategory, setActiveCategory] = React.useState('All');
     const [finalDocumentType, setFinalDocumentType] = React.useState<'Invoice' | 'Receipt'>('Receipt');
     const [documentNumber, setDocumentNumber] = React.useState('');
+    const [editingDiscountId, setEditingDiscountId] = React.useState<string | null>(null);
+    const [discountInputValue, setDiscountInputValue] = React.useState<string>('');
     
     const [orderDiscount, setOrderDiscount] = React.useState(0);
     const [orderDiscountType, setOrderDiscountType] = React.useState<'%' | 'fixed'>('%');
@@ -684,7 +688,21 @@ export default function PosPage() {
                                                         <span className="w-6 text-center font-mono">{item.quantity}</span>
                                                         <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => updateQuantity(item.id, 1)}><Plus className="h-4 w-4" /></Button>
                                                         <div className="flex items-center rounded-md border">
-                                                            <Input type="number" value={item.discount} onChange={e => updateDiscount(item.id, parseInt(e.target.value) || 0)} className="h-8 w-16 pl-2 pr-1 text-sm text-right border-0 focus-visible:ring-0" placeholder="Disc" />
+                                                            <Input 
+                                                                type="number" 
+                                                                value={editingDiscountId === item.id ? discountInputValue : item.discount} 
+                                                                onFocus={() => {
+                                                                    setEditingDiscountId(item.id);
+                                                                    setDiscountInputValue(item.discount > 0 ? String(item.discount) : '');
+                                                                }}
+                                                                onBlur={() => {
+                                                                    updateDiscount(item.id, parseFloat(discountInputValue) || 0);
+                                                                    setEditingDiscountId(null);
+                                                                }}
+                                                                onChange={e => setDiscountInputValue(e.target.value)} 
+                                                                className="h-8 w-16 pl-2 pr-1 text-sm text-right border-0 focus-visible:ring-0" 
+                                                                placeholder="Disc" 
+                                                            />
                                                             <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleDiscountType(item.id)}>
                                                                 {item.discountType === '%' ? <Percent className="h-4 w-4" /> : <Receipt className="h-4 w-4" />}
                                                             </Button>
@@ -748,16 +766,20 @@ export default function PosPage() {
                                     <div className="flex justify-between items-center text-lg font-bold">
                                         <div className="flex items-center gap-1.5">
                                             <span>Total</span>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground" onClick={() => setIsPreviewOpen(true)}>
-                                                        <Eye className="h-4 w-4" />
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p>{documentType} No: {documentNumber}</p>
-                                                </TooltipContent>
-                                            </Tooltip>
+                                            <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <DialogTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground">
+                                                                <Eye className="h-4 w-4" />
+                                                            </Button>
+                                                        </DialogTrigger>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>{documentType} No: {documentNumber}</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </Dialog>
                                         </div>
                                         <span className="font-mono">{formatCurrency(cartTotals.total, 'INR')}</span>
                                     </div>
