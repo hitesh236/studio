@@ -144,8 +144,8 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Create New Party</CardTitle>
-                    <CardDescription>Add a new customer, vendor to your system.</CardDescription>
+                    <h2 className="text-2xl font-semibold leading-none tracking-tight">Create New Party</h2>
+                    <CardDescription>Add a new customer, vendor, or both to your system.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
