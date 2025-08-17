@@ -199,9 +199,11 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="UOM">
-                <Box />
-                <span>UOM</span>
+              <SidebarMenuButton tooltip="UOM" isActive={pathname.startsWith('/uom')} asChild>
+                 <Link href="/uom" onClick={handleLinkClick}>
+                    <Box />
+                    <span>UOM</span>
+                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
