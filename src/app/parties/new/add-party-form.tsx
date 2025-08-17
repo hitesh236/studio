@@ -78,8 +78,6 @@ const partyFormSchema = z.object({
   // Address
   billingAddress: z.string().optional(),
   state: z.string().optional(),
-  isShippingSame: z.boolean().default(true),
-  shippingAddress: z.string().optional(),
 
   // Tax
   gstin: z.string().length(15, "GSTIN must be 15 characters.").optional().or(z.literal('')),
@@ -128,7 +126,6 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
       partyType: 'customer',
       businessName: '',
       displayName: '',
-      isShippingSame: true,
       openingBalance: 0,
       balanceType: 'debit',
       currency: 'INR'
@@ -139,7 +136,6 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
   const partyType = watch('partyType');
   const isCustomer = partyType === 'customer' || partyType === 'both';
   const isVendor = partyType === 'vendor' || partyType === 'both';
-  const isShippingSame = watch('isShippingSame');
 
   const handleGstSearch = () => {
     const gstin = form.getValues('gstinSearch');
@@ -190,23 +186,21 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                             control={form.control}
                             name="partyType"
                             render={({ field }) => (
-                                <FormItem>
-                                    <div className="flex items-center gap-4">
-                                        <FormLabel className="whitespace-nowrap">Select Party Type</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select a party type" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                <SelectItem value="customer">Customer</SelectItem>
-                                                <SelectItem value="vendor">Vendor</SelectItem>
-                                                <SelectItem value="both">Both (Customer & Vendor)</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <FormMessage />
+                                <FormItem className="grid grid-cols-[150px_1fr] items-center gap-4">
+                                    <FormLabel>Select Party Type</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a party type" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="customer">Customer</SelectItem>
+                                            <SelectItem value="vendor">Vendor</SelectItem>
+                                            <SelectItem value="both">Both (Customer & Vendor)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage className="col-start-2" />
                                 </FormItem>
                             )}
                         />
@@ -297,30 +291,12 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                             </FormItem>
                         )}/>
                     </div>
-                     <FormField
-                        control={form.control}
-                        name="isShippingSame"
-                        render={({ field }) => (
-                            <FormItem className="flex flex-row items-center space-x-2">
-                                <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                                <FormLabel className="font-normal">Shipping address is same as billing address</FormLabel>
-                            </FormItem>
-                        )}
-                    />
-                    <SectionWrapper isVisible={!isShippingSame}>
-                        <FormField name="shippingAddress" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Shipping Address</FormLabel><FormControl><Textarea placeholder="Full shipping address" {...field} rows={3}/></FormControl><FormMessage /></FormItem>
-                        )}/>
-                    </SectionWrapper>
                 </CardContent>
             </Card>
 
             <Card>
                 <CardHeader><h3 className="text-lg font-bold">Tax & Compliance</h3></CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField name="gstin" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>GSTIN / VAT / Tax ID</FormLabel><FormControl><Input placeholder="15-digit ID" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
                     <FormField name="pan" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>PAN / Legal ID</FormLabel><FormControl><Input placeholder="10-digit PAN" {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
@@ -342,11 +318,17 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                                     <RadioGroup onValueChange={field.onChange} value={field.value} className="flex items-center space-x-4">
                                         <FormItem className="flex items-center space-x-2 space-y-0">
                                             <FormControl><RadioGroupItem value="debit" /></FormControl>
-                                            <FormLabel className="font-normal flex items-baseline gap-1.5">Dr</FormLabel>
+                                            <FormLabel className="font-normal flex items-baseline gap-1.5">
+                                                <span>Debit</span>
+                                                <span className="text-xs text-muted-foreground">(To collect)</span>
+                                            </FormLabel>
                                         </FormItem>
                                         <FormItem className="flex items-center space-x-2 space-y-0">
                                             <FormControl><RadioGroupItem value="credit" /></FormControl>
-                                            <FormLabel className="font-normal flex items-baseline gap-1.5">Cr</FormLabel>
+                                            <FormLabel className="font-normal flex items-baseline gap-1.5">
+                                                <span>Credit</span>
+                                                <span className="text-xs text-muted-foreground">(To Pay)</span>
+                                            </FormLabel>
                                         </FormItem>
                                     </RadioGroup>
                                 </FormControl><FormMessage /></FormItem>
