@@ -46,7 +46,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { initialCategoriesData } from '@/lib/categories';
 import { initialAttributes } from '@/lib/attributes';
 import type { Category, Attribute } from '@/lib/types';
-import { initialSimpleUnits } from '@/lib/uom-data';
+import { initialSimpleUnits, type SimpleUnit } from '@/lib/uom-data';
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
 
 
@@ -185,6 +185,11 @@ export function AddProductForm() {
   const [isLocationDialogOpen, setIsLocationDialogOpen] = React.useState(false);
   const [newLocation, setNewLocation] = React.useState('');
 
+  const [units, setUnits] = React.useState<SimpleUnit[]>(initialSimpleUnits);
+  const [isUomDialogOpen, setIsUomDialogOpen] = React.useState(false);
+  const [newUom, setNewUom] = React.useState({ name: '', abbreviation: '' });
+  const [targetUomField, setTargetUomField] = React.useState<'uom' | 'secondaryUom' | null>(null);
+
   const [visibleSections, setVisibleSections] = React.useState<Record<string, boolean>>({
     additionalDetails: true,
     ecommerce: true,
@@ -215,7 +220,7 @@ export function AddProductForm() {
     },
   });
 
-  const activeUnits = React.useMemo(() => initialSimpleUnits.filter(u => u.status !== 'disabled'), []);
+  const activeUnits = React.useMemo(() => units.filter(u => u.status !== 'disabled'), [units]);
 
   const watchedCategoryPath = form.watch('categoryPath');
   const lastSelectedCategoryId = watchedCategoryPath.length > 0 ? watchedCategoryPath[watchedCategoryPath.length - 1] : null;
@@ -289,6 +294,28 @@ export function AddProductForm() {
         toast({ title: 'Location added successfully.' });
         setIsLocationDialogOpen(false);
         setNewLocation('');
+    }
+  };
+  
+  const handleAddUom = () => {
+    if (newUom.name.trim() && newUom.abbreviation.trim()) {
+        if (units.some(u => u.name.toLowerCase() === newUom.name.toLowerCase() || u.abbreviation.toLowerCase() === newUom.abbreviation.toLowerCase())) {
+            toast({ variant: 'destructive', title: 'Unit already exists.'});
+            return;
+        }
+        const newUnit: SimpleUnit = { 
+            id: newUom.abbreviation.toLowerCase(),
+            name: newUom.name.trim(), 
+            abbreviation: newUom.abbreviation.trim(),
+            status: 'active',
+        };
+        setUnits(prev => [...prev, newUnit]);
+        if(targetUomField) {
+            form.setValue(targetUomField, newUnit.abbreviation);
+        }
+        toast({ title: 'UOM Added' });
+        setIsUomDialogOpen(false);
+        setNewUom({ name: '', abbreviation: '' });
     }
   };
 
@@ -464,16 +491,30 @@ export function AddProductForm() {
                     <FormField name="sku" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>SKU</FormLabel><FormControl><Input placeholder="Stock Keeping Unit" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 gap-2">
                         <FormField name="uom" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Primary UOM</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger></FormControl><SelectContent>
-                                {activeUnits.map(unit => <SelectItem key={unit.id} value={unit.abbreviation}>{unit.name} ({unit.abbreviation})</SelectItem>)}
-                            </SelectContent></Select><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Primary UOM</FormLabel>
+                                <div className="flex items-center gap-2">
+                                <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger></FormControl><SelectContent>
+                                    {activeUnits.map(unit => <SelectItem key={unit.id} value={unit.abbreviation}>{unit.name} ({unit.abbreviation})</SelectItem>)}
+                                </SelectContent></Select>
+                                <Button type="button" variant="outline" size="icon" onClick={() => { setTargetUomField('uom'); setIsUomDialogOpen(true); }}>
+                                    <PlusCircle className="h-4 w-4" />
+                                </Button>
+                                </div>
+                            <FormMessage /></FormItem>
                         )} />
                         <FormField name="secondaryUom" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Secondary UOM</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger></FormControl><SelectContent>
-                               {activeUnits.map(unit => <SelectItem key={unit.id} value={unit.abbreviation}>{unit.name} ({unit.abbreviation})</SelectItem>)}
-                            </SelectContent></Select><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Secondary UOM</FormLabel>
+                             <div className="flex items-center gap-2">
+                                <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger></FormControl><SelectContent>
+                                {activeUnits.map(unit => <SelectItem key={unit.id} value={unit.abbreviation}>{unit.name} ({unit.abbreviation})</SelectItem>)}
+                                </SelectContent></Select>
+                                <Button type="button" variant="outline" size="icon" onClick={() => { setTargetUomField('secondaryUom'); setIsUomDialogOpen(true); }}>
+                                    <PlusCircle className="h-4 w-4" />
+                                </Button>
+                                </div>
+                            <FormMessage /></FormItem>
                         )} />
                     </div>
                      <FormField name="purchasePrice" control={form.control} render={({ field }) => (
@@ -801,6 +842,27 @@ export function AddProductForm() {
             </CardFooter>
           </form>
         </Form>
+        <Dialog open={isUomDialogOpen} onOpenChange={setIsUomDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Add New Unit of Measurement</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="uom-name">Unit Name</Label>
+                        <Input id="uom-name" value={newUom.name} onChange={e => setNewUom(u => ({...u, name: e.target.value}))} placeholder="e.g., Pieces"/>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="uom-abbr">Abbreviation</Label>
+                        <Input id="uom-abbr" value={newUom.abbreviation} onChange={e => setNewUom(u => ({...u, abbreviation: e.target.value}))} placeholder="e.g., pcs"/>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsUomDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleAddUom}>Save Unit</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
