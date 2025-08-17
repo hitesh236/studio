@@ -748,18 +748,16 @@ export default function PosPage() {
                                     <div className="flex justify-between items-center text-lg font-bold">
                                         <div className="flex items-center gap-1.5">
                                             <span>Total</span>
-                                            <DialogTrigger asChild>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground" onClick={() => setIsPreviewOpen(true)}>
-                                                                <Eye className="h-4 w-4" />
-                                                            </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>{documentType} No: {documentNumber}</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </DialogTrigger>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground" onClick={() => setIsPreviewOpen(true)}>
+                                                        <Eye className="h-4 w-4" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>{documentType} No: {documentNumber}</p>
+                                                </TooltipContent>
+                                            </Tooltip>
                                         </div>
                                         <span className="font-mono">{formatCurrency(cartTotals.total, 'INR')}</span>
                                     </div>
