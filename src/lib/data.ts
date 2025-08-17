@@ -17,6 +17,7 @@ export type Person = {
   bio: string;
   isExpanded?: boolean;
   gstin?: string;
+  type: 'Customer' | 'Vendor';
 };
 
 const firstNames = ["John", "Jane", "Michael", "Emily", "Chris", "Jessica", "David", "Sarah", "James", "Linda"];
@@ -33,6 +34,7 @@ const bios = [
   "Results-driven team player with a strong background in software development and UX design.",
   "Specializes in financial modeling and data-driven decision making for enterprise clients.",
 ];
+const types = ["Customer", "Vendor"] as const;
 
 const getRandomElement = <T>(arr: T[] | readonly T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
@@ -61,6 +63,7 @@ export function generateData(count: number): Person[] {
       },
       bio: getRandomElement(bios),
       gstin: `${gstinStateCode}ABCDE${1000 + i}F1Z${(i % 9) + 1}`,
+      type: getRandomElement(types),
     });
   }
   return data;

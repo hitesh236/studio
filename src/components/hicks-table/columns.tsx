@@ -5,9 +5,8 @@ import type { Person } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown, ChevronRight, Star, Eye, Edit, Trash2, ArrowUp, ArrowDown, ExternalLink } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 type ColumnProps = {
@@ -118,19 +117,13 @@ export const columns = ({
       )
     },
     {
-      accessor: "gstin",
-      header: getSortableHeader("GSTIN", "gstin"),
-      cell: (row: Person) => <div className={cn("font-mono whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.gstin}</div>,
-    },
-    {
-      accessor: "state",
-      header: "State",
-      cell: (row: Person) => <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.address.state}</div>,
-    },
-    {
-      accessor: "city",
-      header: "City",
-      cell: (row: Person) => <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.address.city}</div>,
+      accessor: "type",
+      header: getSortableHeader("Type", "type"),
+      cell: (row: Person) => (
+        <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>
+          <Badge variant={row.type === 'Customer' ? 'secondary' : 'outline'}>{row.type}</Badge>
+        </div>
+      ),
     },
     {
       accessor: "phone",
@@ -143,16 +136,6 @@ export const columns = ({
       cell: (row: Person) => (
           <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.saleAmount)}</div>
       ),
-    },
-    {
-        accessor: "rating",
-        header: getSortableHeader("Rating", "rating"),
-        cell: (row: Person) => (
-            <div className={cn("flex items-center gap-1", density === 'compact' && 'py-1 px-2 text-sm')}>
-                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                <span>{row.rating.toFixed(1)}</span>
-            </div>
-        )
     },
     {
       accessor: "status",

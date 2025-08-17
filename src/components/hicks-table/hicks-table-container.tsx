@@ -62,19 +62,15 @@ import { Separator } from "../ui/separator";
 const availableFilters = [
   { id: "status", label: "Status" },
   { id: "company", label: "Company" },
-  { id: "rating", label: "Rating" },
 ];
 
 const ALL_COLUMNS = [
     { id: 'select', label: 'Select' },
     { id: 'name', label: 'User' },
     { id: 'company', label: 'Company' },
-    { id: 'gstin', label: 'GSTIN' },
-    { id: 'state', label: 'State' },
-    { id: 'city', label: 'City' },
+    { id: 'type', label: 'Type' },
     { id: 'phone', label: 'Phone' },
     { id: 'saleAmount', label: 'Sale Amount' },
-    { id: 'rating', label: 'Rating' },
     { id: 'status', label: 'Status' },
     { id: 'actions', label: 'Actions' },
   ];
