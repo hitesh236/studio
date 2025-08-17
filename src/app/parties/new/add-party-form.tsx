@@ -140,56 +140,58 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <Card className="shadow-none border-none">
-            <CardHeader>
-                <CardTitle>Create New Party</CardTitle>
-                <CardDescription>Add a new customer, vendor, or both to your system.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                {/* Party Type */}
-                <div className="space-y-4">
-                    <FormLabel>Party Type *</FormLabel>
-                    <div className="flex items-center gap-8">
-                        <FormField
-                            control={form.control}
-                            name="isCustomer"
-                            render={({ field }) => (
-                                <FormItem className="flex items-center space-x-2 space-y-0">
-                                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                                    <FormLabel className="font-normal">Customer</FormLabel>
-                                </FormItem>
-                            )}
-                        />
-                         <FormField
-                            control={form.control}
-                            name="isVendor"
-                            render={({ field }) => (
-                                <FormItem className="flex items-center space-x-2 space-y-0">
-                                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                                    <FormLabel className="font-normal">Vendor</FormLabel>
-                                </FormItem>
-                            )}
-                        />
+    <div className="p-4 sm:p-6 space-y-6">
+        <div className="text-center">
+            <h2 className="text-2xl font-bold">Create New Party</h2>
+            <p className="text-muted-foreground">Add a new customer, vendor, or both to your system.</p>
+        </div>
+        <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <Card>
+                <CardHeader><CardTitle>Party Type</CardTitle></CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-8">
+                            <FormField
+                                control={form.control}
+                                name="isCustomer"
+                                render={({ field }) => (
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                        <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                        <FormLabel className="font-normal">Customer</FormLabel>
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="isVendor"
+                                render={({ field }) => (
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                        <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                        <FormLabel className="font-normal">Vendor</FormLabel>
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                        <FormMessage>{form.formState.errors.isCustomer?.message}</FormMessage>
                     </div>
-                     <FormMessage>{form.formState.errors.isCustomer?.message}</FormMessage>
-                </div>
+                </CardContent>
+            </Card>
 
-                {/* Common Fields */}
-                <div className="mt-6 space-y-6">
-                    <h3 className="text-lg font-medium border-b pb-2">Common Details</h3>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+                <CardHeader><CardTitle>Common Details</CardTitle></CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField name="businessName" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Name / Business Name</FormLabel><FormControl><Input placeholder="e.g., Innovate Inc." {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                         <FormField name="displayName" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Display Name</FormLabel><FormControl><Input placeholder="e.g., Innovate" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                         <FormField name="contactPerson" control={form.control} render={({ field }) => (
+                        <FormField name="contactPerson" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Contact Person</FormLabel><FormControl><Input placeholder="e.g., John Doe" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                         <FormField name="phone" control={form.control} render={({ field }) => (
+                        <FormField name="phone" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input type="tel" placeholder="+91 12345 67890" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                         <FormField name="email" control={form.control} render={({ field }) => (
@@ -200,8 +202,10 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                         )}/>
                     </div>
 
+                    <Separator />
+
                     <h4 className="text-md font-medium">Billing Address</h4>
-                     <div className="grid grid-cols-1 gap-6">
+                    <div className="grid grid-cols-1 gap-6">
                         <FormField name="billingAddress" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Street, City, State, Pincode</FormLabel><FormControl><Textarea placeholder="123 Main St, Mumbai, Maharashtra, 400001" {...field} rows={3}/></FormControl><FormMessage /></FormItem>
                         )}/>
@@ -218,32 +222,36 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                         )}
                     />
                     
-                     <SectionWrapper isVisible={!isShippingSame}>
+                    <SectionWrapper isVisible={!isShippingSame}>
                         <h4 className="text-md font-medium">Shipping Address</h4>
                         <div className="grid grid-cols-1 gap-6">
-                           <FormField name="shippingAddress" control={form.control} render={({ field }) => (
+                            <FormField name="shippingAddress" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>Street, City, State, Pincode</FormLabel><FormControl><Textarea placeholder="123 Shipping St, Mumbai, Maharashtra, 400001" {...field} rows={3}/></FormControl><FormMessage /></FormItem>
                             )}/>
                         </div>
                     </SectionWrapper>
                     
-                     <h4 className="text-md font-medium">Tax & Compliance</h4>
+                    <Separator />
+
+                    <h4 className="text-md font-medium">Tax & Compliance</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField name="gstin" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>GSTIN</FormLabel><FormControl><Input placeholder="15-digit GSTIN" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                         <FormField name="pan" control={form.control} render={({ field }) => (
+                        <FormField name="pan" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>PAN</FormLabel><FormControl><Input placeholder="10-digit PAN" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                         <FormField name="placeOfSupply" control={form.control} render={({ field }) => (
+                        <FormField name="placeOfSupply" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Place of Supply</FormLabel><FormControl><Input placeholder="State" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                     </div>
 
+                    <Separator />
+                    
                     <h4 className="text-md font-medium">Accounting</h4>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="flex items-end gap-2">
-                             <FormField name="openingBalance" control={form.control} render={({ field }) => (
+                                <FormField name="openingBalance" control={form.control} render={({ field }) => (
                                 <FormItem className="flex-1"><FormLabel>Opening Balance</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
                             )}/>
                             <FormField name="balanceType" control={form.control} render={({ field }) => (
@@ -264,48 +272,48 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                         <FormField name="currency" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Currency</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                         <FormField name="paymentTerms" control={form.control} render={({ field }) => (
+                        <FormField name="paymentTerms" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Payment Terms</FormLabel><FormControl><Input placeholder="e.g., Net 30" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                         <FormField name="preferredPaymentMode" control={form.control} render={({ field }) => (
+                        <FormField name="preferredPaymentMode" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Preferred Payment Mode</FormLabel><FormControl><Input placeholder="e.g., Bank Transfer" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                         <FormField name="notes" control={form.control} render={({ field }) => (
+                        <FormField name="notes" control={form.control} render={({ field }) => (
                             <FormItem className="md:col-span-2"><FormLabel>Notes</FormLabel><FormControl><Textarea placeholder="Any other remarks" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                     </div>
-                </div>
+                </CardContent>
+            </Card>
 
-                {/* Customer-Specific Fields */}
-                <SectionWrapper isVisible={isCustomer}>
-                     <div className="mt-6 space-y-6 pt-6 border-t">
-                        <h3 className="text-lg font-medium">Customer Details</h3>
+            <SectionWrapper isVisible={isCustomer}>
+                <Card>
+                    <CardHeader><CardTitle>Customer Details</CardTitle></CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField name="customerType" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Customer Type</FormLabel><FormControl><Input placeholder="e.g., Retailer" {...field} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                        <FormField name="salesPerson" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Assigned Sales Person</FormLabel><FormControl><Input placeholder="e.g., Jane Smith" {...field} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                        <FormField name="priceList" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Price List / Discount</FormLabel><FormControl><Input placeholder="e.g., Wholesale Price" {...field} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                        <FormField name="creditLimit" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Credit Limit</FormLabel><FormControl><Input type="number" placeholder="50000" {...field} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                        <FormField name="loyaltyId" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Loyalty ID</FormLabel><FormControl><Input placeholder="e.g., CUST-001" {...field} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                    </CardContent>
+                </Card>
+            </SectionWrapper>
+            
+            <SectionWrapper isVisible={isVendor}>
+                 <Card>
+                    <CardHeader><CardTitle>Vendor Details</CardTitle></CardHeader>
+                    <CardContent className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <FormField name="customerType" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Customer Type</FormLabel><FormControl><Input placeholder="e.g., Retailer" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                             <FormField name="salesPerson" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Assigned Sales Person</FormLabel><FormControl><Input placeholder="e.g., Jane Smith" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                             <FormField name="priceList" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Price List / Discount</FormLabel><FormControl><Input placeholder="e.g., Wholesale Price" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                            <FormField name="creditLimit" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Credit Limit</FormLabel><FormControl><Input type="number" placeholder="50000" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                            <FormField name="loyaltyId" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Loyalty ID</FormLabel><FormControl><Input placeholder="e.g., CUST-001" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                        </div>
-                    </div>
-                </SectionWrapper>
-                
-                {/* Vendor-Specific Fields */}
-                <SectionWrapper isVisible={isVendor}>
-                    <div className="mt-6 space-y-6 pt-6 border-t">
-                        <h3 className="text-lg font-medium">Vendor Details</h3>
-                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                             <FormField name="vendorType" control={form.control} render={({ field }) => (
+                            <FormField name="vendorType" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>Vendor Type</FormLabel><FormControl><Input placeholder="e.g., Manufacturer" {...field} /></FormControl><FormMessage /></FormItem>
                             )}/>
                             <FormField name="purchaseCategory" control={form.control} render={({ field }) => (
@@ -317,33 +325,35 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                             <FormField name="paymentCycle" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>Payment Cycle</FormLabel><FormControl><Input placeholder="e.g., Weekly" {...field} /></FormControl><FormMessage /></FormItem>
                             )}/>
-                            <h4 className="text-md font-medium md:col-span-2 pt-2">Bank Details</h4>
+                        </div>
+                        <Separator />
+                        <h4 className="text-md font-medium">Bank Details</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <FormField name="bankDetails.accountNumber" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                             )}/>
                             <FormField name="bankDetails.ifsc" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>IFSC Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                             )}/>
-                             <FormField name="bankDetails.swiftCode" control={form.control} render={({ field }) => (
+                            <FormField name="bankDetails.swiftCode" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>SWIFT Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                             )}/>
-                             <FormField name="tdsPercentage" control={form.control} render={({ field }) => (
+                            <FormField name="tdsPercentage" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>TDS %</FormLabel><FormControl><Input type="number" placeholder="e.g., 10" {...field} /></FormControl><FormMessage /></FormItem>
                             )}/>
                         </div>
-                    </div>
-                </SectionWrapper>
-            </CardContent>
-            <CardFooter>
-                 <div className="flex justify-end w-full">
-                    <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                        Save Party
-                    </Button>
-                </div>
-            </CardFooter>
-        </Card>
-      </form>
-    </Form>
+                    </CardContent>
+                </Card>
+            </SectionWrapper>
+            
+            <div className="flex justify-end pt-4">
+                <Button type="submit" disabled={isSubmitting} size="lg">
+                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                    Save Party
+                </Button>
+            </div>
+        </form>
+        </Form>
+    </div>
   );
 }
