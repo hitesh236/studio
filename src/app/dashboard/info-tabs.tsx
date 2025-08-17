@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency, cn } from "@/lib/utils";
 import { bankAccounts, recentInvoices, upcomingBills } from "./data";
 import { format, parseISO } from 'date-fns';
+import Link from 'next/link';
 
 // Mobile Card Components
 const MobileInvoiceCard = ({ invoice }: { invoice: typeof recentInvoices[0] }) => {
@@ -20,21 +21,23 @@ const MobileInvoiceCard = ({ invoice }: { invoice: typeof recentInvoices[0] }) =
         }
     };
     return (
-        <Card>
-            <CardHeader className="p-4 flex flex-row items-center justify-between">
-                <div>
-                    <CardTitle className="text-base">{invoice.id}</CardTitle>
-                    <CardDescription>{invoice.customer}</CardDescription>
-                </div>
-                <Badge variant={getStatusVariant(invoice.status)}>{invoice.status}</Badge>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-                <div className="flex justify-between items-baseline">
-                    <p className="text-sm text-muted-foreground">Amount</p>
-                    <p className="text-lg font-mono">{formatCurrency(invoice.amount, 'INR')}</p>
-                </div>
-            </CardContent>
-        </Card>
+        <Link href="/invoice-preview" className="block">
+            <Card className="hover:border-primary">
+                <CardHeader className="p-4 flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle className="text-base">{invoice.id}</CardTitle>
+                        <CardDescription>{invoice.customer}</CardDescription>
+                    </div>
+                    <Badge variant={getStatusVariant(invoice.status)}>{invoice.status}</Badge>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                    <div className="flex justify-between items-baseline">
+                        <p className="text-sm text-muted-foreground">Amount</p>
+                        <p className="text-lg font-mono">{formatCurrency(invoice.amount, 'INR')}</p>
+                    </div>
+                </CardContent>
+            </Card>
+        </Link>
     )
 };
 
@@ -110,8 +113,12 @@ export function InfoTabs() {
                             </TableHeader>
                             <TableBody>
                                 {recentInvoices.map(invoice => (
-                                    <TableRow key={invoice.id}>
-                                        <TableCell className="font-medium">{invoice.id}</TableCell>
+                                    <TableRow key={invoice.id} className="group hover:bg-muted/50">
+                                        <TableCell className="font-medium">
+                                            <Link href="/invoice-preview" className="hover:underline group-hover:text-primary">
+                                                {invoice.id}
+                                            </Link>
+                                        </TableCell>
                                         <TableCell>{invoice.customer}</TableCell>
                                         <TableCell className="text-right font-mono">{formatCurrency(invoice.amount, 'INR')}</TableCell>
                                         <TableCell className="text-center"><Badge variant={getStatusVariant(invoice.status)}>{invoice.status}</Badge></TableCell>

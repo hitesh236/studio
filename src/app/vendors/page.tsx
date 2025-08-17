@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 
 export default function VendorsPage() {
-  const data: Person[] = generateData(500);
+  const data: Person[] = generateData(500).filter(p => p.type === 'Vendor');
 
   return (
     <div data-section="main-content" className="p-4 sm:p-6 lg:p-8">

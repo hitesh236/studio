@@ -37,33 +37,8 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import type { Attribute, AttributeType, Category } from '@/lib/types';
 
-
-type Attribute = {
-  id: string;
-  name: string;
-  dataType: 'Text' | 'Text Area' | 'Number' | 'Date' | 'Dropdown';
-  isSearchable: boolean;
-  isFilterable: boolean;
-  options?: string[];
-};
-
-export const initialAttributes: Record<string, Attribute[]> = {
-  cosmetics: [
-    { id: 'attr-cos-1', name: 'Shade Name', dataType: 'Text', isSearchable: true, isFilterable: false },
-    { id: 'attr-cos-2', name: 'Ingredients', dataType: 'Text Area', isSearchable: false, isFilterable: false },
-    { id: 'attr-cos-3', name: 'Color', dataType: 'Text', isSearchable: true, isFilterable: false },
-  ],
-  apparel: [
-    { id: 'attr-app-1', name: 'Size', dataType: 'Dropdown', isSearchable: true, isFilterable: true, options: ['S', 'M', 'L', 'XL', 'XXL'] },
-    { id: 'attr-app-2', name: 'Color', dataType: 'Dropdown', isSearchable: true, isFilterable: true, options: ['Red', 'Blue', 'Green', 'Black', 'White'] },
-    { id: 'attr-app-3', name: 'Material', dataType: 'Text Area', isSearchable: false, isFilterable: true },
-  ],
-  'motor-parts': [
-    { id: 'attr-mot-1', name: 'Part Number', dataType: 'Text', isSearchable: true, isFilterable: false },
-    { id: 'attr-mot-2', name: 'OEM', dataType: 'Text', isSearchable: true, isFilterable: true },
-  ],
-};
 
 const TagInput = ({ value, onChange }: { value: string[]; onChange: (value: string[]) => void }) => {
     const [inputValue, setInputValue] = React.useState('');
@@ -125,29 +100,37 @@ const AttributeDialog = ({
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [name, setName] = React.useState(attribute?.name || '');
-  const [dataType, setDataType] = React.useState<Attribute['dataType']>(attribute?.dataType || 'Text');
-  const [isSearchable, setIsSearchable] = React.useState(attribute?.isSearchable || false);
-  const [isFilterable, setIsFilterable] = React.useState(attribute?.isFilterable || false);
+  const [dataType, setDataType] = React.useState<AttributeType>(attribute?.type || 'text');
+  const [isSearchable, setIsSearchable] = React.useState(false); // Placeholder
+  const [isFilterable, setIsFilterable] = React.useState(false); // Placeholder
   const [options, setOptions] = React.useState<string[]>(attribute?.options || []);
 
   React.useEffect(() => {
     if (isOpen) {
       setName(attribute?.name || '');
-      setDataType(attribute?.dataType || 'Text');
-      setIsSearchable(attribute?.isSearchable || false);
-      setIsFilterable(attribute?.isFilterable || false);
+      setDataType(attribute?.type || 'text');
+      setIsSearchable(false);
+      setIsFilterable(false);
       setOptions(attribute?.options || []);
     }
   }, [isOpen, attribute]);
   
    React.useEffect(() => {
-    if (dataType !== 'Dropdown') {
+    if (dataType !== 'dropdown') {
       setOptions([]);
     }
   }, [dataType]);
 
   const handleSave = () => {
-    onSave({ name, dataType, isSearchable, isFilterable, options });
+    onSave({ 
+        name, 
+        type: dataType, 
+        options,
+        // These fields are not in the provided Attribute type, but are in the form
+        // For now, we will just use some placeholder logic.
+        isGlobal: false, 
+        assignedCategories: [] 
+    });
     setIsOpen(false);
   };
 
@@ -169,18 +152,17 @@ const AttributeDialog = ({
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="data-type" className="text-right">Data Type</Label>
-                <Select value={dataType} onValueChange={(value: Attribute['dataType']) => setDataType(value)}>
+                <Select value={dataType} onValueChange={(value: AttributeType) => setDataType(value)}>
                     <SelectTrigger id="data-type" className="col-span-3"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="Text">Text</SelectItem>
-                        <SelectItem value="Text Area">Text Area</SelectItem>
-                        <SelectItem value="Number">Number</SelectItem>
-                        <SelectItem value="Date">Date</SelectItem>
-                        <SelectItem value="Dropdown">Dropdown</SelectItem>
+                        <SelectItem value="text">Text</SelectItem>
+                        <SelectItem value="dropdown">Dropdown</SelectItem>
+                        <SelectItem value="checkbox">Checkbox</SelectItem>
+                        <SelectItem value="date">Date</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
-            {dataType === 'Dropdown' && (
+            {dataType === 'dropdown' && (
                 <div className="grid grid-cols-4 items-start gap-4">
                     <Label htmlFor="options" className="text-right pt-2">Options</Label>
                     <div className="col-span-3 space-y-2">
@@ -221,17 +203,31 @@ const AttributeDialog = ({
 };
 
 
-export function AttributesTable({ category }: { category: { id: string; name: string } }) {
+export function AttributesTable({ category, attributes, onAttributeUpdate, categories }: { category: Category, attributes: Attribute[], onAttributeUpdate: (attributes: Attribute[]) => void, categories: Category[] }) {
   const { toast } = useToast();
-  const [attributes, setAttributes] = React.useState<Attribute[]>(initialAttributes[category.id] || []);
+
+  const getCategoryNameById = (categories: Category[], id: string): string | null => {
+    for (const cat of categories) {
+        if (cat.id === id) return cat.name;
+        if (cat.children) {
+            const foundName = getCategoryNameById(cat.children, id);
+            if (foundName) return foundName;
+        }
+    }
+    return null;
+  };
 
   const handleAddAttribute = (newAttrData: Omit<Attribute, 'id'>) => {
     if (!newAttrData.name.trim()) {
         toast({ variant: 'destructive', title: 'Attribute name is required.' });
         return;
     }
-    const newAttribute: Attribute = { ...newAttrData, id: `attr-${Date.now()}` };
-    setAttributes(prev => [...prev, newAttribute]);
+    const newAttribute: Attribute = { 
+        ...newAttrData, 
+        id: `attr-${Date.now()}`,
+        assignedCategories: [category.id] // Assign to current category
+    };
+    onAttributeUpdate([...attributes, newAttribute]);
     toast({ title: 'Attribute Added', description: `Successfully added "${newAttribute.name}".` });
   };
 
@@ -240,20 +236,18 @@ export function AttributesTable({ category }: { category: { id: string; name: st
         toast({ variant: 'destructive', title: 'Attribute name is required.' });
         return;
     }
-    setAttributes(prev => prev.map(attr => attr.id === id ? { ...attr, ...updatedAttrData } : attr));
+    onAttributeUpdate(attributes.map(attr => attr.id === id ? { ...attr, ...updatedAttrData } : attr));
     toast({ title: 'Attribute Updated', description: `Successfully updated "${updatedAttrData.name}".` });
   };
 
   const handleDeleteAttribute = (id: string) => {
-    setAttributes(prev => prev.filter(attr => attr.id !== id));
+    onAttributeUpdate(attributes.filter(attr => attr.id !== id));
     toast({ title: 'Attribute Removed' });
   };
-  
-  const BooleanBadge = ({ value }: { value: boolean }) => (
-    <Badge variant={value ? 'default' : 'destructive'} className={cn(value ? 'bg-green-600' : 'bg-red-600')}>
-      {value ? 'Yes' : 'No'}
-    </Badge>
-  );
+
+  const displayedAttributes = React.useMemo(() => {
+    return attributes.filter(attr => attr.isGlobal || attr.assignedCategories.includes(category.id));
+  }, [attributes, category]);
 
   return (
     <div>
@@ -274,19 +268,18 @@ export function AttributesTable({ category }: { category: { id: string; name: st
             <TableRow>
               <TableHead className="p-2 h-10 font-normal">Attribute Name</TableHead>
               <TableHead className="p-2 h-10 font-normal">Data Type</TableHead>
-              <TableHead className="p-2 h-10 font-normal">Searchable</TableHead>
-              <TableHead className="p-2 h-10 font-normal">Filterable</TableHead>
+              <TableHead className="p-2 h-10 font-normal">Assigned To</TableHead>
               <TableHead className="text-center p-2 h-10 font-normal">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {attributes.length > 0 ? attributes.map(attr => (
+            {displayedAttributes.length > 0 ? displayedAttributes.map(attr => (
               <TableRow key={attr.id}>
                 <TableCell className="font-medium p-2">{attr.name}</TableCell>
                 <TableCell className="p-2 align-top">
                     <div>
-                        <span>{attr.dataType}</span>
-                        {attr.dataType === 'Dropdown' && attr.options && attr.options.length > 0 && (
+                        <span>{attr.type}</span>
+                        {attr.type === 'dropdown' && attr.options && attr.options.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
                                 {attr.options.map(option => (
                                 <Badge key={option} variant="secondary" className="font-normal">{option}</Badge>
@@ -295,8 +288,17 @@ export function AttributesTable({ category }: { category: { id: string; name: st
                         )}
                     </div>
                 </TableCell>
-                <TableCell className="p-2"><BooleanBadge value={attr.isSearchable} /></TableCell>
-                <TableCell className="p-2"><BooleanBadge value={attr.isFilterable} /></TableCell>
+                <TableCell>
+                    {attr.isGlobal ? (
+                        <Badge variant="secondary">Global</Badge>
+                    ) : (
+                        <div className="flex flex-wrap gap-1">
+                            {attr.assignedCategories.map(catId => (
+                                <Badge key={catId}>{getCategoryNameById(categories, catId) || catId}</Badge>
+                            ))}
+                        </div>
+                    )}
+                </TableCell>
                 <TableCell className="text-center space-x-1 p-2">
                   <AttributeDialog attribute={attr} onSave={handleEditAttribute(attr.id)}>
                     <Button variant="ghost" size="icon" className="text-blue-600 hover:text-blue-700">
@@ -317,7 +319,7 @@ export function AttributesTable({ category }: { category: { id: string; name: st
               </TableRow>
             )) : (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center p-2">No attributes found for this category.</TableCell>
+                <TableCell colSpan={4} className="h-24 text-center p-2">No attributes found for this category.</TableCell>
               </TableRow>
             )}
           </TableBody>

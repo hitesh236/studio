@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
-import { AttributesTable, initialAttributes } from './attributes-form';
+import { AttributesTable } from './attributes-form';
 import { PlusCircle } from 'lucide-react';
 import {
   Dialog,
@@ -19,12 +19,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-
-const initialCategories = [
-  { id: 'apparel', name: 'Apparel' },
-  { id: 'motor-parts', name: 'Motor Parts' },
-  { id: 'cosmetics', name: 'Cosmetics' },
-];
+import type { Category, Attribute } from '@/lib/types';
+import { initialCategoriesData } from '@/lib/categories';
+import { initialAttributes as initialAttributesData } from '@/lib/attributes';
 
 const AddCategoryDialog = ({ onAdd }: { onAdd: (name: string) => void }) => {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -76,7 +73,8 @@ const AddCategoryDialog = ({ onAdd }: { onAdd: (name: string) => void }) => {
 
 export default function AttributesPage() {
   const { toast } = useToast();
-  const [categories, setCategories] = React.useState(initialCategories);
+  const [categories, setCategories] = React.useState<Category[]>(initialCategoriesData);
+  const [attributes, setAttributes] = React.useState<Attribute[]>(initialAttributesData);
   const [selectedCategory, setSelectedCategory] = React.useState(categories[0]);
 
   const handleAddCategory = (name: string) => {
@@ -88,13 +86,14 @@ export default function AttributesPage() {
         toast({ variant: 'destructive', title: 'Category already exists.'});
         return;
     }
-    setCategories(prev => [...prev, newCategory]);
+    const updatedCategories = [...categories, newCategory];
+    setCategories(updatedCategories);
     setSelectedCategory(newCategory);
     toast({ title: 'Category Added', description: `Successfully added "${name}".`});
   };
   
   const getAttributeCount = (categoryId: string) => {
-    return initialAttributes[categoryId]?.length || 0;
+    return attributes.filter(attr => attr.isGlobal || attr.assignedCategories.includes(categoryId)).length;
   }
 
   return (
@@ -117,7 +116,7 @@ export default function AttributesPage() {
         <AddCategoryDialog onAdd={handleAddCategory} />
       </aside>
       <main className="flex-1 p-6">
-        <AttributesTable key={selectedCategory.id} category={selectedCategory} />
+        <AttributesTable key={selectedCategory.id} category={selectedCategory} attributes={attributes} onAttributeUpdate={setAttributes} categories={categories} />
       </main>
     </div>
   );
