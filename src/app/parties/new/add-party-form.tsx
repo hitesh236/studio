@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
   CardFooter,
+  CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,7 +21,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
@@ -80,7 +80,6 @@ const partyFormSchema = z.object({
   state: z.string().optional(),
 
   // Tax
-  gstin: z.string().length(15, "GSTIN must be 15 characters.").optional().or(z.literal('')),
   pan: z.string().length(10, 'PAN must be 10 characters.').optional().or(z.literal('')),
   placeOfSupply: z.string().optional(),
   
@@ -148,7 +147,6 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
         // For now, let's pre-fill some dummy data.
         form.setValue('businessName', 'GSTIN Fetched Company');
         form.setValue('billingAddress', '123 GST Street, Mumbai, Maharashtra, 400001');
-        form.setValue('gstin', gstin);
         form.setValue('placeOfSupply', 'Maharashtra');
     } else {
         toast({
@@ -172,21 +170,21 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
-        <div className="text-center">
-            <h2 className="text-2xl font-bold">Create New Party</h2>
-            <p className="text-muted-foreground">Add a new customer, vendor, or both to your system.</p>
-        </div>
+    <div className="space-y-6">
         <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
-                <CardContent className="pt-6">
-                    <div className="space-y-4">
+                <CardHeader>
+                    <CardTitle>Create New Party</CardTitle>
+                    <CardDescription>Add a new customer, vendor, or both to your system.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
                         <FormField
                             control={form.control}
                             name="partyType"
                             render={({ field }) => (
-                                <FormItem className="grid grid-cols-[150px_1fr] items-center gap-4">
+                                <FormItem>
                                     <FormLabel>Select Party Type</FormLabel>
                                     <Select onValueChange={field.onChange} value={field.value}>
                                         <FormControl>
@@ -200,11 +198,10 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                                             <SelectItem value="both">Both (Customer & Vendor)</SelectItem>
                                         </SelectContent>
                                     </Select>
-                                    <FormMessage className="col-start-2" />
+                                    <FormMessage />
                                 </FormItem>
                             )}
                         />
-                         <Separator className="my-4"/>
                          <div className="flex items-end gap-2">
                             <FormField control={form.control} name="gstinSearch" render={({ field }) => (
                                 <FormItem className="flex-1">
