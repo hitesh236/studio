@@ -170,13 +170,13 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4">
         <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
                 <CardHeader>
                     <CardTitle>Create New Party</CardTitle>
-                    <CardDescription>Add a new customer, vendor, or both to your system.</CardDescription>
+                    <CardDescription>Add a new customer, vendor to your system.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
@@ -224,17 +224,17 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                     <FormField name="businessName" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Customer Name</FormLabel><FormControl><Input placeholder="e.g., Innovate Inc." {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
-                    <FormField name="displayName" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Display Name</FormLabel><FormControl><Input placeholder="e.g., Innovate" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormField name="phone" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Phone Number(s)</FormLabel><FormControl><Input type="tel" placeholder="+91 12345 67890" {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
                     <FormField name="contactPerson" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Contact Person</FormLabel><FormControl><Input placeholder="e.g., John Doe" {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
-                    <FormField name="phone" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Phone Number(s)</FormLabel><FormControl><Input type="tel" placeholder="+91 12345 67890" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
                     <FormField name="email" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Email Address</FormLabel><FormControl><Input type="email" placeholder="contact@example.com" {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                    <FormField name="displayName" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Alternate/Legal Name</FormLabel><FormControl><Input placeholder="e.g., Innovate" {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
                     <FormField name="website" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Website URL</FormLabel><FormControl><Input placeholder="https://example.com" {...field} /></FormControl><FormMessage /></FormItem>
