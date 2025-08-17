@@ -8,7 +8,6 @@ import { z } from 'zod';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
   CardFooter,
@@ -33,7 +32,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Trash2, PlusCircle, Check, ChevronsUpDown } from 'lucide-react';
+import { Loader2, Save, Trash2, PlusCircle, Check, ChevronsUpDown, Search } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -43,6 +42,7 @@ const partyFormSchema = z.object({
   // Party Type
   isCustomer: z.boolean().default(false),
   isVendor: z.boolean().default(false),
+  gstinSearch: z.string().optional(),
 
   // Common Fields
   businessName: z.string().min(1, 'Business Name is required.'),
@@ -127,6 +127,28 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
   const isVendor = watch('isVendor');
   const isShippingSame = watch('isShippingSame');
 
+  const handleGstSearch = () => {
+    const gstin = form.getValues('gstinSearch');
+    if (gstin && gstin.length === 15) {
+        toast({
+            title: 'Searching GSTIN...',
+            description: `Looking up details for ${gstin}. This is a placeholder for a real API call.`
+        });
+        // In a real app, you would make an API call here.
+        // For now, let's pre-fill some dummy data.
+        form.setValue('businessName', 'GSTIN Fetched Company');
+        form.setValue('billingAddress', '123 GST Street, Mumbai, Maharashtra, 400001');
+        form.setValue('gstin', gstin);
+        form.setValue('placeOfSupply', 'Maharashtra');
+    } else {
+        toast({
+            variant: 'destructive',
+            title: 'Invalid GSTIN',
+            description: 'Please enter a valid 15-digit GSTIN.',
+        });
+    }
+  }
+
   async function onSubmit(data: PartyFormValues) {
     setIsSubmitting(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -148,7 +170,9 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
         <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
-                <CardHeader><CardTitle>Party Type</CardTitle></CardHeader>
+                <CardHeader>
+                    <h3 className="text-base font-bold">Party Type</h3>
+                </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
                         <div className="flex items-center gap-8">
@@ -174,12 +198,25 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                             />
                         </div>
                         <FormMessage>{form.formState.errors.isCustomer?.message}</FormMessage>
+                         <Separator className="my-4"/>
+                         <div className="flex items-end gap-2">
+                            <FormField control={form.control} name="gstinSearch" render={({ field }) => (
+                                <FormItem className="flex-1">
+                                    <FormLabel>Search by GSTIN</FormLabel>
+                                    <FormControl><Input placeholder="Enter 15-digit GSTIN to fetch details" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}/>
+                            <Button type="button" onClick={handleGstSearch}><Search className="mr-2 h-4 w-4" /> Search</Button>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
 
             <Card>
-                <CardHeader><CardTitle>Common Details</CardTitle></CardHeader>
+                <CardHeader>
+                    <h3 className="text-base font-bold">Common Details</h3>
+                </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField name="businessName" control={form.control} render={({ field }) => (
@@ -287,7 +324,9 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
 
             <SectionWrapper isVisible={isCustomer}>
                 <Card>
-                    <CardHeader><CardTitle>Customer Details</CardTitle></CardHeader>
+                    <CardHeader>
+                        <h3 className="text-base font-bold">Customer Details</h3>
+                    </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField name="customerType" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Customer Type</FormLabel><FormControl><Input placeholder="e.g., Retailer" {...field} /></FormControl><FormMessage /></FormItem>
@@ -310,7 +349,9 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
             
             <SectionWrapper isVisible={isVendor}>
                  <Card>
-                    <CardHeader><CardTitle>Vendor Details</CardTitle></CardHeader>
+                    <CardHeader>
+                         <h3 className="text-base font-bold">Vendor Details</h3>
+                    </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <FormField name="vendorType" control={form.control} render={({ field }) => (
