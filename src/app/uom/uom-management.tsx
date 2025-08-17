@@ -41,6 +41,7 @@ import { PlusCircle, Trash2, Edit, Shield, ShieldOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { initialSimpleUnits, initialCompoundUnits, type SimpleUnit, type CompoundUnit } from '@/lib/uom-data';
 import { cn } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
 
 
 const SimpleUnitDialog = ({ onSave, editingUnit }: { onSave: (unit: Omit<SimpleUnit, 'id' | 'status'>) => void, editingUnit?: SimpleUnit | null }) => {
@@ -252,10 +253,12 @@ export function UomManagement() {
                     <TableRow key={unit.id} className={cn(unit.status === 'disabled' && 'text-muted-foreground opacity-60')}>
                         <TableCell className="font-medium py-2 px-3">{unit.name}</TableCell>
                         <TableCell className="py-2 px-3">{unit.abbreviation}</TableCell>
-                        <TableCell className="text-right py-2 px-3">
-                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleToggleStatus(unit.id)}>
-                               {unit.status === 'disabled' ? <ShieldOff className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
-                           </Button>
+                        <TableCell className="text-right py-2 px-3 space-x-2">
+                           <Switch
+                                checked={unit.status !== 'disabled'}
+                                onCheckedChange={() => handleToggleStatus(unit.id)}
+                                aria-label={`Toggle ${unit.name}`}
+                           />
                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenDialog('simple', unit)}>
                                <Edit className="h-4 w-4" />
                            </Button>
