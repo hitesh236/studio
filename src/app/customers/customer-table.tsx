@@ -172,7 +172,7 @@ export function CustomerTable({ data }: { data: Customer[] }) {
                 customer.gstin.toLowerCase().includes(lowercasedFilter) ||
                 customer.contact.email?.toLowerCase().includes(lowercasedFilter) ||
                 customer.contact.phone?.toLowerCase().includes(lowercasedFilter) ||
-                (customer.placeOfSupply && customer.placeOfSupply.state.toLowerCase().includes(lowercasedFilter))
+                (customer.placeOfSupply && customer.placeOfSupply.state && customer.placeOfSupply.state.toLowerCase().includes(lowercasedFilter))
             );
         }
 
