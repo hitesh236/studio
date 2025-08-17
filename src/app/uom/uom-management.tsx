@@ -122,19 +122,37 @@ const AddUomDialog = ({ onSave }: { onSave: (name: string) => void }) => {
     )
 }
 
-const AddSubUnitDialog = ({ baseUnit, onSave }: { baseUnit: string, onSave: (subUnit: Omit<UomSubUnit, 'id'>) => void }) => {
+const SubUnitDialog = ({ 
+    baseUnitName, 
+    onSave, 
+    children, 
+    editingSubUnit 
+}: { 
+    baseUnitName: string, 
+    onSave: (subUnit: Omit<UomSubUnit, 'id'>) => void, 
+    children: React.ReactNode, 
+    editingSubUnit?: UomSubUnit | null 
+}) => {
     const [isOpen, setIsOpen] = React.useState(false);
     const [name, setName] = React.useState('');
     const [abbreviation, setAbbreviation] = React.useState('');
     const [conversionFactor, setConversionFactor] = React.useState('');
+    
+    const isEditing = !!editingSubUnit;
 
     React.useEffect(() => {
-        if (!isOpen) {
-            setName('');
-            setAbbreviation('');
-            setConversionFactor('');
+        if (isOpen) {
+            if (isEditing) {
+                setName(editingSubUnit.name);
+                setAbbreviation(editingSubUnit.abbreviation);
+                setConversionFactor(String(editingSubUnit.conversionFactor));
+            } else {
+                setName('');
+                setAbbreviation('');
+                setConversionFactor('');
+            }
         }
-    }, [isOpen]);
+    }, [isOpen, editingSubUnit, isEditing]);
 
     const handleSave = () => {
         const factor = parseFloat(conversionFactor);
@@ -146,12 +164,10 @@ const AddSubUnitDialog = ({ baseUnit, onSave }: { baseUnit: string, onSave: (sub
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-                <Button variant="outline" size="sm"><PlusCircle className="mr-2 h-3.5 w-3.5" /> Add Sub-Unit</Button>
-            </DialogTrigger>
+            <DialogTrigger asChild>{children}</DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Add Sub-Unit to {baseUnit}</DialogTitle>
+                    <DialogTitle>{isEditing ? `Edit ${editingSubUnit.name}` : `Add Sub-Unit to ${baseUnitName}`}</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="space-y-2">
@@ -164,7 +180,7 @@ const AddSubUnitDialog = ({ baseUnit, onSave }: { baseUnit: string, onSave: (sub
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="sub-factor">Conversion Factor</Label>
-                        <Input id="sub-factor" type="number" value={conversionFactor} onChange={e => setConversionFactor(e.target.value)} placeholder="How many sub-units = 1 base unit" />
+                        <Input id="sub-factor" type="number" value={conversionFactor} onChange={e => setConversionFactor(e.target.value)} placeholder={`How many sub-units = 1 ${baseUnitName}`} />
                     </div>
                 </div>
                 <DialogFooter>
@@ -181,6 +197,7 @@ export function UomManagement() {
   const { toast } = useToast();
   const [uomData, setUomData] = React.useState<Uom[]>(initialUomData);
   const [openRows, setOpenRows] = React.useState<Set<string>>(new Set(uomData.map(u => u.id)));
+  const [editingSubUnit, setEditingSubUnit] = React.useState<{ uomId: string, subUnit: UomSubUnit } | null>(null);
 
   const handleToggleRow = (id: string) => {
     setOpenRows(prev => {
@@ -221,6 +238,22 @@ export function UomManagement() {
         return uom;
      }));
      toast({ title: 'Sub-Unit Added' });
+  };
+
+  const handleEditSubUnit = (uomId: string, subUnitId: string, updatedSubUnitData: Omit<UomSubUnit, 'id'>) => {
+    setUomData(prev => prev.map(uom => {
+        if (uom.id === uomId) {
+            return {
+                ...uom,
+                subUnits: uom.subUnits.map(sub => 
+                    sub.id === subUnitId ? { id: subUnitId, ...updatedSubUnitData } : sub
+                )
+            };
+        }
+        return uom;
+    }));
+    toast({ title: 'Sub-Unit Updated' });
+    setEditingSubUnit(null);
   };
   
   const handleDeleteSubUnit = (uomId: string, subUnitId: string) => {
@@ -271,7 +304,12 @@ export function UomManagement() {
                         </div>
                     </TableCell>
                     <TableCell className="text-right">
-                       <AddSubUnitDialog baseUnit={uom.baseUnit} onSave={(subUnit) => handleAddSubUnit(uom.id, subUnit)} />
+                       <SubUnitDialog 
+                         baseUnitName={uom.baseUnit} 
+                         onSave={(subUnit) => handleAddSubUnit(uom.id, subUnit)}
+                        >
+                            <Button variant="outline" size="sm"><PlusCircle className="mr-2 h-3.5 w-3.5" /> Add Sub-Unit</Button>
+                       </SubUnitDialog>
                     </TableCell>
                   </TableRow>
                   {openRows.has(uom.id) && (
@@ -294,7 +332,13 @@ export function UomManagement() {
                                                    <TableCell>{sub.abbreviation}</TableCell>
                                                    <TableCell className="text-right font-mono">1 {uom.baseUnit} = {sub.conversionFactor} {sub.abbreviation}</TableCell>
                                                    <TableCell className="text-center">
-                                                       <Button variant="ghost" size="icon" className="h-7 w-7"><Edit className="h-4 w-4" /></Button>
+                                                        <SubUnitDialog 
+                                                            baseUnitName={uom.baseUnit}
+                                                            editingSubUnit={sub}
+                                                            onSave={(updatedSubUnit) => handleEditSubUnit(uom.id, sub.id, updatedSubUnit)}
+                                                        >
+                                                            <Button variant="ghost" size="icon" className="h-7 w-7"><Edit className="h-4 w-4" /></Button>
+                                                        </SubUnitDialog>
                                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteSubUnit(uom.id, sub.id)}><Trash2 className="h-4 w-4" /></Button>
                                                    </TableCell>
                                                </TableRow>
@@ -314,4 +358,3 @@ export function UomManagement() {
     </Card>
   );
 }
-
