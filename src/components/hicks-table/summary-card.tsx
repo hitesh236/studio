@@ -13,7 +13,7 @@ interface SummaryCardProps {
 export function SummaryCard({ title, value, icon: Icon, className, variant = 'default' }: SummaryCardProps) {
   return (
     <Card className={cn(
-      "shadow-lg hover:shadow-primary/20 transition-shadow",
+      "shadow-sm hover:shadow-primary/20 transition-shadow",
       variant === 'primary' ? "bg-primary text-primary-foreground" : "bg-card",
       className
     )}>
@@ -30,7 +30,7 @@ export function SummaryCard({ title, value, icon: Icon, className, variant = 'de
         )} />
       </CardHeader>
       <CardContent className="p-4 pt-0">
-        <div className="text-[1.1rem] font-bold">{value}</div>
+        <div className="text-2xl font-bold">{value}</div>
       </CardContent>
     </Card>
   );

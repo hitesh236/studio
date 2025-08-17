@@ -1,3 +1,4 @@
+
 export type Person = {
   id: string;
   firstName: string;
@@ -18,6 +19,7 @@ export type Person = {
   isExpanded?: boolean;
   gstin?: string;
   type: 'Customer' | 'Vendor';
+  balance: number;
 };
 
 const firstNames = ["John", "Jane", "Michael", "Emily", "Chris", "Jessica", "David", "Sarah", "James", "Linda"];
@@ -45,6 +47,15 @@ export function generateData(count: number): Person[] {
     const lastName = getRandomElement(lastNames);
     const state = getRandomElement(states);
     const gstinStateCode = state === 'Maharashtra' ? '27' : '29'; // Simplified for example
+    const type = getRandomElement(types);
+    
+    let balance = 0;
+    if (type === 'Customer') {
+        balance = Math.random() > 0.3 ? (Math.floor(Math.random() * 50000) + 500) : 0; // 70% of customers have a balance to collect
+    } else { // Vendor
+        balance = Math.random() > 0.4 ? -(Math.floor(Math.random() * 25000) + 500) : 0; // 60% of vendors have a balance to pay
+    }
+
     data.push({
       id: `USR-${1000 + i}`,
       firstName,
@@ -63,7 +74,8 @@ export function generateData(count: number): Person[] {
       },
       bio: getRandomElement(bios),
       gstin: `${gstinStateCode}ABCDE${1000 + i}F1Z${(i % 9) + 1}`,
-      type: getRandomElement(types),
+      type: type,
+      balance: balance,
     });
   }
   return data;
