@@ -7,15 +7,20 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Users, TrendingUp, TrendingDown } from "lucide-react";
 import { motion } from 'framer-motion';
 import { SummaryCard } from "@/components/hicks-table/summary-card";
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { formatCurrency } from "@/lib/utils";
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { AddPartyForm } from "./new/add-party-form";
+import Loading from "../loading";
 
 export default function PartiesPage() {
-  const data: Person[] = useMemo(() => generateData(500), []);
+  const [data, setData] = useState<Person[]>([]);
   const [filter, setFilter] = useState<'all' | 'customer' | 'vendor'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  useEffect(() => {
+    setData(generateData(500));
+  }, []);
 
   const filteredData = useMemo(() => {
     if (filter === 'all') {
@@ -25,6 +30,9 @@ export default function PartiesPage() {
   }, [data, filter]);
 
   const summaryStats = useMemo(() => {
+    if (filteredData.length === 0) {
+      return { totalParties: 0, toCollect: 0, toPay: 0 };
+    }
     const totalParties = filteredData.length;
     let toCollect = 0;
     let toPay = 0;
@@ -43,6 +51,10 @@ export default function PartiesPage() {
       toPay: Math.abs(toPay)
     };
   }, [filteredData]);
+  
+  if (data.length === 0) {
+    return <Loading />;
+  }
 
   return (
     <div data-section="main-content" className="p-4 sm:p-6 lg:p-8 space-y-6">
