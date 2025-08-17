@@ -37,12 +37,13 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, Edit, X } from 'lucide-react';
+import { PlusCircle, Trash2, Edit, Shield, ShieldOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { initialSimpleUnits, initialCompoundUnits, type SimpleUnit, type CompoundUnit } from '@/lib/uom-data';
+import { cn } from '@/lib/utils';
 
 
-const SimpleUnitDialog = ({ onSave, editingUnit }: { onSave: (unit: Omit<SimpleUnit, 'id'>) => void, editingUnit?: SimpleUnit | null }) => {
+const SimpleUnitDialog = ({ onSave, editingUnit }: { onSave: (unit: Omit<SimpleUnit, 'id' | 'status'>) => void, editingUnit?: SimpleUnit | null }) => {
     const [name, setName] = React.useState('');
     const [abbreviation, setAbbreviation] = React.useState('');
     const isEditing = !!editingUnit;
@@ -104,6 +105,8 @@ const CompoundUnitDialog = ({ simpleUnits, onSave }: { simpleUnits: SimpleUnit[]
             }
         }
     };
+    
+    const activeSimpleUnits = simpleUnits.filter(u => u.status !== 'disabled');
 
     return (
         <>
@@ -120,7 +123,7 @@ const CompoundUnitDialog = ({ simpleUnits, onSave }: { simpleUnits: SimpleUnit[]
                         <Select onValueChange={setFirstUnitId} value={firstUnitId}>
                             <SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger>
                             <SelectContent>
-                                {simpleUnits.map(u => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
+                                {activeSimpleUnits.map(u => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
@@ -134,7 +137,7 @@ const CompoundUnitDialog = ({ simpleUnits, onSave }: { simpleUnits: SimpleUnit[]
                          <Select onValueChange={setSecondUnitId} value={secondUnitId}>
                             <SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger>
                             <SelectContent>
-                                {simpleUnits.map(u => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
+                                {activeSimpleUnits.map(u => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
@@ -166,7 +169,7 @@ export function UomManagement() {
     setEditingSimpleUnit(null);
   };
 
-  const handleSaveSimple = (unitData: Omit<SimpleUnit, 'id'>) => {
+  const handleSaveSimple = (unitData: Omit<SimpleUnit, 'id' | 'status'>) => {
     if (editingSimpleUnit) {
         setSimpleUnits(prev => prev.map(u => u.id === editingSimpleUnit.id ? { ...editingSimpleUnit, ...unitData } : u));
         toast({ title: 'Unit Updated' });
@@ -175,7 +178,7 @@ export function UomManagement() {
             toast({ variant: 'destructive', title: 'Unit already exists.'});
             return;
         }
-        const newUnit = { ...unitData, id: unitData.abbreviation.toLowerCase() };
+        const newUnit: SimpleUnit = { ...unitData, id: unitData.abbreviation.toLowerCase(), status: 'active' };
         setSimpleUnits(prev => [...prev, newUnit]);
         toast({ title: 'Simple Unit Added' });
     }
@@ -201,6 +204,17 @@ export function UomManagement() {
   const handleDeleteCompound = (id: string) => {
     setCompoundUnits(prev => prev.filter(u => u.id !== id));
     toast({ title: 'Compound Unit Deleted' });
+  };
+
+  const handleToggleStatus = (id: string) => {
+    setSimpleUnits(prev => prev.map(unit => {
+      if (unit.id === id) {
+        const newStatus = unit.status === 'disabled' ? 'active' : 'disabled';
+        toast({ title: `Unit ${newStatus === 'active' ? 'Enabled' : 'Disabled'}`, description: `${unit.name} is now ${newStatus}.` });
+        return { ...unit, status: newStatus };
+      }
+      return unit;
+    }));
   };
 
   return (
@@ -235,10 +249,13 @@ export function UomManagement() {
               </TableHeader>
               <TableBody>
                 {simpleUnits.map(unit => (
-                    <TableRow key={unit.id}>
+                    <TableRow key={unit.id} className={cn(unit.status === 'disabled' && 'text-muted-foreground opacity-60')}>
                         <TableCell className="font-medium py-2 px-3">{unit.name}</TableCell>
                         <TableCell className="py-2 px-3">{unit.abbreviation}</TableCell>
                         <TableCell className="text-right py-2 px-3">
+                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleToggleStatus(unit.id)}>
+                               {unit.status === 'disabled' ? <ShieldOff className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
+                           </Button>
                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenDialog('simple', unit)}>
                                <Edit className="h-4 w-4" />
                            </Button>

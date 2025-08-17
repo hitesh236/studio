@@ -206,6 +206,8 @@ export function AddProductForm() {
     },
   });
 
+  const activeUnits = React.useMemo(() => initialSimpleUnits.filter(u => u.status !== 'disabled'), []);
+
   const watchedCategoryPath = form.watch('categoryPath');
   const lastSelectedCategoryId = watchedCategoryPath.length > 0 ? watchedCategoryPath[watchedCategoryPath.length - 1] : null;
 
@@ -441,12 +443,12 @@ export function AddProductForm() {
                     <div className="grid grid-cols-2 gap-2">
                         <FormField name="uom" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Primary UOM</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger></FormControl><SelectContent>
-                                {initialSimpleUnits.map(unit => <SelectItem key={unit.id} value={unit.abbreviation}>{unit.name} ({unit.abbreviation})</SelectItem>)}
+                                {activeUnits.map(unit => <SelectItem key={unit.id} value={unit.abbreviation}>{unit.name} ({unit.abbreviation})</SelectItem>)}
                             </SelectContent></Select><FormMessage /></FormItem>
                         )} />
                         <FormField name="secondaryUom" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Secondary UOM</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger></FormControl><SelectContent>
-                               {initialSimpleUnits.map(unit => <SelectItem key={unit.id} value={unit.abbreviation}>{unit.name} ({unit.abbreviation})</SelectItem>)}
+                               {activeUnits.map(unit => <SelectItem key={unit.id} value={unit.abbreviation}>{unit.name} ({unit.abbreviation})</SelectItem>)}
                             </SelectContent></Select><FormMessage /></FormItem>
                         )} />
                     </div>

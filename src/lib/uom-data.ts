@@ -3,6 +3,7 @@ export type SimpleUnit = {
   id: string;
   name: string;
   abbreviation: string;
+  status?: 'active' | 'disabled';
 };
 
 export type CompoundUnit = {
@@ -13,23 +14,23 @@ export type CompoundUnit = {
 };
 
 export const initialSimpleUnits: SimpleUnit[] = [
-  { id: 'pcs', name: 'Pieces', abbreviation: 'pcs' },
-  { id: 'box', name: 'Box', abbreviation: 'box' },
-  { id: 'dz', name: 'Dozen', abbreviation: 'dz' },
-  { id: 'kg', name: 'Kilogram', abbreviation: 'kg' },
-  { id: 'g', name: 'Gram', abbreviation: 'g' },
-  { id: 'mg', name: 'Milligram', abbreviation: 'mg' },
-  { id: 'l', name: 'Liter', abbreviation: 'L' },
-  { id: 'ml', name: 'Milliliter', abbreviation: 'ml' },
-  { id: 'm', name: 'Meter', abbreviation: 'm' },
-  { id: 'cm', name: 'Centimeter', abbreviation: 'cm' },
-  { id: 'in', name: 'Inch', abbreviation: 'in' },
-  { id: 'ft', name: 'Feet', abbreviation: 'ft' },
-  { id: 'pr', name: 'Pair', abbreviation: 'pr' },
-  { id: 'set', name: 'Set', abbreviation: 'set' },
-  { id: 'pkt', name: 'Packet', abbreviation: 'pkt' },
-  { id: 'roll', name: 'Roll', abbreviation: 'roll' },
-  { id: 'btl', name: 'Bottle', abbreviation: 'btl' },
+  { id: 'pcs', name: 'Pieces', abbreviation: 'pcs', status: 'active' },
+  { id: 'box', name: 'Box', abbreviation: 'box', status: 'active' },
+  { id: 'dz', name: 'Dozen', abbreviation: 'dz', status: 'active' },
+  { id: 'kg', name: 'Kilogram', abbreviation: 'kg', status: 'active' },
+  { id: 'g', name: 'Gram', abbreviation: 'g', status: 'active' },
+  { id: 'mg', name: 'Milligram', abbreviation: 'mg', status: 'active' },
+  { id: 'l', name: 'Liter', abbreviation: 'L', status: 'active' },
+  { id: 'ml', name: 'Milliliter', abbreviation: 'ml', status: 'active' },
+  { id: 'm', name: 'Meter', abbreviation: 'm', status: 'active' },
+  { id: 'cm', name: 'Centimeter', abbreviation: 'cm', status: 'active' },
+  { id: 'in', name: 'Inch', abbreviation: 'in', status: 'active' },
+  { id: 'ft', name: 'Feet', abbreviation: 'ft', status: 'active' },
+  { id: 'pr', name: 'Pair', abbreviation: 'pr', status: 'active' },
+  { id: 'set', name: 'Set', abbreviation: 'set', status: 'active' },
+  { id: 'pkt', name: 'Packet', abbreviation: 'pkt', status: 'active' },
+  { id: 'roll', name: 'Roll', abbreviation: 'roll', status: 'active' },
+  { id: 'btl', name: 'Bottle', abbreviation: 'btl', status: 'active' },
 ];
 
 export const initialCompoundUnits: CompoundUnit[] = [
