@@ -24,6 +24,7 @@ type ColumnProps = {
   onSelectAll: (checked: boolean) => void;
   onSelectRow: (id: string) => void;
   paginatedData: SalesInvoice[];
+  onAddPaymentClick: (invoice: SalesInvoice) => void;
 };
 
 export const columns = ({ 
@@ -33,7 +34,8 @@ export const columns = ({
   selectedRows,
   onSelectAll,
   onSelectRow,
-  paginatedData 
+  paginatedData,
+  onAddPaymentClick,
 }: ColumnProps) => {
   const getSortableHeader = (title: string, accessor: string) => {
     const isSorted = sortConfig.key === accessor;
@@ -121,61 +123,10 @@ export const columns = ({
       ),
     },
     {
-      accessor: "currencyCode",
-      header: "Currency",
-      cell: (row: SalesInvoice) => (
-        <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.currencyCode}</div>
-      ),
-    },
-    {
-      accessor: "exchangeRate",
-      header: "Exch. Rate",
-      cell: (row: SalesInvoice) => (
-        <div className={cn("text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.exchangeRate.toFixed(2)}</div>
-      ),
-    },
-    {
-      accessor: "amountForeign",
-      header: getSortableHeader("Amount (FCY)", "amountForeign"),
-      cell: (row: SalesInvoice) => (
-        <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountForeign, row.currencyCode)}</div>
-      ),
-    },
-    {
       accessor: "amountBase",
       header: getSortableHeader("Amount (BCY)", "amountBase"),
       cell: (row: SalesInvoice) => (
         <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountBase, 'INR')}</div>
-      ),
-    },
-    {
-      accessor: "totalTaxableValue",
-      header: getSortableHeader("Taxable Value", "totalTaxableValue"),
-      cell: (row: SalesInvoice) => (
-        <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.totalTaxableValue, 'INR')}</div>
-      ),
-    },
-    {
-      accessor: "totalGstAmount",
-      header: getSortableHeader("GST Amount", "totalGstAmount"),
-      cell: (row: SalesInvoice) => (
-        <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.totalGstAmount, 'INR')}</div>
-      ),
-    },
-    {
-      accessor: "gstType",
-      header: "GST Type",
-      cell: (row: SalesInvoice) => (
-        <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>
-          <Badge variant="outline">{row.gstType}</Badge>
-        </div>
-      ),
-    },
-    {
-      accessor: "placeOfSupply",
-      header: "Place of Supply",
-      cell: (row: SalesInvoice) => (
-        <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.placeOfSupply}</div>
       ),
     },
     {
@@ -228,13 +179,6 @@ export const columns = ({
       ),
     },
     {
-      accessor: "createdBy",
-      header: "Created By",
-      cell: (row: SalesInvoice) => (
-        <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.createdBy}</div>
-      ),
-    },
-    {
       accessor: "actions",
       header: "Actions",
       cell: (row: SalesInvoice) => {
@@ -250,15 +194,17 @@ export const columns = ({
               </TooltipTrigger>
               <TooltipContent><p>View Invoice</p></TooltipContent>
             </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}>
-                  <Pencil className="h-4 w-4" />
-                  <span className="sr-only">Edit Invoice</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent><p>Edit Invoice</p></TooltipContent>
-            </Tooltip>
+            {canAddPayment && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')} onClick={() => onAddPaymentClick(row)}>
+                    <CreditCard className="h-4 w-4" />
+                    <span className="sr-only">Add Payment</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Add Payment</p></TooltipContent>
+              </Tooltip>
+            )}
             <Tooltip>
               <TooltipTrigger asChild>
                  <Button asChild variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}>
@@ -270,17 +216,6 @@ export const columns = ({
               </TooltipTrigger>
               <TooltipContent><p>Create Sales Return</p></TooltipContent>
             </Tooltip>
-            {canAddPayment && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}>
-                    <CreditCard className="h-4 w-4" />
-                    <span className="sr-only">Add Payment</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent><p>Add Payment</p></TooltipContent>
-              </Tooltip>
-            )}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-destructive hover:text-destructive", density === 'compact' && 'h-6 w-6')}>

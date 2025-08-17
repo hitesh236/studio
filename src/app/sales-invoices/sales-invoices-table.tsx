@@ -14,17 +14,12 @@ import {
   Tag,
   Columns,
   GripVertical,
-  Eye,
-  Pencil,
-  FileX2,
-  CreditCard,
   TrendingUp,
   CircleDollarSign,
   FileWarning,
-  Landmark,
   CheckCircle2,
   Download,
-  Undo2,
+  Landmark,
 } from "lucide-react";
 import Link from 'next/link';
 
@@ -66,8 +61,6 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { format } from "date-fns";
 import { SummaryCard } from "./summary-card";
 import {
   Tooltip,
@@ -75,6 +68,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { format, parseISO } from 'date-fns';
 
 const availableFilters = [
   { id: "paymentStatus", label: "Payment Status" },
@@ -86,182 +90,116 @@ const ALL_COLUMNS = [
     { id: 'customerName', label: 'Customer Name' },
     { id: 'invoiceDate', label: 'Invoice Date' },
     { id: 'dueDate', label: 'Due Date' },
-    { id: 'currencyCode', label: 'Currency' },
-    { id: 'exchangeRate', label: 'Exch. Rate' },
-    { id: 'amountForeign', label: 'Amount (FCY)' },
-    { id: 'amountBase', label: 'Amount (BCY)' },
-    { id: 'amountPaid', label: 'Amount Paid' },
-    { id: 'salesReturnAmount', label: 'Return Amount' },
-    { id: 'amountDue', label: 'Amount Due' },
-    { id: 'totalTaxableValue', label: 'Taxable Value' },
-    { id: 'totalGstAmount', label: 'GST Amount' },
-    { id: 'gstType', label: 'GST Type' },
-    { id: 'placeOfSupply', label: 'Place of Supply' },
+    { id: 'amountBase', label: 'Amount' },
     { id: 'paymentStatus', label: 'Payment Status' },
-    { id: 'createdBy', label: 'Created By' },
+    { id: 'amountPaid', label: 'Paid' },
+    { id: 'salesReturnAmount', label: 'Return' },
+    { id: 'amountDue', label: 'Due' },
     { id: 'actions', label: 'Actions' },
   ];
 
-const MobileInvoiceCard = ({ invoice, isExpanded, toggleRowExpansion, selectedRows, onSelectRow }: {
-  invoice: SalesInvoice;
-  isExpanded: boolean;
-  toggleRowExpansion: () => void;
-  selectedRows: Set<string>;
-  onSelectRow: (id: string) => void;
+const AddPaymentDialog = ({ 
+    invoice, 
+    isOpen, 
+    onOpenChange,
+    onPaymentSuccess
+}: { 
+    invoice: SalesInvoice | null, 
+    isOpen: boolean, 
+    onOpenChange: (open: boolean) => void,
+    onPaymentSuccess: (invoiceId: string, paymentAmount: number) => void
 }) => {
-  let statusVariant: "default" | "secondary" | "destructive" | "outline";
-  switch (invoice.paymentStatus) {
-    case "Paid":
-      statusVariant = "default";
-      break;
-    case "Partially Paid":
-      statusVariant = "secondary";
-      break;
-    case "Overdue":
-      statusVariant = "destructive";
-      break;
-    case "Outstanding":
-      statusVariant = "outline";
-      break;
-  }
-  const canAddPayment = invoice.paymentStatus === 'Outstanding' || invoice.paymentStatus === 'Partially Paid' || invoice.paymentStatus === 'Overdue';
+    const { toast } = useToast();
+    const [amount, setAmount] = React.useState('');
+    const [paymentMode, setPaymentMode] = React.useState('bank');
 
-  return (
-    <Card className="transition-shadow hover:shadow-md">
-      <div className="flex items-start p-4">
-        <Checkbox
-          checked={selectedRows.has(invoice.id)}
-          onCheckedChange={() => onSelectRow(invoice.id)}
-          aria-label="Select row"
-          className="mt-1.5 mr-3"
-        />
-        <div className="w-full">
-          <div onClick={toggleRowExpansion} className="cursor-pointer">
-            <CardHeader className="p-0">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-base">{invoice.invoiceNumber}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{invoice.customerName}</p>
-                </div>
-                <Badge variant={statusVariant}>{invoice.paymentStatus}</Badge>
-              </div>
-              <p className="text-lg font-semibold pt-2">{formatCurrency(invoice.amountDue, 'INR')}</p>
-              <p className="text-xs text-muted-foreground">Amount Due</p>
-            </CardHeader>
-          </div>
-          {isExpanded && (
-            <CardContent className="space-y-4 text-sm mt-4 p-0">
-              <Separator />
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                <div>
-                  <strong className="text-muted-foreground block">Invoice Date</strong>
-                  {format(invoice.invoiceDate, "MMM d, yyyy")}
-                </div>
-                <div>
-                  <strong className="text-muted-foreground block">Due Date</strong>
-                  {format(invoice.dueDate, "MMM d, yyyy")}
-                </div>
-                <div>
-                  <strong className="text-muted-foreground block">Amount (Base)</strong>
-                  {formatCurrency(invoice.amountBase, 'INR')}
-                </div>
-                <div>
-                  <strong className="text-muted-foreground block">Amount Paid</strong>
-                  {formatCurrency(invoice.amountPaid, 'INR')}
-                </div>
-                 {invoice.salesReturnAmount && invoice.salesReturnAmount > 0 && (
-                    <div>
-                        <strong className="text-muted-foreground block">Return Amount</strong>
-                        <span className="text-green-600">{formatCurrency(invoice.salesReturnAmount, 'INR')}</span>
+    React.useEffect(() => {
+        if (invoice) {
+            setAmount(invoice.amountDue.toString());
+        } else {
+            setAmount('');
+        }
+    }, [invoice]);
+
+    if (!invoice) return null;
+
+    const handleSave = () => {
+        const parsedAmount = parseFloat(amount);
+        if (isNaN(parsedAmount) || parsedAmount <= 0) {
+            toast({
+                title: 'Invalid Amount',
+                description: 'Please enter a valid payment amount.',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        if (parsedAmount > invoice.amountDue) {
+             toast({
+                title: 'Invalid Amount',
+                description: 'Payment cannot be more than the amount due.',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        toast({
+            title: "Payment Recorded",
+            description: `Payment of ${formatCurrency(parsedAmount, 'INR')} for invoice ${invoice.invoiceNumber} has been recorded.`
+        });
+        onPaymentSuccess(invoice.id, parsedAmount);
+        onOpenChange(false);
+    }
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Add Payment for {invoice.invoiceNumber}</DialogTitle>
+                    <DialogDescription>
+                        Current amount due is {formatCurrency(invoice.amountDue, 'INR')}.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="amount" className="text-right">Amount</Label>
+                        <Input
+                            id="amount"
+                            type="number"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            className="col-span-3"
+                            placeholder="Enter amount"
+                        />
                     </div>
-                )}
-                 <div>
-                  <strong className="text-muted-foreground block">Amount (FCY)</strong>
-                  {formatCurrency(invoice.amountForeign, invoice.currencyCode)}
+                     <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="payment-mode" className="text-right">Payment Mode</Label>
+                        <Select onValueChange={setPaymentMode} defaultValue={paymentMode}>
+                             <SelectTrigger id="payment-mode" className="col-span-3">
+                                <SelectValue placeholder="Select a mode" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="bank">Bank Transfer</SelectItem>
+                                <SelectItem value="cash">Cash</SelectItem>
+                                <SelectItem value="upi">UPI</SelectItem>
+                                <SelectItem value="cheque">Cheque</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
-                <div>
-                  <strong className="text-muted-foreground block">Exchange Rate</strong>
-                  {invoice.exchangeRate.toFixed(2)}
-                </div>
-                <div>
-                  <strong className="text-muted-foreground block">GST Type</strong>
-                  {invoice.gstType}
-                </div>
-                 <div>
-                  <strong className="text-muted-foreground block">Place of Supply</strong>
-                  {invoice.placeOfSupply}
-                </div>
-                <div className="col-span-2">
-                  <strong className="text-muted-foreground block">Created By</strong>
-                  {invoice.createdBy}
-                </div>
-              </div>
-              <Separator />
-              <div className="flex items-center justify-end pt-2 gap-1">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>View Invoice</p>
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Edit Invoice</p>
-                  </TooltipContent>
-                </Tooltip>
-                 <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button asChild variant="ghost" size="icon" className="h-8 w-8">
-                            <Link href={`/sales-invoice-returns/new?invoiceData=${encodeURIComponent(JSON.stringify(invoice))}`}>
-                                <Undo2 className="h-4 w-4" />
-                                <span className="sr-only">Create Sales Return</span>
-                            </Link>
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>Create Sales Return</p></TooltipContent>
-                </Tooltip>
-                {canAddPayment && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <CreditCard className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Add Payment</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
-                      <FileX2 className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Cancel Invoice</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            </CardContent>
-          )}
-        </div>
-      </div>
-    </Card>
-  );
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button onClick={handleSave}>Save Payment</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
 };
 
-
-export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
+export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[] }) {
+  const [data, setData] = useState<SalesInvoice[]>(initialData);
   const [filter, setFilter] = useState("");
   const [density, setDensity] = useState<"normal" | "compact">("normal");
   const [page, setPage] = useState(0);
@@ -278,28 +216,18 @@ export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
   }>({
     paymentStatuses: [],
   });
+  
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false);
+  const [invoiceForPayment, setInvoiceForPayment] = React.useState<SalesInvoice | null>(null);
 
   const [columnVisibility, setColumnVisibility] = useState<Set<string>>(
-    new Set(ALL_COLUMNS.map(c => c.id))
+    new Set(ALL_COLUMNS.map(c => c.id).filter(id => !['currencyCode', 'exchangeRate', 'amountForeign', 'totalTaxableValue', 'totalGstAmount', 'gstType', 'placeOfSupply', 'createdBy'].includes(id)))
   );
   const [columnOrder, setColumnOrder] = useState<string[]>(
     ALL_COLUMNS.map(c => c.id)
   );
   const draggedColumn = useRef<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-
-  const toggleRowExpansion = (id: string) => {
-    setExpandedRows((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
 
   const uniquePaymentStatuses = useMemo(() => Array.from(new Set(data.map((p) => p.paymentStatus))).sort(), [data]);
 
@@ -331,8 +259,7 @@ export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
       return (
         invoice.invoiceNumber.toLowerCase().includes(searchTerm) ||
         invoice.customerName.toLowerCase().includes(searchTerm) ||
-        invoice.paymentStatus.toLowerCase().includes(searchTerm) ||
-        invoice.createdBy.toLowerCase().includes(searchTerm)
+        invoice.paymentStatus.toLowerCase().includes(searchTerm)
       );
     });
 
@@ -440,6 +367,36 @@ export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
     setPageAndClearSelection(0);
   };
   
+  const handleAddPaymentClick = (invoice: SalesInvoice) => {
+    setInvoiceForPayment(invoice);
+    setIsPaymentDialogOpen(true);
+  };
+
+  const handlePaymentSuccess = (invoiceId: string, paymentAmount: number) => {
+    setData(prevData =>
+      prevData.map(inv => {
+        if (inv.id === invoiceId) {
+          const newAmountPaid = inv.amountPaid + paymentAmount;
+          const newAmountDue = inv.amountDue - paymentAmount;
+          let newStatus: SalesInvoice['paymentStatus'] = 'Partially Paid';
+          if (newAmountDue <= 0.01) {
+            newStatus = 'Paid';
+          } else if (new Date() > inv.dueDate) {
+            newStatus = 'Overdue';
+          }
+
+          return {
+            ...inv,
+            amountPaid: newAmountPaid,
+            amountDue: newAmountDue,
+            paymentStatus: newStatus,
+          };
+        }
+        return inv;
+      })
+    );
+  };
+
   const tableColumns = useMemo(() => {
     const allCols = columns({ 
       density, 
@@ -449,6 +406,7 @@ export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
       onSelectAll: handleSelectAll,
       onSelectRow: toggleRowSelection,
       paginatedData,
+      onAddPaymentClick: handleAddPaymentClick,
     });
     
     const visibleCols = allCols.filter(c => columnVisibility.has(c.accessor as string));
@@ -789,27 +747,6 @@ export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
           </div>
         )}
 
-        {/* Mobile View */}
-        <div className="grid gap-4 md:hidden">
-          {paginatedData.length > 0 ? (
-            paginatedData.map((invoice) => (
-              <MobileInvoiceCard
-                key={invoice.id}
-                invoice={invoice}
-                isExpanded={expandedRows.has(invoice.id)}
-                toggleRowExpansion={() => toggleRowExpansion(invoice.id)}
-                selectedRows={selectedRows}
-                onSelectRow={toggleRowSelection}
-              />
-            ))
-          ) : (
-            <div className="py-12 text-center text-muted-foreground">
-              No results found.
-            </div>
-          )}
-        </div>
-        
-        {/* Desktop View */}
         <div className="hidden md:block rounded-lg border overflow-hidden bg-card">
           <Table>
             <TableHeader>
@@ -903,6 +840,13 @@ export function SalesInvoicesTable({ data }: { data: SalesInvoice[] }) {
             </div>
           )}
         </div>
+        
+        <AddPaymentDialog
+            invoice={invoiceForPayment}
+            isOpen={isPaymentDialogOpen}
+            onOpenChange={setIsPaymentDialogOpen}
+            onPaymentSuccess={handlePaymentSuccess}
+        />
       </div>
     </TooltipProvider>
   );
