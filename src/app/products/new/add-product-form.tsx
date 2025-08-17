@@ -195,6 +195,8 @@ export function AddProductForm() {
     ecommerce: true,
   });
 
+  const [showSecondaryUom, setShowSecondaryUom] = React.useState(false);
+
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
@@ -491,7 +493,7 @@ export function AddProductForm() {
                     <FormField name="sku" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>SKU</FormLabel><FormControl><Input placeholder="Stock Keeping Unit" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
-                    <div className="grid grid-cols-1 gap-2">
+                     <div className="space-y-2">
                         <FormField name="uom" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Primary UOM</FormLabel>
                                 <div className="flex items-center gap-2">
@@ -504,18 +506,27 @@ export function AddProductForm() {
                                 </div>
                             <FormMessage /></FormItem>
                         )} />
-                        <FormField name="secondaryUom" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Secondary UOM</FormLabel>
-                             <div className="flex items-center gap-2">
-                                <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger></FormControl><SelectContent>
-                                {activeUnits.map(unit => <SelectItem key={unit.id} value={unit.abbreviation}>{unit.name} ({unit.abbreviation})</SelectItem>)}
-                                </SelectContent></Select>
-                                <Button type="button" variant="outline" size="icon" onClick={() => { setTargetUomField('secondaryUom'); setIsUomDialogOpen(true); }}>
-                                    <PlusCircle className="h-4 w-4" />
-                                </Button>
-                                </div>
-                            <FormMessage /></FormItem>
-                        )} />
+                        {showSecondaryUom ? (
+                            <FormField name="secondaryUom" control={form.control} render={({ field }) => (
+                                <FormItem>
+                                 <div className="flex items-center gap-2">
+                                    <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger></FormControl><SelectContent>
+                                    {activeUnits.map(unit => <SelectItem key={unit.id} value={unit.abbreviation}>{unit.name} ({unit.abbreviation})</SelectItem>)}
+                                    </SelectContent></Select>
+                                    <Button type="button" variant="outline" size="icon" onClick={() => { setTargetUomField('secondaryUom'); setIsUomDialogOpen(true); }}>
+                                        <PlusCircle className="h-4 w-4" />
+                                    </Button>
+                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => { setShowSecondaryUom(false); form.setValue('secondaryUom', ''); }}>
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                    </div>
+                                <FormMessage /></FormItem>
+                            )} />
+                        ) : (
+                            <Button type="button" variant="link" className="p-0 h-auto text-sm" onClick={() => setShowSecondaryUom(true)}>
+                                + Secondary UOM
+                            </Button>
+                        )}
                     </div>
                      <FormField name="purchasePrice" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Purchase Price</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
