@@ -47,6 +47,7 @@ import { initialCategoriesData } from '@/lib/categories';
 import { initialAttributes } from '@/lib/attributes';
 import type { Category, Attribute } from '@/lib/types';
 import { initialSimpleUnits } from '@/lib/uom-data';
+import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter, DialogClose } from '@/components/ui/dialog';
 
 
 const customAttributeSchema = z.object({
@@ -67,12 +68,14 @@ const productFormSchema = z.object({
   gstRate: z.coerce.number().min(0).max(100),
   minStockLevel: z.coerce.number().optional(),
   tags: z.array(z.string()).optional(),
+  sellingPriceIncludesGst: z.boolean().default(false),
   customerPrices: z.object({
     regular: z.coerce.number().min(0, "Price must be non-negative.").optional(),
     b2c: z.coerce.number().min(0, "Price must be non-negative.").optional(),
     b2b: z.coerce.number().min(0, "Price must be non-negative.").optional(),
   }),
   openingStock: z.coerce.number().min(0, "Opening stock must be non-negative.").default(0),
+  location: z.string().optional(),
   
   // Dynamic Attributes
   dynamicAttributes: z.array(customAttributeSchema).optional(),
@@ -177,6 +180,10 @@ export function AddProductForm() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [imagePreviews, setImagePreviews] = React.useState<string[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  
+  const [locations, setLocations] = React.useState(['Main Warehouse', 'Shop Floor', 'Mumbai Godown']);
+  const [isLocationDialogOpen, setIsLocationDialogOpen] = React.useState(false);
+  const [newLocation, setNewLocation] = React.useState('');
 
   const [visibleSections, setVisibleSections] = React.useState<Record<string, boolean>>({
     additionalDetails: true,
@@ -196,12 +203,14 @@ export function AddProductForm() {
         hsnCode: '',
         gstRate: 18,
         tags: [],
+        sellingPriceIncludesGst: false,
         customerPrices: {
             regular: 0,
             b2c: 0,
             b2b: 0,
         },
         openingStock: 0,
+        location: '',
         dynamicAttributes: [],
     },
   });
@@ -241,7 +250,7 @@ export function AddProductForm() {
   
   const attributeMap = React.useMemo(() => 
     new Map(initialAttributes.map(attr => [attr.id, attr])), 
-  [initialAttributes]);
+  []);
 
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -266,6 +275,21 @@ export function AddProductForm() {
     const removedUrl = updatedPreviews.splice(index, 1);
     URL.revokeObjectURL(removedUrl[0]); // Clean up memory
     setImagePreviews(updatedPreviews);
+  };
+  
+  const handleAddLocation = () => {
+    if (newLocation.trim()) {
+        if (locations.some(loc => loc.toLowerCase() === newLocation.trim().toLowerCase())) {
+            toast({ title: 'Location already exists.', variant: 'destructive' });
+            return;
+        }
+        const updatedLocations = [...locations, newLocation.trim()];
+        setLocations(updatedLocations);
+        form.setValue('location', newLocation.trim());
+        toast({ title: 'Location added successfully.' });
+        setIsLocationDialogOpen(false);
+        setNewLocation('');
+    }
   };
 
   async function onSubmit(data: ProductFormValues) {
@@ -477,8 +501,22 @@ export function AddProductForm() {
                       )}
                     />
                     <div className="md:col-span-2">
-                        <Label>Selling Prices</Label>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2 p-4 border rounded-md">
+                        <div className="flex items-center gap-4 mb-2">
+                            <Label>Selling Prices</Label>
+                             <FormField
+                                control={form.control}
+                                name="sellingPriceIncludesGst"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                                        <FormControl>
+                                            <Checkbox checked={field.value} onCheckedChange={field.onChange} id="include-gst" />
+                                        </FormControl>
+                                        <Label htmlFor="include-gst" className="text-sm font-normal">Including GST</Label>
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-4 border rounded-md">
                             <FormField name="customerPrices.regular" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel className="text-sm font-normal">Regular</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
@@ -494,6 +532,46 @@ export function AddProductForm() {
                     <FormField name="openingStock" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Opening Stock</FormLabel><FormControl><Input type="number" placeholder="0" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
+                     <FormField
+                        name="location"
+                        control={form.control}
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Location/Warehouse</FormLabel>
+                                <div className="flex items-center gap-2">
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select location" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {locations.map(loc => <SelectItem key={loc} value={loc}>{loc}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                    <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
+                                        <DialogTrigger asChild>
+                                            <Button type="button" variant="outline" className="w-auto">Add New</Button>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                            <DialogHeader>
+                                                <DialogTitle>Add New Location</DialogTitle>
+                                            </DialogHeader>
+                                            <div className="grid gap-4 py-4">
+                                                <Label htmlFor="location-name">Location Name</Label>
+                                                <Input id="location-name" value={newLocation} onChange={e => setNewLocation(e.target.value)} />
+                                            </div>
+                                            <DialogFooter>
+                                                <DialogClose asChild><Button variant="outline" type="button">Cancel</Button></DialogClose>
+                                                <Button type="button" onClick={handleAddLocation}>Save Location</Button>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
+                                </div>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
                      <FormField
                         name="categoryPath"
                         control={form.control}
