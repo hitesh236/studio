@@ -210,6 +210,7 @@ export function AddProductForm() {
         purchasePrice: 0,
         hsnCode: '',
         gstRate: 18,
+        minStockLevel: 0,
         tags: [],
         sellingPriceIncludesGst: false,
         customerPrices: {
@@ -220,6 +221,17 @@ export function AddProductForm() {
         openingStock: 0,
         location: '',
         dynamicAttributes: [],
+        productDescription: '',
+        brand: '',
+        model: '',
+        barcode: '',
+        reorderQty: 0,
+        isListedOnWebsite: false,
+        productImages: [],
+        webShortDescription: '',
+        webLongDescription: '',
+        seoTitle: '',
+        seoMetaDescription: '',
     },
   });
 
