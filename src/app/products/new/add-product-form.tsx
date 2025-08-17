@@ -46,7 +46,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { initialCategoriesData } from '@/lib/categories';
 import { initialAttributes } from '@/lib/attributes';
 import type { Category, Attribute } from '@/lib/types';
-import { initialSimpleUnits, type SimpleUnit } from '@/lib/uom-data';
+import { initialSimpleUnits, initialCompoundUnits, type SimpleUnit, type CompoundUnit } from '@/lib/uom-data';
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
 
 
@@ -185,7 +185,8 @@ export function AddProductForm() {
   const [isLocationDialogOpen, setIsLocationDialogOpen] = React.useState(false);
   const [newLocation, setNewLocation] = React.useState('');
 
-  const [units, setUnits] = React.useState<SimpleUnit[]>(initialSimpleUnits);
+  const [simpleUnits, setSimpleUnits] = React.useState<SimpleUnit[]>(initialSimpleUnits);
+  const [compoundUnits, setCompoundUnits] = React.useState<CompoundUnit[]>(initialCompoundUnits);
   const [isUomDialogOpen, setIsUomDialogOpen] = React.useState(false);
   const [newUom, setNewUom] = React.useState({ name: '', abbreviation: '' });
   const [targetUomField, setTargetUomField] = React.useState<'uom' | 'secondaryUom' | null>(null);
@@ -222,9 +223,11 @@ export function AddProductForm() {
     },
   });
 
-  const activeUnits = React.useMemo(() => units.filter(u => u.status !== 'disabled'), [units]);
+  const activeSimpleUnits = React.useMemo(() => simpleUnits.filter(u => u.status !== 'disabled'), [simpleUnits]);
 
   const watchedCategoryPath = form.watch('categoryPath');
+  const watchedPrimaryUom = form.watch('uom');
+  const watchedSecondaryUom = form.watch('secondaryUom');
   const lastSelectedCategoryId = watchedCategoryPath.length > 0 ? watchedCategoryPath[watchedCategoryPath.length - 1] : null;
 
   const displayedAttributes = React.useMemo(
@@ -232,6 +235,21 @@ export function AddProductForm() {
     [lastSelectedCategoryId]
   );
   
+  const secondaryUomOptions = React.useMemo(() => {
+    if (!watchedPrimaryUom) return [];
+    return compoundUnits
+        .filter(cu => cu.firstUnit.id === watchedPrimaryUom)
+        .map(cu => cu.secondUnit);
+  }, [watchedPrimaryUom, compoundUnits]);
+  
+  const conversionRate = React.useMemo(() => {
+    if (!watchedPrimaryUom || !watchedSecondaryUom) return null;
+    const compound = compoundUnits.find(cu => cu.firstUnit.id === watchedPrimaryUom && cu.secondUnit.id === watchedSecondaryUom);
+    if (!compound) return null;
+    return `1 ${compound.firstUnit.name} = ${compound.conversion} ${compound.secondUnit.name}`;
+  }, [watchedPrimaryUom, watchedSecondaryUom, compoundUnits]);
+
+
   // Sync form state with displayed attributes
   React.useEffect(() => {
     const existingAttributes = form.getValues('dynamicAttributes') || [];
@@ -301,7 +319,7 @@ export function AddProductForm() {
   
   const handleAddUom = () => {
     if (newUom.name.trim() && newUom.abbreviation.trim()) {
-        if (units.some(u => u.name.toLowerCase() === newUom.name.toLowerCase() || u.abbreviation.toLowerCase() === newUom.abbreviation.toLowerCase())) {
+        if (simpleUnits.some(u => u.name.toLowerCase() === newUom.name.toLowerCase() || u.abbreviation.toLowerCase() === newUom.abbreviation.toLowerCase())) {
             toast({ variant: 'destructive', title: 'Unit already exists.'});
             return;
         }
@@ -311,9 +329,9 @@ export function AddProductForm() {
             abbreviation: newUom.abbreviation.trim(),
             status: 'active',
         };
-        setUnits(prev => [...prev, newUnit]);
+        setSimpleUnits(prev => [...prev, newUnit]);
         if(targetUomField) {
-            form.setValue(targetUomField, newUnit.abbreviation);
+            form.setValue(targetUomField, newUnit.id);
         }
         toast({ title: 'UOM Added' });
         setIsUomDialogOpen(false);
@@ -498,7 +516,7 @@ export function AddProductForm() {
                             <FormItem><FormLabel>Primary UOM</FormLabel>
                                 <div className="flex items-center gap-2">
                                 <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger></FormControl><SelectContent>
-                                    {activeUnits.map(unit => <SelectItem key={unit.id} value={unit.abbreviation}>{unit.name} ({unit.abbreviation})</SelectItem>)}
+                                    {activeSimpleUnits.map(unit => <SelectItem key={unit.id} value={unit.id}>{unit.name} ({unit.abbreviation})</SelectItem>)}
                                 </SelectContent></Select>
                                 <Button type="button" variant="outline" size="icon" onClick={() => { setTargetUomField('uom'); setIsUomDialogOpen(true); }}>
                                     <PlusCircle className="h-4 w-4" />
@@ -507,24 +525,28 @@ export function AddProductForm() {
                             <FormMessage /></FormItem>
                         )} />
                         {showSecondaryUom ? (
-                            <FormField name="secondaryUom" control={form.control} render={({ field }) => (
-                                <FormItem>
-                                 <div className="flex items-center gap-2">
-                                    <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger></FormControl><SelectContent>
-                                    {activeUnits.map(unit => <SelectItem key={unit.id} value={unit.abbreviation}>{unit.name} ({unit.abbreviation})</SelectItem>)}
-                                    </SelectContent></Select>
-                                    <Button type="button" variant="outline" size="icon" onClick={() => { setTargetUomField('secondaryUom'); setIsUomDialogOpen(true); }}>
-                                        <PlusCircle className="h-4 w-4" />
-                                    </Button>
-                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => { setShowSecondaryUom(false); form.setValue('secondaryUom', ''); }}>
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                    </div>
-                                <FormMessage /></FormItem>
-                            )} />
+                            <>
+                                <FormField name="secondaryUom" control={form.control} render={({ field }) => (
+                                    <FormItem>
+                                        <div className="flex items-center gap-2">
+                                            <Select onValueChange={field.onChange} value={field.value} disabled={secondaryUomOptions.length === 0}>
+                                                <FormControl><SelectTrigger><SelectValue placeholder={secondaryUomOptions.length > 0 ? "Select secondary unit" : "No conversion found"} /></SelectTrigger></FormControl>
+                                                <SelectContent>
+                                                    {secondaryUomOptions.map(unit => <SelectItem key={unit.id} value={unit.id}>{unit.name} ({unit.abbreviation})</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => { setShowSecondaryUom(false); form.setValue('secondaryUom', ''); }}>
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    <FormMessage />
+                                    </FormItem>
+                                )} />
+                                {conversionRate && <p className="text-xs text-muted-foreground pt-1">{conversionRate}</p>}
+                            </>
                         ) : (
-                            <Button type="button" variant="link" className="p-0 h-auto text-sm" onClick={() => setShowSecondaryUom(true)}>
-                                + Secondary UOM
+                            watchedPrimaryUom && <Button type="button" variant="link" className="p-0 h-auto text-sm" onClick={() => setShowSecondaryUom(true)}>
+                                + Add Secondary Unit
                             </Button>
                         )}
                     </div>
@@ -645,7 +667,7 @@ export function AddProductForm() {
                                                     value={field.value[level] || ''}
                                                     onValueChange={(value) => {
                                                         const newPath = [...field.value.slice(0, level), value];
-                                                        field.onChange(newPath);
+                                                        form.setValue('categoryPath', newPath);
                                                     }}
                                                     disabled={level > 0 && !field.value[level - 1]}
                                                 >
