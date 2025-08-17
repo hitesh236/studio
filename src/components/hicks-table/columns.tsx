@@ -131,11 +131,17 @@ export const columns = ({
       cell: (row: Person) => <div className={cn("font-mono whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.phone}</div>,
     },
     {
-      accessor: "saleAmount",
-      header: getSortableHeader("Sale Amount", "saleAmount"),
-      cell: (row: Person) => (
-          <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.saleAmount)}</div>
-      ),
+      accessor: "balance",
+      header: getSortableHeader("Balance", "balance"),
+      cell: (row: Person) => {
+        const isCustomer = row.type === 'Customer';
+        const toCollect = isCustomer && row.balance > 0;
+        const toPay = !isCustomer && row.balance < 0;
+        const colorClass = toCollect ? 'text-green-600' : toPay ? 'text-destructive' : '';
+        return (
+          <div className={cn("font-mono text-right whitespace-nowrap", colorClass, density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.balance)}</div>
+        )
+      },
     },
     {
       accessor: "status",

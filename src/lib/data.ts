@@ -62,7 +62,7 @@ export function generateData(count: number): Person[] {
       lastName,
       email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}@example.com`,
       company: getRandomElement(companies),
-      phone: `(${Math.floor(Math.random() * 900) + 100}) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
+      phone: `+91 ${Math.floor(Math.random() * 90000) + 10000} ${Math.floor(Math.random() * 90000) + 10000}`,
       saleAmount: Math.floor(Math.random() * 5000) + 500,
       rating: Math.round((Math.random() * 4 + 1) * 10) / 10,
       status: getRandomElement(statuses),
