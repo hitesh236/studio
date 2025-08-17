@@ -47,7 +47,7 @@ import { initialCategoriesData } from '@/lib/categories';
 import { initialAttributes } from '@/lib/attributes';
 import type { Category, Attribute } from '@/lib/types';
 import { initialSimpleUnits } from '@/lib/uom-data';
-import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
 
 
 const customAttributeSchema = z.object({
