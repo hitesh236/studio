@@ -13,86 +13,76 @@ import {
   TableFooter
 } from "@/components/ui/table";
 import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { CardContent } from '@/components/ui/card';
-import { SummaryCard } from '../sales-invoices/summary-card';
-import { ArrowDownToLine, ArrowUpFromLine, Package } from 'lucide-react';
+import { cn, formatCurrency } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface StockHistoryViewProps {
   data: StockHistoryEntry[];
 }
 
+const StockTable = ({ title, data, type }: { title: string, data: StockHistoryEntry[], type: 'in' | 'out' }) => {
+    const totalQuantity = data.reduce((sum, entry) => sum + entry.quantity, 0);
+    const quantityHeader = type === 'in' ? 'Stock In' : 'Stock Out';
+
+    return (
+        <Card>
+            <CardHeader className="p-4">
+                <CardTitle className="text-xl">{title}</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+                <div className="rounded-md border">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[40px]">#</TableHead>
+                                <TableHead>Date</TableHead>
+                                <TableHead className="text-right">{quantityHeader}</TableHead>
+                                <TableHead className="text-right">Price</TableHead>
+                                <TableHead>Type</TableHead>
+                                <TableHead>Code</TableHead>
+                                <TableHead>{type === 'in' ? 'Supplier/Client' : 'Client/Supplier'}</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {data.map((entry, index) => (
+                                <TableRow key={entry.id}>
+                                    <TableCell>{index + 1}</TableCell>
+                                    <TableCell>{format(entry.date, 'dd MMM, yyyy')}</TableCell>
+                                    <TableCell className="text-right font-mono">{entry.quantity}</TableCell>
+                                    <TableCell className="text-right font-mono">{formatCurrency(entry.price, 'USD')}</TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline">{entry.type}</Badge>
+                                    </TableCell>
+                                    <TableCell>{entry.code}</TableCell>
+                                    <TableCell>{entry.supplierOrClient}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                        <TableFooter>
+                            <TableRow>
+                                <TableCell colSpan={6} className="text-right font-bold">Total Quantity</TableCell>
+                                <TableCell className="text-right font-bold text-lg font-mono">{totalQuantity}</TableCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
+
 export function StockHistoryView({ data }: StockHistoryViewProps) {
   
-  const processedData = React.useMemo(() => {
-    let closingStock = 0;
-    return data.map(entry => {
-        if (entry.type === 'IN') {
-            closingStock += entry.quantity;
-        } else {
-            closingStock -= entry.quantity;
-        }
-        return { ...entry, closingStock };
-    });
-  }, [data]);
-
-  const summaryStats = React.useMemo(() => {
-      const totalIn = data.filter(e => e.type === 'IN').reduce((sum, e) => sum + e.quantity, 0);
-      const totalOut = data.filter(e => e.type === 'OUT').reduce((sum, e) => sum + e.quantity, 0);
-      const closingStock = totalIn - totalOut;
-      return { totalIn, totalOut, closingStock };
-  }, [data]);
+  const stockInData = React.useMemo(() => data.filter(e => e.quantity > 0), [data]);
+  const stockOutData = React.useMemo(() => data.filter(e => e.quantity < 0), [data]);
 
   return (
     <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <SummaryCard icon={ArrowDownToLine} title="Total Stock In" value={summaryStats.totalIn.toString()} variant="primary" />
-            <SummaryCard icon={ArrowUpFromLine} title="Total Stock Out" value={summaryStats.totalOut.toString()} />
-            <SummaryCard icon={Package} title="Closing Stock" value={summaryStats.closingStock.toString()} />
-        </div>
-        <div className="rounded-md border">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Reference</TableHead>
-                        <TableHead>Notes</TableHead>
-                        <TableHead className="text-right">Quantity</TableHead>
-                        <TableHead className="text-right">Closing Stock</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {processedData.map((entry) => (
-                        <TableRow key={entry.id}>
-                            <TableCell>{format(entry.date, 'dd-MMM-yyyy')}</TableCell>
-                            <TableCell>
-                                <span className={cn(
-                                    "font-semibold",
-                                    entry.type === 'IN' ? 'text-green-600' : 'text-destructive'
-                                )}>
-                                    {entry.type}
-                                </span>
-                            </TableCell>
-                            <TableCell>{entry.reference}</TableCell>
-                            <TableCell className="text-muted-foreground">{entry.notes}</TableCell>
-                            <TableCell className="text-right font-mono">
-                                {entry.type === 'IN' ? '+' : '-'} {entry.quantity}
-                            </TableCell>
-                            <TableCell className="text-right font-mono font-semibold">{entry.closingStock}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-                 <TableFooter>
-                    <TableRow>
-                        <TableCell colSpan={5} className="text-right font-bold">Final Closing Stock</TableCell>
-                        <TableCell className="text-right font-bold font-mono text-lg">{summaryStats.closingStock}</TableCell>
-                    </TableRow>
-                </TableFooter>
-            </Table>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <StockTable title="Stock In" data={stockInData} type="in" />
+            <StockTable title="Stock Out" data={stockOutData} type="out" />
         </div>
     </CardContent>
   );
 }
-
-    
