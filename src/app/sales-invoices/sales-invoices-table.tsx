@@ -1,6 +1,7 @@
 
 "use client";
 
+import * as React from 'react';
 import type { SalesInvoice } from "./data";
 import { useMemo, useState, useRef } from "react";
 import {
@@ -78,7 +79,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { format, parseISO } from 'date-fns';
+import { format } from "date-fns";
 
 const availableFilters = [
   { id: "paymentStatus", label: "Payment Status" },
@@ -584,7 +585,7 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <SummaryCard
             icon={TrendingUp}
-            title="Total Sales (BCY)"
+            title="Total Sales"
             value={formatCurrency(summaryStats.totalSales, 'INR')}
             variant="primary"
           />
@@ -747,7 +748,7 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
           </div>
         )}
 
-        <div className="hidden md:block rounded-lg border overflow-hidden bg-card">
+        <div className="rounded-lg border overflow-hidden bg-card">
           <Table>
             <TableHeader>
               <TableRow>
