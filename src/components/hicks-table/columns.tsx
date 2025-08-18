@@ -87,15 +87,11 @@ export const columns = ({
       cell: (row: Person) => (
         <div className={cn("flex items-center gap-2", density === 'compact' && 'py-1 px-2 text-sm')}>
           <div>
-            <div className="font-medium whitespace-nowrap">{`${row.firstName} ${row.lastName}`}</div>
+            <Link href={`/customer-portfolio?id=${row.id}`} className="font-medium whitespace-nowrap hover:underline hover:text-primary">
+              {`${row.firstName} ${row.lastName}`}
+            </Link>
             <div className="text-xs text-muted-foreground whitespace-nowrap">{row.email}</div>
           </div>
-          <Button asChild variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
-            <Link href={`/customer-portfolio?id=${row.id}`}>
-                <ExternalLink className="h-4 w-4" />
-                <span className="sr-only">View Customer Portfolio</span>
-            </Link>
-          </Button>
         </div>
       ),
     },
