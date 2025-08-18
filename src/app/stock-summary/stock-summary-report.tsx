@@ -165,8 +165,8 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
               <TableRow>
                 <TableHead colSpan={4} className="text-center">Item Details</TableHead>
                 <TableHead colSpan={2} className="text-center">Opening Stock</TableHead>
-                <TableHead colSpan={2} className="text-center bg-green-50 dark:bg-green-900/20">Stock In</TableHead>
-                <TableHead colSpan={2} className="text-center bg-red-50 dark:bg-red-900/20">Stock Out</TableHead>
+                <TableHead colSpan={2} className="text-center">Stock In</TableHead>
+                <TableHead colSpan={2} className="text-center">Stock Out</TableHead>
                 <TableHead colSpan={2} className="text-center">Closing Stock</TableHead>
               </TableRow>
               <TableRow>
@@ -176,10 +176,10 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
                 <TableHead />
                 <TableHead className="text-right">Qty</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
-                <TableHead className="text-right bg-green-50 dark:bg-green-900/20">Qty</TableHead>
-                <TableHead className="text-right bg-green-50 dark:bg-green-900/20">Amount</TableHead>
-                <TableHead className="text-right bg-red-50 dark:bg-red-900/20">Qty</TableHead>
-                <TableHead className="text-right bg-red-50 dark:bg-red-900/20">Amount</TableHead>
+                <TableHead className="text-right">Qty</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="text-right">Qty</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
                 <TableHead className="text-right">Qty</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
               </TableRow>
