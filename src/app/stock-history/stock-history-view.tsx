@@ -17,6 +17,7 @@ import { cn, formatCurrency } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowDown, ArrowUp } from 'lucide-react';
+import Link from 'next/link';
 
 interface StockHistoryViewProps {
   data: StockHistoryEntry[];
@@ -42,7 +43,7 @@ const StockTable = ({ title, data, type }: { title: string, data: StockHistoryEn
                                 <TableHead className="text-right">{quantityHeader}</TableHead>
                                 <TableHead className="text-right">Price</TableHead>
                                 <TableHead>Type</TableHead>
-                                <TableHead>Code</TableHead>
+                                <TableHead>Invoice/Ref No.</TableHead>
                                 <TableHead>{type === 'in' ? 'Supplier/Client' : 'Client/Supplier'}</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -52,11 +53,13 @@ const StockTable = ({ title, data, type }: { title: string, data: StockHistoryEn
                                     <TableCell>{index + 1}</TableCell>
                                     <TableCell>{format(entry.date, 'dd MMM, yyyy')}</TableCell>
                                     <TableCell className="text-right font-mono">{entry.quantity}</TableCell>
-                                    <TableCell className="text-right font-mono">{formatCurrency(entry.price, 'USD')}</TableCell>
+                                    <TableCell className="text-right font-mono">{formatCurrency(entry.price, 'INR')}</TableCell>
                                     <TableCell>
                                         <Badge variant="outline">{entry.type}</Badge>
                                     </TableCell>
-                                    <TableCell>{entry.code}</TableCell>
+                                    <TableCell>
+                                      <Link href="#" className="text-primary hover:underline">{entry.referenceId}</Link>
+                                    </TableCell>
                                     <TableCell>{entry.supplierOrClient}</TableCell>
                                 </TableRow>
                             ))}
@@ -76,14 +79,22 @@ const StockTable = ({ title, data, type }: { title: string, data: StockHistoryEn
 
 const CombinedStockTable = ({ data }: { data: StockHistoryEntry[] }) => {
     let runningStock = 0;
+    // Assume a constant purchase price for profit calculation for this example
+    const avgPurchasePrice = data.find(e => e.type === 'Purchase')?.price || 750;
+
     const processedData = data.map(entry => {
         runningStock += entry.quantity;
-        return { ...entry, runningStock };
+        let profit = 0;
+        if (entry.type === 'Invoice') {
+            profit = (entry.price - avgPurchasePrice) * Math.abs(entry.quantity);
+        }
+        return { ...entry, runningStock, profit };
     });
 
     const totalIn = data.filter(e => e.quantity > 0).reduce((sum, e) => sum + e.quantity, 0);
     const totalOut = data.filter(e => e.quantity < 0).reduce((sum, e) => sum + e.quantity, 0);
-
+    const totalProfit = processedData.reduce((sum, e) => sum + e.profit, 0);
+    
     return (
         <Card>
             <CardHeader className="p-4">
@@ -96,9 +107,9 @@ const CombinedStockTable = ({ data }: { data: StockHistoryEntry[] }) => {
                             <TableRow>
                                 <TableHead>Date</TableHead>
                                 <TableHead>Type</TableHead>
-                                <TableHead>Code</TableHead>
-                                <TableHead>Supplier/Client</TableHead>
+                                <TableHead>Invoice/Ref No.</TableHead>
                                 <TableHead className="text-right">Price</TableHead>
+                                <TableHead className="text-right">Profit</TableHead>
                                 <TableHead className="text-right">In</TableHead>
                                 <TableHead className="text-right">Out</TableHead>
                                 <TableHead className="text-right">Balance</TableHead>
@@ -116,9 +127,13 @@ const CombinedStockTable = ({ data }: { data: StockHistoryEntry[] }) => {
                                                 {entry.type}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell>{entry.code}</TableCell>
-                                        <TableCell>{entry.supplierOrClient}</TableCell>
-                                        <TableCell className="text-right font-mono">{formatCurrency(entry.price, 'USD')}</TableCell>
+                                        <TableCell>
+                                          <Link href="#" className="text-primary hover:underline">{entry.referenceId}</Link>
+                                        </TableCell>
+                                        <TableCell className="text-right font-mono">{formatCurrency(entry.price, 'INR')}</TableCell>
+                                        <TableCell className={cn("text-right font-mono", entry.profit > 0 ? "text-green-600" : "text-muted-foreground")}>
+                                            {entry.profit > 0 ? formatCurrency(entry.profit, 'INR') : '-'}
+                                        </TableCell>
                                         <TableCell className="text-right font-mono text-green-600">{isStockIn ? entry.quantity : '-'}</TableCell>
                                         <TableCell className="text-right font-mono text-red-600">{!isStockIn ? Math.abs(entry.quantity) : '-'}</TableCell>
                                         <TableCell className="text-right font-bold font-mono">{entry.runningStock}</TableCell>
@@ -128,7 +143,8 @@ const CombinedStockTable = ({ data }: { data: StockHistoryEntry[] }) => {
                         </TableBody>
                          <TableFooter>
                             <TableRow>
-                                <TableCell colSpan={5} className="text-right font-bold">Total</TableCell>
+                                <TableCell colSpan={4} className="text-right font-bold">Total</TableCell>
+                                <TableCell className="text-right font-bold font-mono text-green-600">{formatCurrency(totalProfit, 'INR')}</TableCell>
                                 <TableCell className="text-right font-bold text-lg font-mono text-green-600">{totalIn}</TableCell>
                                 <TableCell className="text-right font-bold text-lg font-mono text-red-600">{Math.abs(totalOut)}</TableCell>
                                 <TableCell className="text-right font-bold text-lg font-mono">{runningStock}</TableCell>
