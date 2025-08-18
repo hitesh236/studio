@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import {
@@ -241,6 +240,14 @@ export function AppSidebar() {
               <SidebarMenuButton tooltip="Invoice Overviews">
                 <BookOpen />
                 <span>Invoice Overviews</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Stock Report" isActive={pathname.startsWith('/stock-list')} asChild>
+                <Link href="/stock-list" onClick={handleLinkClick}>
+                  <LayoutGrid />
+                  <span>Stock Report</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
