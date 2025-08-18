@@ -250,6 +250,10 @@ export function AddProductForm() {
   const watchedSecondaryUom = form.watch('secondaryUom');
   const lastSelectedCategoryId = watchedCategoryPath.length > 0 ? watchedCategoryPath[watchedCategoryPath.length - 1] : null;
 
+  const watchedPrices = form.watch('customerPrices');
+  const watchedGstRate = form.watch('gstRate');
+  const watchedIncludesGst = form.watch('sellingPriceIncludesGst');
+
   const displayedAttributes = React.useMemo(
     () => getAttributesForCategory(lastSelectedCategoryId, initialCategoriesData, initialAttributes),
     [lastSelectedCategoryId]
@@ -518,6 +522,27 @@ export function AddProductForm() {
     );
 };
 
+const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRate: number; includesGst: boolean; }) => {
+    if (!price || price === 0) return null;
+
+    let basePrice: number;
+    let gstAmount: number;
+
+    if (includesGst) {
+        basePrice = price / (1 + gstRate / 100);
+        gstAmount = price - basePrice;
+    } else {
+        basePrice = price;
+        gstAmount = price * (gstRate / 100);
+    }
+
+    return (
+        <FormDescription>
+            Base: {formatCurrency(basePrice, 'INR')} + GST: {formatCurrency(gstAmount, 'INR')}
+        </FormDescription>
+    );
+};
+
   return (
     <div className="space-y-6">
         <div className="flex justify-between items-center">
@@ -615,7 +640,15 @@ export function AddProductForm() {
                         </div>
                     </FormItem>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                        <div className="md:col-span-2">
+                        <FormField name="hsnCode" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>HSN/SAC Code</FormLabel><FormControl><Input placeholder="e.g., 847160" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField name="gstRate" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>GST Rate (%)</FormLabel><Select onValueChange={(v) => field.onChange(Number(v))} value={String(field.value)}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent>
+                                {[0, 5, 12, 18, 28].map(rate => <SelectItem key={rate} value={String(rate)}>{rate}%</SelectItem>)}
+                            </SelectContent></Select><FormMessage /></FormItem>
+                        )} />
+                         <div className="md:col-span-2">
                             <div className="flex items-center gap-4 mb-2">
                                 <Label>Selling Prices</Label>
                                 <FormField
@@ -633,24 +666,31 @@ export function AddProductForm() {
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-4 border rounded-md">
                                 <FormField name="customerPrices.regular" control={form.control} render={({ field }) => (
-                                    <FormItem><FormLabel className="text-sm font-normal">Regular</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
+                                    <FormItem>
+                                        <FormLabel className="text-sm font-normal">Regular</FormLabel>
+                                        <FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl>
+                                        <PriceBreakdown price={watchedPrices.regular} gstRate={watchedGstRate} includesGst={watchedIncludesGst} />
+                                        <FormMessage />
+                                    </FormItem>
                                 )} />
                                 <FormField name="customerPrices.b2c" control={form.control} render={({ field }) => (
-                                    <FormItem><FormLabel className="text-sm font-normal">B2C</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
+                                    <FormItem>
+                                        <FormLabel className="text-sm font-normal">B2C</FormLabel>
+                                        <FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl>
+                                        <PriceBreakdown price={watchedPrices.b2c} gstRate={watchedGstRate} includesGst={watchedIncludesGst} />
+                                        <FormMessage />
+                                    </FormItem>
                                 )} />
                                 <FormField name="customerPrices.b2b" control={form.control} render={({ field }) => (
-                                    <FormItem><FormLabel className="text-sm font-normal">B2B</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
+                                    <FormItem>
+                                        <FormLabel className="text-sm font-normal">B2B</FormLabel>
+                                        <FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl>
+                                         <PriceBreakdown price={watchedPrices.b2b} gstRate={watchedGstRate} includesGst={watchedIncludesGst} />
+                                        <FormMessage />
+                                    </FormItem>
                                 )} />
                             </div>
                         </div>
-                        <FormField name="hsnCode" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>HSN/SAC Code</FormLabel><FormControl><Input placeholder="e.g., 847160" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField name="gstRate" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>GST Rate (%)</FormLabel><Select onValueChange={(v) => field.onChange(Number(v))} value={String(field.value)}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent>
-                                {[0, 5, 12, 18, 28].map(rate => <SelectItem key={rate} value={String(rate)}>{rate}%</SelectItem>)}
-                            </SelectContent></Select><FormMessage /></FormItem>
-                        )} />
                     </div>
                 </CardContent>
             </Card>
