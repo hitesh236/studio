@@ -34,7 +34,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Settings, Upload, Image as ImageIcon, Tags, Barcode, Percent, Trash2, PlusCircle, X, ChevronsUpDown, Check, Info } from 'lucide-react';
+import { Loader2, Save, Settings, Upload, Image as ImageIcon, Tags, Barcode, Percent, Trash2, PlusCircle, X, ChevronsUpDown, Check, Info, Sparkles } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
@@ -208,7 +208,7 @@ export function AddProductForm() {
         productName: '',
         alternateName: '',
         sku: '',
-        categoryPath: [],
+        categoryPath: ['grocery', 'staples-pulses', 'rice'], // Default category
         productDescription: '',
         uom: '',
         secondaryUom: '',
@@ -260,6 +260,26 @@ export function AddProductForm() {
     if (!compound) return null;
     return `1 ${compound.firstUnit.name} = ${compound.conversion} ${compound.secondUnit.name}`;
   }, [watchedPrimaryUom, watchedSecondaryUom, compoundUnits]);
+
+  const flattenedCategories = React.useMemo(() => {
+    const flatten = (categories: Category[], prefix = ''): { label: string; value: string[] }[] => {
+      let all: { label: string; value: string[] }[] = [];
+      for (const category of categories) {
+        const currentPath = prefix ? `${prefix} / ${category.name}` : category.name;
+        const currentPathIds = prefix.split(',').filter(Boolean);
+        currentPathIds.push(category.id);
+        
+        all.push({ label: currentPath, value: currentPathIds });
+
+        if (category.children && category.children.length > 0) {
+          const childrenPath = prefix ? `${prefix},${category.id}` : category.id;
+          all = all.concat(flatten(category.children, childrenPath));
+        }
+      }
+      return all;
+    };
+    return flatten(initialCategoriesData);
+  }, []);
 
 
   // Sync form state with displayed attributes
@@ -350,6 +370,18 @@ export function AddProductForm() {
         setIsUomDialogOpen(false);
         setNewUom({ name: '', abbreviation: '' });
     }
+  };
+
+  const generateSku = () => {
+    const productName = form.getValues('productName');
+    if (!productName) {
+        toast({ title: 'Product Name required', description: 'Please enter a product name first to generate an SKU.', variant: 'destructive' });
+        return;
+    }
+    // Generate SKU: First 4 letters of name, uppercase, plus random 4 digits
+    const sku = `${productName.substring(0, 4).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    form.setValue('sku', sku, { shouldValidate: true });
+    toast({ title: 'SKU Generated!', description: `New SKU: ${sku}`});
   };
 
   async function onSubmit(data: ProductFormValues) {
@@ -499,53 +531,60 @@ export function AddProductForm() {
                             <FormItem><FormLabel>Alternate Name</FormLabel><FormControl><Input placeholder="Optional alternate name" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                     </div>
-                    <FormField name="sku" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>SKU</FormLabel><FormControl><Input placeholder="Stock Keeping Unit" {...field} /></FormControl><FormMessage /></FormItem>
+                     <FormField name="sku" control={form.control} render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>SKU</FormLabel>
+                            <div className="flex items-center gap-2">
+                                <FormControl>
+                                    <Input placeholder="Stock Keeping Unit" {...field} />
+                                </FormControl>
+                                <Button type="button" variant="outline" onClick={generateSku}>
+                                    <Sparkles className="mr-2 h-4 w-4" />
+                                    Generate
+                                </Button>
+                            </div>
+                            <FormMessage />
+                        </FormItem>
                     )} />
                     <FormField
-                        name="categoryPath"
                         control={form.control}
-                        render={({ field }) => {
-                            return (
-                                <FormItem>
-                                    <FormLabel>Category</FormLabel>
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                        {[0, 1, 2].map(level => {
-                                            const parentPath = field.value.slice(0, level);
-                                            const parentCategory = findCategoryByPath(parentPath, initialCategoriesData);
-                                            const options = level === 0 ? initialCategoriesData : (parentCategory?.children || []);
-
-                                            if (level > 0 && field.value.length < level) return null;
-                                            if (options.length === 0 && level > 0 && field.value[level-1]) return null;
-                                            
-                                            return (
-                                                <Select
-                                                    key={level}
-                                                    value={field.value[level] || ''}
-                                                    onValueChange={(value) => {
-                                                        const newPath = [...field.value.slice(0, level), value];
-                                                        form.setValue('categoryPath', newPath, { shouldValidate: true, shouldDirty: true });
-                                                    }}
-                                                    disabled={level > 0 && !field.value[level - 1]}
-                                                >
-                                                    <FormControl>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder={`Select Level ${level + 1}`} />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        {options.map(cat => (
-                                                            <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            );
-                                        })}
-                                    </div>
-                                    <FormMessage />
-                                </FormItem>
-                            );
-                        }}
+                        name="categoryPath"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Category</FormLabel>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <FormControl>
+                                            <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
+                                                {field.value?.length > 0 ? flattenedCategories.find(c => c.value.join(',') === field.value.join(','))?.label : "Select Category"}
+                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                        <Command>
+                                            <CommandInput placeholder="Search category..." />
+                                            <CommandList>
+                                                <CommandEmpty>No category found.</CommandEmpty>
+                                                <CommandGroup>
+                                                    {flattenedCategories.map((category) => (
+                                                        <CommandItem
+                                                            value={category.label}
+                                                            key={category.label}
+                                                            onSelect={() => form.setValue("categoryPath", category.value)}
+                                                        >
+                                                            <Check className={cn("mr-2 h-4 w-4", category.value.join(',') === field.value.join(',') ? "opacity-100" : "opacity-0")}/>
+                                                            {category.label}
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                            </FormItem>
+                        )}
                     />
                     <FormField name="productDescription" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Product Description</FormLabel><FormControl><Textarea placeholder="Internal description for the product" {...field} /></FormControl><FormMessage /></FormItem>
@@ -906,7 +945,7 @@ export function AddProductForm() {
                     Save Product
                 </Button>
             </div>
-            </form>
+        </form>
         </Form>
     </Card>
   );
