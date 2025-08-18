@@ -26,6 +26,11 @@ interface StockSummaryReportProps {
   data: StockSummaryRow[];
 }
 
+const companyDetails = {
+    name: 'Hicks Inc.',
+    address: '123 Business Rd, Financial District, Mumbai, Maharashtra, 400001',
+};
+
 export function StockSummaryReport({ data }: StockSummaryReportProps) {
   const [date, setDate] = React.useState<DateRange | undefined>({
     from: new Date(2025, 7, 11), // August 11, 2025
@@ -71,8 +76,8 @@ export function StockSummaryReport({ data }: StockSummaryReportProps) {
         </div>
         <div className="flex justify-between items-center text-sm">
             <div>
-                <p><strong className="w-24 inline-block">Company name</strong> XpertNext</p>
-                <p><strong className="w-24 inline-block">Address</strong> Karachi, Pakistan</p>
+                <p><strong className="w-24 inline-block">Company name</strong> {companyDetails.name}</p>
+                <p><strong className="w-24 inline-block">Address</strong> {companyDetails.address}</p>
             </div>
             <div className="flex gap-2">
                 <Popover>
