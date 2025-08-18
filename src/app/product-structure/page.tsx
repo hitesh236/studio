@@ -397,7 +397,7 @@ const AttributeDialog = ({
                             <Command>
                                 <CommandInput placeholder="Type to search or create..." onValueChange={(search) => setValue('name', search)} />
                                 <CommandList>
-                                    {filteredSuggestedAttributes.length === 0 && !name && <CommandEmpty>No suggestions found.</CommandEmpty>}
+                                    <CommandEmpty>No suggestions found.</CommandEmpty>
                                     <CommandGroup>
                                         {filteredSuggestedAttributes.map(attr => (
                                             <CommandItem
