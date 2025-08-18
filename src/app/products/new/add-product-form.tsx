@@ -178,6 +178,7 @@ const getAttributesForCategory = (categoryId: string | null, categories: Categor
 };
 
 const optionalSectionsConfig = {
+    attributes: 'Attributes',
     organization: 'Organization',
     ecommerce: 'E-commerce Details'
 };
@@ -202,6 +203,7 @@ export function AddProductForm() {
   const [targetUomField, setTargetUomField] = React.useState<'uom' | 'secondaryUom' | null>(null);
 
   const [visibleSections, setVisibleSections] = React.useState<Record<string, boolean>>({
+    attributes: false,
     organization: false,
     ecommerce: false,
   });
@@ -590,7 +592,7 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                         <FormField name="productName" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Product Name</FormLabel><FormControl><Input placeholder="e.g., Wireless Mouse" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
-                         <FormField name="purchasePrice" control={form.control} render={({ field }) => (
+                        <FormField name="purchasePrice" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Purchase Price</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                     </div>
@@ -824,44 +826,7 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                 </CardContent>
             </Card>
 
-            {visibleSections.organization && (
-                <Card>
-                    <CardHeader><CardTitle className="text-[20px] text-secondary">Organization</CardTitle></CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField name="brand" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Brand</FormLabel><FormControl><Input placeholder="e.g., Logitech" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField name="model" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Model</FormLabel><FormControl><Input placeholder="e.g., MX Master 3S" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField name="barcode" control={form.control} render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Barcode</FormLabel>
-                                <div className="relative">
-                                    <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <FormControl><Input placeholder="Scan or enter barcode" className="pl-10" {...field} /></FormControl>
-                                </div>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                        <FormField name="alternateName" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Alternate Name</FormLabel><FormControl><Input placeholder="Optional alternate name" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField
-                        control={form.control}
-                        name="tags"
-                        render={({ field }) => (
-                            <div className="md:col-span-2">
-                            <FormLabel>Tags/Keywords</FormLabel>
-                            <TagsInput field={field} />
-                            </div>
-                        )}
-                        />
-                    </CardContent>
-                </Card>
-            )}
-
-            {displayedAttributes.length > 0 && <Card>
+            {visibleSections.attributes && displayedAttributes.length > 0 && <Card>
                 <CardHeader>
                     <CardTitle className="text-[20px] text-secondary">Attributes</CardTitle>
                     <CardDescription>Specify attributes for the selected category.</CardDescription>
@@ -912,6 +877,43 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                 })}
                 </CardContent>
             </Card>}
+
+            {visibleSections.organization && (
+                <Card>
+                    <CardHeader><CardTitle className="text-[20px] text-secondary">Organization</CardTitle></CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField name="brand" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Brand</FormLabel><FormControl><Input placeholder="e.g., Logitech" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField name="model" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Model</FormLabel><FormControl><Input placeholder="e.g., MX Master 3S" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField name="barcode" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Barcode</FormLabel>
+                                <div className="relative">
+                                    <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <FormControl><Input placeholder="Scan or enter barcode" className="pl-10" {...field} /></FormControl>
+                                </div>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                        <FormField name="alternateName" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Alternate Name</FormLabel><FormControl><Input placeholder="Optional alternate name" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField
+                        control={form.control}
+                        name="tags"
+                        render={({ field }) => (
+                            <div className="md:col-span-2">
+                            <FormLabel>Tags/Keywords</FormLabel>
+                            <TagsInput field={field} />
+                            </div>
+                        )}
+                        />
+                    </CardContent>
+                </Card>
+            )}
 
             {visibleSections.ecommerce && <Card>
                 <CardHeader>
