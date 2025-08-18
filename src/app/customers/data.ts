@@ -37,12 +37,15 @@ const personNames = [
     "Karan Malhotra", "Pooja Hegde", "Arjun Nair", "Sneha Iyer", "Vivek Anand"
 ];
 
-const getRandomElement = <T>(arr: T[] | readonly T[]): T => arr[Math.floor(Math.random() * arr.length)];
+const getDeterministicElement = <T>(arr: T[] | readonly T[], index: number): T => arr[index % arr.length];
 
-function generateRandomGstin(stateCode: string): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const pan = Array(10).fill(null).map(() => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
-    return `${stateCode}${pan}1Z${Math.floor(Math.random() * 9) + 1}`;
+function generateDeterministicGstin(stateCode: string, index: number): string {
+    const panChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let pan = '';
+    for (let i = 0; i < 10; i++) {
+        pan += panChars.charAt((index + i * 5) % panChars.length);
+    }
+    return `${stateCode}${pan}1Z${(index % 9) + 1}`;
 }
 
 
@@ -55,7 +58,7 @@ export const generateCustomerData = (): Customer[] => {
         const entityName = allEntities[i];
         const isCompany = companyNames.includes(entityName);
         
-        const stateName = getRandomElement(Object.keys(indianStatesMap));
+        const stateName = getDeterministicElement(Object.keys(indianStatesMap), i);
         const placeOfSupply = indianStatesMap[stateName];
         
         let name: string;
@@ -63,34 +66,33 @@ export const generateCustomerData = (): Customer[] => {
 
         if (isCompany) {
             company = entityName;
-            name = getRandomElement(personNames); // A contact person for the company
+            name = getDeterministicElement(personNames, i); // A contact person for the company
         } else {
             company = undefined;
             name = entityName;
         }
 
-        const balanceRandom = Math.random();
         let balanceDue: number;
-        if (balanceRandom < 0.7) { // 70% have dues
-            balanceDue = Math.floor(Math.random() * 50000) + 5000;
-        } else { // 30% have zero balance
+        if (i % 3 !== 0) { // ~66% have dues
+            balanceDue = (i * 1234.5) % 50000 + 5000;
+        } else { // ~33% have zero balance
             balanceDue = 0;
         }
 
         // Companies always have GSTIN, individuals have a smaller chance
-        const hasGstin = company ? true : Math.random() > 0.8; 
+        const hasGstin = company ? true : (i % 5 === 0);
 
         data.push({
             id: `cust-${1001 + i}`,
             name,
             company,
-            gstin: hasGstin ? generateRandomGstin(placeOfSupply.code) : '-',
+            gstin: hasGstin ? generateDeterministicGstin(placeOfSupply.code, i) : '-',
             contact: {
-                phone: `98${Math.floor(Math.random() * 90000000) + 10000000}`,
-                email: `${name.split(' ')[0].toLowerCase()}@${company ? company.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/gi, '') : 'example'}.com`,
+                phone: `98${(10000000 + i * 123456) % 90000000}`,
+                email: `${name.split(' ')[0].toLowerCase()}${i}@${company ? company.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/gi, '') : 'example'}.com`,
             },
             balanceDue,
-            lastTransaction: new Date(now.getTime() - Math.random() * 30 * 24 * 60 * 60 * 1000), // last 30 days
+            lastTransaction: new Date(now.getTime() - (i * 24 * 60 * 60 * 1000)), // last N days
             placeOfSupply: {
                 code: placeOfSupply.code,
                 state: stateName,
