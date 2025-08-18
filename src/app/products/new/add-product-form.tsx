@@ -556,12 +556,12 @@ export function AddProductForm() {
                      <FormField name="sku" control={form.control} render={({ field }) => (
                         <FormItem>
                             <FormLabel>SKU</FormLabel>
-                            <div className="flex items-center gap-2">
+                            <div className="relative flex items-center">
+                                <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <FormControl>
-                                    <Input placeholder="Stock Keeping Unit" {...field} />
+                                    <Input placeholder="Stock Keeping Unit" className="pl-10" {...field} />
                                 </FormControl>
-                                <Button type="button" variant="outline" onClick={generateSku}>
-                                    <Sparkles className="mr-2 h-4 w-4" />
+                                <Button type="button" variant="outline" onClick={generateSku} className="ml-2">
                                     Generate
                                 </Button>
                             </div>
@@ -602,9 +602,47 @@ export function AddProductForm() {
                             ))}
                         </div>
                     </FormItem>
-                    <FormField name="productDescription" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Product Description</FormLabel><FormControl><Textarea placeholder="Internal description for the product" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                        <FormField name="purchasePrice" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Purchase Price</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <div className="md:col-span-2">
+                            <div className="flex items-center gap-4 mb-2">
+                                <Label>Selling Prices</Label>
+                                <FormField
+                                    control={form.control}
+                                    name="sellingPriceIncludesGst"
+                                    render={({ field }) => (
+                                        <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                                            <FormControl>
+                                                <Checkbox checked={field.value} onCheckedChange={field.onChange} id="include-gst" />
+                                            </FormControl>
+                                            <Label htmlFor="include-gst" className="text-sm font-normal">Including GST</Label>
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-4 border rounded-md">
+                                <FormField name="customerPrices.regular" control={form.control} render={({ field }) => (
+                                    <FormItem><FormLabel className="text-sm font-normal">Regular</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
+                                )} />
+                                <FormField name="customerPrices.b2c" control={form.control} render={({ field }) => (
+                                    <FormItem><FormLabel className="text-sm font-normal">B2C</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
+                                )} />
+                                <FormField name="customerPrices.b2b" control={form.control} render={({ field }) => (
+                                    <FormItem><FormLabel className="text-sm font-normal">B2B</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
+                                )} />
+                            </div>
+                        </div>
+                        <FormField name="hsnCode" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>HSN/SAC Code</FormLabel><FormControl><Input placeholder="e.g., 847160" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField name="gstRate" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>GST Rate (%)</FormLabel><Select onValueChange={(v) => field.onChange(Number(v))} value={String(field.value)}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent>
+                                {[0, 5, 12, 18, 28].map(rate => <SelectItem key={rate} value={String(rate)}>{rate}%</SelectItem>)}
+                            </SelectContent></Select><FormMessage /></FormItem>
+                        )} />
+                    </div>
                 </CardContent>
             </Card>
             
@@ -729,51 +767,6 @@ export function AddProductForm() {
             </Card>
             
             <Card>
-                <CardHeader><CardTitle className="text-[20px] text-secondary">Pricing & Taxation</CardTitle></CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField name="purchasePrice" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Purchase Price</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <div className="md:col-span-2">
-                        <div className="flex items-center gap-4 mb-2">
-                            <Label>Selling Prices</Label>
-                            <FormField
-                                control={form.control}
-                                name="sellingPriceIncludesGst"
-                                render={({ field }) => (
-                                    <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                                        <FormControl>
-                                            <Checkbox checked={field.value} onCheckedChange={field.onChange} id="include-gst" />
-                                        </FormControl>
-                                        <Label htmlFor="include-gst" className="text-sm font-normal">Including GST</Label>
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-4 border rounded-md">
-                            <FormField name="customerPrices.regular" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel className="text-sm font-normal">Regular</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                            <FormField name="customerPrices.b2c" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel className="text-sm font-normal">B2C</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                            <FormField name="customerPrices.b2b" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel className="text-sm font-normal">B2B</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                        </div>
-                    </div>
-                    <FormField name="hsnCode" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>HSN/SAC Code</FormLabel><FormControl><Input placeholder="e.g., 847160" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField name="gstRate" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>GST Rate (%)</FormLabel><Select onValueChange={(v) => field.onChange(Number(v))} value={String(field.value)}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent>
-                            {[0, 5, 12, 18, 28].map(rate => <SelectItem key={rate} value={String(rate)}>{rate}%</SelectItem>)}
-                        </SelectContent></Select><FormMessage /></FormItem>
-                    )} />
-                </CardContent>
-            </Card>
-            
-            <Card>
                 <CardHeader><CardTitle className="text-[20px] text-secondary">Organization</CardTitle></CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField name="brand" control={form.control} render={({ field }) => (
@@ -878,6 +871,9 @@ export function AddProductForm() {
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                       <FormField name="productDescription" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Internal Product Description</FormLabel><FormControl><Textarea placeholder="Internal description for the product" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
                         <FormField name="productImages" control={form.control} render={() => (
                             <FormItem>
                                 <FormLabel>Product Images</FormLabel>
