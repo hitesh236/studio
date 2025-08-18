@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -61,6 +62,7 @@ import type { Category, Attribute, AttributeType } from '@/lib/types';
 import { initialCategoriesData } from '@/lib/categories';
 import { initialAttributes } from '@/lib/attributes';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { FormControl } from '@/components/ui/form';
 
 
 // Dummy data for product counts
