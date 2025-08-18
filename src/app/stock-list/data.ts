@@ -18,7 +18,7 @@ const productNames = [
 ];
 
 const categories = ['Dairy & Bakery', 'Produce', 'Pantry Staples', 'Snacks & Beverages', 'Household'];
-const locations = ['Aisle 1', 'Aisle 2', 'Aisle 3', 'Refrigerated Section', 'Front Counter'];
+const locations = ['Main Warehouse', 'Store', 'Shop'];
 const uoms = ['ltr', 'pack', 'dozen', 'kg', 'pcs', 'g', 'unit'];
 
 const getRandomElement = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
