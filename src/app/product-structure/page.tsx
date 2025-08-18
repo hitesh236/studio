@@ -118,7 +118,7 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
       <div
         className={cn(
           "flex items-center gap-1.5 py-1.5 px-2 rounded-md hover:bg-muted/50 group",
-          isSelected && "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-black"
+          isSelected && "bg-primary text-primary-foreground hover:bg-primary/90"
         )}
         style={{ paddingLeft: `${level * 0.75 + 0.5}rem` }}
       >
@@ -129,18 +129,18 @@ const CategoryNode = ({ category, level, onAdd, onEdit, onDelete, selectedCatego
           <Folder className="h-4 w-4 text-amber-500 shrink-0" />
           <span className={cn("text-sm truncate", level === 0 && "font-semibold")}>{category.name} ({productCount})</span>
         </div>
-        <div className="hidden group-hover:flex items-center gap-1">
+        <div className={cn("hidden group-hover:flex items-center gap-1", isSelected && "flex")}>
             <TooltipProvider><Tooltip>
-                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onAdd(category.id)}><PlusCircle className="h-4 w-4" /></Button></TooltipTrigger>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className={cn("h-6 w-6", isSelected && "hover:bg-primary/80")} onClick={() => onAdd(category.id)}><PlusCircle className="h-4 w-4" /></Button></TooltipTrigger>
                 <TooltipContent><p>Add Sub-category</p></TooltipContent>
             </Tooltip></TooltipProvider>
             <TooltipProvider><Tooltip>
-                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onEdit(category)}><Edit2 className="h-4 w-4" /></Button></TooltipTrigger>
+                <TooltipTrigger asChild><Button variant="ghost" size="icon" className={cn("h-6 w-6", isSelected && "hover:bg-primary/80")} onClick={() => onEdit(category)}><Edit2 className="h-4 w-4" /></Button></TooltipTrigger>
                 <TooltipContent><p>Edit Category</p></TooltipContent>
             </Tooltip></TooltipProvider>
             {productCount === 0 && (
                 <TooltipProvider><Tooltip>
-                    <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => onDelete(category)}><Trash2 className="h-4 w-4" /></Button></TooltipTrigger>
+                    <TooltipTrigger asChild><Button variant="ghost" size="icon" className={cn("h-6 w-6 text-destructive hover:text-destructive", isSelected && "text-destructive-foreground hover:bg-destructive/80")} onClick={() => onDelete(category)}><Trash2 className="h-4 w-4" /></Button></TooltipTrigger>
                     <TooltipContent><p>Delete Category</p></TooltipContent>
                 </Tooltip></TooltipProvider>
             )}
@@ -369,7 +369,7 @@ const AttributeDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <Form {...form}>
-          <form onSubmit={handleSubmit(handleSave)}>
+        <form onSubmit={handleSubmit(handleSave)}>
             <DialogHeader>
               <DialogTitle>{dialogTitle}</DialogTitle>
             </DialogHeader>
@@ -393,15 +393,7 @@ const AttributeDialog = ({
                             <Command>
                                 <CommandInput placeholder="Search or type to create..." onValueChange={(search) => setValue('name', search)} />
                                 <CommandList>
-                                    <CommandEmpty>
-                                        <CommandItem onSelect={() => {
-                                            field.onChange(name);
-                                            setComboboxOpen(false);
-                                        }}>
-                                            <PlusCircle className="mr-2 h-4 w-4" />
-                                            Create "{name}"
-                                        </CommandItem>
-                                    </CommandEmpty>
+                                    <CommandEmpty>No suggestions found.</CommandEmpty>
                                     <CommandGroup>
                                         {filteredSuggestedAttributes.map(attr => (
                                             <CommandItem
@@ -416,6 +408,15 @@ const AttributeDialog = ({
                                                 {attr}
                                             </CommandItem>
                                         ))}
+                                    </CommandGroup>
+                                     <CommandGroup>
+                                        <CommandItem onSelect={() => {
+                                            field.onChange(name);
+                                            setComboboxOpen(false);
+                                        }}>
+                                            <PlusCircle className="mr-2 h-4 w-4" />
+                                            Add New
+                                        </CommandItem>
                                     </CommandGroup>
                                 </CommandList>
                             </Command>
