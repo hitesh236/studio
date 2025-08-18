@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Download, Printer, Search, ChevronRight, ChevronDown, MapPin } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, Printer, Search, ChevronRight, ChevronDown, MapPin, ArrowUp, ArrowDown } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 import Link from 'next/link';
 
@@ -29,6 +29,39 @@ const companyDetails = {
     name: 'Hicks Inc.',
     address: '123 Business Rd, Financial District, Mumbai, Maharashtra, 400001',
 };
+
+const StockCard = ({ item }: { item: StockSummaryRow }) => {
+    return (
+        <Card>
+            <CardHeader className="p-3">
+                <CardTitle className="text-sm">
+                    <Link href={`/stock-history?product=${encodeURIComponent(item.commodityName)}`} className="hover:underline text-primary">
+                        {item.commodityName}
+                    </Link>
+                </CardTitle>
+                <CardDescription>{item.commodityCode}</CardDescription>
+            </CardHeader>
+            <CardContent className="p-3 pt-0 text-xs space-y-3">
+                <div className="flex justify-between">
+                    <span className="text-muted-foreground">Opening</span>
+                    <span className="font-mono">{item.openingStock.quantity} ({formatCurrency(item.openingStock.amount, 'INR')})</span>
+                </div>
+                <div className="flex justify-between items-center text-green-600">
+                    <span className="flex items-center gap-1"><ArrowUp className="h-3 w-3"/> Stock In</span>
+                    <span className="font-mono">{item.importInPeriod.quantity} ({formatCurrency(item.importInPeriod.amount, 'INR')})</span>
+                </div>
+                 <div className="flex justify-between items-center text-red-600">
+                    <span className="flex items-center gap-1"><ArrowDown className="h-3 w-3"/> Stock Out</span>
+                    <span className="font-mono">{item.exportInPeriod.quantity} ({formatCurrency(item.exportInPeriod.amount, 'INR')})</span>
+                </div>
+                <div className="flex justify-between font-semibold pt-2 border-t">
+                    <span>Closing</span>
+                    <span className="font-mono">{item.closingStock.quantity} ({formatCurrency(item.closingStock.amount, 'INR')})</span>
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
 
 export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
   const [date, setDate] = React.useState<DateRange | undefined>({
@@ -87,9 +120,8 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
   }, [filteredAndSortedData]);
   
   React.useEffect(() => {
-    // Expand all categories by default when data loads
     setExpandedCategories(new Set(Object.keys(groupedData)));
-  }, [data]); // Re-run only when original data changes
+  }, [data]);
 
 
   const requestSort = (key: keyof StockSummaryRow) => {
@@ -190,14 +222,15 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="rounded-md border">
+        {/* Desktop Table View */}
+        <div className="hidden md:block rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead colSpan={4} className="text-center">Item Details</TableHead>
                 <TableHead colSpan={2} className="text-center">Opening Stock</TableHead>
-                <TableHead colSpan={2} className="text-center">Stock In</TableHead>
-                <TableHead colSpan={2} className="text-center">Stock Out</TableHead>
+                <TableHead colSpan={2} className="text-center bg-green-50 dark:bg-green-900/20">Stock In</TableHead>
+                <TableHead colSpan={2} className="text-center bg-red-50 dark:bg-red-900/20">Stock Out</TableHead>
                 <TableHead colSpan={2} className="text-center">Closing Stock</TableHead>
               </TableRow>
               <TableRow>
@@ -271,6 +304,30 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
                 </TableRow>
             </TableFooter>
           </Table>
+        </div>
+        {/* Mobile Card View */}
+        <div className="md:hidden space-y-4">
+            {Object.entries(groupedData).map(([category, items]) => {
+                const isExpanded = expandedCategories.has(category);
+                return (
+                    <Card key={category}>
+                        <CardHeader className="p-3 bg-muted/50 cursor-pointer" onClick={() => toggleCategory(category)}>
+                            <div className="flex justify-between items-center">
+                                <CardTitle className="text-base flex items-center gap-2">
+                                     {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                     {category}
+                                </CardTitle>
+                                <Badge variant="secondary">{items.length} items</Badge>
+                            </div>
+                        </CardHeader>
+                        {isExpanded && (
+                            <CardContent className="p-2 space-y-2">
+                                {items.map(item => <StockCard key={item.commodityCode} item={item} />)}
+                            </CardContent>
+                        )}
+                    </Card>
+                )
+            })}
         </div>
       </CardContent>
     </Card>
