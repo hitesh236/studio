@@ -7,14 +7,17 @@ import { generateStockListData, type StockItem } from './data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Loading from '../loading';
 import { SummaryCard } from '../sales-invoices/summary-card';
-import { Wallet, Archive, Clock } from 'lucide-react';
+import { Wallet, Archive, Clock, PlusCircle } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+
 
 export default function StockListPage() {
   const [stockItems, setStockItems] = React.useState<StockItem[] | null>(null);
 
   React.useEffect(() => {
-    setStockItems(generateStockListData(50));
+    setStockItems(generateStockListData());
   }, []);
 
   const summaryStats = React.useMemo(() => {
@@ -22,13 +25,17 @@ export default function StockListPage() {
       return {
         totalStockValue: 0,
         lowStockItems: 0,
-        expiringSoon: 0, // Placeholder
+        expiringSoon: 0,
       };
     }
 
     const totalStockValue = stockItems.reduce((acc, item) => acc + (item.purchasePrice * item.stockInHand), 0);
     const lowStockItems = stockItems.filter(item => item.stockInHand < 10).length;
-    const expiringSoon = 0; // Placeholder until expiry data is available
+    
+    const now = new Date();
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(now.getDate() + 30);
+    const expiringSoon = stockItems.filter(item => item.expiryDate && item.expiryDate <= thirtyDaysFromNow).length;
 
     return { totalStockValue, lowStockItems, expiringSoon };
   }, [stockItems]);
@@ -62,8 +69,18 @@ export default function StockListPage() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Stock List</CardTitle>
-          <CardDescription>An overview of all your stock items.</CardDescription>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <CardTitle>Stock List</CardTitle>
+              <CardDescription>An overview of all your stock items.</CardDescription>
+            </div>
+            <Link href="/products/new" passHref>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add New Item
+              </Button>
+            </Link>
+          </div>
         </CardHeader>
         <CardContent>
           <StockListTable data={stockItems} />
