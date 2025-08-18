@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -276,6 +275,12 @@ const CategoryDialog = ({ open, onOpenChange, onSave, categories, editingCategor
     );
 };
 
+const suggestedAttributes = [
+    'Brand', 'Net Weight', 'Manufacturing Date', 'Expiry Date', 'FSSAI License No.',
+    'Dietary Information', 'Ingredients', 'Storage Instructions', 'Country of Origin',
+    'Allergen Information', 'Nutritional Facts', 'Pack Type', 'Organic',
+];
+
 const AttributeDialog = ({
   open,
   onOpenChange,
@@ -283,6 +288,7 @@ const AttributeDialog = ({
   editingAttribute,
   categories,
   selectedCategory,
+  existingAttributes
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -290,13 +296,14 @@ const AttributeDialog = ({
   editingAttribute?: Attribute | null;
   categories: Category[];
   selectedCategory: Category | null;
+  existingAttributes: Attribute[];
 }) => {
   const [name, setName] = React.useState('');
   const [type, setType] = React.useState<AttributeType>('text');
   const [options, setOptions] = React.useState('');
   const [isGlobal, setIsGlobal] = React.useState(false);
   const [assigned, setAssigned] = React.useState<string[]>([]);
-  const [blocked, setBlocked] = React.useState<string[]>([]);
+  const [openCombobox, setOpenCombobox] = React.useState(false);
 
   React.useEffect(() => {
     if (open) {
@@ -336,6 +343,11 @@ const AttributeDialog = ({
     ? 'Edit Attribute' 
     : `Add Attribute to: ${selectedCategory ? getCategoryNameById(categories, selectedCategory.id) : 'Global'}`;
 
+  const currentAttributeNames = React.useMemo(() => new Set(existingAttributes.map(a => a.name)), [existingAttributes]);
+  const filteredSuggestedAttributes = React.useMemo(() => {
+      return suggestedAttributes.filter(attr => !currentAttributeNames.has(attr) && attr.toLowerCase().includes(name.toLowerCase()));
+  }, [name, currentAttributeNames]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
@@ -345,7 +357,50 @@ const AttributeDialog = ({
         <div className="space-y-6 py-4">
           <div className="space-y-2">
             <Label htmlFor="attr-name">Attribute Name</Label>
-            <Input id="attr-name" placeholder="e.g., Color" value={name} onChange={e => setName(e.target.value)} />
+            <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+                <PopoverTrigger asChild>
+                    <FormControl>
+                        <Input
+                            id="attr-name"
+                            placeholder="e.g., Color"
+                            value={name}
+                            onChange={e => setName(e.target.value)}
+                            onFocus={() => setOpenCombobox(true)}
+                        />
+                    </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                    <Command>
+                        <CommandList>
+                            <CommandEmpty>{name ? `No suggestions found for "${name}".` : 'Type to search or add.'}</CommandEmpty>
+                            <CommandGroup>
+                                {filteredSuggestedAttributes.map(attr => (
+                                    <CommandItem
+                                        key={attr}
+                                        value={attr}
+                                        onSelect={(currentValue) => {
+                                            setName(currentValue);
+                                            setOpenCombobox(false);
+                                        }}
+                                    >
+                                        <Check className={cn("mr-2 h-4 w-4", name === attr ? "opacity-100" : "opacity-0")} />
+                                        {attr}
+                                    </CommandItem>
+                                ))}
+                                {name && !suggestedAttributes.includes(name) && (
+                                     <CommandItem
+                                        value={name}
+                                        onSelect={() => setOpenCombobox(false)}
+                                    >
+                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                        Create "{name}"
+                                    </CommandItem>
+                                )}
+                            </CommandGroup>
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
           </div>
           <div className="space-y-2">
             <Label htmlFor="attr-type">Attribute Type</Label>
@@ -736,6 +791,7 @@ export default function ProductStructurePage() {
                 editingAttribute={editingAttribute}
                 categories={categories}
                 selectedCategory={selectedCategory}
+                existingAttributes={attributes}
             />
         </main>
       </div>
