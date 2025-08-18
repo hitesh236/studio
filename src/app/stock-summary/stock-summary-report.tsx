@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Download, Printer, Search, ChevronRight, ChevronDown } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, Printer, Search, ChevronRight, ChevronDown, MapPin } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 import Link from 'next/link';
 
@@ -23,6 +23,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import type { StockSummaryRow } from './data';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const companyDetails = {
     name: 'Hicks Inc.',
@@ -37,11 +38,20 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [sortConfig, setSortConfig] = React.useState<{ key: keyof StockSummaryRow | null, direction: 'ascending' | 'descending' }>({ key: 'commodityName', direction: 'ascending'});
   const [expandedCategories, setExpandedCategories] = React.useState<Set<string>>(new Set());
+  const [valuationMethod, setValuationMethod] = React.useState('standard');
+  const [location, setLocation] = React.useState('all');
+
+  const uniqueLocations = React.useMemo(() => ['all', ...Array.from(new Set(data.map(item => item.location)))], [data]);
 
   const filteredAndSortedData = React.useMemo(() => {
     let filtered = data;
+
+    if (location !== 'all') {
+        filtered = filtered.filter(item => item.location === location);
+    }
+    
     if (searchTerm) {
-        filtered = data.filter(item => 
+        filtered = filtered.filter(item => 
             item.commodityName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.commodityCode.toLowerCase().includes(searchTerm.toLowerCase())
         );
@@ -63,7 +73,7 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
     }
 
     return filtered;
-  }, [data, searchTerm, sortConfig]);
+  }, [data, searchTerm, sortConfig, location]);
   
   const groupedData = React.useMemo(() => {
     return filteredAndSortedData.reduce((acc, row) => {
@@ -141,10 +151,10 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
                     className="pl-10"
                 />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
                 <Popover>
                     <PopoverTrigger asChild>
-                    <Button id="date" variant="outline" className={cn('w-full sm:w-[260px] justify-start text-left font-normal', !date && 'text-muted-foreground')}>
+                    <Button id="date" variant="outline" className={cn('w-full sm:w-auto justify-start text-left font-normal', !date && 'text-muted-foreground')}>
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {date?.from ? (date.to ? <>{format(date.from, 'LLL dd, y')} - {format(date.to, 'LLL dd, y')}</> : format(date.from, 'LLL dd, y')) : <span>Pick a date</span>}
                     </Button>
@@ -153,6 +163,29 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
                     <Calendar initialFocus mode="range" defaultMonth={date?.from} selected={date} onSelect={setDate} numberOfMonths={2} />
                     </PopoverContent>
                 </Popover>
+                 <Select onValueChange={setLocation} value={location}>
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                        <MapPin className="mr-2 h-4 w-4" />
+                        <SelectValue placeholder="Filter by location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {uniqueLocations.map(loc => (
+                            <SelectItem key={loc} value={loc}>
+                                {loc === 'all' ? 'All Locations' : loc}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                 <Select onValueChange={setValuationMethod} defaultValue={valuationMethod}>
+                    <SelectTrigger className="w-full sm:w-[220px]">
+                        <SelectValue placeholder="Valuation Method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="standard">Standard Costing</SelectItem>
+                        <SelectItem value="fifo" disabled>FIFO (First-In, First-Out)</SelectItem>
+                        <SelectItem value="weighted_average" disabled>Weighted Average</SelectItem>
+                    </SelectContent>
+                </Select>
                 <Button variant="outline" size="icon"><Printer className="h-4 w-4" /></Button>
                 <Button variant="outline" size="icon"><Download className="h-4 w-4" /></Button>
             </div>
@@ -199,10 +232,10 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
                             </TableCell>
                             <TableCell className="text-right font-mono">{categoryTotals.openingQty}</TableCell>
                             <TableCell className="text-right font-mono">{formatCurrency(categoryTotals.openingAmt, 'INR')}</TableCell>
-                            <TableCell className="text-right font-mono bg-green-50 dark:bg-green-900/20">{categoryTotals.importQty}</TableCell>
-                            <TableCell className="text-right font-mono bg-green-50 dark:bg-green-900/20">{formatCurrency(categoryTotals.importAmt, 'INR')}</TableCell>
-                            <TableCell className="text-right font-mono bg-red-50 dark:bg-red-900/20">{categoryTotals.exportQty}</TableCell>
-                            <TableCell className="text-right font-mono bg-red-50 dark:bg-red-900/20">{formatCurrency(categoryTotals.exportAmt, 'INR')}</TableCell>
+                            <TableCell className="text-right font-mono bg-green-100 dark:bg-green-900/20">{categoryTotals.importQty}</TableCell>
+                            <TableCell className="text-right font-mono bg-green-100 dark:bg-green-900/20">{formatCurrency(categoryTotals.importAmt, 'INR')}</TableCell>
+                            <TableCell className="text-right font-mono bg-red-100 dark:bg-red-900/20">{categoryTotals.exportQty}</TableCell>
+                            <TableCell className="text-right font-mono bg-red-100 dark:bg-red-900/20">{formatCurrency(categoryTotals.exportAmt, 'INR')}</TableCell>
                             <TableCell className="text-right font-mono">{categoryTotals.closingQty}</TableCell>
                             <TableCell className="text-right font-mono">{formatCurrency(categoryTotals.closingAmt, 'INR')}</TableCell>
                         </TableRow>
@@ -214,10 +247,10 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
                                 <TableCell />
                                 <TableCell className="text-right font-mono">{row.openingStock.quantity}</TableCell>
                                 <TableCell className="text-right font-mono">{formatCurrency(row.openingStock.amount, 'INR')}</TableCell>
-                                <TableCell className="text-right font-mono bg-green-50 dark:bg-green-900/20">{row.importInPeriod.quantity}</TableCell>
-                                <TableCell className="text-right font-mono bg-green-50 dark:bg-green-900/20">{formatCurrency(row.importInPeriod.amount, 'INR')}</TableCell>
-                                <TableCell className="text-right font-mono bg-red-50 dark:bg-red-900/20">{row.exportInPeriod.quantity}</TableCell>
-                                <TableCell className="text-right font-mono bg-red-50 dark:bg-red-900/20">{formatCurrency(row.exportInPeriod.amount, 'INR')}</TableCell>
+                                <TableCell className="text-right font-mono bg-green-100 dark:bg-green-900/20">{row.importInPeriod.quantity}</TableCell>
+                                <TableCell className="text-right font-mono bg-green-100 dark:bg-green-900/20">{formatCurrency(row.importInPeriod.amount, 'INR')}</TableCell>
+                                <TableCell className="text-right font-mono bg-red-100 dark:bg-red-900/20">{row.exportInPeriod.quantity}</TableCell>
+                                <TableCell className="text-right font-mono bg-red-100 dark:bg-red-900/20">{formatCurrency(row.exportInPeriod.amount, 'INR')}</TableCell>
                                 <TableCell className="text-right font-mono">{row.closingStock.quantity}</TableCell>
                                 <TableCell className="text-right font-mono">{formatCurrency(row.closingStock.amount, 'INR')}</TableCell>
                             </TableRow>
@@ -231,10 +264,10 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
                     <TableCell colSpan={4} className="text-right font-bold">Grand Total :</TableCell>
                     <TableCell className="text-right font-bold font-mono">{grandTotals.openingQty}</TableCell>
                     <TableCell className="text-right font-bold font-mono">{formatCurrency(grandTotals.openingAmt, 'INR')}</TableCell>
-                    <TableCell className="text-right font-bold font-mono bg-green-50 dark:bg-green-900/20">{grandTotals.importQty}</TableCell>
-                    <TableCell className="text-right font-bold font-mono bg-green-50 dark:bg-green-900/20">{formatCurrency(grandTotals.importAmt, 'INR')}</TableCell>
-                    <TableCell className="text-right font-bold font-mono bg-red-50 dark:bg-red-900/20">{grandTotals.exportQty}</TableCell>
-                    <TableCell className="text-right font-bold font-mono bg-red-50 dark:bg-red-900/20">{formatCurrency(grandTotals.exportAmt, 'INR')}</TableCell>
+                    <TableCell className="text-right font-bold font-mono bg-green-100 dark:bg-green-900/20">{grandTotals.importQty}</TableCell>
+                    <TableCell className="text-right font-bold font-mono bg-green-100 dark:bg-green-900/20">{formatCurrency(grandTotals.importAmt, 'INR')}</TableCell>
+                    <TableCell className="text-right font-bold font-mono bg-red-100 dark:bg-red-900/20">{grandTotals.exportQty}</TableCell>
+                    <TableCell className="text-right font-bold font-mono bg-red-100 dark:bg-red-900/20">{formatCurrency(grandTotals.exportAmt, 'INR')}</TableCell>
                     <TableCell className="text-right font-bold font-mono">{grandTotals.closingQty}</TableCell>
                     <TableCell className="text-right font-bold font-mono">{formatCurrency(grandTotals.closingAmt, 'INR')}</TableCell>
                 </TableRow>
@@ -242,15 +275,6 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
           </Table>
         </div>
       </CardContent>
-       <CardContent className="pt-6 border-t mt-4">
-            <div className="text-xs text-muted-foreground w-full">
-                <h4 className="font-semibold text-foreground mb-1">Notes:</h4>
-                <ul className="list-disc pl-5 space-y-1">
-                    <li>This report is generated based on inventory transactions recorded during the selected period.</li>
-                    <li>Valuation is based on the current purchase price (Standard Costing).</li>
-                </ul>
-            </div>
-        </CardContent>
     </Card>
   );
 }

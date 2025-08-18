@@ -24,6 +24,7 @@ export type StockSummaryRow = {
     quantity: number;
     amount: number;
   };
+  location: string;
 };
 
 
@@ -64,7 +65,8 @@ export const generateStockSummaryData = (stockItems: StockItem[], stockHistory: 
             closingStock: {
                 quantity: closingStockQty,
                 amount: closingStockAmt
-            }
+            },
+            location: item.location
         };
     });
 };
