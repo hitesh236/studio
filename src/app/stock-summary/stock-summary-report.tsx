@@ -37,7 +37,7 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
   });
   const [searchTerm, setSearchTerm] = React.useState('');
   const [sortConfig, setSortConfig] = React.useState<{ key: keyof StockSummaryRow | null, direction: 'ascending' | 'descending' }>({ key: 'commodityName', direction: 'ascending'});
-  const [expandedCategories, setExpandedCategories] = React.useState<Set<string>>(new Set());
+  const [expandedCategories, setExpandedCategories] = React.useState<Set<string>>(new Set(data.map(item => item.category)));
   const [valuationMethod, setValuationMethod] = React.useState('standard');
   const [location, setLocation] = React.useState('all');
 
@@ -136,9 +136,7 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
         <div className="text-center">
           <CardTitle className="text-2xl">STOCK SUMMARY REPORT</CardTitle>
           <CardDescription>
-            From date : {date?.from ? format(date.from, 'MMMM, dd yyyy') : ''}
-            <br />
-            To date : {date?.to ? format(date.to, 'MMMM, dd yyyy') : ''}
+            {companyDetails.name}, {companyDetails.address}
           </CardDescription>
         </div>
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -232,10 +230,10 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
                             </TableCell>
                             <TableCell className="text-right font-mono">{categoryTotals.openingQty}</TableCell>
                             <TableCell className="text-right font-mono">{formatCurrency(categoryTotals.openingAmt, 'INR')}</TableCell>
-                            <TableCell className="text-right font-mono bg-green-100 dark:bg-green-900/20">{categoryTotals.importQty}</TableCell>
-                            <TableCell className="text-right font-mono bg-green-100 dark:bg-green-900/20">{formatCurrency(categoryTotals.importAmt, 'INR')}</TableCell>
-                            <TableCell className="text-right font-mono bg-red-100 dark:bg-red-900/20">{categoryTotals.exportQty}</TableCell>
-                            <TableCell className="text-right font-mono bg-red-100 dark:bg-red-900/20">{formatCurrency(categoryTotals.exportAmt, 'INR')}</TableCell>
+                            <TableCell className="text-right font-mono bg-green-50 dark:bg-green-900/20">{categoryTotals.importQty}</TableCell>
+                            <TableCell className="text-right font-mono bg-green-50 dark:bg-green-900/20">{formatCurrency(categoryTotals.importAmt, 'INR')}</TableCell>
+                            <TableCell className="text-right font-mono bg-red-50 dark:bg-red-900/20">{categoryTotals.exportQty}</TableCell>
+                            <TableCell className="text-right font-mono bg-red-50 dark:bg-red-900/20">{formatCurrency(categoryTotals.exportAmt, 'INR')}</TableCell>
                             <TableCell className="text-right font-mono">{categoryTotals.closingQty}</TableCell>
                             <TableCell className="text-right font-mono">{formatCurrency(categoryTotals.closingAmt, 'INR')}</TableCell>
                         </TableRow>
@@ -247,10 +245,10 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
                                 <TableCell />
                                 <TableCell className="text-right font-mono">{row.openingStock.quantity}</TableCell>
                                 <TableCell className="text-right font-mono">{formatCurrency(row.openingStock.amount, 'INR')}</TableCell>
-                                <TableCell className="text-right font-mono bg-green-100 dark:bg-green-900/20">{row.importInPeriod.quantity}</TableCell>
-                                <TableCell className="text-right font-mono bg-green-100 dark:bg-green-900/20">{formatCurrency(row.importInPeriod.amount, 'INR')}</TableCell>
-                                <TableCell className="text-right font-mono bg-red-100 dark:bg-red-900/20">{row.exportInPeriod.quantity}</TableCell>
-                                <TableCell className="text-right font-mono bg-red-100 dark:bg-red-900/20">{formatCurrency(row.exportInPeriod.amount, 'INR')}</TableCell>
+                                <TableCell className="text-right font-mono bg-green-50 dark:bg-green-900/20">{row.importInPeriod.quantity}</TableCell>
+                                <TableCell className="text-right font-mono bg-green-50 dark:bg-green-900/20">{formatCurrency(row.importInPeriod.amount, 'INR')}</TableCell>
+                                <TableCell className="text-right font-mono bg-red-50 dark:bg-red-900/20">{row.exportInPeriod.quantity}</TableCell>
+                                <TableCell className="text-right font-mono bg-red-50 dark:bg-red-900/20">{formatCurrency(row.exportInPeriod.amount, 'INR')}</TableCell>
                                 <TableCell className="text-right font-mono">{row.closingStock.quantity}</TableCell>
                                 <TableCell className="text-right font-mono">{formatCurrency(row.closingStock.amount, 'INR')}</TableCell>
                             </TableRow>
@@ -264,10 +262,10 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
                     <TableCell colSpan={4} className="text-right font-bold">Grand Total :</TableCell>
                     <TableCell className="text-right font-bold font-mono">{grandTotals.openingQty}</TableCell>
                     <TableCell className="text-right font-bold font-mono">{formatCurrency(grandTotals.openingAmt, 'INR')}</TableCell>
-                    <TableCell className="text-right font-bold font-mono bg-green-100 dark:bg-green-900/20">{grandTotals.importQty}</TableCell>
-                    <TableCell className="text-right font-bold font-mono bg-green-100 dark:bg-green-900/20">{formatCurrency(grandTotals.importAmt, 'INR')}</TableCell>
-                    <TableCell className="text-right font-bold font-mono bg-red-100 dark:bg-red-900/20">{grandTotals.exportQty}</TableCell>
-                    <TableCell className="text-right font-bold font-mono bg-red-100 dark:bg-red-900/20">{formatCurrency(grandTotals.exportAmt, 'INR')}</TableCell>
+                    <TableCell className="text-right font-bold font-mono bg-green-50 dark:bg-green-900/20">{grandTotals.importQty}</TableCell>
+                    <TableCell className="text-right font-bold font-mono bg-green-50 dark:bg-green-900/20">{formatCurrency(grandTotals.importAmt, 'INR')}</TableCell>
+                    <TableCell className="text-right font-bold font-mono bg-red-50 dark:bg-red-900/20">{grandTotals.exportQty}</TableCell>
+                    <TableCell className="text-right font-bold font-mono bg-red-50 dark:bg-red-900/20">{formatCurrency(grandTotals.exportAmt, 'INR')}</TableCell>
                     <TableCell className="text-right font-bold font-mono">{grandTotals.closingQty}</TableCell>
                     <TableCell className="text-right font-bold font-mono">{formatCurrency(grandTotals.closingAmt, 'INR')}</TableCell>
                 </TableRow>
