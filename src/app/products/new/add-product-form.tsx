@@ -5,14 +5,29 @@ import * as React from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { format } from 'date-fns';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from '@/components/ui/card';
+  Calendar as CalendarIcon,
+  PlusCircle,
+  Trash2,
+  Save,
+  Send,
+  Loader2,
+  Settings,
+  ChevronsUpDown,
+  Check,
+  Info,
+  Sparkles,
+  Upload,
+  Image as ImageIcon,
+  Tags,
+  Barcode,
+  Percent,
+  X,
+  Package
+} from 'lucide-react';
+
+import { cn, formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -34,10 +49,16 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Settings, Upload, Image as ImageIcon, Tags, Barcode, Percent, Trash2, PlusCircle, X, ChevronsUpDown, Check, Info, Sparkles } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
@@ -196,8 +217,7 @@ export function AddProductForm() {
   const [targetUomField, setTargetUomField] = React.useState<'uom' | 'secondaryUom' | null>(null);
 
   const [visibleSections, setVisibleSections] = React.useState<Record<string, boolean>>({
-    additionalDetails: true,
-    ecommerce: true,
+    ecommerce: false,
   });
 
   const [showSecondaryUom, setShowSecondaryUom] = React.useState(false);
@@ -262,18 +282,16 @@ export function AddProductForm() {
   }, [watchedPrimaryUom, watchedSecondaryUom, compoundUnits]);
 
   const flattenedCategories = React.useMemo(() => {
-    const flatten = (categories: Category[], prefix = ''): { label: string; value: string[] }[] => {
+    const flatten = (categories: Category[], pathIds: string[] = [], pathLabels: string[] = []): { label: string; value: string[] }[] => {
       let all: { label: string; value: string[] }[] = [];
       for (const category of categories) {
-        const currentPath = prefix ? `${prefix} / ${category.name}` : category.name;
-        const currentPathIds = prefix.split(',').filter(Boolean);
-        currentPathIds.push(category.id);
+        const newPathIds = [...pathIds, category.id];
+        const newPathLabels = [...pathLabels, category.name];
         
-        all.push({ label: currentPath, value: currentPathIds });
+        all.push({ label: newPathLabels.join(' / '), value: newPathIds });
 
         if (category.children && category.children.length > 0) {
-          const childrenPath = prefix ? `${prefix},${category.id}` : category.id;
-          all = all.concat(flatten(category.children, childrenPath));
+          all = all.concat(flatten(category.children, newPathIds, newPathLabels));
         }
       }
       return all;
@@ -508,19 +526,34 @@ export function AddProductForm() {
 };
 
   return (
-    <Card>
+    <div className="space-y-6">
+        <div className="flex justify-between items-center">
+            <h1 className="text-[20px] font-semibold text-primary">Create New Product</h1>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                        <Settings className="h-5 w-5" />
+                        <span className="sr-only">Toggle Optional Sections</span>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Show Sections</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem
+                        checked={visibleSections.ecommerce}
+                        onCheckedChange={(checked) => setVisibleSections(prev => ({ ...prev, ecommerce: !!checked }))}
+                    >
+                        E-commerce Details
+                    </DropdownMenuCheckboxItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
         <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-
-            {/* --- Core Details Card --- */}
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
-            <CardHeader>
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <CardTitle>Core Product Details</CardTitle>
-                            <CardDescription>Enter the primary information for your product.</CardDescription>
-                        </div>
-                    </div>
+                <CardHeader>
+                    <CardTitle>Core Product Details</CardTitle>
+                    <CardDescription>Enter the primary information for your product.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -592,7 +625,6 @@ export function AddProductForm() {
                 </CardContent>
             </Card>
             
-            {/* --- Units & Stock Card --- */}
             <Card>
                 <CardHeader>
                     <CardTitle>Units & Stock</CardTitle>
@@ -713,7 +745,6 @@ export function AddProductForm() {
                 </CardContent>
             </Card>
             
-            {/* --- Pricing & Taxation Card --- */}
             <Card>
                 <CardHeader><CardTitle>Pricing & Taxation</CardTitle></CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -759,7 +790,6 @@ export function AddProductForm() {
                 </CardContent>
             </Card>
             
-            {/* --- Organization Card --- */}
             <Card>
                 <CardHeader><CardTitle>Organization</CardTitle></CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -792,7 +822,6 @@ export function AddProductForm() {
                 </CardContent>
             </Card>
                 
-                {/* Dynamic Attributes Section */}
                 {displayedAttributes.length > 0 && <Card>
                     <CardHeader>
                         <CardTitle>Attributes</CardTitle>
@@ -846,7 +875,6 @@ export function AddProductForm() {
                 </Card>}
 
 
-                {/* E-commerce Section */}
                 {visibleSections.ecommerce && <Card>
                     <CardHeader>
                         <div className="flex justify-between items-center">
@@ -947,6 +975,6 @@ export function AddProductForm() {
             </div>
         </form>
         </Form>
-    </Card>
+    </div>
   );
 }
