@@ -87,7 +87,7 @@ export const columns = ({
       cell: (row: Person) => (
         <div className={cn("flex items-center gap-2", density === 'compact' && 'py-1 px-2 text-sm')}>
           <div>
-            <Link href={`/customer-portfolio?id=${row.id}`} className="font-medium whitespace-nowrap hover:underline hover:text-primary">
+             <Link href={`/customer-portfolio?customerData=${encodeURIComponent(JSON.stringify(row))}`} className="font-medium whitespace-nowrap hover:underline hover:text-primary">
               {`${row.firstName} ${row.lastName}`}
             </Link>
             <div className="text-xs text-muted-foreground whitespace-nowrap">{row.email}</div>

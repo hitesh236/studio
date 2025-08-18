@@ -420,35 +420,39 @@ const CustomerInvoiceView = ({ customerInvoices }: { customerInvoices: SalesInvo
 // --- Content Component ---
 const CustomerPortfolioContent = () => {
     const searchParams = useSearchParams();
-    const customerId = searchParams.get('id');
+    const customerDataString = searchParams.get('customerData');
     const [isDetailsExpanded, setIsDetailsExpanded] = React.useState(false);
     const [dialogType, setDialogType] = React.useState<'in' | 'out' | null>(null);
 
-    const [allCustomers, setAllCustomers] = React.useState<Person[] | null>(null);
     const [allInvoices, setAllInvoices] = React.useState<SalesInvoice[] | null>(null);
-    const [allLedgerData, setAllLedgerData] = React.useState<CustomerLedgerEntry[] | null>(null);
+    const [customerLedgerData, setCustomerLedgerData] = React.useState<CustomerLedgerEntry[] | null>(null);
+    
+    const customer = React.useMemo(() => {
+        if (!customerDataString) return null;
+        try {
+            const parsedData = JSON.parse(decodeURIComponent(customerDataString));
+            // Ensure date objects are correctly parsed
+            if(parsedData.lastSeen) parsedData.lastSeen = new Date(parsedData.lastSeen);
+            return parsedData as Person;
+        } catch (error) {
+            console.error("Failed to parse customer data from URL:", error);
+            return null;
+        }
+    }, [customerDataString]);
 
     React.useEffect(() => {
-        setAllCustomers(generateData(50));
+        // These are still generated for demonstration purposes
         setAllInvoices(generateSalesInvoices(50));
-        setAllLedgerData(generateCustomerLedger(25));
+        setCustomerLedgerData(generateCustomerLedger(25));
     }, []);
 
-    const customer = React.useMemo(() => {
-        if (!allCustomers) return null;
-        if (customerId) {
-            return allCustomers.find(c => c.id === customerId) || allCustomers[0];
-        }
-        return allCustomers[0];
-    }, [customerId, allCustomers]);
-    
     const customerInvoices = React.useMemo(() => {
         if (!allInvoices || !customer) return [];
         return allInvoices.filter(inv => inv.customerName === customer.company);
     }, [allInvoices, customer]);
 
     const handlePaymentAdd = (amount: number, paymentMode: string) => {
-        if (!dialogType) return;
+        if (!dialogType || !customerLedgerData) return;
         
         const newLedgerEntry: CustomerLedgerEntry = {
             id: `cl-${Date.now()}`,
@@ -459,10 +463,10 @@ const CustomerPortfolioContent = () => {
             credit: dialogType === 'in' ? amount : 0,
         };
         
-        setAllLedgerData(prev => prev ? [newLedgerEntry, ...prev] : [newLedgerEntry]);
+        setCustomerLedgerData(prev => prev ? [newLedgerEntry, ...prev] : [newLedgerEntry]);
     };
     
-    if (!customer || !allLedgerData) {
+    if (!customer || !customerLedgerData) {
         return <Loading />;
     }
 
@@ -533,7 +537,7 @@ const CustomerPortfolioContent = () => {
                     <TabsTrigger value="invoice" className="rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:border data-[state=inactive]:border-border data-[state=inactive]:bg-transparent">Invoices</TabsTrigger>
                 </TabsList>
                 <TabsContent value="ledger">
-                    <CustomerLedgerView customerLedgerData={allLedgerData} />
+                    <CustomerLedgerView customerLedgerData={customerLedgerData} />
                 </TabsContent>
                 <TabsContent value="invoice">
                     <CustomerInvoiceView customerInvoices={customerInvoices} />
