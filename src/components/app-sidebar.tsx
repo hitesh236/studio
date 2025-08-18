@@ -243,10 +243,10 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Stock Report" isActive={pathname.startsWith('/stock-list')} asChild>
-                <Link href="/stock-list" onClick={handleLinkClick}>
+              <SidebarMenuButton tooltip="Stock Summary" isActive={pathname.startsWith('/stock-summary')} asChild>
+                <Link href="/stock-summary" onClick={handleLinkClick}>
                   <LayoutGrid />
-                  <span>Stock Report</span>
+                  <span>Stock Summary</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
