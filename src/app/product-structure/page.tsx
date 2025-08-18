@@ -65,7 +65,7 @@ import type { Category, Attribute, AttributeType } from '@/lib/types';
 import { initialCategoriesData } from '@/lib/categories';
 import { initialAttributes } from '@/lib/attributes';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Form, FormControl, FormMessage, FormField, FormLabel, FormItem } from '@/components/ui/form';
+import { Form, FormControl, FormMessage, FormField, FormLabel, FormItem, FormDescription } from '@/components/ui/form';
 
 
 // Dummy data for product counts
@@ -384,7 +384,7 @@ const AttributeDialog = ({
                         <PopoverTrigger asChild>
                             <FormControl>
                                 <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
-                                    {field.value || "Type to search or create..."}
+                                    {field.value || "Type or search to create..."}
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
                             </FormControl>
