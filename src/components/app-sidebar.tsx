@@ -96,14 +96,6 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-green-600 dark:text-green-500">Money In</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Customers" isActive={pathname.startsWith('/customers')} asChild>
-                    <Link href="/customers" onClick={handleLinkClick}>
-                        <Users />
-                        <span>Customers</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
                 <SidebarMenuButton tooltip="Sales Invoices" isActive={pathname.startsWith('/sales-invoices')} asChild>
                     <Link href="/sales-invoices" onClick={handleLinkClick}>
                         <FileText />
@@ -125,14 +117,6 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel className="text-destructive">Money Out</SidebarGroupLabel>
           <SidebarMenu>
-            <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Vendors" isActive={pathname.startsWith('/vendors')} asChild>
-                    <Link href="/vendors" onClick={handleLinkClick}>
-                        <Store />
-                        <span>Vendors</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton tooltip="Purchase Bills" isActive={pathname.startsWith('/purchase-bills')} asChild>
                  <Link href="/purchase-bills" onClick={handleLinkClick}>
