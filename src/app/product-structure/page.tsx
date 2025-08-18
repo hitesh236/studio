@@ -316,7 +316,7 @@ const AttributeDialog = ({
   const { control, handleSubmit, reset, watch, setValue } = form;
   const name = watch('name');
 
-  const [openCombobox, setOpenCombobox] = React.useState(false);
+  const [comboboxOpen, setComboboxOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (open) {
@@ -369,104 +369,135 @@ const AttributeDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <Form {...form}>
-        <form onSubmit={handleSubmit(handleSave)}>
-        <DialogHeader>
-          <DialogTitle>{dialogTitle}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-6 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="attr-name">Attribute Name</Label>
-            <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
-                <PopoverTrigger asChild>
-                    <FormControl>
-                        <Input
-                            id="attr-name"
-                            placeholder="Search attributes or type to create new..."
-                            value={name}
-                            onChange={e => setValue('name', e.target.value)}
-                            onFocus={() => setOpenCombobox(true)}
-                        />
-                    </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                    <Command>
-                        <CommandList>
-                            <CommandEmpty>{name ? `No suggestions found for "${name}".` : 'Type to search or add.'}</CommandEmpty>
-                            <CommandGroup>
-                                {filteredSuggestedAttributes.map(attr => (
-                                    <CommandItem
-                                        key={attr}
-                                        value={attr}
-                                        onSelect={(currentValue) => {
-                                            setValue('name', currentValue);
-                                            setOpenCombobox(false);
-                                        }}
-                                    >
-                                        <Check className={cn("mr-2 h-4 w-4", name === attr ? "opacity-100" : "opacity-0")} />
-                                        {attr}
-                                    </CommandItem>
-                                ))}
-                                {name && !suggestedAttributes.includes(name) && (
-                                     <CommandItem
-                                        value={name}
-                                        onSelect={() => setOpenCombobox(false)}
-                                    >
-                                        <PlusCircle className="mr-2 h-4 w-4" />
-                                        Create "{name}"
-                                    </CommandItem>
-                                )}
-                            </CommandGroup>
-                        </CommandList>
-                    </Command>
-                </PopoverContent>
-            </Popover>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="attr-type">Attribute Type</Label>
-            <Select value={watch('type')} onValueChange={(v: AttributeType) => setValue('type', v)}>
-              <SelectTrigger id="attr-type"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="text">Text</SelectItem>
-                <SelectItem value="dropdown">Dropdown</SelectItem>
-                <SelectItem value="checkbox">Checkbox</SelectItem>
-                <SelectItem value="date">Date</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {watch('type') === 'dropdown' && (
-            <div className="space-y-2">
-              <Label htmlFor="attr-options">Options</Label>
-              <Input id="attr-options" placeholder="Enter comma-separated values" {...form.register('options')} />
-            </div>
-          )}
-          <Separator />
-          <div className="space-y-4">
-            <h4 className="font-medium">Assignment</h4>
-            <div className="flex items-center justify-between rounded-lg border p-4">
-              <div>
-                <Label htmlFor="global-toggle">Global Attribute</Label>
-                <p className="text-xs text-muted-foreground">Apply this attribute to all categories.</p>
+          <form onSubmit={handleSubmit(handleSave)}>
+            <DialogHeader>
+              <DialogTitle>{dialogTitle}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6 py-4">
+              <FormField
+                name="name"
+                control={control}
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Attribute Name</FormLabel>
+                    <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+                        <PopoverTrigger asChild>
+                            <FormControl>
+                                <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
+                                    {field.value || "Type to search or create..."}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                            </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <Command>
+                                <CommandInput placeholder="Search or type to create..." onValueChange={(search) => setValue('name', search)} />
+                                <CommandList>
+                                    <CommandEmpty>
+                                        <CommandItem onSelect={() => {
+                                            field.onChange(name);
+                                            setComboboxOpen(false);
+                                        }}>
+                                            <PlusCircle className="mr-2 h-4 w-4" />
+                                            Create "{name}"
+                                        </CommandItem>
+                                    </CommandEmpty>
+                                    <CommandGroup>
+                                        {filteredSuggestedAttributes.map(attr => (
+                                            <CommandItem
+                                                key={attr}
+                                                value={attr}
+                                                onSelect={() => {
+                                                    field.onChange(attr);
+                                                    setComboboxOpen(false);
+                                                }}
+                                            >
+                                                <Check className={cn("mr-2 h-4 w-4", name === attr ? "opacity-100" : "opacity-0")} />
+                                                {attr}
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                    </FormItem>
+                )}
+               />
+
+              <FormField
+                control={control}
+                name="type"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Attribute Type</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                            <SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                            <SelectItem value="text">Text</SelectItem>
+                            <SelectItem value="dropdown">Dropdown</SelectItem>
+                            <SelectItem value="checkbox">Checkbox</SelectItem>
+                            <SelectItem value="date">Date</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                )}
+                />
+              {watch('type') === 'dropdown' && (
+                 <FormField
+                    control={control}
+                    name="options"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Options</FormLabel>
+                        <FormControl>
+                        <Input placeholder="Enter comma-separated values" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+              )}
+              <Separator />
+              <div className="space-y-4">
+                <h4 className="font-medium">Assignment</h4>
+                <FormField
+                  control={control}
+                  name="isGlobal"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                            <FormLabel>Global Attribute</FormLabel>
+                            <FormDescription>Apply this attribute to all categories.</FormDescription>
+                        </div>
+                        <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                    </FormItem>
+                  )}
+                />
+                {!watch('isGlobal') && (
+                  <div className="space-y-2">
+                    <Label>Assign to Specific Categories</Label>
+                    <Input disabled placeholder="Multi-select dropdown would be here" />
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label>Block Inheritance from Categories (Optional)</Label>
+                  <Input disabled placeholder="Multi-select for categories to block" />
+                  <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Info className="h-3 w-3" /> Child categories will not inherit this attribute if their parent is selected here.</p>
+                </div>
               </div>
-              <Switch id="global-toggle" checked={watch('isGlobal')} onCheckedChange={(checked) => setValue('isGlobal', checked)} />
             </div>
-            {!watch('isGlobal') && (
-              <div className="space-y-2">
-                <Label>Assign to Specific Categories</Label>
-                <Input disabled placeholder="Multi-select dropdown would be here" />
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label>Block Inheritance from Categories (Optional)</Label>
-              <Input disabled placeholder="Multi-select for categories to block" />
-              <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Info className="h-3 w-3" /> Child categories will not inherit this attribute if their parent is selected here.</p>
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
-          <Button type="submit">Save Attribute</Button>
-        </DialogFooter>
-        </form>
+            <DialogFooter>
+              <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
+              <Button type="submit">Save Attribute</Button>
+            </DialogFooter>
+          </form>
         </Form>
       </DialogContent>
     </Dialog>
