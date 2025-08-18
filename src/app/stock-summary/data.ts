@@ -7,6 +7,7 @@ export type StockSummaryRow = {
   commodityCode: string;
   commodityName: string;
   unitName: string;
+  category: string;
   openingStock: {
     quantity: number;
     amount: number;
@@ -47,6 +48,7 @@ export const generateStockSummaryData = (stockItems: StockItem[], stockHistory: 
             commodityCode: item.sku,
             commodityName: item.productName,
             unitName: item.uom,
+            category: item.category,
             openingStock: {
                 quantity: openingStockQty,
                 amount: openingStockAmt
