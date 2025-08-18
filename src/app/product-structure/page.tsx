@@ -3,6 +3,8 @@
 
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
   Card,
   CardContent,
@@ -63,7 +65,7 @@ import type { Category, Attribute, AttributeType } from '@/lib/types';
 import { initialCategoriesData } from '@/lib/categories';
 import { initialAttributes } from '@/lib/attributes';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Form, FormControl } from '@/components/ui/form';
+import { Form, FormControl, FormMessage, FormField, FormLabel } from '@/components/ui/form';
 
 
 // Dummy data for product counts
@@ -379,7 +381,7 @@ const AttributeDialog = ({
                     <FormControl>
                         <Input
                             id="attr-name"
-                            placeholder="e.g., Color"
+                            placeholder="Search attributes or type to create new..."
                             value={name}
                             onChange={e => setValue('name', e.target.value)}
                             onFocus={() => setOpenCombobox(true)}
@@ -817,3 +819,5 @@ export default function ProductStructurePage() {
     </div>
   );
 }
+
+    
