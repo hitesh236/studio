@@ -9,6 +9,7 @@ import { formatCurrency, cn } from "@/lib/utils";
 import { bankAccounts, recentInvoices, upcomingBills } from "./data";
 import { format, parseISO } from 'date-fns';
 import Link from 'next/link';
+import { useRouter } from "next/navigation";
 
 // Mobile Card Components
 const MobileInvoiceCard = ({ invoice }: { invoice: typeof recentInvoices[0] }) => {
@@ -75,6 +76,8 @@ const MobileAccountCard = ({ account }: { account: typeof bankAccounts[0] }) => 
 };
 
 export function InfoTabs() {
+  const router = useRouter();
+
   const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
       case 'Paid': return 'default';
@@ -113,7 +116,7 @@ export function InfoTabs() {
                             </TableHeader>
                             <TableBody>
                                 {recentInvoices.map(invoice => (
-                                    <TableRow key={invoice.id} className="group hover:bg-muted/50">
+                                    <TableRow key={invoice.id} className="group hover:bg-muted/50 cursor-pointer" onClick={() => router.push('/invoice-preview')}>
                                         <TableCell className="font-medium">
                                             <Link href="/invoice-preview" className="hover:underline group-hover:text-primary">
                                                 {invoice.id}
