@@ -65,7 +65,7 @@ import type { Category, Attribute, AttributeType } from '@/lib/types';
 import { initialCategoriesData } from '@/lib/categories';
 import { initialAttributes } from '@/lib/attributes';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Form, FormControl, FormMessage, FormField, FormLabel } from '@/components/ui/form';
+import { Form, FormControl, FormMessage, FormField, FormLabel, FormItem } from '@/components/ui/form';
 
 
 // Dummy data for product counts
@@ -850,5 +850,3 @@ export default function ProductStructurePage() {
     </div>
   );
 }
-
-    
