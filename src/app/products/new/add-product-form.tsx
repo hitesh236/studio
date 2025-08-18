@@ -125,23 +125,6 @@ const productFormSchema = z.object({
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
 
-// Helper function to find a category by its path
-const findCategoryByPath = (path: string[], categories: Category[]): Category | null => {
-    if (!path || path.length === 0) return null;
-    let currentLevel = categories;
-    let foundCategory: Category | null = null;
-    for (const id of path) {
-        const nextCategory = currentLevel.find(c => c.id === id);
-        if (nextCategory) {
-            foundCategory = nextCategory;
-            currentLevel = nextCategory.children || [];
-        } else {
-            return null; // Path is invalid
-        }
-    }
-    return foundCategory;
-};
-
 // Helper function to get all parent categories
 const getCategoryHierarchy = (categoryId: string, categories: Category[]): Category[] => {
     const path: Category[] = [];
@@ -256,6 +239,8 @@ export function AddProductForm() {
         seoMetaDescription: '',
     },
   });
+  
+  const [categoryLevels, setCategoryLevels] = React.useState<Category[][]>([initialCategoriesData]);
 
   const activeSimpleUnits = React.useMemo(() => simpleUnits.filter(u => u.status !== 'disabled'), [simpleUnits]);
 
@@ -282,24 +267,29 @@ export function AddProductForm() {
     if (!compound) return null;
     return `1 ${compound.firstUnit.name} = ${compound.conversion} ${compound.secondUnit.name}`;
   }, [watchedPrimaryUom, watchedSecondaryUom, compoundUnits]);
-
-  const flattenedCategories = React.useMemo(() => {
-    const flatten = (categories: Category[], pathIds: string[] = [], pathLabels: string[] = []): { label: string; value: string[] }[] => {
-      let all: { label: string; value: string[] }[] = [];
-      for (const category of categories) {
-        const newPathIds = [...pathIds, category.id];
-        const newPathLabels = [...pathLabels, category.name];
-        
-        all.push({ label: newPathLabels.join(' / '), value: newPathIds });
-
-        if (category.children && category.children.length > 0) {
-          all = all.concat(flatten(category.children, newPathIds, newPathLabels));
-        }
+  
+  React.useEffect(() => {
+    let currentCategories = initialCategoriesData;
+    const newLevels: Category[][] = [currentCategories];
+    for (const catId of watchedCategoryPath) {
+      const foundCat = currentCategories.find(c => c.id === catId);
+      if (foundCat && foundCat.children) {
+        currentCategories = foundCat.children;
+        newLevels.push(currentCategories);
+      } else {
+        break;
       }
-      return all;
-    };
-    return flatten(initialCategoriesData);
-  }, []);
+    }
+    setCategoryLevels(newLevels);
+  }, [watchedCategoryPath]);
+  
+  const handleCategoryChange = (level: number, value: string) => {
+    const newPath = watchedCategoryPath.slice(0, level);
+    if (value) {
+      newPath.push(value);
+    }
+    form.setValue('categoryPath', newPath, { shouldValidate: true });
+  };
 
 
   // Sync form state with displayed attributes
@@ -530,7 +520,7 @@ export function AddProductForm() {
   return (
     <div className="space-y-6">
         <div className="flex justify-between items-center">
-            <h1 className="text-xl font-semibold text-primary">Create New Product</h1>
+            <h1 className="text-[20px] font-semibold text-secondary">Create New Product</h1>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
@@ -554,7 +544,7 @@ export function AddProductForm() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Core Product Details</CardTitle>
+                    <CardTitle className="text-[20px] text-secondary">Core Product Details</CardTitle>
                     <CardDescription>Enter the primary information for your product.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -581,46 +571,40 @@ export function AddProductForm() {
                             <FormMessage />
                         </FormItem>
                     )} />
-                    <FormField
-                        control={form.control}
-                        name="categoryPath"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Category</FormLabel>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <FormControl>
-                                            <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
-                                                {field.value?.length > 0 ? flattenedCategories.find(c => c.value.join(',') === field.value.join(','))?.label : "Select Category"}
-                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                            </Button>
-                                        </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                                        <Command>
-                                            <CommandInput placeholder="Search category..." />
-                                            <CommandList>
-                                                <CommandEmpty>No category found.</CommandEmpty>
-                                                <CommandGroup>
-                                                    {flattenedCategories.map((category) => (
-                                                        <CommandItem
-                                                            value={category.label}
-                                                            key={category.label}
-                                                            onSelect={() => form.setValue("categoryPath", category.value)}
-                                                        >
-                                                            <Check className={cn("mr-2 h-4 w-4", category.value.join(',') === field.value.join(',') ? "opacity-100" : "opacity-0")}/>
-                                                            {category.label}
-                                                        </CommandItem>
+                    <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            {categoryLevels.map((levelCategories, level) => (
+                                <FormField
+                                    key={level}
+                                    control={form.control}
+                                    name={`categoryPath.${level}`}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <Select
+                                                onValueChange={(value) => handleCategoryChange(level, value)}
+                                                value={field.value || ''}
+                                            >
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder={`Select Level ${level + 1}`} />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {levelCategories.map((cat) => (
+                                                        <SelectItem key={cat.id} value={cat.id}>
+                                                            {cat.name}
+                                                        </SelectItem>
                                                     ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                </Popover>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            ))}
+                        </div>
+                    </FormItem>
                     <FormField name="productDescription" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Product Description</FormLabel><FormControl><Textarea placeholder="Internal description for the product" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
@@ -629,7 +613,7 @@ export function AddProductForm() {
             
             <Card>
                 <CardHeader>
-                    <CardTitle>Units & Stock</CardTitle>
+                    <CardTitle className="text-[20px] text-secondary">Units & Stock</CardTitle>
                     <CardDescription>Manage measurement units and inventory levels.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -748,7 +732,7 @@ export function AddProductForm() {
             </Card>
             
             <Card>
-                <CardHeader><CardTitle>Pricing & Taxation</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="text-[20px] text-secondary">Pricing & Taxation</CardTitle></CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField name="purchasePrice" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Purchase Price</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
@@ -793,7 +777,7 @@ export function AddProductForm() {
             </Card>
             
             <Card>
-                <CardHeader><CardTitle>Organization</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="text-[20px] text-secondary">Organization</CardTitle></CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField name="brand" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Brand</FormLabel><FormControl><Input placeholder="e.g., Logitech" {...field} /></FormControl><FormMessage /></FormItem>
@@ -826,7 +810,7 @@ export function AddProductForm() {
                 
                 {displayedAttributes.length > 0 && <Card>
                     <CardHeader>
-                        <CardTitle>Attributes</CardTitle>
+                        <CardTitle className="text-[20px] text-secondary">Attributes</CardTitle>
                         <CardDescription>Specify attributes for the selected category.</CardDescription>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -880,7 +864,7 @@ export function AddProductForm() {
                 {visibleSections.ecommerce && <Card>
                     <CardHeader>
                         <div className="flex justify-between items-center">
-                            <CardTitle>E-commerce Details</CardTitle>
+                            <CardTitle className="text-[20px] text-secondary">E-commerce Details</CardTitle>
                             <FormField
                                 control={form.control}
                                 name="isListedOnWebsite"
