@@ -43,7 +43,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 
 // --- Reusable Dialog Component ---
-const AddPaymentDialog = ({ customer, isOpen, onOpenChange, onPaymentAdd, type }: { customer: Person, isOpen: boolean, onOpenChange: (open: boolean) => void, onPaymentAdd: (amount: number) => void, type: 'in' | 'out' | null }) => {
+const AddPaymentDialog = ({ customer, isOpen, onOpenChange, onPaymentAdd, type }: { customer: Person, isOpen: boolean, onOpenChange: (open: boolean) => void, onPaymentAdd: (amount: number, paymentMode: string) => void, type: 'in' | 'out' | null }) => {
     const { toast } = useToast();
     const [amount, setAmount] = React.useState('');
     const [paymentMode, setPaymentMode] = React.useState('bank');
@@ -64,7 +64,7 @@ const AddPaymentDialog = ({ customer, isOpen, onOpenChange, onPaymentAdd, type }
             title: `Payment ${type === 'in' ? 'Received' : 'Made'}`,
             description: `Payment of ${formatCurrency(parsedAmount, 'INR')} for ${customer.company} has been recorded.`
         });
-        onPaymentAdd(parsedAmount);
+        onPaymentAdd(parsedAmount, paymentMode);
         onOpenChange(false);
         setAmount('');
         setReason('');
@@ -446,6 +446,21 @@ const CustomerPortfolioContent = () => {
         if (!allInvoices || !customer) return [];
         return allInvoices.filter(inv => inv.customerName === customer.company);
     }, [allInvoices, customer]);
+
+    const handlePaymentAdd = (amount: number, paymentMode: string) => {
+        if (!dialogType) return;
+        
+        const newLedgerEntry: CustomerLedgerEntry = {
+            id: `cl-${Date.now()}`,
+            date: new Date(),
+            description: dialogType === 'in' ? `Payment Received via ${paymentMode}` : `Payment Made via ${paymentMode}`,
+            ref: 'On Account',
+            debit: dialogType === 'out' ? amount : 0,
+            credit: dialogType === 'in' ? amount : 0,
+        };
+        
+        setAllLedgerData(prev => prev ? [newLedgerEntry, ...prev] : [newLedgerEntry]);
+    };
     
     if (!customer || !allLedgerData) {
         return <Loading />;
@@ -530,10 +545,7 @@ const CustomerPortfolioContent = () => {
                 isOpen={dialogType !== null}
                 type={dialogType}
                 onOpenChange={(open) => { if (!open) setDialogType(null) }} 
-                onPaymentAdd={(amount) => {
-                    // You would typically handle the state update here, e.g., refetching data
-                    console.log(`Payment of ${amount} added.`);
-                }} 
+                onPaymentAdd={handlePaymentAdd}
             />
         </div>
     );
@@ -548,5 +560,3 @@ export default function CustomerPortfolioPage() {
         </Suspense>
     );
 }
-
-    
