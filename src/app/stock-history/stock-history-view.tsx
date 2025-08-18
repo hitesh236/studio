@@ -21,7 +21,7 @@ import Link from 'next/link';
 
 interface StockHistoryViewProps {
   data: StockHistoryEntry[];
-  viewMode: 'split' | 'combined';
+  viewMode: 'all' | 'in' | 'out';
 }
 
 const StockTable = ({ title, data, type }: { title: string, data: StockHistoryEntry[], type: 'in' | 'out' }) => {
@@ -163,16 +163,13 @@ export function StockHistoryView({ data, viewMode }: StockHistoryViewProps) {
   const stockInData = React.useMemo(() => data.filter(e => e.quantity > 0), [data]);
   const stockOutData = React.useMemo(() => data.filter(e => e.quantity < 0).map(e => ({ ...e, quantity: Math.abs(e.quantity) })), [data]);
 
-  return (
-    <CardContent className="space-y-6">
-        {viewMode === 'split' ? (
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <StockTable title="Stock In" data={stockInData} type="in" />
-                <StockTable title="Stock Out" data={stockOutData} type="out" />
-            </div>
-        ) : (
-            <CombinedStockTable data={data} />
-        )}
-    </CardContent>
-  );
+  if (viewMode === 'in') {
+    return <StockTable title="Stock In" data={stockInData} type="in" />;
+  }
+
+  if (viewMode === 'out') {
+    return <StockTable title="Stock Out" data={stockOutData} type="out" />;
+  }
+
+  return <CombinedStockTable data={data} />;
 }
