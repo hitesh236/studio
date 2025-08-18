@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -65,16 +66,19 @@ import type { Category, Attribute, AttributeType } from '@/lib/types';
 import { initialCategoriesData } from '@/lib/categories';
 import { initialAttributes } from '@/lib/attributes';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Form, FormControl, FormMessage, FormField, FormLabel, FormItem, FormDescription } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormMessage, FormField, FormLabel, FormItem } from '@/components/ui/form';
 
 
 // Dummy data for product counts
 const productCounts: Record<string, number> = {
-    'smartphones': 12,
-    'laptops': 5,
-    'men-tshirts': 25,
-    'men-shirts': 18,
-    'furniture': 7
+    'staples-pulses': 5,
+    'rice': 2,
+    'wheat-flour': 3,
+    'spices-condiments': 8,
+    'beverages': 4,
+    'personal-care-household': 10,
+    'soaps-shampoos': 6,
+    'detergents-cleaners': 4,
 };
 
 const getCategoryProductCount = (category: Category): number => {
@@ -391,9 +395,9 @@ const AttributeDialog = ({
                         </PopoverTrigger>
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                             <Command>
-                                <CommandInput placeholder="Search or type to create..." onValueChange={(search) => setValue('name', search)} />
+                                <CommandInput placeholder="Type to search or create..." onValueChange={(search) => setValue('name', search)} />
                                 <CommandList>
-                                    <CommandEmpty>No suggestions found.</CommandEmpty>
+                                    {filteredSuggestedAttributes.length === 0 && !name && <CommandEmpty>No suggestions found.</CommandEmpty>}
                                     <CommandGroup>
                                         {filteredSuggestedAttributes.map(attr => (
                                             <CommandItem
@@ -415,7 +419,7 @@ const AttributeDialog = ({
                                             setComboboxOpen(false);
                                         }}>
                                             <PlusCircle className="mr-2 h-4 w-4" />
-                                            Add New
+                                            {name && !suggestedAttributes.includes(name) ? `Create "${name}"` : 'Add New'}
                                         </CommandItem>
                                     </CommandGroup>
                                 </CommandList>
