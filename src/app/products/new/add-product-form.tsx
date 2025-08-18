@@ -69,6 +69,8 @@ import { initialAttributes } from '@/lib/attributes';
 import type { Category, Attribute } from '@/lib/types';
 import { initialSimpleUnits, initialCompoundUnits, type SimpleUnit, type CompoundUnit } from '@/lib/uom-data';
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
+import { Calendar } from '@/components/ui/calendar';
+import { generateStockListData, type StockItem } from '@/app/stock-list/data';
 
 
 const customAttributeSchema = z.object({
@@ -528,7 +530,7 @@ export function AddProductForm() {
   return (
     <div className="space-y-6">
         <div className="flex justify-between items-center">
-            <h1 className="text-[20px] font-semibold text-primary">Create New Product</h1>
+            <h1 className="text-xl font-semibold text-primary">Create New Product</h1>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
