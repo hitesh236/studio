@@ -30,12 +30,12 @@ const indianStatesMap: Record<string, { code: string; abbr: string }> = {
 
 const companyNames = [
   "Innovate Solutions Ltd.", "Quantum Systems", "Synergy Creations", "Apex Logistics",
-  "Starlight Fabrics", "Blue Ribbon Foods", "Venture Dynamics", "Peak Performance Co.",
-  "Nexus Infotech"
 ];
-const personNames = ["Aarav Sharma", "Priya Patel", "Rohan Gupta", "Sunita Rao", "Vikram Singh"];
-const allCustomerEntities = [...companyNames, ...personNames];
-
+const personNames = [
+    "Aarav Sharma", "Priya Patel", "Rohan Gupta", "Sunita Rao", "Vikram Singh",
+    "Aditi Chavan", "Rajesh Kumar", "Meera Desai", "Sanjay Reddy", "Anjali Mehta",
+    "Karan Malhotra", "Pooja Hegde", "Arjun Nair", "Sneha Iyer", "Vivek Anand"
+];
 
 const getRandomElement = <T>(arr: T[] | readonly T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
@@ -49,9 +49,10 @@ function generateRandomGstin(stateCode: string): string {
 export const generateCustomerData = (): Customer[] => {
     const data: Customer[] = [];
     const now = new Date();
+    const allEntities = [...personNames, ...companyNames];
 
-    for (let i = 0; i < allCustomerEntities.length; i++) {
-        const entityName = allCustomerEntities[i];
+    for (let i = 0; i < allEntities.length; i++) {
+        const entityName = allEntities[i];
         const isCompany = companyNames.includes(entityName);
         
         const stateName = getRandomElement(Object.keys(indianStatesMap));
@@ -62,7 +63,7 @@ export const generateCustomerData = (): Customer[] => {
 
         if (isCompany) {
             company = entityName;
-            name = getRandomElement(personNames);
+            name = getRandomElement(personNames); // A contact person for the company
         } else {
             company = undefined;
             name = entityName;
@@ -76,7 +77,8 @@ export const generateCustomerData = (): Customer[] => {
             balanceDue = 0;
         }
 
-        const hasGstin = company ? true : Math.random() > 0.5; // Companies always have GSTIN, individuals have 50% chance
+        // Companies always have GSTIN, individuals have a smaller chance
+        const hasGstin = company ? true : Math.random() > 0.8; 
 
         data.push({
             id: `cust-${1001 + i}`,
@@ -89,7 +91,11 @@ export const generateCustomerData = (): Customer[] => {
             },
             balanceDue,
             lastTransaction: new Date(now.getTime() - Math.random() * 30 * 24 * 60 * 60 * 1000), // last 30 days
-            placeOfSupply,
+            placeOfSupply: {
+                code: placeOfSupply.code,
+                state: stateName,
+                abbr: placeOfSupply.abbr,
+            },
         });
     }
     return data;
