@@ -38,22 +38,27 @@ const bios = [
 ];
 const types = ["Customer", "Vendor"] as const;
 
-const getRandomElement = <T>(arr: T[] | readonly T[]): T => arr[Math.floor(Math.random() * arr.length)];
+const getDeterministicElement = <T>(arr: T[] | readonly T[], index: number): T => arr[index % arr.length];
+
 
 export function generateData(count: number): Person[] {
   const data: Person[] = [];
   for (let i = 0; i < count; i++) {
-    const firstName = getRandomElement(firstNames);
-    const lastName = getRandomElement(lastNames);
-    const state = getRandomElement(states);
+    const firstName = getDeterministicElement(firstNames, i);
+    const lastName = getDeterministicElement(lastNames, i);
+    const state = getDeterministicElement(states, i);
     const gstinStateCode = state === 'Maharashtra' ? '27' : '29'; // Simplified for example
-    const type = getRandomElement(types);
+    const type = getDeterministicElement(types, i);
     
     let balance = 0;
     if (type === 'Customer') {
-        balance = Math.random() > 0.3 ? (Math.floor(Math.random() * 50000) + 500) : 0; // 70% of customers have a balance to collect
+        if (i % 3 !== 0) { // ~66% of customers have a balance
+            balance = (i * 1234.5) % 50000 + 500;
+        }
     } else { // Vendor
-        balance = Math.random() > 0.4 ? -(Math.floor(Math.random() * 25000) + 500) : 0; // 60% of vendors have a balance to pay
+        if (i % 2 === 0) { // 50% of vendors have a balance
+            balance = -((i * 789.1) % 25000 + 500);
+        }
     }
 
     data.push({
@@ -61,18 +66,18 @@ export function generateData(count: number): Person[] {
       firstName,
       lastName,
       email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}@example.com`,
-      company: getRandomElement(companies),
-      phone: `+91 ${Math.floor(Math.random() * 90000) + 10000} ${Math.floor(Math.random() * 90000) + 10000}`,
-      saleAmount: Math.floor(Math.random() * 5000) + 500,
-      rating: Math.round((Math.random() * 4 + 1) * 10) / 10,
-      status: getRandomElement(statuses),
+      company: getDeterministicElement(companies, i),
+      phone: `+91 98${(10000000 + i * 12345) % 90000000}`,
+      saleAmount: (i * 543.21) % 5000 + 500,
+      rating: ((i * 3) % 4) + 1.5,
+      status: getDeterministicElement(statuses, i),
       address: {
-        street: `${Math.floor(Math.random() * 1000) + 1} ${getRandomElement(streets)}`,
-        city: getRandomElement(cities),
+        street: `${(i*17) % 1000 + 1} ${getDeterministicElement(streets, i)}`,
+        city: getDeterministicElement(cities, i),
         state: state,
-        zip: `${Math.floor(Math.random() * 90000) + 10000}`,
+        zip: `${(400000 + i * 13) % 500000}`,
       },
-      bio: getRandomElement(bios),
+      bio: getDeterministicElement(bios, i),
       gstin: `${gstinStateCode}ABCDE${1000 + i}F1Z${(i % 9) + 1}`,
       type: type,
       balance: balance,
