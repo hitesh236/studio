@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
-import { LogOut, User, LayoutGrid, BookOpen, FileText, Eye, Globe, UserCircle, Palette, MonitorPlay } from 'lucide-react';
+import { LogOut, User, LayoutGrid, BookOpen, FileText, Eye, Globe, UserCircle, Palette, MonitorPlay, Tags } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const componentMenuItems = [
@@ -27,7 +27,7 @@ const componentMenuItems = [
     { href: '/invoice-preview-fc', icon: Globe, label: 'Invoice Preview FC' },
     { href: '/customer-portfolio', icon: UserCircle, label: 'Customer Portfolio' },
     { href: '/ui', icon: Palette, label: 'UI' },
-    { href: '/product-add-design', icon: Palette, label: 'Product Add Design' },
+    { href: '/product-structure', icon: Tags, label: 'Product Structure' },
 ];
 
 const MegaMenu = () => (
