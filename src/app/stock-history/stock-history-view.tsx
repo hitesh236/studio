@@ -79,7 +79,6 @@ const StockTable = ({ title, data, type }: { title: string, data: StockHistoryEn
 
 const CombinedStockTable = ({ data }: { data: StockHistoryEntry[] }) => {
     let runningStock = 0;
-    // Assume a constant purchase price for profit calculation for this example
     const avgPurchasePrice = data.find(e => e.type === 'Purchase')?.price || 750;
 
     const processedData = data.map(entry => {
@@ -109,7 +108,6 @@ const CombinedStockTable = ({ data }: { data: StockHistoryEntry[] }) => {
                                 <TableHead>Type</TableHead>
                                 <TableHead>Invoice/Ref No.</TableHead>
                                 <TableHead className="text-right">Price</TableHead>
-                                <TableHead className="text-right">Profit</TableHead>
                                 <TableHead className="text-right">In</TableHead>
                                 <TableHead className="text-right">Out</TableHead>
                                 <TableHead className="text-right">Balance</TableHead>
@@ -131,9 +129,6 @@ const CombinedStockTable = ({ data }: { data: StockHistoryEntry[] }) => {
                                           <Link href="#" className="text-primary hover:underline">{entry.referenceId}</Link>
                                         </TableCell>
                                         <TableCell className="text-right font-mono">{formatCurrency(entry.price, 'INR')}</TableCell>
-                                        <TableCell className={cn("text-right font-mono", entry.profit > 0 ? "text-green-600" : "text-muted-foreground")}>
-                                            {entry.profit > 0 ? formatCurrency(entry.profit, 'INR') : '-'}
-                                        </TableCell>
                                         <TableCell className="text-right font-mono text-green-600">{isStockIn ? entry.quantity : '-'}</TableCell>
                                         <TableCell className="text-right font-mono text-red-600">{!isStockIn ? Math.abs(entry.quantity) : '-'}</TableCell>
                                         <TableCell className="text-right font-bold font-mono">{entry.runningStock}</TableCell>
@@ -144,10 +139,13 @@ const CombinedStockTable = ({ data }: { data: StockHistoryEntry[] }) => {
                          <TableFooter>
                             <TableRow>
                                 <TableCell colSpan={4} className="text-right font-bold">Total</TableCell>
-                                <TableCell className="text-right font-bold font-mono text-green-600">{formatCurrency(totalProfit, 'INR')}</TableCell>
                                 <TableCell className="text-right font-bold text-lg font-mono text-green-600">{totalIn}</TableCell>
                                 <TableCell className="text-right font-bold text-lg font-mono text-red-600">{Math.abs(totalOut)}</TableCell>
                                 <TableCell className="text-right font-bold text-lg font-mono">{runningStock}</TableCell>
+                            </TableRow>
+                             <TableRow>
+                                <TableCell colSpan={6} className="text-right font-bold">Estimated Profit</TableCell>
+                                <TableCell className="text-right font-bold text-lg font-mono text-green-600">{formatCurrency(totalProfit, 'INR')}</TableCell>
                             </TableRow>
                         </TableFooter>
                     </Table>
