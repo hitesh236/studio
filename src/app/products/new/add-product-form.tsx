@@ -520,7 +520,7 @@ export function AddProductForm() {
   return (
     <div className="space-y-6">
         <div className="flex justify-between items-center">
-            <h1 className="text-[20px] font-semibold text-secondary">Create New Product</h1>
+            <h1 className="text-xl text-primary font-semibold">Create New Product</h1>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
@@ -551,9 +551,6 @@ export function AddProductForm() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField name="productName" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Product Name</FormLabel><FormControl><Input placeholder="e.g., Wireless Mouse" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField name="alternateName" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Alternate Name</FormLabel><FormControl><Input placeholder="Optional alternate name" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                     </div>
                      <FormField name="sku" control={form.control} render={({ field }) => (
@@ -794,6 +791,9 @@ export function AddProductForm() {
                             </div>
                             <FormMessage />
                         </FormItem>
+                    )} />
+                     <FormField name="alternateName" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Alternate Name</FormLabel><FormControl><Input placeholder="Optional alternate name" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                     <FormField
                     control={form.control}
