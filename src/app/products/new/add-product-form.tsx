@@ -563,13 +563,18 @@ export function AddProductForm() {
                      <FormField name="sku" control={form.control} render={({ field }) => (
                         <FormItem>
                             <FormLabel>SKU</FormLabel>
-                            <div className="relative flex items-center">
-                                <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <div className="relative">
                                 <FormControl>
-                                    <Input placeholder="Stock Keeping Unit" className="pl-10" {...field} />
+                                    <Input placeholder="Stock Keeping Unit" className="pr-10" {...field} />
                                 </FormControl>
-                                <Button type="button" variant="outline" onClick={generateSku} className="ml-2">
-                                    Generate
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={generateSku}
+                                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary"
+                                >
+                                    <Sparkles className="h-4 w-4" />
                                 </Button>
                             </div>
                             <FormMessage />
@@ -877,7 +882,7 @@ export function AddProductForm() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                    <FormField name="productDescription" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Internal Product Description</FormLabel><FormControl><Textarea placeholder="Internal description for the product" {...field} /></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel>Product Description</FormLabel><FormControl><Textarea placeholder="Detailed product description for the product page." {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                     <FormField name="productImages" control={form.control} render={() => (
                         <FormItem>
