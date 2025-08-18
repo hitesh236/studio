@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { format } from 'date-fns';
 import { cn, formatCurrency } from '@/lib/utils';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 interface StockHistoryViewProps {
