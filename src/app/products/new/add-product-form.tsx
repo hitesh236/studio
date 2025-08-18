@@ -178,7 +178,7 @@ const getAttributesForCategory = (categoryId: string | null, categories: Categor
 };
 
 const optionalSectionsConfig = {
-    additionalDetails: 'Additional Details',
+    organization: 'Organization',
     ecommerce: 'E-commerce Details'
 };
 
@@ -202,6 +202,7 @@ export function AddProductForm() {
   const [targetUomField, setTargetUomField] = React.useState<'uom' | 'secondaryUom' | null>(null);
 
   const [visibleSections, setVisibleSections] = React.useState<Record<string, boolean>>({
+    organization: false,
     ecommerce: false,
   });
 
@@ -531,12 +532,15 @@ export function AddProductForm() {
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Show Sections</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuCheckboxItem
-                        checked={visibleSections.ecommerce}
-                        onCheckedChange={(checked) => setVisibleSections(prev => ({ ...prev, ecommerce: !!checked }))}
-                    >
-                        E-commerce Details
-                    </DropdownMenuCheckboxItem>
+                    {Object.entries(optionalSectionsConfig).map(([key, label]) => (
+                         <DropdownMenuCheckboxItem
+                            key={key}
+                            checked={visibleSections[key]}
+                            onCheckedChange={(checked) => setVisibleSections(prev => ({ ...prev, [key]: !!checked }))}
+                        >
+                            {label}
+                        </DropdownMenuCheckboxItem>
+                    ))}
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
@@ -551,6 +555,9 @@ export function AddProductForm() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField name="productName" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Product Name</FormLabel><FormControl><Input placeholder="e.g., Wireless Mouse" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField name="purchasePrice" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Purchase Price</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                     </div>
                      <FormField name="sku" control={form.control} render={({ field }) => (
@@ -603,9 +610,6 @@ export function AddProductForm() {
                         </div>
                     </FormItem>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                        <FormField name="purchasePrice" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Purchase Price</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
                         <div className="md:col-span-2">
                             <div className="flex items-center gap-4 mb-2">
                                 <Label>Selling Prices</Label>
@@ -765,189 +769,190 @@ export function AddProductForm() {
                     )} />
                 </CardContent>
             </Card>
-            
-            <Card>
-                <CardHeader><CardTitle className="text-[20px] text-secondary">Organization</CardTitle></CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField name="brand" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Brand</FormLabel><FormControl><Input placeholder="e.g., Logitech" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField name="model" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Model</FormLabel><FormControl><Input placeholder="e.g., MX Master 3S" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField name="barcode" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Barcode</FormLabel>
-                            <div className="relative">
-                                <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <FormControl><Input placeholder="Scan or enter barcode" className="pl-10" {...field} /></FormControl>
-                            </div>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                     <FormField name="alternateName" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Alternate Name</FormLabel><FormControl><Input placeholder="Optional alternate name" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField
-                    control={form.control}
-                    name="tags"
-                    render={({ field }) => (
-                        <div className="md:col-span-2">
-                        <FormLabel>Tags/Keywords</FormLabel>
-                        <TagsInput field={field} />
-                        </div>
-                    )}
-                    />
-                </CardContent>
-            </Card>
-                
-                {displayedAttributes.length > 0 && <Card>
-                    <CardHeader>
-                        <CardTitle className="text-[20px] text-secondary">Attributes</CardTitle>
-                        <CardDescription>Specify attributes for the selected category.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {dynamicAttributeFields.map((field, index) => {
-                        const attributeInfo = attributeMap.get(field.attributeId);
-                        if (!attributeInfo || !displayedAttributes.some(a => a.id === attributeInfo.id)) return null;
 
-                        return (
-                            <FormField
-                                key={field.id}
-                                control={form.control}
-                                name={`dynamicAttributes.${index}.value`}
-                                render={({ field: itemField }) => {
-                                    if (attributeInfo.type === 'dropdown' && attributeInfo.options) {
-                                        return (
-                                            <FormItem>
-                                                <FormLabel>{attributeInfo.name}</FormLabel>
-                                                <Select onValueChange={itemField.onChange} defaultValue={itemField.value}>
-                                                    <FormControl><SelectTrigger><SelectValue placeholder={`Select ${attributeInfo.name}`} /></SelectTrigger></FormControl>
-                                                    <SelectContent>
-                                                        {attributeInfo.options.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        );
-                                    }
-                                    if (attributeInfo.type === 'checkbox') {
-                                        return (
-                                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                                            <FormLabel>{attributeInfo.name}</FormLabel>
-                                            <FormControl><Switch checked={itemField.value} onCheckedChange={itemField.onChange} /></FormControl>
-                                        </FormItem>
-                                        );
-                                    }
+            {displayedAttributes.length > 0 && <Card>
+                <CardHeader>
+                    <CardTitle className="text-[20px] text-secondary">Attributes</CardTitle>
+                    <CardDescription>Specify attributes for the selected category.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {dynamicAttributeFields.map((field, index) => {
+                    const attributeInfo = attributeMap.get(field.attributeId);
+                    if (!attributeInfo || !displayedAttributes.some(a => a.id === attributeInfo.id)) return null;
+
+                    return (
+                        <FormField
+                            key={field.id}
+                            control={form.control}
+                            name={`dynamicAttributes.${index}.value`}
+                            render={({ field: itemField }) => {
+                                if (attributeInfo.type === 'dropdown' && attributeInfo.options) {
                                     return (
                                         <FormItem>
                                             <FormLabel>{attributeInfo.name}</FormLabel>
-                                            <FormControl><Input type={attributeInfo.type} {...itemField} /></FormControl>
+                                            <Select onValueChange={itemField.onChange} defaultValue={itemField.value}>
+                                                <FormControl><SelectTrigger><SelectValue placeholder={`Select ${attributeInfo.name}`} /></SelectTrigger></FormControl>
+                                                <SelectContent>
+                                                    {attributeInfo.options.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
                                             <FormMessage />
                                         </FormItem>
-                                    )
-                                }}
-                            />
-                        );
-                    })}
-                    </CardContent>
-                </Card>}
-
-
-                {visibleSections.ecommerce && <Card>
-                    <CardHeader>
-                        <div className="flex justify-between items-center">
-                            <CardTitle className="text-[20px] text-secondary">E-commerce Details</CardTitle>
-                            <FormField
-                                control={form.control}
-                                name="isListedOnWebsite"
-                                render={({ field }) => (
-                                    <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                                        <FormLabel>List on Website</FormLabel>
-                                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                    );
+                                }
+                                if (attributeInfo.type === 'checkbox') {
+                                    return (
+                                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                        <FormLabel>{attributeInfo.name}</FormLabel>
+                                        <FormControl><Switch checked={itemField.value} onCheckedChange={itemField.onChange} /></FormControl>
                                     </FormItem>
-                                )}
-                            />
-                        </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                       <FormField name="productDescription" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Internal Product Description</FormLabel><FormControl><Textarea placeholder="Internal description for the product" {...field} /></FormControl><FormMessage /></FormItem>
+                                    );
+                                }
+                                return (
+                                    <FormItem>
+                                        <FormLabel>{attributeInfo.name}</FormLabel>
+                                        <FormControl><Input type={attributeInfo.type} {...itemField} /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )
+                            }}
+                        />
+                    );
+                })}
+                </CardContent>
+            </Card>}
+
+            {visibleSections.organization && (
+                <Card>
+                    <CardHeader><CardTitle className="text-[20px] text-secondary">Organization</CardTitle></CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField name="brand" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Brand</FormLabel><FormControl><Input placeholder="e.g., Logitech" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
-                        <FormField name="productImages" control={form.control} render={() => (
+                        <FormField name="model" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Model</FormLabel><FormControl><Input placeholder="e.g., MX Master 3S" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField name="barcode" control={form.control} render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Product Images</FormLabel>
-                                <FormControl>
-                                    <div
-                                        className="relative flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50"
-                                        onClick={() => fileInputRef.current?.click()}
-                                    >
-                                        <Upload className="h-10 w-10 text-muted-foreground" />
-                                        <p className="mt-2 text-sm text-muted-foreground">
-                                            <span className="font-semibold">Click to upload</span> or drag and drop
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
-                                        <Input
-                                            ref={fileInputRef}
-                                            type="file"
-                                            accept="image/*"
-                                            multiple
-                                            className="hidden"
-                                            onChange={handleImageChange}
-                                        />
-                                    </div>
-                                </FormControl>
+                                <FormLabel>Barcode</FormLabel>
+                                <div className="relative">
+                                    <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <FormControl><Input placeholder="Scan or enter barcode" className="pl-10" {...field} /></FormControl>
+                                </div>
                                 <FormMessage />
                             </FormItem>
                         )} />
-
-                        {imagePreviews.length > 0 && (
-                            <div>
-                                <Label>Image Gallery Preview</Label>
-                                <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                    {imagePreviews.map((src, index) => (
-                                        <div key={index} className="relative group aspect-square">
-                                            <img
-                                                src={src}
-                                                alt={`Preview ${index + 1}`}
-                                                className="w-full h-full object-cover rounded-md"
-                                                onLoad={() => {
-                                                    // Optional: Check if we still need to revoke this URL later
-                                                }}
-                                            />
-                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                <Button
-                                                    type="button"
-                                                    variant="destructive"
-                                                    size="icon"
-                                                    className="h-8 w-8"
-                                                    onClick={() => handleRemoveImage(index)}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                    <span className="sr-only">Remove image</span>
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                        <FormField name="alternateName" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Alternate Name</FormLabel><FormControl><Input placeholder="Optional alternate name" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField
+                        control={form.control}
+                        name="tags"
+                        render={({ field }) => (
+                            <div className="md:col-span-2">
+                            <FormLabel>Tags/Keywords</FormLabel>
+                            <TagsInput field={field} />
                             </div>
                         )}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FormField name="webShortDescription" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Short Description</FormLabel><FormControl><Textarea placeholder="A catchy, brief description for product listings." {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                            <FormField name="webLongDescription" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Full Description</FormLabel><FormControl><Textarea placeholder="Detailed product description for the product page." rows={5} {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                            <FormField name="seoTitle" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>SEO Title</FormLabel><FormControl><Input placeholder="Title for search engine results" {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                            <FormField name="seoMetaDescription" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>SEO Meta Description</FormLabel><FormControl><Input placeholder="Description for search engine results" {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                        </div>
+                        />
                     </CardContent>
-                </Card>}
+                </Card>
+            )}
+
+            {visibleSections.ecommerce && <Card>
+                <CardHeader>
+                    <div className="flex justify-between items-center">
+                        <CardTitle className="text-[20px] text-secondary">E-commerce Details</CardTitle>
+                        <FormField
+                            control={form.control}
+                            name="isListedOnWebsite"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                                    <FormLabel>List on Website</FormLabel>
+                                    <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                   <FormField name="productDescription" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Internal Product Description</FormLabel><FormControl><Textarea placeholder="Internal description for the product" {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField name="productImages" control={form.control} render={() => (
+                        <FormItem>
+                            <FormLabel>Product Images</FormLabel>
+                            <FormControl>
+                                <div
+                                    className="relative flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50"
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    <Upload className="h-10 w-10 text-muted-foreground" />
+                                    <p className="mt-2 text-sm text-muted-foreground">
+                                        <span className="font-semibold">Click to upload</span> or drag and drop
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
+                                    <Input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        className="hidden"
+                                        onChange={handleImageChange}
+                                    />
+                                </div>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+
+                    {imagePreviews.length > 0 && (
+                        <div>
+                            <Label>Image Gallery Preview</Label>
+                            <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                {imagePreviews.map((src, index) => (
+                                    <div key={index} className="relative group aspect-square">
+                                        <img
+                                            src={src}
+                                            alt={`Preview ${index + 1}`}
+                                            className="w-full h-full object-cover rounded-md"
+                                            onLoad={() => {
+                                                // Optional: Check if we still need to revoke this URL later
+                                            }}
+                                        />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <Button
+                                                type="button"
+                                                variant="destructive"
+                                                size="icon"
+                                                className="h-8 w-8"
+                                                onClick={() => handleRemoveImage(index)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                                <span className="sr-only">Remove image</span>
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField name="webShortDescription" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Short Description</FormLabel><FormControl><Textarea placeholder="A catchy, brief description for product listings." {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField name="webLongDescription" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Full Description</FormLabel><FormControl><Textarea placeholder="Detailed product description for the product page." rows={5} {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField name="seoTitle" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>SEO Title</FormLabel><FormControl><Input placeholder="Title for search engine results" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField name="seoMetaDescription" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>SEO Meta Description</FormLabel><FormControl><Input placeholder="Description for search engine results" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                    </div>
+                </CardContent>
+            </Card>}
             
             <div className="flex justify-end">
                 <Button type="submit" disabled={isSubmitting}>
