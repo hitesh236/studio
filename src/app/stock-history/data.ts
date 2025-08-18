@@ -7,6 +7,7 @@ export type StockHistoryEntry = {
     price: number;
     referenceId: string;
     supplierOrClient: string;
+    location: string;
 };
 
 const getRandomDate = (start: Date, end: Date): Date => new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
@@ -15,6 +16,8 @@ const suppliers = ['Jemima Hoffman', 'Amir Vega', 'Quyn Erickson', 'Carla Bender
 const clients = ['Troy Walker', 'Ciaran Buck', 'Ruth Miles', 'Walking Customer', 'Reed Montoya'];
 const transactionTypesIn: ('Purchase' | 'Sales Return')[] = ['Purchase', 'Sales Return'];
 const transactionTypesOut: ('Invoice' | 'Purchase Return' | 'Stock Adjustment')[] = ['Invoice', 'Purchase Return', 'Stock Adjustment'];
+const locations = ['Main Warehouse', 'Shop Floor', 'Mumbai Godown'];
+
 
 const getRandomElement = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
@@ -33,6 +36,7 @@ export const generateStockHistory = (productName: string, initialStock: number =
             price: type === 'Purchase' ? 750 + Math.random() * 100 : 877.85,
             referenceId: type === 'Purchase' ? `PUR-${i + 1}` : `SR-${i - 4}`,
             supplierOrClient: type === 'Purchase' ? getRandomElement(suppliers) : getRandomElement(clients),
+            location: getRandomElement(locations),
         };
         entries.push(entry);
     }
@@ -48,6 +52,7 @@ export const generateStockHistory = (productName: string, initialStock: number =
             price: type === 'Invoice' ? 950.00 : 880.00,
             referenceId: type === 'Invoice' ? `INV-${i + 1}` : `PR-${i - 5}`,
             supplierOrClient: type === 'Invoice' ? getRandomElement(clients) : getRandomElement(suppliers),
+            location: getRandomElement(locations),
         };
         entries.push(entry);
     }
