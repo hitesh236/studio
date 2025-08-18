@@ -1,445 +1,299 @@
-
 'use client';
 
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarFooter,
+  useSidebar,
+  SidebarSeparator,
+} from '@/components/ui/sidebar';
+import {
+    BookOpen,
+    Box,
+    Briefcase,
+    ChevronDown,
+    Eye,
+    FileSpreadsheet,
+    FileText,
+    FolderPlus,
+    Globe,
+    LayoutDashboard,
+    LayoutGrid,
+    PackagePlus,
+    Palette,
+    Percent,
+    Receipt,
+    Redo2,
+    Scale,
+    Send,
+    Settings,
+    Shield,
+    Store,
+    Tags,
+    TrendingUp,
+    Undo2,
+    UserCircle,
+    Users,
+    Wallet
+} from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import * as React from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Settings, Search, PlusCircle, Trash2 } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuCheckboxItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogClose,
-    DialogTrigger,
-  } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
+import { AnimatePresence, motion } from 'framer-motion';
 
-const indianStates = [
-  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
-  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
-  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya',
-  'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim',
-  'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand',
-  'West Bengal', 'Andaman and Nicobar Islands', 'Chandigarh',
-  'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu and Kashmir',
-  'Ladakh', 'Lakshadweep', 'Puducherry',
-];
+export function AppSidebar() {
+  const { state, isMobile, setOpen, setOpenMobile } = useSidebar();
+  const pathname = usePathname();
 
-const bankAccountSchema = z.object({
-  bankName: z.string().optional(),
-  accountNumber: z.string().optional(),
-  ifscCode: z.string().optional(),
-});
-
-const customerFormSchema = z.object({
-  // Core Information
-  gstinSearch: z.string().optional(),
-  name: z.string().min(1, "Name is required."),
-  customerType: z.string().min(1, "Customer type is required"),
-  mobile: z.string().optional(),
-  openingBalance: z.coerce.number().optional().default(0),
-  balanceType: z.enum(['debit', 'credit']).default('debit'),
-
-  // Contact Details
-  mailingName: z.string().optional(),
-  address: z.string().optional(),
-  state: z.string().optional(),
-  country: z.string().optional(),
-  pincode: z.string().optional(),
-  email: z.string().email("Invalid email address.").optional().or(z.literal('')),
-
-  // Tax & Compliance
-  pan: z.string().optional(),
-  tdsApplicable: z.boolean().default(false),
-
-  // Financial Controls
-  creditLimit: z.coerce.number().optional().default(0),
-  creditPeriod: z.coerce.number().optional().default(0),
-  maintainBillWise: z.boolean().default(false),
-
-  // Banking Details
-  bankAccounts: z.array(bankAccountSchema),
-  
-  // Additional Fields
-  contactPerson: z.string().optional(),
-  placeOfSupply: z.string().optional(),
-  shipToAddress: z.string().optional(),
-});
-
-type CustomerFormValues = z.infer<typeof customerFormSchema>;
-
-const optionalSectionsConfig = {
-  contactDetails: 'Contact Details',
-  taxCompliance: 'Tax & Compliance',
-  financialControls: 'Financial Controls',
-  bankingDetails: 'Banking Details',
-  additionalFields: 'Additional Fields',
-};
-
-export function AddCustomerForm({ onSuccess }: { onSuccess?: () => void }) {
-  const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [visibleSections, setVisibleSections] = React.useState<Record<string, boolean>>({
-    contactDetails: false,
-    taxCompliance: true,
-    financialControls: false,
-    bankingDetails: true,
-    additionalFields: false,
-  });
-
-  const [customerTypes, setCustomerTypes] = React.useState(['Regular', 'B2B', 'B2C']);
-  const [isTypeDialogOpen, setIsTypeDialogOpen] = React.useState(false);
-  const [newCustomerType, setNewCustomerType] = React.useState('');
-
-  const form = useForm<CustomerFormValues>({
-    resolver: zodResolver(customerFormSchema),
-    defaultValues: {
-      name: '',
-      customerType: 'Regular',
-      mobile: '',
-      openingBalance: 0,
-      balanceType: 'debit',
-      mailingName: '',
-      address: '',
-      state: '',
-      country: 'India',
-      pincode: '',
-      email: '',
-      pan: '',
-      tdsApplicable: false,
-      creditLimit: 0,
-      creditPeriod: 0,
-      maintainBillWise: false,
-      bankAccounts: [{ bankName: '', accountNumber: '', ifscCode: '' }],
-      contactPerson: '',
-      placeOfSupply: '',
-      shipToAddress: '',
-    },
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "bankAccounts",
-  });
-
-  async function onSubmit(data: CustomerFormValues) {
-    setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log('New Customer Data:', data);
-    toast({
-      title: "Customer Created",
-      description: `${data.name} has been successfully added.`,
-    });
-    setIsSubmitting(false);
-    form.reset();
-    if (onSuccess) {
-      onSuccess();
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
     }
-  }
-  
-  const handleAddNewCustomerType = () => {
-    if (newCustomerType && !customerTypes.includes(newCustomerType)) {
-        setCustomerTypes(prev => [...prev, newCustomerType]);
-        form.setValue('customerType', newCustomerType);
-        toast({ title: "Customer type added" });
-        setIsTypeDialogOpen(false);
-        setNewCustomerType('');
-    } else {
-        toast({ title: 'Error', description: 'Type is invalid or already exists.', variant: 'destructive'});
-    }
-  }
-  
-  const handleGstSearch = () => {
-    const gstin = form.getValues('gstinSearch');
-    toast({
-        title: 'Searching GSTIN...',
-        description: `Looking up details for ${gstin}. This is a placeholder.`
-    });
-    // Here you would typically make an API call
-  }
+  };
 
   return (
-    <Card className="max-w-4xl mx-auto shadow-none border-none">
-      <CardHeader className="flex flex-row items-start justify-between">
-        <div>
-            <CardTitle>Create a New Customer</CardTitle>
-            <CardDescription>Fill in the details below to add a new customer to your records.</CardDescription>
+    <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <div className="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className="h-6 w-6">
+                <rect width="256" height="256" fill="none"></rect>
+                <path d="M42.4,188.4,74.8,93.2a15.9,15.9,0,0,1,15.1-10.8h76.2a15.9,15.9,0,0,1,15.1,10.8l32.4,95.2a16,16,0,0,1-15.1,21.2H57.5A16,16,0,0,1,42.4,188.4Z" opacity="0.2"></path>
+                <path d="M42.4,188.4,74.8,93.2a15.9,15.9,0,0,1,15.1-10.8h76.2a15.9,15.9,0,0,1,15.1,10.8l32.4,95.2a16,16,0,0,1-15.1,21.2H57.5A16,16,0,0,1,42.4,188.4Z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"></path><line x1="128" y1="40" x2="128" y2="82.4" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"></line>
+            </svg>
+            {state === 'expanded' && <h1 className="text-xl font-bold">Hicks Inc.</h1>}
         </div>
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                    <Settings className="h-5 w-5" />
-                    <span className="sr-only">Toggle Fields</span>
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Show/Hide Optional Sections</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {Object.entries(optionalSectionsConfig).map(([key, label]) => (
-                    <DropdownMenuCheckboxItem
-                        key={key}
-                        checked={visibleSections[key]}
-                        onCheckedChange={(checked) => setVisibleSections(prev => ({ ...prev, [key]: !!checked }))}
-                    >
-                        {label}
-                    </DropdownMenuCheckboxItem>
-                ))}
-            </DropdownMenuContent>
-        </DropdownMenu>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            
-            {/* GST Search */}
-             <section>
-                <div className="flex items-end gap-2">
-                    <FormField control={form.control} name="gstinSearch" render={({ field }) => (
-                        <FormItem className="flex-1">
-                            <FormLabel>Search by GSTIN</FormLabel>
-                            <FormControl><Input placeholder="Enter 15-digit GSTIN to fetch details" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}/>
-                    <Button type="button" onClick={handleGstSearch}><Search className="mr-2 h-4 w-4" /> Search</Button>
-                </div>
-            </section>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/'} asChild>
+                <Link href="/" onClick={handleLinkClick}>
+                    <LayoutDashboard />
+                    <span>Dashboard</span>
+                </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+           <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Parties" isActive={pathname.startsWith('/parties')} asChild>
+                    <Link href="/parties" onClick={handleLinkClick}>
+                        <Users />
+                        <span>Parties</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+        </SidebarMenu>
+        
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-green-600 dark:text-green-500">Money In</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Sales Invoices" isActive={pathname.startsWith('/sales-invoices')} asChild>
+                    <Link href="/sales-invoices" onClick={handleLinkClick}>
+                        <FileText />
+                        <span>Sales Invoices</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Invoice Returns (Sales)" isActive={pathname.startsWith('/sales-invoice-returns')} asChild>
+                <Link href="/sales-invoice-returns" onClick={handleLinkClick}>
+                  <Undo2 />
+                  <span>Invoice Returns (Sales)</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+        
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-destructive">Money Out</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Purchase Bills" isActive={pathname.startsWith('/purchase-bills')} asChild>
+                 <Link href="/purchase-bills" onClick={handleLinkClick}>
+                  <Receipt />
+                  <span>Purchase Bills</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Invoice Returns (Purchase)">
+                <Redo2 />
+                <span>Invoice Returns (Purchase)</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
 
-            {/* Core Information */}
-            <section>
-                <h3 className="text-lg font-medium mb-2">Core Information</h3>
-                <Separator className="mb-4" />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="name" render={({ field }) => (
-                        <FormItem><FormLabel>Name (Mandatory)</FormLabel><FormControl><Input placeholder="Customer's Full Name or Company Name" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                    <FormField control={form.control} name="customerType" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Customer Type</FormLabel>
-                            <div className="flex items-start gap-2">
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                    <SelectContent>
-                                        {customerTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
-                                        <SelectItem value="add-new">
-                                            <span className="text-primary flex items-center gap-2"><PlusCircle className="h-4 w-4" /> Add New...</span>
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <Dialog open={isTypeDialogOpen} onOpenChange={setIsTypeDialogOpen}>
-                                    <DialogTrigger asChild>
-                                        <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={() => setIsTypeDialogOpen(true)}>
-                                            <PlusCircle className="h-4 w-4" />
-                                            <span className="sr-only">Add New Customer Type</span>
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
-                                        <DialogHeader>
-                                            <DialogTitle>Add New Customer Type</DialogTitle>
-                                        </DialogHeader>
-                                        <div className="grid gap-4 py-4">
-                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="new-type-name" className="text-right">Name</Label>
-                                                <Input id="new-type-name" value={newCustomerType} onChange={(e) => setNewCustomerType(e.target.value)} className="col-span-3" />
-                                            </div>
-                                        </div>
-                                        <DialogFooter>
-                                            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-                                            <Button onClick={handleAddNewCustomerType}>Add Type</Button>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>
-                            </div>
-                            <FormMessage />
-                        </FormItem>
-                    )}/>
-                    <FormField control={form.control} name="mobile" render={({ field }) => (
-                        <FormItem><FormLabel>Mobile</FormLabel><FormControl><Input type="tel" placeholder="9876543210" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                    <FormField control={form.control} name="openingBalance" render={({ field }) => (
-                        <FormItem><FormLabel>Opening Balance</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                    <FormField control={form.control} name="balanceType" render={({ field }) => (
-                        <FormItem className="space-y-3"><FormLabel>Balance Type</FormLabel><FormControl>
-                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex items-center space-x-4">
-                                <FormItem className="flex items-center space-x-2 space-y-0">
-                                    <FormControl><RadioGroupItem value="debit" /></FormControl>
-                                    <FormLabel className="font-normal flex items-baseline gap-1.5">
-                                        <span>Debit</span>
-                                        <span className="text-xs text-muted-foreground">(To collect)</span>
-                                    </FormLabel>
-                                </FormItem>
-                                <FormItem className="flex items-center space-x-2 space-y-0">
-                                    <FormControl><RadioGroupItem value="credit" /></FormControl>
-                                    <FormLabel className="font-normal flex items-baseline gap-1.5">
-                                        <span>Credit</span>
-                                        <span className="text-xs text-muted-foreground">(To Pay)</span>
-                                    </FormLabel>
-                                </FormItem>
-                            </RadioGroup>
-                        </FormControl><FormMessage /></FormItem>
-                    )}/>
-                </div>
-            </section>
-            
-            {/* Contact Details */}
-            {visibleSections.contactDetails && <section>
-                <h3 className="text-lg font-medium mb-2">Contact Details</h3>
-                <Separator className="mb-4" />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="mailingName" render={({ field }) => (
-                        <FormItem><FormLabel>Mailing Name</FormLabel><FormControl><Input placeholder="Name for correspondence" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                    <FormField control={form.control} name="email" render={({ field }) => (
-                        <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" placeholder="customer@example.com" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                     <FormField control={form.control} name="address" render={({ field }) => (
-                        <FormItem className="md:col-span-2"><FormLabel>Address</FormLabel><FormControl><Textarea placeholder="Full address" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                    <FormField control={form.control} name="state" render={({ field }) => (
-                        <FormItem><FormLabel>State</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger></FormControl><SelectContent>{indianStates.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
-                    )}/>
-                    <FormField control={form.control} name="pincode" render={({ field }) => (
-                        <FormItem><FormLabel>Pincode</FormLabel><FormControl><Input placeholder="e.g. 400001" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                     <FormField control={form.control} name="country" render={({ field }) => (
-                        <FormItem><FormLabel>Country</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                </div>
-            </section>}
+        <SidebarGroup>
+          <SidebarGroupLabel>Stock</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Stock List" isActive={pathname.startsWith('/stock-list')} asChild>
+                <Link href="/stock-list" onClick={handleLinkClick}>
+                    <LayoutGrid />
+                    <span>Stock List</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Add Product" isActive={pathname.startsWith('/products/new')} asChild>
+                <Link href="/products/new" onClick={handleLinkClick}>
+                    <PackagePlus />
+                    <span>Add Product</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Stock Purchase" isActive={pathname.startsWith('/stock-purchase')} asChild>
+                <Link href="/stock-purchase" onClick={handleLinkClick}>
+                    <Briefcase />
+                    <span>Stock Purchase</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Category and Attributes" isActive={pathname.startsWith('/attributes')} asChild>
+                <Link href="/attributes" onClick={handleLinkClick}>
+                  <Tags />
+                  <span>Category and Attributes</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="UOM" isActive={pathname.startsWith('/uom')} asChild>
+                 <Link href="/uom" onClick={handleLinkClick}>
+                    <Box />
+                    <span>UOM</span>
+                 </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
 
-            {/* Tax & Compliance */}
-            {visibleSections.taxCompliance && <section>
-                <h3 className="text-lg font-medium mb-2">Tax & Compliance</h3>
-                <Separator className="mb-4" />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     <FormField control={form.control} name="pan" render={({ field }) => (
-                        <FormItem><FormLabel>PAN</FormLabel><FormControl><Input placeholder="10-digit PAN" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                    <FormField control={form.control} name="tdsApplicable" render={({ field }) => (
-                        <FormItem className="flex items-center space-x-2 pt-8"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel>TDS Applicable</FormLabel></FormItem>
-                    )}/>
-                </div>
-            </section>}
+        <SidebarGroup>
+          <SidebarGroupLabel>Accounts &amp; Books</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Groups & Ledgers" isActive={pathname.startsWith('/my-accounts')} asChild>
+                <Link href="/my-accounts" onClick={handleLinkClick}>
+                    <Wallet />
+                    <span>Groups &amp; Ledgers</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="All Entries" isActive={pathname.startsWith('/journal-entries')} asChild>
+                <Link href="/journal-entries" onClick={handleLinkClick}>
+                    <BookOpen />
+                    <span>All Entries</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
 
-            {/* Financial Controls */}
-            {visibleSections.financialControls && <section>
-                <h3 className="text-lg font-medium mb-2">Financial Controls</h3>
-                <Separator className="mb-4" />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="creditLimit" render={({ field }) => (
-                        <FormItem><FormLabel>Credit Limit</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                    <FormField control={form.control} name="creditPeriod" render={({ field }) => (
-                        <FormItem><FormLabel>Credit Period (Days)</FormLabel><FormControl><Input type="number" placeholder="e.g. 30" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                    <FormField control={form.control} name="maintainBillWise" render={({ field }) => (
-                        <FormItem className="flex items-center space-x-2 pt-8"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                          <FormLabel>Maintain Bill-wise Details</FormLabel>
-                        </FormItem>
-                    )}/>
-                </div>
-            </section>}
+        <SidebarGroup>
+          <SidebarGroupLabel>Reports</SidebarGroupLabel>
+          <SidebarMenu>
+             <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Profit &amp; Loss" isActive={pathname.startsWith('/profit-loss')} asChild>
+                <Link href="/profit-loss" onClick={handleLinkClick}>
+                    <TrendingUp />
+                    <span>Profit &amp; Loss</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Balance Sheet" isActive={pathname.startsWith('/balance-sheet')} asChild>
+                <Link href="/balance-sheet" onClick={handleLinkClick}>
+                    <Scale />
+                    <span>Balance Sheet</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+                <SidebarMenuButton tooltip="GST Summary" isActive={pathname.startsWith('/gst-summary')} asChild>
+                    <Link href="/gst-summary" onClick={handleLinkClick}>
+                        <Percent />
+                        <span>GST Summary</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+                <SidebarMenuButton tooltip="GST Reports" isActive={pathname.startsWith('/gst-reports')} asChild>
+                    <Link href="/gst-reports" onClick={handleLinkClick}>
+                        <FileSpreadsheet />
+                        <span>GST Reports</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Invoice Overviews">
+                <BookOpen />
+                <span>Invoice Overviews</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
 
-            {/* Banking Details */}
-            {visibleSections.bankingDetails && <section>
-                <h3 className="text-lg font-medium mb-2">Banking Details</h3>
-                <Separator className="mb-4" />
-                {fields.map((field, index) => (
-                    <div key={field.id} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_auto] gap-4 mb-4 items-end">
-                        <FormField control={form.control} name={`bankAccounts.${index}.bankName`} render={({ field }) => (
-                            <FormItem><FormLabel>Bank Name</FormLabel><FormControl><Input placeholder="e.g. HDFC Bank" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                        <FormField control={form.control} name={`bankAccounts.${index}.accountNumber`} render={({ field }) => (
-                            <FormItem><FormLabel>Account Number</FormLabel><FormControl><Input placeholder="Bank account number" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                        <FormField control={form.control} name={`bankAccounts.${index}.ifscCode`} render={({ field }) => (
-                            <FormItem><FormLabel>IFSC Code</FormLabel><FormControl><Input placeholder="e.g. HDFC0000001" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => remove(index)} disabled={fields.length <= 1}>
-                           <Trash2 className="h-4 w-4" />
-                        </Button>
-                    </div>
-                ))}
-                 <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-2"
-                    onClick={() => append({ bankName: '', accountNumber: '', ifscCode: '' })}
-                >
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Another Bank
-                </Button>
-            </section>}
-
-             {/* Additional Fields */}
-            {visibleSections.additionalFields && <section>
-                <h3 className="text-lg font-medium mb-2">Additional Fields</h3>
-                <Separator className="mb-4" />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="contactPerson" render={({ field }) => (
-                        <FormItem><FormLabel>Contact Person</FormLabel><FormControl><Input placeholder="Name of contact" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                     <FormField control={form.control} name="placeOfSupply" render={({ field }) => (
-                        <FormItem><FormLabel>Place of Supply</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger></FormControl><SelectContent>{indianStates.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
-                    )}/>
-                    <FormField control={form.control} name="shipToAddress" render={({ field }) => (
-                        <FormItem className="md:col-span-2"><FormLabel>Ship-to Address</FormLabel><FormControl><Textarea placeholder="Optional delivery address" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
+        <SidebarGroup>
+          <SidebarGroupLabel>GST Filing</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton tooltip="GSTR-1 Filing" isActive={pathname.startsWith('/gst-filing/gstr1')} asChild>
+                    <Link href="/gst-filing/gstr1" onClick={handleLinkClick}>
+                        <Send />
+                        <span>GSTR-1 Filing</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+      </SidebarContent>
+      
+      <SidebarFooter>
+        <SidebarGroup>
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton tooltip="Company Settings" isActive={pathname.startsWith('/settings')} asChild>
+                        <Link href="/settings" onClick={handleLinkClick}>
+                            <Settings />
+                            <span>Company Settings</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton tooltip="User Roles" isActive={pathname.startsWith('/settings/user-roles')} asChild>
+                        <Link href="/settings/user-roles" onClick={handleLinkClick}>
+                            <Shield />
+                            <span>User Roles</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </SidebarGroup>
+        <SidebarSeparator />
+        <div className="flex items-center gap-2 p-2.5">
+            <Avatar className="h-8 w-8">
+                <AvatarImage src="https://placehold.co/40x40.png" alt="@shadcn" data-ai-hint="profile picture" />
+                <AvatarFallback>JD</AvatarFallback>
+            </Avatar>
+            {state === 'expanded' && (
+                <div>
+                    <p className="text-sm font-semibold">Jane Doe</p>
+                    <p className="text-xs text-muted-foreground">jane.doe@hicks.inc</p>
                 </div>
-            </section>}
-            
-            <div className="flex justify-end pt-4">
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                Save Customer
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+            )}
+        </div>
+      </SidebarFooter>
+    </Sidebar>
   );
 }
