@@ -264,10 +264,10 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
                             </TableCell>
                             <TableCell className="text-right font-mono">{categoryTotals.openingQty}</TableCell>
                             <TableCell className="text-right font-mono">{formatCurrency(categoryTotals.openingAmt, 'INR')}</TableCell>
-                            <TableCell className="text-right font-mono bg-green-100 dark:bg-green-900/30">{categoryTotals.importQty}</TableCell>
-                            <TableCell className="text-right font-mono bg-green-100 dark:bg-green-900/30">{formatCurrency(categoryTotals.importAmt, 'INR')}</TableCell>
-                            <TableCell className="text-right font-mono bg-red-100 dark:bg-red-900/30">{categoryTotals.exportQty}</TableCell>
-                            <TableCell className="text-right font-mono bg-red-100 dark:bg-red-900/30">{formatCurrency(categoryTotals.exportAmt, 'INR')}</TableCell>
+                            <TableCell className="text-right font-mono bg-green-50 dark:bg-green-900/30 dark:hover:bg-green-900/50">{categoryTotals.importQty}</TableCell>
+                            <TableCell className="text-right font-mono bg-green-50 dark:bg-green-900/30 dark:hover:bg-green-900/50">{formatCurrency(categoryTotals.importAmt, 'INR')}</TableCell>
+                            <TableCell className="text-right font-mono bg-red-50 dark:bg-red-900/30 dark:hover:bg-red-900/50">{categoryTotals.exportQty}</TableCell>
+                            <TableCell className="text-right font-mono bg-red-50 dark:bg-red-900/30 dark:hover:bg-red-900/50">{formatCurrency(categoryTotals.exportAmt, 'INR')}</TableCell>
                             <TableCell className="text-right font-mono">{categoryTotals.closingQty}</TableCell>
                             <TableCell className="text-right font-mono">{formatCurrency(categoryTotals.closingAmt, 'INR')}</TableCell>
                         </TableRow>
@@ -279,10 +279,10 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
                                 <TableCell />
                                 <TableCell className="text-right font-mono">{row.openingStock.quantity}</TableCell>
                                 <TableCell className="text-right font-mono">{formatCurrency(row.openingStock.amount, 'INR')}</TableCell>
-                                <TableCell className="text-right font-mono bg-green-100 dark:bg-green-900/30">{row.importInPeriod.quantity}</TableCell>
-                                <TableCell className="text-right font-mono bg-green-100 dark:bg-green-900/30">{formatCurrency(row.importInPeriod.amount, 'INR')}</TableCell>
-                                <TableCell className="text-right font-mono bg-red-100 dark:bg-red-900/30">{row.exportInPeriod.quantity}</TableCell>
-                                <TableCell className="text-right font-mono bg-red-100 dark:bg-red-900/30">{formatCurrency(row.exportInPeriod.amount, 'INR')}</TableCell>
+                                <TableCell className="text-right font-mono bg-green-50 dark:bg-green-900/30 dark:hover:bg-green-900/50">{row.importInPeriod.quantity}</TableCell>
+                                <TableCell className="text-right font-mono bg-green-50 dark:bg-green-900/30 dark:hover:bg-green-900/50">{formatCurrency(row.importInPeriod.amount, 'INR')}</TableCell>
+                                <TableCell className="text-right font-mono bg-red-50 dark:bg-red-900/30 dark:hover:bg-red-900/50">{row.exportInPeriod.quantity}</TableCell>
+                                <TableCell className="text-right font-mono bg-red-50 dark:bg-red-900/30 dark:hover:bg-red-900/50">{formatCurrency(row.exportInPeriod.amount, 'INR')}</TableCell>
                                 <TableCell className="text-right font-mono">{row.closingStock.quantity}</TableCell>
                                 <TableCell className="text-right font-mono">{formatCurrency(row.closingStock.amount, 'INR')}</TableCell>
                             </TableRow>
@@ -296,10 +296,10 @@ export function StockSummaryReport({ data }: { data: StockSummaryRow[] }) {
                     <TableCell colSpan={4} className="text-right font-bold">Grand Total :</TableCell>
                     <TableCell className="text-right font-bold font-mono">{grandTotals.openingQty}</TableCell>
                     <TableCell className="text-right font-bold font-mono">{formatCurrency(grandTotals.openingAmt, 'INR')}</TableCell>
-                    <TableCell className="text-right font-bold font-mono bg-green-100 dark:bg-green-900/30">{grandTotals.importQty}</TableCell>
-                    <TableCell className="text-right font-bold font-mono bg-green-100 dark:bg-green-900/30">{formatCurrency(grandTotals.importAmt, 'INR')}</TableCell>
-                    <TableCell className="text-right font-bold font-mono bg-red-100 dark:bg-red-900/30">{grandTotals.exportQty}</TableCell>
-                    <TableCell className="text-right font-bold font-mono bg-red-100 dark:bg-red-900/30">{formatCurrency(grandTotals.exportAmt, 'INR')}</TableCell>
+                    <TableCell className="text-right font-bold font-mono bg-green-50 dark:bg-green-900/30 dark:hover:bg-green-900/50">{grandTotals.importQty}</TableCell>
+                    <TableCell className="text-right font-bold font-mono bg-green-50 dark:bg-green-900/30 dark:hover:bg-green-900/50">{formatCurrency(grandTotals.importAmt, 'INR')}</TableCell>
+                    <TableCell className="text-right font-bold font-mono bg-red-50 dark:bg-red-900/30 dark:hover:bg-red-900/50">{grandTotals.exportQty}</TableCell>
+                    <TableCell className="text-right font-bold font-mono bg-red-50 dark:bg-red-900/30 dark:hover:bg-red-900/50">{formatCurrency(grandTotals.exportAmt, 'INR')}</TableCell>
                     <TableCell className="text-right font-bold font-mono">{grandTotals.closingQty}</TableCell>
                     <TableCell className="text-right font-bold font-mono">{formatCurrency(grandTotals.closingAmt, 'INR')}</TableCell>
                 </TableRow>
