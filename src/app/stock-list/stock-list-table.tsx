@@ -48,6 +48,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 
 const ALL_COLUMNS = [
     { id: 'productName', label: 'Product Name' },
@@ -69,7 +70,7 @@ const MobileStockCard = ({ item }: { item: StockItem }) => (
     <Card>
         <CardHeader className="p-4 flex flex-row items-center justify-between">
             <div>
-                <CardTitle className="text-base">{item.productName}</CardTitle>
+                <CardTitle className="text-base"><Link href={`/stock-history?product=${encodeURIComponent(item.productName)}`} className="hover:underline">{item.productName}</Link></CardTitle>
                 <p className="text-sm text-muted-foreground">{item.sku}</p>
             </div>
             <DropdownMenu>
@@ -308,7 +309,7 @@ export function StockListTable({ data }: { data: StockItem[] }) {
                                     <TableCell key={column.id} className={cn(density === 'compact' && 'py-1 px-2')}>
                                         {(() => {
                                             switch (column.id) {
-                                                case 'productName': return <span className="font-medium">{item.productName}</span>;
+                                                case 'productName': return <Link href={`/stock-history?product=${encodeURIComponent(item.productName)}`} className="font-medium hover:underline">{item.productName}</Link>;
                                                 case 'sku': return item.sku;
                                                 case 'category': return item.category;
                                                 case 'stockInHand': return <span className="text-right font-semibold block">{item.stockInHand} {item.uom}</span>;
@@ -349,3 +350,4 @@ export function StockListTable({ data }: { data: StockItem[] }) {
     );
 }
 
+    
