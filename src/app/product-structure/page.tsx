@@ -2,6 +2,7 @@
 'use client';
 
 import * as React from 'react';
+import { useForm } from 'react-hook-form';
 import {
   Card,
   CardContent,
@@ -62,7 +63,7 @@ import type { Category, Attribute, AttributeType } from '@/lib/types';
 import { initialCategoriesData } from '@/lib/categories';
 import { initialAttributes } from '@/lib/attributes';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { FormControl } from '@/components/ui/form';
+import { Form, FormControl } from '@/components/ui/form';
 
 
 // Dummy data for product counts
@@ -300,39 +301,51 @@ const AttributeDialog = ({
   selectedCategory: Category | null;
   existingAttributes: Attribute[];
 }) => {
-  const [name, setName] = React.useState('');
-  const [type, setType] = React.useState<AttributeType>('text');
-  const [options, setOptions] = React.useState('');
-  const [isGlobal, setIsGlobal] = React.useState(false);
-  const [assigned, setAssigned] = React.useState<string[]>([]);
+  const form = useForm({
+    defaultValues: {
+      name: '',
+      type: 'text' as AttributeType,
+      options: '',
+      isGlobal: false,
+      assignedCategories: [] as string[],
+    }
+  });
+
+  const { control, handleSubmit, reset, watch, setValue } = form;
+  const name = watch('name');
+
   const [openCombobox, setOpenCombobox] = React.useState(false);
 
   React.useEffect(() => {
     if (open) {
       if (editingAttribute) {
-        setName(editingAttribute.name);
-        setType(editingAttribute.type);
-        setOptions(editingAttribute.options?.join(', ') || '');
-        setIsGlobal(editingAttribute.isGlobal);
-        setAssigned(editingAttribute.assignedCategories);
+        reset({
+          name: editingAttribute.name,
+          type: editingAttribute.type,
+          options: editingAttribute.options?.join(', ') || '',
+          isGlobal: editingAttribute.isGlobal,
+          assignedCategories: editingAttribute.assignedCategories,
+        });
       } else {
-        setName('');
-        setType('text');
-        setOptions('');
-        setIsGlobal(false);
-        setAssigned(selectedCategory ? [selectedCategory.id] : []);
+        reset({
+          name: '',
+          type: 'text',
+          options: '',
+          isGlobal: false,
+          assignedCategories: selectedCategory ? [selectedCategory.id] : [],
+        });
       }
     }
-  }, [open, editingAttribute, selectedCategory]);
+  }, [open, editingAttribute, selectedCategory, reset]);
 
-  const handleSave = () => {
+  const handleSave = (data: any) => {
     onSave(
       {
-        name,
-        type,
-        options: type === 'dropdown' ? options.split(',').map(o => o.trim()).filter(Boolean) : undefined,
-        isGlobal,
-        assignedCategories: isGlobal ? [] : assigned,
+        name: data.name,
+        type: data.type,
+        options: data.type === 'dropdown' ? data.options.split(',').map((o:string) => o.trim()).filter(Boolean) : undefined,
+        isGlobal: data.isGlobal,
+        assignedCategories: data.isGlobal ? [] : data.assignedCategories,
       },
       editingAttribute?.id
     );
@@ -353,6 +366,8 @@ const AttributeDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <Form {...form}>
+        <form onSubmit={handleSubmit(handleSave)}>
         <DialogHeader>
           <DialogTitle>{dialogTitle}</DialogTitle>
         </DialogHeader>
@@ -366,7 +381,7 @@ const AttributeDialog = ({
                             id="attr-name"
                             placeholder="e.g., Color"
                             value={name}
-                            onChange={e => setName(e.target.value)}
+                            onChange={e => setValue('name', e.target.value)}
                             onFocus={() => setOpenCombobox(true)}
                         />
                     </FormControl>
@@ -381,7 +396,7 @@ const AttributeDialog = ({
                                         key={attr}
                                         value={attr}
                                         onSelect={(currentValue) => {
-                                            setName(currentValue);
+                                            setValue('name', currentValue);
                                             setOpenCombobox(false);
                                         }}
                                     >
@@ -406,7 +421,7 @@ const AttributeDialog = ({
           </div>
           <div className="space-y-2">
             <Label htmlFor="attr-type">Attribute Type</Label>
-            <Select value={type} onValueChange={(v: AttributeType) => setType(v)}>
+            <Select value={watch('type')} onValueChange={(v: AttributeType) => setValue('type', v)}>
               <SelectTrigger id="attr-type"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="text">Text</SelectItem>
@@ -416,10 +431,10 @@ const AttributeDialog = ({
               </SelectContent>
             </Select>
           </div>
-          {type === 'dropdown' && (
+          {watch('type') === 'dropdown' && (
             <div className="space-y-2">
               <Label htmlFor="attr-options">Options</Label>
-              <Input id="attr-options" placeholder="Enter comma-separated values" value={options} onChange={e => setOptions(e.target.value)} />
+              <Input id="attr-options" placeholder="Enter comma-separated values" {...form.register('options')} />
             </div>
           )}
           <Separator />
@@ -430,9 +445,9 @@ const AttributeDialog = ({
                 <Label htmlFor="global-toggle">Global Attribute</Label>
                 <p className="text-xs text-muted-foreground">Apply this attribute to all categories.</p>
               </div>
-              <Switch id="global-toggle" checked={isGlobal} onCheckedChange={setIsGlobal} />
+              <Switch id="global-toggle" checked={watch('isGlobal')} onCheckedChange={(checked) => setValue('isGlobal', checked)} />
             </div>
-            {!isGlobal && (
+            {!watch('isGlobal') && (
               <div className="space-y-2">
                 <Label>Assign to Specific Categories</Label>
                 <Input disabled placeholder="Multi-select dropdown would be here" />
@@ -446,9 +461,11 @@ const AttributeDialog = ({
           </div>
         </div>
         <DialogFooter>
-          <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-          <Button onClick={handleSave}>Save Attribute</Button>
+          <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
+          <Button type="submit">Save Attribute</Button>
         </DialogFooter>
+        </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
