@@ -185,7 +185,7 @@ export function AddProductForm() {
   const [imagePreviews, setImagePreviews] = React.useState<string[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   
-  const [locations, setLocations] = React.useState(['Main Warehouse', 'Shop Floor', 'Mumbai Godown']);
+  const [locations, setLocations] = React.useState(['Main Warehouse', 'Store', 'Shop']);
   const [isLocationDialogOpen, setIsLocationDialogOpen] = React.useState(false);
   const [newLocation, setNewLocation] = React.useState('');
 

@@ -16,7 +16,7 @@ const suppliers = ['Jemima Hoffman', 'Amir Vega', 'Quyn Erickson', 'Carla Bender
 const clients = ['Troy Walker', 'Ciaran Buck', 'Ruth Miles', 'Walking Customer', 'Reed Montoya'];
 const transactionTypesIn: ('Purchase' | 'Sales Return')[] = ['Purchase', 'Sales Return'];
 const transactionTypesOut: ('Invoice' | 'Purchase Return' | 'Stock Adjustment')[] = ['Invoice', 'Purchase Return', 'Stock Adjustment'];
-const locations = ['Main Warehouse', 'Shop Floor', 'Mumbai Godown'];
+const locations = ['Main Warehouse', 'Store', 'Shop'];
 
 
 const getRandomElement = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
