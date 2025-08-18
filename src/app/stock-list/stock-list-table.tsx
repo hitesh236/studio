@@ -38,7 +38,8 @@ import {
   Tag,
   X,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  MapPin
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -291,7 +292,7 @@ export function StockListTable({ data }: { data: StockItem[] }) {
                              return <div key={filterId} className="flex items-center gap-2"><DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" className="w-auto"><Tag className="mr-2 h-4 w-4" />Category<Separator orientation="vertical" className="mx-2 h-4 bg-border" />{filterValues.categories.length > 0 ? <Badge variant="secondary" className="rounded-sm px-1 font-normal">{filterValues.categories.length} selected</Badge> : <span className="text-muted-foreground">Any</span>}</Button></DropdownMenuTrigger><DropdownMenuContent className="w-56"><DropdownMenuLabel>Filter by Category</DropdownMenuLabel><DropdownMenuSeparator />{uniqueCategories.map(cat => <DropdownMenuCheckboxItem key={cat} checked={filterValues.categories.includes(cat)} onCheckedChange={checked => setFilterValues(prev => ({ ...prev, categories: checked ? [...prev.categories, cat] : prev.categories.filter(c => c !== cat) }))}>{cat}</DropdownMenuCheckboxItem>)}</DropdownMenuContent></DropdownMenu><Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button></div>;
                         }
                         if (filterId === 'location') {
-                            return <div key={filterId} className="flex items-center gap-2"><DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" className="w-auto"><Tag className="mr-2 h-4 w-4" />Location<Separator orientation="vertical" className="mx-2 h-4 bg-border" />{filterValues.locations.length > 0 ? <Badge variant="secondary" className="rounded-sm px-1 font-normal">{filterValues.locations.length} selected</Badge> : <span className="text-muted-foreground">Any</span>}</Button></DropdownMenuTrigger><DropdownMenuContent className="w-56"><DropdownMenuLabel>Filter by Location</DropdownMenuLabel><DropdownMenuSeparator />{uniqueLocations.map(loc => <DropdownMenuCheckboxItem key={loc} checked={filterValues.locations.includes(loc)} onCheckedChange={checked => setFilterValues(prev => ({ ...prev, locations: checked ? [...prev.locations, loc] : prev.locations.filter(l => l !== loc) }))}>{loc}</DropdownMenuCheckboxItem>)}</DropdownMenuContent></DropdownMenu><Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button></div>;
+                            return <div key={filterId} className="flex items-center gap-2"><DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" className="w-auto"><MapPin className="mr-2 h-4 w-4" />Location<Separator orientation="vertical" className="mx-2 h-4 bg-border" />{filterValues.locations.length > 0 ? <Badge variant="secondary" className="rounded-sm px-1 font-normal">{filterValues.locations.length} selected</Badge> : <span className="text-muted-foreground">Any</span>}</Button></DropdownMenuTrigger><DropdownMenuContent className="w-56"><DropdownMenuLabel>Filter by Location</DropdownMenuLabel><DropdownMenuSeparator />{uniqueLocations.map(loc => <DropdownMenuCheckboxItem key={loc} checked={filterValues.locations.includes(loc)} onCheckedChange={checked => setFilterValues(prev => ({ ...prev, locations: checked ? [...prev.locations, loc] : prev.locations.filter(l => l !== loc) }))}>{loc}</DropdownMenuCheckboxItem>)}</DropdownMenuContent></DropdownMenu><Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button></div>;
                         }
                         return null;
                     })}
@@ -349,5 +350,3 @@ export function StockListTable({ data }: { data: StockItem[] }) {
         </div>
     );
 }
-
-    
