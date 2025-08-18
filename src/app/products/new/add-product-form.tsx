@@ -389,12 +389,21 @@ export function AddProductForm() {
 
   const generateSku = () => {
     const productName = form.getValues('productName');
+    const categoryPath = form.getValues('categoryPath');
+    
     if (!productName) {
         toast({ title: 'Product Name required', description: 'Please enter a product name first to generate an SKU.', variant: 'destructive' });
         return;
     }
-    // Generate SKU: First 4 letters of name, uppercase, plus random 4 digits
-    const sku = `${productName.substring(0, 4).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    if (categoryPath.length === 0) {
+        toast({ title: 'Category required', description: 'Please select a category to generate an SKU.', variant: 'destructive' });
+        return;
+    }
+    
+    const category = categoryPath[categoryPath.length - 1].substring(0, 4).toUpperCase();
+    const namePart = productName.substring(0, 4).toUpperCase();
+    
+    const sku = `${category}-${namePart}-${Math.floor(1000 + Math.random() * 9000)}`;
     form.setValue('sku', sku, { shouldValidate: true });
     toast({ title: 'SKU Generated!', description: `New SKU: ${sku}`});
   };
@@ -537,7 +546,7 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
     }
 
     return (
-        <FormDescription>
+        <FormDescription className="text-xs">
             Base: {formatCurrency(basePrice, 'INR')} + GST: {formatCurrency(gstAmount, 'INR')}
         </FormDescription>
     );
@@ -581,30 +590,10 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                         <FormField name="productName" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Product Name</FormLabel><FormControl><Input placeholder="e.g., Wireless Mouse" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
-                        <FormField name="purchasePrice" control={form.control} render={({ field }) => (
+                         <FormField name="purchasePrice" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Purchase Price</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                     </div>
-                     <FormField name="sku" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>SKU</FormLabel>
-                            <div className="relative">
-                                <FormControl>
-                                    <Input placeholder="Stock Keeping Unit" className="pr-10" {...field} />
-                                </FormControl>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={generateSku}
-                                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary"
-                                >
-                                    <Sparkles className="h-4 w-4" />
-                                </Button>
-                            </div>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
                     <FormItem>
                         <FormLabel>Category</FormLabel>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -691,6 +680,26 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                                 )} />
                             </div>
                         </div>
+                         <FormField name="sku" control={form.control} render={({ field }) => (
+                            <FormItem className="md:col-span-2">
+                                <FormLabel>SKU</FormLabel>
+                                <div className="relative">
+                                    <FormControl>
+                                        <Input placeholder="Stock Keeping Unit" className="pr-10" {...field} />
+                                    </FormControl>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={generateSku}
+                                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary"
+                                    >
+                                        <Sparkles className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
                     </div>
                 </CardContent>
             </Card>
@@ -815,6 +824,43 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                 </CardContent>
             </Card>
 
+            {visibleSections.organization && (
+                <Card>
+                    <CardHeader><CardTitle className="text-[20px] text-secondary">Organization</CardTitle></CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField name="brand" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Brand</FormLabel><FormControl><Input placeholder="e.g., Logitech" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField name="model" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Model</FormLabel><FormControl><Input placeholder="e.g., MX Master 3S" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField name="barcode" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Barcode</FormLabel>
+                                <div className="relative">
+                                    <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <FormControl><Input placeholder="Scan or enter barcode" className="pl-10" {...field} /></FormControl>
+                                </div>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                        <FormField name="alternateName" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Alternate Name</FormLabel><FormControl><Input placeholder="Optional alternate name" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField
+                        control={form.control}
+                        name="tags"
+                        render={({ field }) => (
+                            <div className="md:col-span-2">
+                            <FormLabel>Tags/Keywords</FormLabel>
+                            <TagsInput field={field} />
+                            </div>
+                        )}
+                        />
+                    </CardContent>
+                </Card>
+            )}
+
             {displayedAttributes.length > 0 && <Card>
                 <CardHeader>
                     <CardTitle className="text-[20px] text-secondary">Attributes</CardTitle>
@@ -866,43 +912,6 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                 })}
                 </CardContent>
             </Card>}
-
-            {visibleSections.organization && (
-                <Card>
-                    <CardHeader><CardTitle className="text-[20px] text-secondary">Organization</CardTitle></CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField name="brand" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Brand</FormLabel><FormControl><Input placeholder="e.g., Logitech" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField name="model" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Model</FormLabel><FormControl><Input placeholder="e.g., MX Master 3S" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField name="barcode" control={form.control} render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Barcode</FormLabel>
-                                <div className="relative">
-                                    <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <FormControl><Input placeholder="Scan or enter barcode" className="pl-10" {...field} /></FormControl>
-                                </div>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                        <FormField name="alternateName" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Alternate Name</FormLabel><FormControl><Input placeholder="Optional alternate name" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField
-                        control={form.control}
-                        name="tags"
-                        render={({ field }) => (
-                            <div className="md:col-span-2">
-                            <FormLabel>Tags/Keywords</FormLabel>
-                            <TagsInput field={field} />
-                            </div>
-                        )}
-                        />
-                    </CardContent>
-                </Card>
-            )}
 
             {visibleSections.ecommerce && <Card>
                 <CardHeader>
@@ -1010,3 +1019,5 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
     </div>
   );
 }
+
+    
