@@ -67,7 +67,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { Checkbox } from '@/components/ui/checkbox';
 import { initialCategoriesData } from '@/lib/categories';
 import { initialAttributes } from '@/lib/attributes';
-import type { Category, Attribute } from '@/lib/types';
+import type { Category, Attribute, AttributeType } from '@/lib/types';
 import { initialSimpleUnits, initialCompoundUnits, type SimpleUnit, type CompoundUnit } from '@/lib/uom-data';
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
@@ -182,12 +182,53 @@ const getAttributesForCategory = (categoryId: string | null, categories: Categor
 };
 
 const optionalSectionsConfig = {
-    attributes: 'Attributes',
     organization: 'Organization',
+    attributes: 'Attributes',
     ecommerce: 'E-commerce Details'
 };
 
 const predefinedTags = ['new-arrival', 'best-seller', 'featured', 'on-sale', 'clearance', 'eco-friendly', 'premium'];
+
+const AttributeCreationDialog = ({ open, onOpenChange, onSave }: { open: boolean, onOpenChange: (open: boolean) => void, onSave: (data: Omit<Attribute, 'id'>) => void }) => {
+    const [name, setName] = React.useState('');
+    const [type, setType] = React.useState<AttributeType>('text');
+    const [options, setOptions] = React.useState('');
+
+    const handleSave = () => {
+        if (!name.trim()) return;
+        const attributeData: Omit<Attribute, 'id'> = {
+            name: name.trim(),
+            type,
+            isGlobal: false,
+            assignedCategories: [], // This will be set in the main component
+            ...(type === 'dropdown' && { options: options.split(',').map(o => o.trim()).filter(Boolean) }),
+        };
+        onSave(attributeData);
+        onOpenChange(false);
+        setName('');
+        setType('text');
+        setOptions('');
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Add New Attribute</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <div className="space-y-2"><Label>Attribute Name</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
+                    <div className="space-y-2"><Label>Attribute Type</Label><Select onValueChange={(v) => setType(v as AttributeType)} value={type}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="text">Text</SelectItem><SelectItem value="dropdown">Dropdown</SelectItem><SelectItem value="checkbox">Checkbox</SelectItem><SelectItem value="date">Date</SelectItem></SelectContent></Select></div>
+                    {type === 'dropdown' && <div className="space-y-2"><Label>Options (comma-separated)</Label><Input value={options} onChange={e => setOptions(e.target.value)} /></div>}
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                    <Button onClick={handleSave}>Save Attribute</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
 
 
 export function AddProductForm() {
@@ -208,7 +249,7 @@ export function AddProductForm() {
 
   const [visibleSections, setVisibleSections] = React.useState<Record<string, boolean>>({
     organization: false,
-    attributes: false,
+    attributes: true, // Show attributes by default
     ecommerce: false,
   });
   
@@ -216,6 +257,9 @@ export function AddProductForm() {
   const [dragOverImageIndex, setDragOverImageIndex] = React.useState<number | null>(null);
 
   const [showSecondaryUom, setShowSecondaryUom] = React.useState(false);
+
+  const [allAttributes, setAllAttributes] = React.useState<Attribute[]>(initialAttributes);
+  const [isAttributeDialogOpen, setIsAttributeDialogOpen] = React.useState(false);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
@@ -268,8 +312,8 @@ export function AddProductForm() {
   const watchedIncludesGst = form.watch('sellingPriceIncludesGst');
 
   const displayedAttributes = React.useMemo(
-    () => getAttributesForCategory(lastSelectedCategoryId, initialCategoriesData, initialAttributes),
-    [lastSelectedCategoryId]
+    () => getAttributesForCategory(lastSelectedCategoryId, initialCategoriesData, allAttributes),
+    [lastSelectedCategoryId, allAttributes]
   );
   
   const secondaryUomOptions = React.useMemo(() => {
@@ -334,9 +378,23 @@ export function AddProductForm() {
   });
   
   const attributeMap = React.useMemo(
-    () => new Map(initialAttributes.map(attr => [attr.id, attr])), 
-    []
+    () => new Map(allAttributes.map(attr => [attr.id, attr])), 
+    [allAttributes]
   );
+
+  const handleSaveAttribute = (attributeData: Omit<Attribute, 'id'>) => {
+    if (!lastSelectedCategoryId) {
+        toast({ title: 'No Category Selected', description: 'Please select a category to assign this attribute to.', variant: 'destructive'});
+        return;
+    }
+    const newAttribute: Attribute = {
+        ...attributeData,
+        id: `attr-${Date.now()}`,
+        assignedCategories: [lastSelectedCategoryId], // Assign to the current category
+    };
+    setAllAttributes(prev => [...prev, newAttribute]);
+    toast({ title: 'Attribute Added', description: `"${newAttribute.name}" has been created and assigned.`});
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -596,7 +654,7 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
   return (
     <div className="space-y-6">
         <div className="flex justify-between items-center">
-            <h1 className="text-xl text-primary font-semibold">Create New Product</h1>
+            <h1 className="text-xl text-secondary font-semibold">Create New Product</h1>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
@@ -865,10 +923,15 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                 </CardContent>
             </Card>
             
-            {visibleSections.attributes && displayedAttributes.length > 0 && <Card>
-                <CardHeader>
-                    <CardTitle className="text-[20px] text-secondary">Attributes</CardTitle>
-                    <CardDescription>Specify attributes for the selected category.</CardDescription>
+            {visibleSections.attributes && <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle className="text-[20px] text-secondary">Attributes</CardTitle>
+                        <CardDescription>Specify attributes for the selected category.</CardDescription>
+                    </div>
+                    <Button type="button" variant="outline" onClick={() => setIsAttributeDialogOpen(true)}>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add New Attribute
+                    </Button>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {dynamicAttributeFields.map((field, index) => {
@@ -902,6 +965,22 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                                         <FormControl><Switch checked={itemField.value} onCheckedChange={itemField.onChange} /></FormControl>
                                     </FormItem>
                                     );
+                                }
+                                 if (attributeInfo.type === 'date') {
+                                    return (
+                                        <FormItem className="flex flex-col">
+                                            <FormLabel>{attributeInfo.name}</FormLabel>
+                                            <Popover><PopoverTrigger asChild><FormControl>
+                                                <Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal", !itemField.value && "text-muted-foreground")}>
+                                                    {itemField.value ? format(new Date(itemField.value), "PPP") : <span>Pick a date</span>}
+                                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                </Button>
+                                            </FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar mode="single" selected={itemField.value ? new Date(itemField.value) : undefined} onSelect={itemField.onChange} initialFocus />
+                                            </PopoverContent></Popover>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )
                                 }
                                 return (
                                     <FormItem>
@@ -1103,6 +1182,7 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
             </div>
         </form>
         </Form>
+        <AttributeCreationDialog open={isAttributeDialogOpen} onOpenChange={setIsAttributeDialogOpen} onSave={handleSaveAttribute} />
     </div>
   );
 }
