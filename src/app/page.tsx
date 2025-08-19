@@ -1,22 +1,31 @@
+import Link from 'next/link';
 import { kpiData } from './dashboard/data';
 import { SummaryCard } from './sales-invoices/summary-card';
 import { QuickActions } from './dashboard/quick-actions';
 import { DashboardCharts } from './dashboard/charts';
 import { InfoTabs } from './dashboard/info-tabs';
 
+const kpiLinks: Record<string, string> = {
+    "Total Revenue": "/sales-invoices",
+    "Total Payables": "/purchase-bills",
+    "Total Receivables": "/sales-invoices",
+    "Net Profit": "/profit-loss"
+};
+
 export default function Home() {
   return (
     <div data-section="main-content" className="p-4 sm:p-6 lg:p-8 space-y-6">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {kpiData.map(kpi => (
-            <SummaryCard 
-                key={kpi.title}
-                title={kpi.title}
-                value={kpi.value}
-                icon={kpi.icon}
-                description={kpi.description}
-                variant={kpi.variant as any}
-            />
+            <Link href={kpiLinks[kpi.title] || '/'} key={kpi.title}>
+                <SummaryCard
+                    title={kpi.title}
+                    value={kpi.value}
+                    icon={kpi.icon}
+                    description={kpi.description}
+                    variant={kpi.variant as any}
+                />
+            </Link>
         ))}
       </div>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
