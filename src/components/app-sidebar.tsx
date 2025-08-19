@@ -117,10 +117,10 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-destructive">Money Out</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Purchase Bills" isActive={pathname.startsWith('/purchase-bills')} asChild>
+              <SidebarMenuButton tooltip="Purchase" isActive={pathname.startsWith('/purchase-bills')} asChild>
                  <Link href="/purchase-bills" onClick={handleLinkClick}>
                   <Receipt />
-                  <span>Purchase Bills</span>
+                  <span>Purchase</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -149,14 +149,6 @@ export function AppSidebar() {
                 <Link href="/products/new" onClick={handleLinkClick}>
                     <PackagePlus />
                     <span>Add Product</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Stock Purchase" isActive={pathname.startsWith('/purchase-bills')} asChild>
-                <Link href="/purchase-bills" onClick={handleLinkClick}>
-                    <Briefcase />
-                    <span>Stock Purchase</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
