@@ -21,7 +21,7 @@ export default function PartiesPage() {
 
   useEffect(() => {
     const customerData = generateCustomerData();
-    const vendorData = generateData(50); // Assuming this is the source for vendors
+    const vendorData = generateData(5); // Assuming this is the source for vendors
 
     const transformedCustomerData: Person[] = customerData.map(c => ({
         id: c.id,
