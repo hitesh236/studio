@@ -28,10 +28,9 @@ export type SalesInvoice = {
   items: SalesInvoiceItem[];
 };
 
-import { generateCustomerData } from '@/app/customers/data';
+import { staticCustomers } from '@/lib/customer-data';
 
-const customers = generateCustomerData();
-const customerNames = customers.map(c => c.company || c.name);
+const customerNames = staticCustomers.map(c => c.company || `${c.firstName} ${c.lastName}`);
 const gstTypes = ['CGST&SGST', 'IGST', 'UTGST', 'N/A'] as const;
 const currencyCodes = ['USD', 'INR', 'EUR'] as const;
 const createdByUsers = ['Admin', 'John Doe', 'Jane Smith', 'Peter Jones'];
