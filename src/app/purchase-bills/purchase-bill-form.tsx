@@ -72,6 +72,7 @@ import { Label } from '@/components/ui/label';
 import { ledgerData as chartOfAccountsData, type Ledger } from '@/lib/ledger-data';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { generateData, type Person } from '@/lib/data';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -94,7 +95,7 @@ const purchaseItemSchema = z.object({
 });
 
 const purchaseBillSchema = z.object({
-  vendorName: z.string().min(1, 'Vendor name is required.'),
+  vendorId: z.string().min(1, 'Vendor is required.'),
   vendorGstin: z.string().optional(),
   vendorAddress: z.string().min(1, 'Vendor address is required.'),
   placeOfSupply: z.string().min(1, 'Place of supply is required.'),
@@ -113,20 +114,21 @@ export function PurchaseBillForm() {
   const [purchaseMode, setPurchaseMode] = React.useState<'both' | 'assets' | 'inventory'>('both');
   const [activeTab, setActiveTab] = React.useState<'assets' | 'inventory'>('inventory');
 
-
-  const [vendors, setVendors] = React.useState([
-    { id: 'vend1', name: 'Cloud Services LLC', gstin: '27AAAAA0000A1Z5', address: '789 Cloud Ave, Pune, Maharashtra' },
-    { id: 'vend2', name: 'Office Supplies R Us', gstin: '29BBBBB1111B1Z6', address: '101 Supply St, Bengaluru, Karnataka' },
-    { id: 'vend3', name: 'Marketing Wizards', gstin: '07CCCCC2222C1Z7', address: '202 Creative Ln, Delhi, Delhi' },
-  ]);
+  const [vendors, setVendors] = React.useState<Person[]>([]);
   const [isVendorDialogOpen, setIsVendorDialogOpen] = React.useState(false);
   const [newVendor, setNewVendor] = React.useState({ name: '', gstin: '', address: '' });
+  const [vendorSearch, setVendorSearch] = React.useState("");
+
+  React.useEffect(() => {
+    const allParties = generateData(100);
+    setVendors(allParties.filter(p => p.type === 'Vendor'));
+  }, []);
 
 
   const form = useForm<PurchaseBillValues>({
     resolver: zodResolver(purchaseBillSchema),
     defaultValues: {
-      vendorName: '',
+      vendorId: '',
       vendorAddress: '',
       billNumber: '',
       billDate: undefined,
@@ -180,18 +182,27 @@ export function PurchaseBillForm() {
   
   const handleAddVendor = () => {
     if (newVendor.name && newVendor.address) {
-        const newVendorData = { ...newVendor, id: `vend-${Date.now()}` };
+        const newVendorData: Person = { 
+            ...newVendor, 
+            id: `vend-${Date.now()}`,
+            firstName: newVendor.name.split(' ')[0],
+            lastName: newVendor.name.split(' ').slice(1).join(' '),
+            company: newVendor.name,
+            email: '', phone: '', saleAmount: 0, rating: 0, status: 'Active',
+            address: { street: newVendor.address, city: '', state: '', zip: '' },
+            bio: '', type: 'Vendor', balance: 0,
+        };
         setVendors(prev => [...prev, newVendorData]);
-        form.setValue('vendorName', newVendorData.name);
+        form.setValue('vendorId', newVendorData.id);
         form.setValue('vendorGstin', newVendorData.gstin);
-        form.setValue('vendorAddress', newVendorData.address);
+        form.setValue('vendorAddress', newVendorData.address.street);
         
-        const stateMatch = indianStates.find(state => newVendorData.address.toLowerCase().includes(state.toLowerCase()));
+        const stateMatch = indianStates.find(state => newVendorData.address.street.toLowerCase().includes(state.toLowerCase()));
         if(stateMatch) {
             form.setValue('placeOfSupply', stateMatch);
         }
 
-        toast({ title: 'Vendor Added', description: `${newVendorData.name} has been added.` });
+        toast({ title: 'Vendor Added', description: `${newVendorData.company} has been added.` });
         setIsVendorDialogOpen(false);
         setNewVendor({ name: '', gstin: '', address: '' });
     } else {
@@ -224,13 +235,14 @@ export function PurchaseBillForm() {
     setIsSubmitting(true);
     await new Promise(resolve => setTimeout(resolve, 1500));
     console.log('Form Submitted', { data, totals });
+    const vendor = vendors.find(v => v.id === data.vendorId);
     toast({
       title: "Purchase Bill Recorded",
-      description: `Bill from ${data.vendorName} has been successfully recorded.`,
+      description: `Bill from ${vendor?.company} has been successfully recorded.`,
     });
     setIsSubmitting(false);
     form.reset({
-      vendorName: '',
+      vendorId: '',
       vendorAddress: '',
       billNumber: '',
       billDate: new Date(),
@@ -271,7 +283,7 @@ export function PurchaseBillForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <Card className="max-w-6xl mx-auto">
+        <Card>
           <CardHeader>
             <div className="flex justify-between items-start">
               <div>
@@ -301,63 +313,49 @@ export function PurchaseBillForm() {
               <div className="space-y-4">
                  <FormField
                     control={form.control}
-                    name="vendorName"
+                    name="vendorId"
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Vendor</FormLabel>
-                             <div className="flex items-start gap-2">
-                                <Select
-                                    onValueChange={(value) => {
-                                        const selectedVendor = vendors.find(c => c.name === value);
-                                        if (selectedVendor) {
-                                            field.onChange(value);
-                                            form.setValue('vendorGstin', selectedVendor.gstin);
-                                            form.setValue('vendorAddress', selectedVendor.address);
-                                            const stateMatch = indianStates.find(state => selectedVendor.address.toLowerCase().includes(state.toLowerCase()));
-                                            if(stateMatch) {
-                                                form.setValue('placeOfSupply', stateMatch);
-                                            }
-                                        }
-                                    }}
-                                    value={field.value}
-                                >
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select a vendor" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {vendors.map(vendor => (
-                                            <SelectItem key={vendor.id} value={vendor.name}>
-                                                {vendor.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <Dialog open={isVendorDialogOpen} onOpenChange={setIsVendorDialogOpen}>
-                                    <DialogTrigger asChild>
-                                        <Button type="button" variant="outline" size="icon" className="shrink-0">
-                                            <PlusCircle className="h-4 w-4" />
-                                            <span className="sr-only">Add New Vendor</span>
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
-                                        <DialogHeader>
-                                            <DialogTitle>Add New Vendor</DialogTitle>
-                                            <DialogDescription>Quickly add a new vendor.</DialogDescription>
-                                        </DialogHeader>
-                                        <div className="grid gap-4 py-4">
-                                            <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="new-vendor-name" className="text-right">Name</Label><Input id="new-vendor-name" value={newVendor.name} onChange={(e) => setNewVendor(p => ({...p, name: e.target.value}))} className="col-span-3" /></div>
-                                            <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="new-vendor-gstin" className="text-right">GSTIN</Label><Input id="new-vendor-gstin" value={newVendor.gstin} onChange={(e) => setNewVendor(p => ({...p, gstin: e.target.value}))} className="col-span-3" /></div>
-                                            <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="new-vendor-address" className="text-right">Address</Label><Textarea id="new-vendor-address" value={newVendor.address} onChange={(e) => setNewVendor(p => ({...p, address: e.target.value}))} className="col-span-3" placeholder="Full Address including State" /></div>
-                                        </div>
-                                        <DialogFooter>
-                                            <Button variant="outline" onClick={() => setIsVendorDialogOpen(false)}>Cancel</Button>
-                                            <Button onClick={handleAddVendor}>Add Vendor</Button>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>
-                            </div>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <FormControl>
+                                            <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
+                                                {field.value ? vendors.find(v => v.id === field.value)?.company : "Select vendor"}
+                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                        <Command>
+                                            <CommandInput placeholder="Search by name or phone..." onValueChange={setVendorSearch} />
+                                            <CommandList>
+                                                <CommandEmpty>
+                                                     <Button variant="ghost" className="w-full" onClick={() => { setIsVendorDialogOpen(true); }}>
+                                                        <PlusCircle className="mr-2 h-4 w-4" /> Add "{vendorSearch}"
+                                                    </Button>
+                                                </CommandEmpty>
+                                                <CommandGroup>
+                                                    {vendors.map(vendor => (
+                                                        <CommandItem
+                                                            value={vendor.id}
+                                                            key={vendor.id}
+                                                            onSelect={() => {
+                                                                form.setValue('vendorId', vendor.id);
+                                                                form.setValue('vendorGstin', vendor.gstin);
+                                                                form.setValue('vendorAddress', vendor.address.street);
+                                                                form.setValue('placeOfSupply', vendor.address.state);
+                                                            }}
+                                                        >
+                                                            <Check className={cn("mr-2 h-4 w-4", vendor.id === field.value ? "opacity-100" : "opacity-0")} />
+                                                            {vendor.company}
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
                             <FormMessage />
                         </FormItem>
                     )}
@@ -508,6 +506,23 @@ export function PurchaseBillForm() {
           </Button>
         </div>
       </form>
+       <Dialog open={isVendorDialogOpen} onOpenChange={setIsVendorDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Add New Vendor</DialogTitle>
+                    <DialogDescription>Quickly add a new vendor.</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="new-vendor-name" className="text-right">Name</Label><Input id="new-vendor-name" value={newVendor.name} onChange={(e) => setNewVendor(p => ({...p, name: e.target.value}))} className="col-span-3" /></div>
+                    <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="new-vendor-gstin" className="text-right">GSTIN</Label><Input id="new-vendor-gstin" value={newVendor.gstin} onChange={(e) => setNewVendor(p => ({...p, gstin: e.target.value}))} className="col-span-3" /></div>
+                    <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="new-vendor-address" className="text-right">Address</Label><Textarea id="new-vendor-address" value={newVendor.address} onChange={(e) => setNewVendor(p => ({...p, address: e.target.value}))} className="col-span-3" placeholder="Full Address including State" /></div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsVendorDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleAddVendor}>Add Vendor</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </Form>
   );
 }
