@@ -2,8 +2,8 @@
 'use client';
 
 import { HicksTableContainer } from "@/components/hicks-table/hicks-table-container";
-import { generateData, Person } from "@/lib/data";
-import { generateCustomerData } from "@/lib/customer-data";
+import type { Person } from "@/lib/data";
+import { staticCustomers, staticVendors } from "@/lib/customer-data";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Users, TrendingUp, TrendingDown } from "lucide-react";
 import { motion } from 'framer-motion';
@@ -20,36 +20,7 @@ export default function PartiesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
-    const customerData = generateCustomerData(11);
-    const vendorData = generateData(5); 
-
-    const transformedCustomerData: Person[] = customerData.map(c => ({
-        id: c.id,
-        firstName: c.name.split(' ')[0],
-        lastName: c.name.split(' ').slice(1).join(' '),
-        email: c.contact.email || '',
-        company: c.company || c.name,
-        phone: c.contact.phone || '',
-        balance: c.balanceDue,
-        status: c.status,
-        type: 'Customer',
-        // --- Defaulting other Person fields ---
-        saleAmount: c.balanceDue > 0 ? c.balanceDue : Math.random() * 10000,
-        rating: Math.round((Math.random() * 4 + 1) * 10) / 10,
-        address: {
-            street: c.placeOfSupply.state,
-            city: c.placeOfSupply.state,
-            state: c.placeOfSupply.state,
-            zip: ''
-        },
-        bio: 'Customer from customer data.',
-        gstin: c.gstin,
-        lastSeen: c.lastTransaction,
-    }));
-
-    const filteredVendorData = vendorData.map(v => ({...v, type: 'Vendor' as const, balance: v.balance < 0 ? v.balance : -v.balance }));
-
-    setData([...transformedCustomerData, ...filteredVendorData]);
+    setData([...staticCustomers, ...staticVendors]);
   }, []);
 
   const filteredData = useMemo(() => {

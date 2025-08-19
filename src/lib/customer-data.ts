@@ -1,73 +1,287 @@
 
-export type Customer = {
-  id: string;
-  name: string;
-  company: string | null;
-  contact: {
-    email: string | null;
-    phone: string | null;
-  };
-  gstin: string;
-  balanceDue: number;
-  lastTransaction: Date;
-  status: 'Active' | 'Inactive';
-  placeOfSupply: {
-    state: string;
-    code: string;
-    abbr: string;
-  };
-};
+import type { Person } from './data';
 
-const personNames = [
-  "Aarav Sharma", "Vivaan Singh", "Aditya Kumar", "Vihaan Gupta", "Arjun Patel",
-  "Sai Reddy", "Reyansh Mehta", "Ayaan Jain", "Krishna Iyer", "Ishaan Nair",
-  "Ananya Verma", "Diya Shah", "Saanvi Pillai", "Gauri Menon", "Pari Joshi"
+const now = new Date('2024-07-21T10:00:00Z');
+const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+const oneEightyDaysAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+
+
+export const staticCustomers: Person[] = [
+  // 8 Individual Customers
+  {
+    id: 'CUST-001',
+    firstName: 'Aarav',
+    lastName: 'Sharma',
+    email: 'aarav.sharma@example.com',
+    company: 'Aarav Sharma',
+    phone: '+91 9876543210',
+    saleAmount: 12500,
+    rating: 4.5,
+    status: 'Active',
+    address: { street: '123 M.G. Road', city: 'Mumbai', state: 'Maharashtra', zip: '400001' },
+    bio: 'Loyal customer, prefers quick delivery.',
+    gstin: '27ABCDE1234F1Z5',
+    type: 'Customer',
+    balance: 12500,
+    lastSeen: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
+  },
+  {
+    id: 'CUST-002',
+    firstName: 'Diya',
+    lastName: 'Verma',
+    email: 'diya.verma@example.com',
+    company: 'Diya Verma',
+    phone: '+91 9876543211',
+    saleAmount: 8200,
+    rating: 4.2,
+    status: 'Active',
+    address: { street: '456 Brigade Road', city: 'Bengaluru', state: 'Karnataka', zip: '560001' },
+    bio: 'Bulk buyer, sensitive to pricing.',
+    gstin: '29ABCDE1234F1Z6',
+    type: 'Customer',
+    balance: 0,
+    lastSeen: new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000), // 25 days ago
+  },
+  {
+    id: 'CUST-003',
+    firstName: 'Arjun',
+    lastName: 'Singh',
+    email: 'arjun.singh@example.com',
+    company: 'Arjun Singh',
+    phone: '+91 9876543212',
+    saleAmount: 21000,
+    rating: 4.8,
+    status: 'Inactive',
+    address: { street: '789 Park Street', city: 'Kolkata', state: 'West Bengal', zip: '700016' },
+    bio: 'High-value customer, currently inactive.',
+    gstin: '19ABCDE1234F1Z7',
+    type: 'Customer',
+    balance: 21000,
+    lastSeen: new Date(now.getTime() - 100 * 24 * 60 * 60 * 1000), // 100 days ago
+  },
+  {
+    id: 'CUST-004',
+    firstName: 'Saanvi',
+    lastName: 'Patel',
+    email: 'saanvi.patel@example.com',
+    company: 'Saanvi Patel',
+    phone: '+91 9876543213',
+    saleAmount: 5600,
+    rating: 4.0,
+    status: 'Active',
+    address: { street: '101 C.G. Road', city: 'Ahmedabad', state: 'Gujarat', zip: '380009' },
+    bio: 'Regular customer, pays on time.',
+    gstin: '24ABCDE1234F1Z8',
+    type: 'Customer',
+    balance: 5600,
+    lastSeen: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+  },
+   {
+    id: 'CUST-005',
+    firstName: 'Vihaan',
+    lastName: 'Gupta',
+    email: 'vihaan.gupta@example.com',
+    company: 'Vihaan Gupta',
+    phone: '+91 9876543214',
+    saleAmount: 9800,
+    rating: 4.3,
+    status: 'Active',
+    address: { street: '212 Hazratganj', city: 'Lucknow', state: 'Uttar Pradesh', zip: '226001' },
+    bio: 'New customer, first purchase was a month ago.',
+    gstin: '09ABCDE1234F1Z9',
+    type: 'Customer',
+    balance: 0,
+    lastSeen: new Date(now.getTime() - 32 * 24 * 60 * 60 * 1000), // 32 days ago
+  },
+  {
+    id: 'CUST-006',
+    firstName: 'Myra',
+    lastName: 'Reddy',
+    email: 'myra.reddy@example.com',
+    company: 'Myra Reddy',
+    phone: '+91 9876543215',
+    saleAmount: 15400,
+    rating: 4.6,
+    status: 'Active',
+    address: { street: '313 K.G. Marg', city: 'Delhi', state: 'Delhi', zip: '110001' },
+    bio: 'Responds well to promotional offers.',
+    gstin: '07ABCDE1234F1Z1',
+    type: 'Customer',
+    balance: 15400,
+    lastSeen: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
+  },
+  {
+    id: 'CUST-007',
+    firstName: 'Ishaan',
+    lastName: 'Nair',
+    email: 'ishaan.nair@example.com',
+    company: 'Ishaan Nair',
+    phone: '+91 9876543216',
+    saleAmount: 3200,
+    rating: 3.9,
+    status: 'Inactive',
+    address: { street: '414 Commercial Street', city: 'Bengaluru', state: 'Karnataka', zip: '560001' },
+    bio: 'One-time purchase, has not returned.',
+    gstin: '29ABCDE1234F1Z2',
+    type: 'Customer',
+    balance: 0,
+    lastSeen: new Date(now.getTime() - 120 * 24 * 60 * 60 * 1000), // 120 days ago
+  },
+  {
+    id: 'CUST-008',
+    firstName: 'Anika',
+    lastName: 'Jain',
+    email: 'anika.jain@example.com',
+    company: 'Anika Jain',
+    phone: '+91 9876543217',
+    saleAmount: 11250,
+    rating: 4.7,
+    status: 'Active',
+    address: { street: '515 FC Road', city: 'Pune', state: 'Maharashtra', zip: '411004' },
+    bio: 'Refers new customers frequently.',
+    gstin: '27ABCDE1234F1Z3',
+    type: 'Customer',
+    balance: 0,
+    lastSeen: new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000), // 45 days ago
+  },
+  // 3 Company Customers
+  {
+    id: 'CUST-009',
+    firstName: 'Rohan',
+    lastName: 'Mehra',
+    email: 'rohan@innovate.com',
+    company: 'Innovate Solutions Ltd.',
+    phone: '+91 9123456780',
+    saleAmount: 75000,
+    rating: 4.9,
+    status: 'Active',
+    address: { street: 'Innovate Tower, Hitech City', city: 'Hyderabad', state: 'Telangana', zip: '500081' },
+    bio: 'Enterprise client with a large account.',
+    gstin: '36ABCDE1234F1Z4',
+    type: 'Customer',
+    balance: 75000,
+    lastSeen: new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
+  },
+  {
+    id: 'CUST-010',
+    firstName: 'Priya',
+    lastName: 'Rao',
+    email: 'priya@quantum.com',
+    company: 'Quantum Systems',
+    phone: '+91 9123456781',
+    saleAmount: 45000,
+    rating: 4.5,
+    status: 'Active',
+    address: { street: 'Quantum Park, Electronic City', city: 'Bengaluru', state: 'Karnataka', zip: '560100' },
+    bio: 'Requires detailed technical specifications.',
+    gstin: '29FGHIJ5678K1Z5',
+    type: 'Customer',
+    balance: 15000,
+    lastSeen: new Date(now.getTime() - 40 * 24 * 60 * 60 * 1000), // 40 days ago
+  },
+  {
+    id: 'CUST-011',
+    firstName: 'Amit',
+    lastName: 'Patel',
+    email: 'amit@synergy.com',
+    company: 'Synergy Creations',
+    phone: '+91 9123456782',
+    saleAmount: 150000,
+    rating: 4.8,
+    status: 'Inactive',
+    address: { street: 'Synergy House, Andheri East', city: 'Mumbai', state: 'Maharashtra', zip: '400093' },
+    bio: 'Previously a high-volume client.',
+    gstin: '27LMNOP1234Q1Z9',
+    type: 'Customer',
+    balance: 0,
+    lastSeen: oneEightyDaysAgo, // 180 days ago
+  },
 ];
 
-const companyNames = [
-  "Innovate Solutions", "Quantum Systems", "Synergy Creations", "Apex Logistics",
+export const staticVendors: Person[] = [
+  {
+    id: 'VEND-001',
+    firstName: 'Suresh',
+    lastName: 'Gupta',
+    email: 'suresh@suryainfo.com',
+    company: 'Surya Informatics',
+    phone: '+91 8876543210',
+    saleAmount: 0,
+    rating: 4.5,
+    status: 'Active',
+    address: { street: '1 Cyber-ro-gil', city: 'Pune', state: 'Maharashtra', zip: '411057' },
+    bio: 'Primary supplier for computer peripherals.',
+    gstin: '27ZYXWV9876E1Z4',
+    type: 'Vendor',
+    balance: -25000,
+    lastSeen: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 'VEND-002',
+    firstName: 'Meena',
+    lastName: 'Iyer',
+    email: 'meena@chandralog.com',
+    company: 'Chandra Logistics',
+    phone: '+91 8876543211',
+    saleAmount: 0,
+    rating: 4.2,
+    status: 'Active',
+    address: { street: '2 Transport Nagar', city: 'Nagpur', state: 'Maharashtra', zip: '440026' },
+    bio: 'Reliable logistics partner.',
+    gstin: '27TSRQP5432D1Z3',
+    type: 'Vendor',
+    balance: -12500,
+    lastSeen: new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 'VEND-003',
+    firstName: 'Rajesh',
+    lastName: 'Kumar',
+    email: 'rajesh@mangaltrade.com',
+    company: 'Mangal Traders',
+    phone: '+91 8876543212',
+    saleAmount: 0,
+    rating: 4.0,
+    status: 'Active',
+    address: { street: '3 Wholesale Market', city: 'Delhi', state: 'Delhi', zip: '110006' },
+    bio: 'Wholesale supplier for office stationery.',
+    gstin: '07PONML8765C1Z2',
+    type: 'Vendor',
+    balance: 0,
+    lastSeen: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 'VEND-004',
+    firstName: 'Fatima',
+    lastName: 'Khan',
+    email: 'fatima@gurutex.com',
+    company: 'Guru Textiles',
+    phone: '+91 8876543213',
+    saleAmount: 0,
+    rating: 4.8,
+    status: 'Inactive',
+    address: { street: '4 Textile Mill Compound', city: 'Surat', state: 'Gujarat', zip: '395003' },
+    bio: 'Main supplier for fabrics.',
+    gstin: '24KJIHG4321B1Z1',
+    type: 'Vendor',
+    balance: -55000,
+    lastSeen: new Date(now.getTime() - 150 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: 'VEND-005',
+    firstName: 'Vikram',
+    lastName: 'Singh',
+    email: 'vikram@shukrapack.com',
+    company: 'Shukra Packaging',
+    phone: '+91 8876543214',
+    saleAmount: 0,
+    rating: 4.6,
+    status: 'Active',
+    address: { street: '5 Packaging Industrial Estate', city: 'Vapi', state: 'Gujarat', zip: '396191' },
+    bio: 'Provides all our packaging materials.',
+    gstin: '24FEDCB1234A1Z0',
+    type: 'Vendor',
+    balance: 0,
+    lastSeen: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000),
+  },
 ];
-
-const states = [
-    { name: "Maharashtra", code: "27", abbr: "MH" },
-    { name: "Delhi", code: "07", abbr: "DL" },
-    { name: "Karnataka", code: "29", abbr: "KA" },
-    { name: "Tamil Nadu", code: "33", abbr: "TN" },
-    { name: "Uttar Pradesh", code: "09", abbr: "UP" },
-    { name: "Gujarat", code: "24", abbr: "GJ" },
-    { name: "West Bengal", code: "19", abbr: "WB" },
-    { name: "Rajasthan", code: "08", abbr: "RJ" },
-];
-
-const getDeterministicElement = <T>(arr: T[], index: number): T => arr[index % arr.length];
-
-export function generateCustomerData(count: number): Customer[] {
-  const customers: Customer[] = [];
-  const now = new Date('2024-07-21T10:00:00Z');
-  const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-  
-  const allNames = [...personNames, ...companyNames];
-
-  for (let i = 0; i < count; i++) {
-    const isCompany = i >= personNames.length;
-    const name = allNames[i];
-    const state = getDeterministicElement(states, i);
-    const lastSeen = new Date(now.getTime() - (i * 5 * 24 * 60 * 60 * 1000));
-    
-    customers.push({
-      id: `CUST-${1001 + i}`,
-      name: isCompany ? `${getDeterministicElement(personNames, i).split(' ')[0]} (Contact)` : name,
-      company: isCompany ? name : null,
-      contact: {
-        email: `${name.split(' ')[0].toLowerCase()}@example.com`,
-        phone: `+91 98765432${i.toString().padStart(2, '0')}`,
-      },
-      gstin: i % 3 !== 0 ? `${state.code}ABCDE${1000 + i}F1Z${(i % 9) + 1}` : '-',
-      balanceDue: i % 4 !== 0 ? (i * 1234.5) % 50000 + 500 : 0,
-      lastTransaction: lastSeen,
-      status: lastSeen > ninetyDaysAgo ? 'Active' : 'Inactive',
-      placeOfSupply: state,
-    });
-  }
-  return customers;
-}

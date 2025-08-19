@@ -1,5 +1,5 @@
 
-import { generateData } from '@/lib/data';
+import { staticVendors } from '@/lib/customer-data';
 
 export type PurchaseBillItem = {
   id: number;
@@ -21,8 +21,7 @@ export type PurchaseBill = {
   items: PurchaseBillItem[];
 };
 
-const vendors = generateData(20).filter(p => p.type === 'Vendor');
-const vendorNames = vendors.map(v => v.company);
+const vendorNames = staticVendors.map(v => v.company);
 const itemNames = ['Office Supplies', 'Cloud Hosting Subscription', 'Marketing Services', 'Raw Material A', 'Component B'];
 
 const getRandomElement = <T>(arr: T[] | readonly T[]): T => arr[Math.floor(Math.random() * arr.length)];
