@@ -67,7 +67,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { ledgerData as chartOfAccountsData, type Ledger } from '@/lib/ledger-data';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -327,7 +327,11 @@ export function PurchaseBillForm() {
                                         </FormControl>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                                        <Command>
+                                        <Command filter={(value, search) => {
+                                            const vendor = vendors.find(v => v.id === value);
+                                            if (vendor?.company.toLowerCase().includes(search.toLowerCase()) || vendor?.phone.includes(search)) return 1;
+                                            return 0;
+                                        }}>
                                             <CommandInput placeholder="Search by name or phone..." onValueChange={setVendorSearch} />
                                             <CommandList>
                                                 <CommandEmpty>
