@@ -1,6 +1,7 @@
 
 'use client';
 
+import * as React from 'react';
 import { $getRoot, $getSelection, EditorState } from 'lexical';
 import { useEffect } from 'react';
 
