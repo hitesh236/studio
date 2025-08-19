@@ -24,7 +24,8 @@ import {
   Barcode,
   Percent,
   X,
-  Package
+  Package,
+  GripVertical,
 } from 'lucide-react';
 
 import { cn, formatCurrency } from '@/lib/utils';
@@ -181,8 +182,8 @@ const getAttributesForCategory = (categoryId: string | null, categories: Categor
 };
 
 const optionalSectionsConfig = {
-    organization: 'Organization',
     attributes: 'Attributes',
+    organization: 'Organization',
     ecommerce: 'E-commerce Details'
 };
 
@@ -864,41 +865,6 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                 </CardContent>
             </Card>
             
-            {visibleSections.organization && <Card>
-                <CardHeader><CardTitle className="text-[20px] text-secondary">Organization</CardTitle></CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField name="brand" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Brand</FormLabel><FormControl><Input placeholder="e.g., Logitech" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField name="model" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Model</FormLabel><FormControl><Input placeholder="e.g., MX Master 3S" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField name="barcode" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Barcode</FormLabel>
-                            <div className="relative">
-                                <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <FormControl><Input placeholder="Scan or enter barcode" className="pl-10" {...field} /></FormControl>
-                            </div>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                     <FormField name="alternateName" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Alternate Name</FormLabel><FormControl><Input placeholder="Optional alternate name" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField
-                    control={form.control}
-                    name="tags"
-                    render={({ field }) => (
-                        <div className="md:col-span-2">
-                        <FormLabel>Tags/Keywords</FormLabel>
-                        <TagsInput field={field} />
-                        </div>
-                    )}
-                    />
-                </CardContent>
-            </Card>}
-
             {visibleSections.attributes && displayedAttributes.length > 0 && <Card>
                 <CardHeader>
                     <CardTitle className="text-[20px] text-secondary">Attributes</CardTitle>
@@ -948,6 +914,41 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                         />
                     );
                 })}
+                </CardContent>
+            </Card>}
+
+            {visibleSections.organization && <Card>
+                <CardHeader><CardTitle className="text-[20px] text-secondary">Organization</CardTitle></CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField name="brand" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Brand</FormLabel><FormControl><Input placeholder="e.g., Logitech" {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField name="model" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Model</FormLabel><FormControl><Input placeholder="e.g., MX Master 3S" {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField name="barcode" control={form.control} render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Barcode</FormLabel>
+                            <div className="relative">
+                                <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <FormControl><Input placeholder="Scan or enter barcode" className="pl-10" {...field} /></FormControl>
+                            </div>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                     <FormField name="alternateName" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Alternate Name</FormLabel><FormControl><Input placeholder="Optional alternate name" {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField
+                    control={form.control}
+                    name="tags"
+                    render={({ field }) => (
+                        <div className="md:col-span-2">
+                        <FormLabel>Tags/Keywords</FormLabel>
+                        <TagsInput field={field} />
+                        </div>
+                    )}
+                    />
                 </CardContent>
             </Card>}
 
@@ -1035,7 +1036,7 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                                     <div 
                                         key={field.id} 
                                         className={cn(
-                                            "relative group aspect-square transition-opacity",
+                                            "relative group aspect-square transition-opacity cursor-grab active:cursor-grabbing",
                                             draggedImageIndex.current === index && 'opacity-50',
                                             dragOverImageIndex === index && 'border-2 border-primary border-dashed'
                                         )}
@@ -1046,6 +1047,7 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                                         onDragEnd={handleDragEnd}
                                         onDragLeave={() => setDragOverImageIndex(null)}
                                     >
+                                        <GripVertical className="absolute top-1 left-1 h-5 w-5 text-white/50 group-hover:text-white transition-colors z-10 pointer-events-none" />
                                         <img
                                             src={imagePreviews[index]}
                                             alt={`Preview ${index + 1}`}
