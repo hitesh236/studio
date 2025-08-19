@@ -38,6 +38,7 @@ const ALL_COLUMNS = [
     { id: 'contact', label: 'Contact' },
     { id: 'balanceDue', label: 'Balance Due' },
     { id: 'lastTransaction', label: 'Last Transaction' },
+    { id: 'status', label: 'Status' },
     { id: 'placeOfSupply', label: 'Place of Supply' },
     { id: 'actions', label: 'Actions' },
 ];
@@ -95,6 +96,7 @@ const MobileCustomerCard = ({ customer }: { customer: Customer }) => {
                         </span>
                       )}
                     </div>
+                     <Badge variant={customer.status === 'Active' ? 'default' : 'outline'}>{customer.status}</Badge>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                     <div className="space-y-1">
@@ -185,10 +187,8 @@ export function CustomerTable({ data }: { data: Customer[] }) {
         }
 
         if (activeFilters.has("activityStatus") && filterValues.activityStatus !== 'all') {
-            const ninetyDaysAgo = new Date();
-            ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
             baseData = baseData.filter(c => {
-                return filterValues.activityStatus === 'active' ? c.lastTransaction >= ninetyDaysAgo : c.lastTransaction < ninetyDaysAgo;
+                return filterValues.activityStatus === 'active' ? c.status === 'Active' : c.status === 'Inactive';
             });
         }
         
@@ -616,7 +616,7 @@ export function CustomerTable({ data }: { data: Customer[] }) {
                                                     )}
                                                 </div>
                                                 <Button asChild variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground opacity-0 group-hover/row:opacity-100">
-                                                    <Link href={`/customer-portfolio?id=${customer.id}`}>
+                                                    <Link href={`/customer-portfolio?customerData=${encodeURIComponent(JSON.stringify(customer))}`}>
                                                         <ExternalLink className="h-4 w-4" />
                                                         <span className="sr-only">View Customer</span>
                                                     </Link>
@@ -638,6 +638,7 @@ export function CustomerTable({ data }: { data: Customer[] }) {
                                             </span>
                                         );
                                         case 'lastTransaction': return <span>{format(customer.lastTransaction, "dd-MMM-yyyy")}</span>;
+                                        case 'status': return <Badge variant={customer.status === 'Active' ? 'default' : 'outline'}>{customer.status}</Badge>;
                                         case 'placeOfSupply': return <span>{customer.placeOfSupply.code} ({customer.placeOfSupply.abbr})</span>;
                                         case 'actions': return (
                                             <div className="text-center">

@@ -8,7 +8,7 @@ export type Person = {
   phone: string;
   saleAmount: number;
   rating: number;
-  status: "Active" | "Follow-Up" | "Lost" | "Converted";
+  status: "Active" | "Inactive";
   address: {
     street: string;
     city: string;
@@ -20,24 +20,23 @@ export type Person = {
   gstin?: string;
   type: 'Customer' | 'Vendor';
   balance: number;
+  lastSeen: Date;
 };
 
 const firstNames = ["Aarav", "Vivaan", "Aditya", "Vihaan", "Arjun", "Sai", "Reyansh", "Ayaan", "Krishna", "Ishaan", "Ananya", "Diya", "Saanvi", "Gauri", "Pari", "Myra", "Aadhya", "Kiara", "Anika", "Riya"];
 const lastNames = ["Sharma", "Verma", "Gupta", "Singh", "Kumar", "Patel", "Reddy", "Mehta", "Jain", "Fernandes", "Khan", "Biswas", "Chatterjee", "Iyer", "Nair"];
 
 const companies = [
-    "Reliance Industries", "Tata Consultancy Services", "HDFC Bank", "Infosys", "ICICI Bank", 
-    "Hindustan Unilever", "State Bank of India", "Bharti Airtel", "Wipro", "Asian Paints",
-    "Mahindra & Mahindra", "Sun Pharmaceutical", "Adani Ports", "Larsen & Toubro", "Bajaj Finance",
-    "JSW Steel", "Vedanta Limited", "Godrej Consumer Products", "Dabur India", "Marico",
     "Surya Informatics", "Chandra Exports", "Mangal Traders", "Budh Wholesalers", "Guru Textiles",
-    "Shukra Logistics", "Shani Heavy Industries", "Rahu Technologies", "Ketu Solutions"
+    "Shukra Logistics", "Shani Heavy Industries", "Rahu Technologies", "Ketu Solutions",
+    "Innovate Solutions Ltd.", "Quantum Systems", "Synergy Creations", "Apex Logistics",
+    "Starlight Innovations", "Zenith Corporation", "Phoenix Enterprises", "Odyssey Group",
+    "Blue-chip Ventures", "Pinnacle Partners", "Frontier Solutions", "Nexus International",
 ];
 
 const streets = ["M.G. Road", "Brigade Road", "Linking Road", "Park Street", "Hazratganj", "K.G. Marg", "S.V. Road", "C.G. Road", "Commercial Street", "FC Road"];
 const cities = ["Mumbai", "Delhi", "Bengaluru", "Kolkata", "Chennai", "Hyderabad", "Pune", "Ahmedabad", "Jaipur", "Lucknow"];
 const states = ["Maharashtra", "Delhi", "Karnataka", "Tamil Nadu", "Uttar Pradesh", "Gujarat", "West Bengal", "Rajasthan"];
-const statuses = ["Active", "Follow-Up", "Lost", "Converted"] as const;
 const bios = [
   "A dedicated professional with a passion for data analysis and strategic planning.",
   "Experienced in client relations and project management, always aiming for excellence.",
@@ -53,7 +52,9 @@ const getDeterministicElement = <T>(arr: T[] | readonly T[], index: number): T =
 export function generateData(count: number): Person[] {
   const data: Person[] = [];
   const usedCompanyNames = new Set<string>();
-  const fixedDate = new Date('2024-07-21T10:00:00Z');
+  const now = new Date('2024-07-21T10:00:00Z');
+  const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+
 
   for (let i = 0; i < count; i++) {
     const firstName = getDeterministicElement(firstNames, i);
@@ -73,7 +74,7 @@ export function generateData(count: number): Person[] {
     
     let balance = 0;
     if (type === 'Customer') {
-        if (i % 3 !== 0) { // ~66% of customers have a balance
+        if (i % 4 !== 0) { // ~75% of customers have a balance
             balance = (i * 1234.5) % 50000 + 500;
         }
     } else { // Vendor
@@ -81,6 +82,9 @@ export function generateData(count: number): Person[] {
             balance = -((i * 789.1) % 25000 + 500);
         }
     }
+    
+    const lastSeen = new Date(now.getTime() - (i * 5 * 24 * 60 * 60 * 1000)); // Every 5 days
+    const status = lastSeen >= ninetyDaysAgo ? 'Active' : 'Inactive';
 
     data.push({
       id: `USR-${1000 + i}`,
@@ -91,7 +95,7 @@ export function generateData(count: number): Person[] {
       phone: `+91 98${(10000000 + i * 12345) % 90000000}`,
       saleAmount: (i * 543.21) % 5000 + 500,
       rating: ((i * 3) % 4) + 1.5,
-      status: getDeterministicElement(statuses, i),
+      status: status,
       address: {
         street: `${(i*17) % 1000 + 1} ${getDeterministicElement(streets, i)}`,
         city: getDeterministicElement(cities, i),
@@ -102,6 +106,7 @@ export function generateData(count: number): Person[] {
       gstin: `${gstinStateCode}ABCDE${1000 + i}F1Z${(i % 9) + 1}`,
       type: type,
       balance: balance,
+      lastSeen: lastSeen,
     });
   }
   return data;

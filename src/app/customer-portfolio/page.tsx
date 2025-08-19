@@ -475,17 +475,17 @@ const CustomerPortfolioContent = () => {
             <Card>
                 <CardHeader>
                     <div className="flex items-start justify-between">
-                        <div 
-                            className="flex items-center gap-4 cursor-pointer"
-                            onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
-                        >
+                        <div className="flex items-center gap-4">
                             <Avatar className="h-16 w-16">
                             <AvatarImage src="https://placehold.co/64x64.png" alt={`${customer.firstName} ${customer.lastName}`} data-ai-hint="person avatar" />
                             <AvatarFallback>{customer.firstName.charAt(0)}{customer.lastName.charAt(0)}</AvatarFallback>
                             </Avatar>
-                            <div>
-                            <CardTitle className="text-2xl">{`${customer.firstName} ${customer.lastName}`}</CardTitle>
-                            <CardDescription>{customer.company}</CardDescription>
+                            <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                                <CardTitle className="text-2xl">{customer.company}</CardTitle>
+                                <Badge variant={customer.status === 'Active' ? 'default' : 'outline'}>{customer.status}</Badge>
+                            </div>
+                            <CardDescription>{`${customer.firstName} ${customer.lastName}`}</CardDescription>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
