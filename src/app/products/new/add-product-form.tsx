@@ -71,6 +71,7 @@ import { initialSimpleUnits, initialCompoundUnits, type SimpleUnit, type Compoun
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
 import { generateStockListData, type StockItem } from '@/app/stock-list/data';
+import { RichTextEditor } from '@/components/rich-text-editor';
 
 
 const customAttributeSchema = z.object({
@@ -217,7 +218,6 @@ export function AddProductForm() {
         alternateName: '',
         sku: '',
         categoryPath: ['grocery', 'staples-pulses', 'rice'], // Default category
-        productDescription: '',
         uom: '',
         secondaryUom: '',
         openingStock: 0,
@@ -932,9 +932,40 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                   <FormField name="productDescription" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Product Description</FormLabel><FormControl><Textarea placeholder="Detailed product description for the product page." {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
+                   <FormField
+                        control={form.control}
+                        name="webShortDescription"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Short Description</FormLabel>
+                            <FormControl>
+                                <RichTextEditor
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder="A catchy, brief description for product listings."
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="webLongDescription"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Full Description</FormLabel>
+                            <FormControl>
+                                 <RichTextEditor
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder="Detailed product description for the product page."
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
                     <FormField name="productImages" control={form.control} render={() => (
                         <FormItem>
                             <FormLabel>Product Images</FormLabel>
@@ -994,12 +1025,6 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                         </div>
                     )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField name="webShortDescription" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Short Description</FormLabel><FormControl><Textarea placeholder="A catchy, brief description for product listings." {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField name="webLongDescription" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Full Description</FormLabel><FormControl><Textarea placeholder="Detailed product description for the product page." rows={5} {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
                         <FormField name="seoTitle" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>SEO Title</FormLabel><FormControl><Input placeholder="Title for search engine results" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
@@ -1021,5 +1046,3 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
     </div>
   );
 }
-
-    
