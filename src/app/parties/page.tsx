@@ -3,7 +3,7 @@
 
 import { HicksTableContainer } from "@/components/hicks-table/hicks-table-container";
 import { generateData, Person } from "@/lib/data";
-import { generateCustomerData, type Customer as CustomerType } from "@/app/customers/data";
+import { generateCustomerData } from "@/lib/customer-data";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Users, TrendingUp, TrendingDown } from "lucide-react";
 import { motion } from 'framer-motion';
@@ -20,8 +20,8 @@ export default function PartiesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
-    const customerData = generateCustomerData();
-    const vendorData = generateData(5); // Assuming this is the source for vendors
+    const customerData = generateCustomerData(11);
+    const vendorData = generateData(5); 
 
     const transformedCustomerData: Person[] = customerData.map(c => ({
         id: c.id,
@@ -31,7 +31,7 @@ export default function PartiesPage() {
         company: c.company || c.name,
         phone: c.contact.phone || '',
         balance: c.balanceDue,
-        status: 'Active', // Default status
+        status: c.status,
         type: 'Customer',
         // --- Defaulting other Person fields ---
         saleAmount: c.balanceDue > 0 ? c.balanceDue : Math.random() * 10000,
@@ -44,6 +44,7 @@ export default function PartiesPage() {
         },
         bio: 'Customer from customer data.',
         gstin: c.gstin,
+        lastSeen: c.lastTransaction,
     }));
 
     const filteredVendorData = vendorData.map(v => ({...v, type: 'Vendor' as const, balance: v.balance < 0 ? v.balance : -v.balance }));
@@ -133,6 +134,7 @@ export default function PartiesPage() {
         </div>
 
       <HicksTableContainer data={filteredData} />
+      <p className="text-center text-xs text-muted-foreground mt-4">Note: Customer 'status' is 'Active' if the last transaction was within the last 90 days.</p>
     </div>
   );
 }
