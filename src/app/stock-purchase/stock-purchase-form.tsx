@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useForm, useFieldArray, useWatch } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
@@ -14,7 +14,7 @@ import {
   Loader2,
   ChevronsUpDown,
   Check,
-  Package,
+  Settings,
 } from 'lucide-react';
 
 import { cn, formatCurrency } from '@/lib/utils';
@@ -26,7 +26,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
@@ -44,6 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Card,
   CardContent,
@@ -67,17 +67,11 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { useToast } from '@/hooks/use-toast';
-import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-  SheetClose,
-} from '@/components/ui/sheet';
+import { ledgerData as chartOfAccountsData, type Ledger } from '@/lib/ledger-data';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -90,182 +84,75 @@ const indianStates = [
   'Ladakh', 'Lakshadweep', 'Puducherry',
 ];
 
-const products = [
-  { value: 'wireless-mouse', label: 'Wireless Mouse' },
-  { value: 'wired-keyboard', label: 'Wired Keyboard' },
-  { value: 'hdmi-cable', label: 'HDMI Cable (3ft)' },
-  { value: 'usb-c-hub', label: 'USB-C Hub' },
-  { value: 'laptop-stand', label: 'Ergonomic Laptop Stand' },
-];
-
-const batchDetailSchema = z.object({
-  batchNumber: z.string().min(1, 'Batch number is required.'),
-  mfgDate: z.date().optional(),
-  expDate: z.date().optional(),
-  quantity: z.coerce.number().min(0.01, 'Quantity must be positive.'),
-});
-
 const purchaseItemSchema = z.object({
   itemName: z.string().min(1, 'Item name is required.'),
+  ledgerAccountId: z.string().min(1, 'Account is required.'),
   hsnCode: z.string().optional(),
   quantity: z.coerce.number().min(0.01, 'Quantity must be positive.'),
   rate: z.coerce.number().min(0, 'Rate cannot be negative.'),
   gstRate: z.coerce.number().min(0).max(100).default(18),
-  batchDetails: z.array(batchDetailSchema).optional(),
 });
 
-const stockPurchaseSchema = z.object({
+const purchaseBillSchema = z.object({
   vendorName: z.string().min(1, 'Vendor name is required.'),
+  vendorGstin: z.string().optional(),
+  vendorAddress: z.string().min(1, 'Vendor address is required.'),
   placeOfSupply: z.string().min(1, 'Place of supply is required.'),
   billNumber: z.string().min(1, 'Bill number is required.'),
   billDate: z.date(),
-  maintainBatches: z.boolean().default(false),
+  dueDate: z.date().optional(),
   items: z.array(purchaseItemSchema).min(1, 'At least one item is required.'),
-}).refine(data => {
-    if (!data.maintainBatches) return true;
-    for (const item of data.items) {
-        const itemQty = item.quantity;
-        const batchQty = item.batchDetails?.reduce((sum, batch) => sum + batch.quantity, 0) ?? 0;
-        if (Math.abs(itemQty - batchQty) > 0.001) return false;
-    }
-    return true;
-}, {
-    message: "Total batch quantity must match the item quantity for all items.",
-    path: ['items'],
+  notes: z.string().optional(),
 });
 
+type PurchaseBillValues = z.infer<typeof purchaseBillSchema>;
 
-type StockPurchaseValues = z.infer<typeof stockPurchaseSchema>;
-
-const BatchDetailsSheet = ({ 
-    itemIndex, 
-    itemName, 
-    control,
-    onSave
-}: { 
-    itemIndex: number;
-    itemName: string;
-    control: any;
-    onSave: (totalQuantity: number) => void;
-}) => {
-    const { fields, append, remove, update } = useFieldArray({
-        control,
-        name: `items.${itemIndex}.batchDetails`
-    });
-
-    const watchedBatches = useWatch({ control, name: `items.${itemIndex}.batchDetails` });
-    const totalBatchQuantity = React.useMemo(() => {
-        return watchedBatches?.reduce((sum: number, batch: { quantity: number }) => sum + (batch.quantity || 0), 0) ?? 0;
-    }, [watchedBatches]);
-
-    return (
-        <SheetContent className="sm:max-w-xl">
-            <SheetHeader>
-                <SheetTitle>Batch Details for: {itemName || 'Item'}</SheetTitle>
-                <SheetDescription>
-                    Add or edit batch information for this item. The total batch quantity must match the item quantity on the bill.
-                </SheetDescription>
-            </SheetHeader>
-            <div className="py-4 space-y-4 max-h-[70vh] overflow-y-auto">
-                {fields.map((field, index) => (
-                    <Card key={field.id} className="p-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                                control={control}
-                                name={`items.${itemIndex}.batchDetails.${index}.batchNumber`}
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Batch No.</FormLabel>
-                                    <FormControl><Input {...field} placeholder="Batch/Lot Number" /></FormControl>
-                                </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={control}
-                                name={`items.${itemIndex}.batchDetails.${index}.quantity`}
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Quantity</FormLabel>
-                                    <FormControl><Input type="number" {...field} placeholder="0.00" /></FormControl>
-                                </FormItem>
-                                )}
-                            />
-                             <FormField
-                                control={control}
-                                name={`items.${itemIndex}.batchDetails.${index}.mfgDate`}
-                                render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                    <FormLabel>Mfg. Date</FormLabel>
-                                    <Popover><PopoverTrigger asChild><FormControl>
-                                        <Button variant="outline" className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
-                                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                        </Button>
-                                    </FormControl></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover>
-                                </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={control}
-                                name={`items.${itemIndex}.batchDetails.${index}.expDate`}
-                                render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                    <FormLabel>Exp. Date</FormLabel>
-                                    <Popover><PopoverTrigger asChild><FormControl>
-                                        <Button variant="outline" className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
-                                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                        </Button>
-                                    </FormControl></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent></Popover>
-                                </FormItem>
-                                )}
-                            />
-                        </div>
-                        <div className="flex justify-end mt-2">
-                             <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => remove(index)}>
-                                <Trash2 className="h-4 w-4"/>
-                            </Button>
-                        </div>
-                    </Card>
-                ))}
-                <Button type="button" variant="outline" className="w-full" onClick={() => append({ batchNumber: '', quantity: 0 })}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Batch
-                </Button>
-            </div>
-            <SheetFooter className="pt-4 border-t">
-                <div className="flex justify-between items-center w-full">
-                    <p className="text-sm">Total Batch Quantity: <span className="font-bold">{totalBatchQuantity}</span></p>
-                    <SheetClose asChild>
-                        <Button type="button" onClick={() => onSave(totalBatchQuantity)}>Done</Button>
-                    </SheetClose>
-                </div>
-            </SheetFooter>
-        </SheetContent>
-    );
-};
-
-
-export function StockPurchaseForm() {
+export function PurchaseBillForm() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [activeSheetIndex, setActiveSheetIndex] = React.useState<number | null>(null);
+  const [purchaseMode, setPurchaseMode] = React.useState<'both' | 'assets' | 'inventory'>('both');
+  const [activeTab, setActiveTab] = React.useState<'assets' | 'inventory'>('inventory');
+
 
   const [vendors, setVendors] = React.useState([
-    { id: 'vend1', name: 'Cloud Services LLC', gstin: '27AAAAA0000A1Z5', address: '789 Cloud Ave, Pune, Maharashtra' },
-    { id: 'vend2', name: 'Office Supplies R Us', gstin: '29BBBBB1111B1Z6', address: '101 Supply St, Bengaluru, Karnataka' },
-    { id: 'vend3', name: 'Marketing Wizards', gstin: '07CCCCC2222C1Z7', address: '202 Creative Ln, Delhi, Delhi' },
+    { id: 'vend1', name: 'Shree Krishna Traders', gstin: '27AAAAA0000A1Z5', address: '123, ABC Market, Pune, Maharashtra' },
+    { id: 'vend2', name: 'Gupta & Sons Enterprises', gstin: '29BBBBB1111B1Z6', address: '45, Industrial Area, Bengaluru, Karnataka' },
+    { id: 'vend3', name: 'Rajeshwari Logistics', gstin: '07CCCCC2222C1Z7', address: 'F-16, Okhla Industrial Area, Delhi, Delhi' },
   ]);
+  const [isVendorDialogOpen, setIsVendorDialogOpen] = React.useState(false);
+  const [newVendor, setNewVendor] = React.useState({ name: '', gstin: '', address: '' });
 
-  const form = useForm<StockPurchaseValues>({
-    resolver: zodResolver(stockPurchaseSchema),
+
+  const form = useForm<PurchaseBillValues>({
+    resolver: zodResolver(purchaseBillSchema),
     defaultValues: {
       vendorName: '',
+      vendorAddress: '',
       billNumber: '',
-      billDate: new Date(),
-      maintainBatches: false,
-      items: [{ itemName: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18, batchDetails: [] }],
+      billDate: undefined,
+      dueDate: undefined,
+      items: [{ itemName: '', ledgerAccountId: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 }],
+      notes: '',
     },
   });
+  
+  React.useEffect(() => {
+    const today = new Date();
+    const futureDate = new Date();
+    futureDate.setDate(today.getDate() + 30);
+    
+    form.setValue('billDate', today);
+    form.setValue('dueDate', futureDate);
+  }, [form]);
+
+  React.useEffect(() => {
+    if (purchaseMode === 'assets') {
+        setActiveTab('assets');
+    } else if (purchaseMode === 'inventory') {
+        setActiveTab('inventory');
+    }
+  }, [purchaseMode]);
+
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -274,7 +161,43 @@ export function StockPurchaseForm() {
   
   const watchedItems = form.watch('items');
   const watchedPlaceOfSupply = form.watch('placeOfSupply');
-  const maintainBatches = form.watch('maintainBatches');
+
+  const allLedgers = React.useMemo(() => {
+    const flatten = (accounts: Ledger[]): { value: string, label: string }[] => {
+        let list: { value: string, label: string }[] = [];
+        accounts.forEach(acc => {
+            if (acc.type === 'ledger') {
+                list.push({ value: acc.id, label: acc.name });
+            }
+            if (acc.children) {
+                list = [...list, ...flatten(acc.children)];
+            }
+        });
+        return list;
+    };
+    return flatten(chartOfAccountsData);
+  }, []);
+  
+  const handleAddVendor = () => {
+    if (newVendor.name && newVendor.address) {
+        const newVendorData = { ...newVendor, id: `vend-${Date.now()}` };
+        setVendors(prev => [...prev, newVendorData]);
+        form.setValue('vendorName', newVendorData.name);
+        form.setValue('vendorGstin', newVendorData.gstin);
+        form.setValue('vendorAddress', newVendorData.address);
+        
+        const stateMatch = indianStates.find(state => newVendorData.address.toLowerCase().includes(state.toLowerCase()));
+        if(stateMatch) {
+            form.setValue('placeOfSupply', stateMatch);
+        }
+
+        toast({ title: 'Vendor Added', description: `${newVendorData.name} has been added.` });
+        setIsVendorDialogOpen(false);
+        setNewVendor({ name: '', gstin: '', address: '' });
+    } else {
+        toast({ title: 'Error', description: 'Vendor Name and Address are required.', variant: 'destructive' });
+    }
+  }
 
   const totals = React.useMemo(() => {
     let subtotal = 0;
@@ -297,107 +220,151 @@ export function StockPurchaseForm() {
     return { subtotal, grandTotal, totalGst, totalCgst, totalSgst, totalIgst };
   }, [watchedItems, watchedPlaceOfSupply]);
   
-  async function onSubmit(data: StockPurchaseValues) {
+  async function onSubmit(data: PurchaseBillValues) {
     setIsSubmitting(true);
     await new Promise(resolve => setTimeout(resolve, 1500));
     console.log('Form Submitted', { data, totals });
     toast({
-      title: "Stock Purchase Recorded",
-      description: `Purchase from ${data.vendorName} has been successfully recorded.`,
+      title: "Purchase Bill Recorded",
+      description: `Bill from ${data.vendorName} has been successfully recorded.`,
     });
     setIsSubmitting(false);
     form.reset({
       vendorName: '',
+      vendorAddress: '',
       billNumber: '',
       billDate: new Date(),
-      items: [{ itemName: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18, batchDetails: [] }],
+      items: [{ itemName: '', ledgerAccountId: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 }],
     });
   }
-  
-  const ProductCombobox = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
+
+  const AccountCombobox = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
     const [open, setOpen] = React.useState(false);
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild><FormControl>
                 <Button variant="outline" role="combobox" className={cn("w-full justify-between", !value && "text-muted-foreground")}>
-                {value ? products.find(product => product.value === value)?.label : "Select item"}
+                {value ? allLedgers.find(acc => acc.value === value)?.label : "Select account"}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </FormControl></PopoverTrigger>
-            <PopoverContent className="w-[300px] p-0"><Command><CommandInput placeholder="Search items..." />
-            <CommandList><CommandEmpty>No item found.</CommandEmpty><CommandGroup>
-                {products.map(product => (
-                    <CommandItem value={product.label} key={product.value} onSelect={() => { onChange(product.value); setOpen(false); }}>
-                        <Check className={cn("mr-2 h-4 w-4", product.value === value ? "opacity-100" : "opacity-0")} />
-                        {product.label}
-                    </CommandItem>
-                ))}
-            </CommandGroup></CommandList></Command></PopoverContent>
+            <PopoverContent className="w-[300px] p-0"><Command>
+                <CommandInput placeholder="Search accounts..." />
+                <CommandList>
+                    <CommandEmpty>No account found.</CommandEmpty>
+                    <CommandGroup>
+                        {allLedgers.map(acc => (
+                            <CommandItem value={acc.label} key={acc.value} onSelect={() => { onChange(acc.value); setOpen(false); }}>
+                                <Check className={cn("mr-2 h-4 w-4", acc.value === value ? "opacity-100" : "opacity-0")} />
+                                {acc.label}
+                            </CommandItem>
+                        ))}
+                    </CommandGroup>
+                </CommandList>
+            </Command></PopoverContent>
         </Popover>
     );
   };
+  
+  const showAccountColumn = activeTab === 'inventory';
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <Card className="max-w-5xl mx-auto">
+        <Card className="max-w-6xl mx-auto">
           <CardHeader>
-            <CardTitle className="text-2xl">New Stock Purchase</CardTitle>
-            <CardDescription>Enter the details for the items you have purchased.</CardDescription>
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle className="text-2xl">New Purchase Bill</CardTitle>
+                <CardDescription>Enter the details from your vendor's bill.</CardDescription>
+              </div>
+              <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                          <Settings className="h-5 w-5" />
+                      </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Purchase Mode</DropdownMenuLabel>
+                      <DropdownMenuRadioGroup value={purchaseMode} onValueChange={(value) => setPurchaseMode(value as any)}>
+                          <DropdownMenuRadioItem value="both">Assets & Inventory</DropdownMenuRadioItem>
+                          <DropdownMenuRadioItem value="assets">Assets Only</DropdownMenuRadioItem>
+                          <DropdownMenuRadioItem value="inventory">Inventory Only</DropdownMenuRadioItem>
+                      </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
-             <FormField
-              control={form.control}
-              name="maintainBatches"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Maintain Batch/Serial No.</FormLabel>
-                    <FormDescription>Enable to track items by batch, including Mfg & Exp dates.</FormDescription>
-                  </div>
-                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                </FormItem>
-              )}
-            />
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column */}
               <div className="space-y-4">
-                <FormField
+                 <FormField
                     control={form.control}
                     name="vendorName"
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Vendor</FormLabel>
-                            <Select
-                                onValueChange={(value) => {
-                                    const selectedVendor = vendors.find(c => c.name === value);
-                                    if (selectedVendor) {
-                                        field.onChange(value);
-                                        const stateMatch = indianStates.find(state => selectedVendor.address.toLowerCase().includes(state.toLowerCase()));
-                                        if(stateMatch) {
-                                            form.setValue('placeOfSupply', stateMatch);
+                             <div className="flex items-start gap-2">
+                                <Select
+                                    onValueChange={(value) => {
+                                        const selectedVendor = vendors.find(c => c.name === value);
+                                        if (selectedVendor) {
+                                            field.onChange(value);
+                                            form.setValue('vendorGstin', selectedVendor.gstin);
+                                            form.setValue('vendorAddress', selectedVendor.address);
+                                            const stateMatch = indianStates.find(state => selectedVendor.address.toLowerCase().includes(state.toLowerCase()));
+                                            if(stateMatch) {
+                                                form.setValue('placeOfSupply', stateMatch);
+                                            }
                                         }
-                                    }
-                                }}
-                                value={field.value}
-                            >
-                                <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a vendor" />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {vendors.map(vendor => (
-                                        <SelectItem key={vendor.id} value={vendor.name}>
-                                            {vendor.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                    }}
+                                    value={field.value}
+                                >
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a vendor" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {vendors.map(vendor => (
+                                            <SelectItem key={vendor.id} value={vendor.name}>
+                                                {vendor.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Dialog open={isVendorDialogOpen} onOpenChange={setIsVendorDialogOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button type="button" variant="outline" size="icon" className="shrink-0">
+                                            <PlusCircle className="h-4 w-4" />
+                                            <span className="sr-only">Add New Vendor</span>
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Add New Vendor</DialogTitle>
+                                            <DialogDescription>Quickly add a new vendor.</DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid gap-4 py-4">
+                                            <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="new-vendor-name" className="text-right">Name</Label><Input id="new-vendor-name" value={newVendor.name} onChange={(e) => setNewVendor(p => ({...p, name: e.target.value}))} className="col-span-3" /></div>
+                                            <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="new-vendor-gstin" className="text-right">GSTIN</Label><Input id="new-vendor-gstin" value={newVendor.gstin} onChange={(e) => setNewVendor(p => ({...p, gstin: e.target.value}))} className="col-span-3" /></div>
+                                            <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="new-vendor-address" className="text-right">Address</Label><Textarea id="new-vendor-address" value={newVendor.address} onChange={(e) => setNewVendor(p => ({...p, address: e.target.value}))} className="col-span-3" placeholder="Full Address including State" /></div>
+                                        </div>
+                                        <DialogFooter>
+                                            <Button variant="outline" onClick={() => setIsVendorDialogOpen(false)}>Cancel</Button>
+                                            <Button onClick={handleAddVendor}>Add Vendor</Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
                             <FormMessage />
                         </FormItem>
                     )}
                 />
+                 <FormField control={form.control} name="vendorGstin" render={({ field }) => (
+                    <FormItem><FormLabel>Vendor GSTIN</FormLabel><FormControl><Input placeholder="15-digit GSTIN" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
                  <FormField control={form.control} name="placeOfSupply" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Place of Supply (Vendor's State)</FormLabel>
@@ -408,6 +375,7 @@ export function StockPurchaseForm() {
                     </FormItem>
                 )} />
               </div>
+              {/* Right Column */}
               <div className="space-y-4">
                 <FormField control={form.control} name="billNumber" render={({ field }) => (
                     <FormItem><FormLabel>Bill Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
@@ -427,83 +395,83 @@ export function StockPurchaseForm() {
                         <FormMessage />
                     </FormItem>
                 )} />
+                <FormField control={form.control} name="dueDate" render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                        <FormLabel>Due Date</FormLabel>
+                        <Popover>
+                            <PopoverTrigger asChild><FormControl>
+                                <Button variant={"outline"} className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                                    {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                            </FormControl></PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus /></PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                    </FormItem>
+                )} />
               </div>
             </div>
 
             <Separator />
 
-            <Sheet open={activeSheetIndex !== null} onOpenChange={(open) => !open && setActiveSheetIndex(null)}>
-                <div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-1/3">Item</TableHead>
-                        <TableHead>HSN/SAC</TableHead>
-                        <TableHead className="text-right">Qty</TableHead>
-                        <TableHead className="text-right">Rate</TableHead>
-                        <TableHead className="text-right">GST%</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                        <TableHead></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {fields.map((field, index) => {
-                        const itemQty = watchedItems[index]?.quantity || 0;
-                        const batchQty = watchedItems[index]?.batchDetails?.reduce((sum, b) => sum + b.quantity, 0) || 0;
-                        const isQtyMismatched = maintainBatches && itemQty > 0 && Math.abs(itemQty - batchQty) > 0.001;
-                        return (
-                          <TableRow key={field.id}>
-                            <TableCell>
-                              <FormField
-                                  control={form.control}
-                                  name={`items.${index}.itemName`}
-                                  render={({ field }) => (
-                                      <FormItem>
-                                          <ProductCombobox value={field.value} onChange={field.onChange} />
-                                          <FormMessage />
-                                      </FormItem>
-                                  )}
-                              />
-                            </TableCell>
-                            <TableCell><FormField control={form.control} name={`items.${index}.hsnCode`} render={({ field }) => <Input placeholder="HSN Code" {...field} />} /></TableCell>
-                            <TableCell><FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => <Input type="number" className="text-right min-w-[100px]" {...field} readOnly={maintainBatches} />} /></TableCell>
-                            <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="number" className="text-right min-w-[100px]" {...field} />} /></TableCell>
-                            <TableCell><FormField control={form.control} name={`items.${index}.gstRate`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
-                            <TableCell className="text-right font-mono">{formatCurrency((watchedItems[index]?.quantity || 0) * (watchedItems[index]?.rate || 0), 'INR')}</TableCell>
-                            <TableCell className="flex items-center">
-                                {maintainBatches && (
-                                    <Button variant={isQtyMismatched ? "destructive" : "outline"} size="icon" className="h-8 w-8" onClick={() => setActiveSheetIndex(index)}>
-                                        <Package className="h-4 w-4" />
-                                    </Button>
-                                )}
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => remove(index)}>
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
-                  <Button type="button" variant="outline" className="mt-4" onClick={() => append({ itemName: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18, batchDetails: [] })}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Item
-                  </Button>
-                </div>
-                {activeSheetIndex !== null && (
-                    <BatchDetailsSheet
-                        itemIndex={activeSheetIndex}
-                        itemName={watchedItems[activeSheetIndex]?.itemName || ''}
-                        control={form.control}
-                        onSave={(totalQuantity) => {
-                            form.setValue(`items.${activeSheetIndex}.quantity`, totalQuantity, { shouldValidate: true });
-                            setActiveSheetIndex(null);
-                        }}
-                    />
-                )}
-            </Sheet>
+            {/* Items Table */}
+            <div>
+              {purchaseMode === 'both' && (
+                  <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full mb-4">
+                      <TabsList className="bg-transparent p-0 justify-start gap-2 h-auto flex-wrap">
+                          <TabsTrigger value="inventory" className="rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border border-input bg-transparent hover:bg-accent hover:text-accent-foreground data-[state=active]:border-transparent">Inventory Purchase</TabsTrigger>
+                          <TabsTrigger value="assets" className="rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border border-input bg-transparent hover:bg-accent hover:text-accent-foreground data-[state=active]:border-transparent">Asset Purchase</TabsTrigger>
+                      </TabsList>
+                  </Tabs>
+              )}
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-1/3">Item</TableHead>
+                    {showAccountColumn && <TableHead className="w-1/4">Account</TableHead>}
+                    <TableHead>HSN/SAC</TableHead>
+                    <TableHead className="text-right">Qty</TableHead>
+                    <TableHead className="text-right">Rate</TableHead>
+                    <TableHead className="text-right">GST%</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {fields.map((field, index) => (
+                    <TableRow key={field.id}>
+                      <TableCell><FormField control={form.control} name={`items.${index}.itemName`} render={({ field }) => <Input placeholder="Item name" {...field} />} /></TableCell>
+                      {showAccountColumn && <TableCell>
+                        <FormField
+                            control={form.control}
+                            name={`items.${index}.ledgerAccountId`}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <AccountCombobox value={field.value} onChange={field.onChange} />
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                      </TableCell>}
+                      <TableCell><FormField control={form.control} name={`items.${index}.hsnCode`} render={({ field }) => <Input placeholder="HSN Code" {...field} />} /></TableCell>
+                      <TableCell><FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
+                      <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
+                      <TableCell><FormField control={form.control} name={`items.${index}.gstRate`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
+                      <TableCell className="text-right font-mono">{formatCurrency((watchedItems[index]?.quantity || 0) * (watchedItems[index]?.rate || 0), 'INR')}</TableCell>
+                      <TableCell><Button variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <Button type="button" variant="outline" className="mt-4" onClick={() => append({ itemName: '', ledgerAccountId: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 })}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Item
+              </Button>
+            </div>
 
             <Separator />
             
+            {/* Totals Section */}
             <div className="flex justify-end">
               <div className="w-full max-w-sm space-y-2">
                 <div className="flex justify-between"><span>Subtotal</span><span className="font-mono">{formatCurrency(totals.subtotal, 'INR')}</span></div>
@@ -515,12 +483,28 @@ export function StockPurchaseForm() {
               </div>
             </div>
 
+            <Separator />
+
+             <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Notes</FormLabel>
+                    <FormControl>
+                        <Textarea placeholder="Any notes related to this purchase bill." {...field} rows={2} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+
           </CardContent>
         </Card>
         <div className="flex justify-end">
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            Save Purchase
+            Save Purchase Bill
           </Button>
         </div>
       </form>

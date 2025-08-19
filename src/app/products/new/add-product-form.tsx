@@ -256,8 +256,8 @@ export function AddProductForm() {
   const [targetUomField, setTargetUomField] = React.useState<'uom' | 'secondaryUom' | null>(null);
 
   const [visibleSections, setVisibleSections] = React.useState<Record<string, boolean>>({
-    organization: false,
-    attributes: true, // Show attributes by default
+    organization: true,
+    attributes: true, 
     ecommerce: false,
   });
   
