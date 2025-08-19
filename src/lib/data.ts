@@ -53,6 +53,7 @@ const getDeterministicElement = <T>(arr: T[] | readonly T[], index: number): T =
 export function generateData(count: number): Person[] {
   const data: Person[] = [];
   const usedCompanyNames = new Set<string>();
+  const fixedDate = new Date('2024-07-21T10:00:00Z');
 
   for (let i = 0; i < count; i++) {
     const firstName = getDeterministicElement(firstNames, i);

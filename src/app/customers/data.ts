@@ -51,7 +51,7 @@ function generateDeterministicGstin(stateCode: string, index: number): string {
 
 export const generateCustomerData = (count?: number): Customer[] => {
     const data: Customer[] = [];
-    const now = new Date();
+    const now = new Date('2024-07-21T10:00:00Z'); // Use a fixed date
     const allEntities = [...personNames, ...companyNames];
     const totalCount = count || allEntities.length;
 
