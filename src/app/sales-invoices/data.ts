@@ -28,7 +28,10 @@ export type SalesInvoice = {
   items: SalesInvoiceItem[];
 };
 
-const customerNames = ["Innovate Inc.", "Solutions Corp.", "Quantum Tech", "Synergy LLC", "Apex Industries", "Starlight Co."];
+import { generateCustomerData } from '@/app/customers/data';
+
+const customers = generateCustomerData();
+const customerNames = customers.map(c => c.company || c.name);
 const gstTypes = ['CGST&SGST', 'IGST', 'UTGST', 'N/A'] as const;
 const currencyCodes = ['USD', 'INR', 'EUR'] as const;
 const createdByUsers = ['Admin', 'John Doe', 'Jane Smith', 'Peter Jones'];
