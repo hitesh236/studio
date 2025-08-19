@@ -230,6 +230,14 @@ const AttributeCreationDialog = ({ open, onOpenChange, onSave }: { open: boolean
     );
 };
 
+const defaultCategoryPath = ['grocery', 'staples-pulses', 'rice'];
+const defaultLastCategoryId = defaultCategoryPath[defaultCategoryPath.length - 1];
+const defaultAttributes = getAttributesForCategory(defaultLastCategoryId, initialCategoriesData, initialAttributes);
+const defaultDynamicAttributes = defaultAttributes.map(attr => ({
+    attributeId: attr.id,
+    value: attr.type === 'checkbox' ? false : ''
+}));
+
 
 export function AddProductForm() {
   const { toast } = useToast();
@@ -271,7 +279,7 @@ export function AddProductForm() {
         hsnCode: '',
         gstRate: 18,
         sku: '',
-        categoryPath: ['grocery', 'staples-pulses', 'rice'],
+        categoryPath: defaultCategoryPath,
         uom: '',
         secondaryUom: '',
         openingStock: 0,
@@ -283,7 +291,7 @@ export function AddProductForm() {
         barcode: '',
         alternateName: '',
         tags: [],
-        dynamicAttributes: [],
+        dynamicAttributes: defaultDynamicAttributes,
         isListedOnWebsite: false,
         productImages: [],
         webShortDescription: '',
