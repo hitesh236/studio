@@ -107,7 +107,7 @@ const purchaseBillSchema = z.object({
 
 type PurchaseBillValues = z.infer<typeof purchaseBillSchema>;
 
-export function PurchaseBillForm() {
+export function StockPurchaseForm() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [purchaseMode, setPurchaseMode] = React.useState<'both' | 'assets' | 'inventory'>('both');
