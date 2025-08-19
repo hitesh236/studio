@@ -29,6 +29,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Slider } from '@/components/ui/slider';
 import Link from 'next/link';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 const ALL_COLUMNS = [
@@ -474,6 +475,7 @@ export function CustomerTable({ data }: { data: Customer[] }) {
       };
 
   return (
+    <TooltipProvider>
     <div className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <SummaryCard icon={Users} title="Total Customers" value={summaryStats.totalCustomers.toString()} variant="primary" />
@@ -494,87 +496,100 @@ export function CustomerTable({ data }: { data: Customer[] }) {
                       <Input
                         placeholder="Filter customers..."
                         value={filter}
-                        onChange={(e) => setFilter(e.target.value)}
+                        onChange={(e) => {
+                            setFilter(e.target.value);
+                            setPage(0);
+                        }}
                         className="pl-10 w-full sm:w-64"
                       />
                     </div>
-                     <Popover>
-                        <PopoverTrigger asChild>
-                            <Button variant="outline" size="icon">
-                                <FilterIcon className="h-4 w-4"/>
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-56 p-4" align="end">
-                            <div className="space-y-4">
-                                <h4 className="font-medium leading-none">Add Filters</h4>
-                                <div className="space-y-2">
-                                {availableFilters.map((f) => (
-                                    <div key={f.id} className="flex items-center space-x-2">
-                                        <Checkbox id={f.id} checked={activeFilters.has(f.id)} onCheckedChange={() => toggleFilter(f.id)}/>
-                                        <Label htmlFor={f.id}>{f.label}</Label>
-                                    </div>
-                                ))}
-                                </div>
+                    <div className="flex items-center space-x-2">
+                        <Tooltip><TooltipTrigger asChild>
+                            <div className="flex items-center space-x-2">
+                                <Switch id="density-mode" checked={density === "compact"} onCheckedChange={(checked) => setDensity(checked ? "compact" : "normal")} />
+                                <Label htmlFor="density-mode">Compact</Label>
                             </div>
-                        </PopoverContent>
-                    </Popover>
-                    <div className="hidden sm:flex items-center space-x-2">
-                        <Switch id="density-mode" checked={density === "compact"} onCheckedChange={(checked) => setDensity(checked ? "compact" : "normal")} />
-                        <Label htmlFor="density-mode">Compact</Label>
+                        </TooltipTrigger><TooltipContent><p>Toggle Compact View</p></TooltipContent></Tooltip>
                     </div>
-                     <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="icon">
-                            <Columns className="h-4 w-4" />
-                            <span className="sr-only">Toggle Columns</span>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-64" align="end" onMouseLeave={() => setDragOverColumn(null)}>
-                        <DropdownMenuLabel>Toggle & Reorder</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <div className="flex flex-col gap-1 p-1">
-                            {columnOrder.map((columnId) => {
-                                const column = ALL_COLUMNS.find((c) => c.id === columnId)!;
-                                return (
-                                    <div
-                                    key={column.id}
-                                    draggable={column.id !== 'actions'}
-                                    onDragStart={(e) => handleDragStart(e, column.id)}
-                                    onDragOver={(e) => handleDragOver(e, column.id)}
-                                    onDragLeave={handleDragLeave}
-                                    onDrop={(e) => handleDrop(e, column.id)}
-                                    onDragEnd={handleDragEnd}
-                                    className={cn(
-                                        "flex items-center p-2 rounded-md transition-all text-sm",
-                                        column.id !== 'actions' && "cursor-grab active:cursor-grabbing",
-                                        draggedColumn.current === column.id && "opacity-50",
-                                        dragOverColumn === column.id && draggedColumn.current !== column.id && "bg-accent/50"
-                                    )}
-                                    >
-                                    <GripVertical className={cn("h-5 w-5 text-muted-foreground mr-2 shrink-0", column.id === 'actions' && "opacity-0")} />
-                                    <span className="flex-grow">{column.label}</span>
-                                    <Switch
-                                        checked={columnVisibility.has(column.id)}
-                                        onCheckedChange={(checked) => {
-                                        const newVisibility = new Set(columnVisibility);
-                                        if (checked) newVisibility.add(column.id);
-                                        else newVisibility.delete(column.id);
-                                        setColumnVisibility(newVisibility);
-                                        }}
-                                        onClick={(e) => e.stopPropagation()}
-                                        disabled={column.id === 'name'}
-                                        className="h-5 w-9 shrink-0 [&>span]:h-4 [&>span]:w-4 [&>span[data-state=checked]]:translate-x-4 [&>span[data-state=unchecked]]:translate-x-0"
-                                    />
+                    <Tooltip><TooltipTrigger asChild>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" size="icon">
+                                    <FilterIcon className="h-4 w-4"/>
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-56 p-4" align="end">
+                                <div className="space-y-4">
+                                    <h4 className="font-medium leading-none">Add Filters</h4>
+                                    <div className="space-y-2">
+                                    {availableFilters.map((f) => (
+                                        <div key={f.id} className="flex items-center space-x-2">
+                                            <Checkbox id={f.id} checked={activeFilters.has(f.id)} onCheckedChange={() => toggleFilter(f.id)}/>
+                                            <Label htmlFor={f.id}>{f.label}</Label>
+                                        </div>
+                                    ))}
                                     </div>
-                                );
-                            })}
-                        </div>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    <Button variant="outline" size="icon">
-                        <Download className="h-4 w-4" />
-                        <span className="sr-only">Export</span>
-                    </Button>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                    </TooltipTrigger><TooltipContent><p>Filter</p></TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="icon">
+                                <Columns className="h-4 w-4" />
+                                <span className="sr-only">Toggle Columns</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-64" align="end" onMouseLeave={() => setDragOverColumn(null)}>
+                            <DropdownMenuLabel>Toggle & Reorder</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <div className="flex flex-col gap-1 p-1">
+                                {columnOrder.map((columnId) => {
+                                    const column = ALL_COLUMNS.find((c) => c.id === columnId)!;
+                                    return (
+                                        <div
+                                        key={column.id}
+                                        draggable={column.id !== 'actions'}
+                                        onDragStart={(e) => handleDragStart(e, column.id)}
+                                        onDragOver={(e) => handleDragOver(e, column.id)}
+                                        onDragLeave={handleDragLeave}
+                                        onDrop={(e) => handleDrop(e, column.id)}
+                                        onDragEnd={handleDragEnd}
+                                        className={cn(
+                                            "flex items-center p-2 rounded-md transition-all text-sm",
+                                            column.id !== 'actions' && "cursor-grab active:cursor-grabbing",
+                                            draggedColumn.current === column.id && "opacity-50",
+                                            dragOverColumn === column.id && draggedColumn.current !== column.id && "bg-accent/50"
+                                        )}
+                                        >
+                                        <GripVertical className={cn("h-5 w-5 text-muted-foreground mr-2 shrink-0", column.id === 'actions' && "opacity-0")} />
+                                        <span className="flex-grow">{column.label}</span>
+                                        <Switch
+                                            checked={columnVisibility.has(column.id)}
+                                            onCheckedChange={(checked) => {
+                                            const newVisibility = new Set(columnVisibility);
+                                            if (checked) newVisibility.add(column.id);
+                                            else newVisibility.delete(column.id);
+                                            setColumnVisibility(newVisibility);
+                                            }}
+                                            onClick={(e) => e.stopPropagation()}
+                                            disabled={column.id === 'name'}
+                                            className="h-5 w-9 shrink-0 [&>span]:h-4 [&>span]:w-4 [&>span[data-state=checked]]:translate-x-4 [&>span[data-state=unchecked]]:translate-x-0"
+                                        />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </TooltipTrigger><TooltipContent><p>Columns</p></TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild>
+                        <Button variant="outline" size="icon">
+                            <Download className="h-4 w-4" />
+                            <span className="sr-only">Export</span>
+                        </Button>
+                    </TooltipTrigger><TooltipContent><p>Export</p></TooltipContent></Tooltip>
                 </div>
             </div>
             {activeFilters.size > 0 && (
@@ -708,6 +723,8 @@ export function CustomerTable({ data }: { data: Customer[] }) {
               )}
             </CardContent>
         </Card>
+        <p className="text-center text-xs text-muted-foreground mt-4">Note: Customer 'status' is 'Active' if the last transaction was within the last 90 days.</p>
     </div>
+    </TooltipProvider>
   );
 }
