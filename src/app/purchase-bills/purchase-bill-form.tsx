@@ -67,12 +67,13 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { ledgerData as chartOfAccountsData, type Ledger } from '@/lib/ledger-data';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { generateData, type Person } from '@/lib/data';
+import { generateStockListData, type StockItem } from '@/app/stock-list/data';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -86,6 +87,7 @@ const indianStates = [
 ];
 
 const purchaseItemSchema = z.object({
+  productId: z.string().optional(),
   itemName: z.string().min(1, 'Item name is required.'),
   ledgerAccountId: z.string().min(1, 'Account is required.'),
   hsnCode: z.string().optional(),
@@ -115,6 +117,7 @@ export function PurchaseBillForm() {
   const [activeTab, setActiveTab] = React.useState<'assets' | 'inventory'>('inventory');
 
   const [vendors, setVendors] = React.useState<Person[]>([]);
+  const [products, setProducts] = React.useState<StockItem[]>([]);
   const [isVendorDialogOpen, setIsVendorDialogOpen] = React.useState(false);
   const [newVendor, setNewVendor] = React.useState({ name: '', gstin: '', address: '' });
   const [vendorSearch, setVendorSearch] = React.useState("");
@@ -122,6 +125,7 @@ export function PurchaseBillForm() {
   React.useEffect(() => {
     const allParties = generateData(100);
     setVendors(allParties.filter(p => p.type === 'Vendor'));
+    setProducts(generateStockListData());
   }, []);
 
 
@@ -133,7 +137,7 @@ export function PurchaseBillForm() {
       billNumber: '',
       billDate: undefined,
       dueDate: undefined,
-      items: [{ itemName: '', ledgerAccountId: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 }],
+      items: [{ productId: '', itemName: '', ledgerAccountId: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 }],
       notes: '',
     },
   });
@@ -246,9 +250,50 @@ export function PurchaseBillForm() {
       vendorAddress: '',
       billNumber: '',
       billDate: new Date(),
-      items: [{ itemName: '', ledgerAccountId: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 }],
+      items: [{ productId: '', itemName: '', ledgerAccountId: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 }],
     });
   }
+  
+  const ProductCombobox = ({ value, onChange, onProductSelect }: { value: string; onChange: (value: string) => void; onProductSelect: (product: StockItem) => void; }) => {
+    const [open, setOpen] = React.useState(false);
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild><FormControl>
+                <Button variant="outline" role="combobox" className={cn("w-full justify-between", !value && "text-muted-foreground")}>
+                {value ? products.find(product => product.id === value)?.productName : "Select item"}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+            </FormControl></PopoverTrigger>
+            <PopoverContent className="w-full p-0" style={{minWidth: 'var(--radix-popover-trigger-width)'}}>
+                <Command filter={(value, search) => {
+                    const product = products.find(p => p.id === value);
+                    if (product?.productName.toLowerCase().includes(search.toLowerCase()) || product?.sku.toLowerCase().includes(search)) return 1;
+                    return 0;
+                }}>
+                    <CommandInput placeholder="Search items..." />
+                    <CommandList>
+                        <CommandEmpty>No item found.</CommandEmpty>
+                        <CommandGroup>
+                            {products.map(product => (
+                                <CommandItem value={product.id} key={product.id} onSelect={() => { 
+                                    onChange(product.id);
+                                    onProductSelect(product);
+                                    setOpen(false); 
+                                }}>
+                                    <Check className={cn("mr-2 h-4 w-4", product.id === value ? "opacity-100" : "opacity-0")} />
+                                    <div className="flex justify-between w-full">
+                                        <span>{product.productName}</span>
+                                        <span className="text-muted-foreground text-xs">{product.sku}</span>
+                                    </div>
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    </CommandList>
+                </Command>
+            </PopoverContent>
+        </Popover>
+    );
+  };
 
   const AccountCombobox = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
     const [open, setOpen] = React.useState(false);
@@ -329,7 +374,7 @@ export function PurchaseBillForm() {
                                     <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                                         <Command filter={(value, search) => {
                                             const vendor = vendors.find(v => v.id === value);
-                                            if (vendor?.company.toLowerCase().includes(search.toLowerCase()) || vendor?.phone.includes(search)) return 1;
+                                            if (vendor?.company.toLowerCase().includes(search.toLowerCase()) || vendor?.phone?.includes(search)) return 1;
                                             return 0;
                                         }}>
                                             <CommandInput placeholder="Search by name or phone..." onValueChange={setVendorSearch} />
@@ -443,7 +488,25 @@ export function PurchaseBillForm() {
                 <TableBody>
                   {fields.map((field, index) => (
                     <TableRow key={field.id}>
-                      <TableCell><FormField control={form.control} name={`items.${index}.itemName`} render={({ field }) => <Input placeholder="Item name" {...field} />} /></TableCell>
+                      <TableCell>
+                          <FormField
+                            control={form.control}
+                            name={`items.${index}.productId`}
+                            render={({ field: itemField }) => (
+                                <FormItem>
+                                    <ProductCombobox
+                                        value={itemField.value || ''}
+                                        onChange={itemField.onChange}
+                                        onProductSelect={(product) => {
+                                            form.setValue(`items.${index}.itemName`, product.productName);
+                                            form.setValue(`items.${index}.rate`, product.purchasePrice);
+                                        }}
+                                    />
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                      </TableCell>
                       {showAccountColumn && <TableCell>
                         <FormField
                             control={form.control}
@@ -466,7 +529,7 @@ export function PurchaseBillForm() {
                   ))}
                 </TableBody>
               </Table>
-              <Button type="button" variant="outline" className="mt-4" onClick={() => append({ itemName: '', ledgerAccountId: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 })}>
+              <Button type="button" variant="outline" className="mt-4" onClick={() => append({ productId: '', itemName: '', ledgerAccountId: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 })}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Item
               </Button>
             </div>
