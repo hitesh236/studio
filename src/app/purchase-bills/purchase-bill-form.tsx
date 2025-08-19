@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
@@ -15,6 +15,7 @@ import {
   ChevronsUpDown,
   Check,
   Settings,
+  Layers,
 } from 'lucide-react';
 
 import { cn, formatCurrency } from '@/lib/utils';
@@ -67,7 +68,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { ledgerData as chartOfAccountsData, type Ledger } from '@/lib/ledger-data';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -86,6 +87,13 @@ const indianStates = [
   'Ladakh', 'Lakshadweep', 'Puducherry',
 ];
 
+const batchSchema = z.object({
+    id: z.string(),
+    batchNumber: z.string().optional(),
+    expiryDate: z.date().optional(),
+    quantity: z.coerce.number().min(0.01, 'Qty must be > 0'),
+});
+
 const purchaseItemSchema = z.object({
   productId: z.string().optional(),
   itemName: z.string().min(1, 'Item name is required.'),
@@ -94,6 +102,7 @@ const purchaseItemSchema = z.object({
   quantity: z.coerce.number().min(0.01, 'Quantity must be positive.'),
   rate: z.coerce.number().min(0, 'Rate cannot be negative.'),
   gstRate: z.coerce.number().min(0).max(100).default(18),
+  batches: z.array(batchSchema).optional(),
 });
 
 const purchaseBillSchema = z.object({
@@ -109,6 +118,82 @@ const purchaseBillSchema = z.object({
 });
 
 type PurchaseBillValues = z.infer<typeof purchaseBillSchema>;
+type BatchValues = z.infer<typeof batchSchema>;
+
+// Batch Management Dialog
+const BatchDialog = ({
+    item,
+    itemIndex,
+    updateBatches,
+    onClose,
+}: {
+    item: z.infer<typeof purchaseItemSchema>;
+    itemIndex: number;
+    updateBatches: (itemIndex: number, batches: BatchValues[]) => void;
+    onClose: () => void;
+}) => {
+    const [batches, setBatches] = React.useState<BatchValues[]>(item.batches || []);
+    
+    const handleAddBatch = () => {
+        setBatches([...batches, { id: `batch-${Date.now()}`, quantity: 0 }]);
+    };
+
+    const handleRemoveBatch = (id: string) => {
+        setBatches(batches.filter(b => b.id !== id));
+    };
+
+    const handleBatchChange = (id: string, field: keyof BatchValues, value: any) => {
+        setBatches(batches.map(b => b.id === id ? { ...b, [field]: value } : b));
+    };
+
+    const handleSave = () => {
+        updateBatches(itemIndex, batches);
+        onClose();
+    };
+
+    return (
+        <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+                <DialogTitle>Manage Batches for {item.itemName}</DialogTitle>
+                <DialogDescription>Add batch numbers, expiry dates, and quantities for this item.</DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto">
+                {batches.map((batch, index) => (
+                    <div key={batch.id} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_100px_auto] gap-2 items-end p-2 border rounded-lg">
+                        <div className="space-y-1">
+                            {index === 0 && <Label>Batch No.</Label>}
+                            <Input placeholder="Optional" value={batch.batchNumber} onChange={(e) => handleBatchChange(batch.id, 'batchNumber', e.target.value)} />
+                        </div>
+                        <div className="space-y-1">
+                             {index === 0 && <Label>Expiry Date</Label>}
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !batch.expiryDate && "text-muted-foreground")}>
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {batch.expiryDate ? format(batch.expiryDate, "dd/MM/yyyy") : <span>No Expiry</span>}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={batch.expiryDate} onSelect={(date) => handleBatchChange(batch.id, 'expiryDate', date)} /></PopoverContent>
+                            </Popover>
+                        </div>
+                        <div className="space-y-1">
+                             {index === 0 && <Label>Quantity</Label>}
+                            <Input type="number" value={batch.quantity} onChange={(e) => handleBatchChange(batch.id, 'quantity', parseFloat(e.target.value))} />
+                        </div>
+                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleRemoveBatch(batch.id)}><Trash2 className="h-4 w-4" /></Button>
+                    </div>
+                ))}
+                <Button type="button" variant="outline" onClick={handleAddBatch}>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Batch
+                </Button>
+            </div>
+            <DialogFooter>
+                <Button variant="outline" onClick={onClose}>Cancel</Button>
+                <Button onClick={handleSave}>Save Batches</Button>
+            </DialogFooter>
+        </DialogContent>
+    )
+}
 
 export function PurchaseBillForm() {
   const { toast } = useToast();
@@ -121,6 +206,9 @@ export function PurchaseBillForm() {
   const [isVendorDialogOpen, setIsVendorDialogOpen] = React.useState(false);
   const [newVendor, setNewVendor] = React.useState({ name: '', gstin: '', address: '' });
   const [vendorSearch, setVendorSearch] = React.useState("");
+
+  const [isBatchDialogOpen, setIsBatchDialogOpen] = React.useState(false);
+  const [activeItemForBatch, setActiveItemForBatch] = React.useState<{ item: z.infer<typeof purchaseItemSchema>, index: number } | null>(null);
 
   React.useEffect(() => {
     const allParties = generateData(100);
@@ -137,7 +225,7 @@ export function PurchaseBillForm() {
       billNumber: '',
       billDate: undefined,
       dueDate: undefined,
-      items: [{ productId: '', itemName: '', ledgerAccountId: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 }],
+      items: [{ productId: '', itemName: '', ledgerAccountId: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18, batches: [{ id: 'default-batch', quantity: 1}] }],
       notes: '',
     },
   });
@@ -160,7 +248,7 @@ export function PurchaseBillForm() {
   }, [purchaseMode]);
 
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, update } = useFieldArray({
     control: form.control,
     name: 'items',
   });
@@ -235,6 +323,12 @@ export function PurchaseBillForm() {
     return { subtotal, grandTotal, totalGst, totalCgst, totalSgst, totalIgst };
   }, [watchedItems, watchedPlaceOfSupply]);
   
+  const handleUpdateBatches = (itemIndex: number, batches: BatchValues[]) => {
+    const totalQuantity = batches.reduce((sum, b) => sum + (b.quantity || 0), 0);
+    const currentItem = form.getValues(`items.${itemIndex}`);
+    update(itemIndex, { ...currentItem, batches, quantity: totalQuantity });
+  };
+  
   async function onSubmit(data: PurchaseBillValues) {
     setIsSubmitting(true);
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -250,7 +344,7 @@ export function PurchaseBillForm() {
       vendorAddress: '',
       billNumber: '',
       billDate: new Date(),
-      items: [{ productId: '', itemName: '', ledgerAccountId: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 }],
+      items: [{ productId: '', itemName: '', ledgerAccountId: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18, batches: [{ id: 'default', quantity: 1 }] }],
     });
   }
   
@@ -520,7 +614,14 @@ export function PurchaseBillForm() {
                         />
                       </TableCell>}
                       <TableCell><FormField control={form.control} name={`items.${index}.hsnCode`} render={({ field }) => <Input placeholder="HSN Code" {...field} />} /></TableCell>
-                      <TableCell><FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
+                      <TableCell>
+                         <div className="flex items-center gap-1">
+                            <FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => <Input type="number" className="text-right" {...field} readOnly={(field.value > 0 && !!watchedItems[index]?.batches && watchedItems[index]?.batches?.length > 0)} />} />
+                             <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => setActiveItemForBatch({ item: watchedItems[index], index })}>
+                                <Layers className="h-4 w-4" />
+                            </Button>
+                         </div>
+                      </TableCell>
                       <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
                       <TableCell><FormField control={form.control} name={`items.${index}.gstRate`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
                       <TableCell className="text-right font-mono">{formatCurrency((watchedItems[index]?.quantity || 0) * (watchedItems[index]?.rate || 0), 'INR')}</TableCell>
@@ -529,7 +630,7 @@ export function PurchaseBillForm() {
                   ))}
                 </TableBody>
               </Table>
-              <Button type="button" variant="outline" className="mt-4" onClick={() => append({ productId: '', itemName: '', ledgerAccountId: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 })}>
+              <Button type="button" variant="outline" className="mt-4" onClick={() => append({ productId: '', itemName: '', ledgerAccountId: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18, batches: [{ id: 'default-batch', quantity: 1}] })}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Item
               </Button>
             </div>
@@ -589,6 +690,14 @@ export function PurchaseBillForm() {
                     <Button onClick={handleAddVendor}>Add Vendor</Button>
                 </DialogFooter>
             </DialogContent>
+        </Dialog>
+        <Dialog open={!!activeItemForBatch} onOpenChange={(open) => !open && setActiveItemForBatch(null)}>
+            {activeItemForBatch && <BatchDialog
+                item={activeItemForBatch.item}
+                itemIndex={activeItemForBatch.index}
+                updateBatches={handleUpdateBatches}
+                onClose={() => setActiveItemForBatch(null)}
+            />}
         </Dialog>
     </Form>
   );
