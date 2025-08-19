@@ -49,13 +49,14 @@ function generateDeterministicGstin(stateCode: string, index: number): string {
 }
 
 
-export const generateCustomerData = (): Customer[] => {
+export const generateCustomerData = (count?: number): Customer[] => {
     const data: Customer[] = [];
     const now = new Date();
     const allEntities = [...personNames, ...companyNames];
+    const totalCount = count || allEntities.length;
 
-    for (let i = 0; i < allEntities.length; i++) {
-        const entityName = allEntities[i];
+    for (let i = 0; i < totalCount; i++) {
+        const entityName = allEntities[i % allEntities.length];
         const isCompany = companyNames.includes(entityName);
         
         const stateName = getDeterministicElement(Object.keys(indianStatesMap), i);

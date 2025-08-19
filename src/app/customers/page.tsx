@@ -13,7 +13,7 @@ export default function CustomersPage() {
     const [customers, setCustomers] = React.useState<Customer[] | null>(null);
 
     React.useEffect(() => {
-        setCustomers(generateCustomerData());
+        setCustomers(generateCustomerData(11));
     }, []);
 
     if (!customers) {
