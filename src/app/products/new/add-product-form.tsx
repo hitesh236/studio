@@ -79,23 +79,14 @@ const customAttributeSchema = z.object({
   value: z.any(),
 });
 
+const imageSchema = z.object({
+    file: z.any(),
+    title: z.string(),
+});
+
 const productFormSchema = z.object({
   // Core Information
   productName: z.string().min(1, "Product name is required."),
-  alternateName: z.string().optional(),
-  sku: z.string().min(1, "SKU is required."),
-  categoryPath: z.array(z.string()).min(1, "Category is required."),
-  productDescription: z.string().optional(),
-
-  // Units & Stock
-  uom: z.string().min(1, "Unit of Measurement is required."),
-  secondaryUom: z.string().optional(),
-  openingStock: z.coerce.number().min(0, "Opening stock must be non-negative.").default(0),
-  location: z.string().optional(),
-  minStockLevel: z.coerce.number().optional(),
-  reorderQty: z.coerce.number().optional(),
-  
-  // Pricing & Taxation
   purchasePrice: z.coerce.number().min(0, "Purchase price must be non-negative."),
   sellingPriceIncludesGst: z.boolean().default(false),
   customerPrices: z.object({
@@ -105,11 +96,22 @@ const productFormSchema = z.object({
   }),
   hsnCode: z.string().optional(),
   gstRate: z.coerce.number().min(0).max(100),
+  sku: z.string().min(1, "SKU is required."),
+  categoryPath: z.array(z.string()).min(1, "Category is required."),
+  
+  // Units & Stock
+  uom: z.string().min(1, "Unit of Measurement is required."),
+  secondaryUom: z.string().optional(),
+  openingStock: z.coerce.number().min(0, "Opening stock must be non-negative.").default(0),
+  location: z.string().optional(),
+  minStockLevel: z.coerce.number().optional(),
+  reorderQty: z.coerce.number().optional(),
   
   // Organization
   brand: z.string().optional(),
   model: z.string().optional(),
   barcode: z.string().optional(),
+  alternateName: z.string().optional(),
   tags: z.array(z.string()).optional(),
 
   // Dynamic Attributes
@@ -117,7 +119,7 @@ const productFormSchema = z.object({
 
   // Ecommerce Details
   isListedOnWebsite: z.boolean().default(false),
-  productImages: z.array(z.any()).optional(),
+  productImages: z.array(imageSchema).optional(),
   webShortDescription: z.string().optional(),
   webLongDescription: z.string().optional(),
   seoTitle: z.string().optional(),
@@ -179,8 +181,8 @@ const getAttributesForCategory = (categoryId: string | null, categories: Categor
 };
 
 const optionalSectionsConfig = {
-    attributes: 'Attributes',
     organization: 'Organization',
+    attributes: 'Attributes',
     ecommerce: 'E-commerce Details'
 };
 
@@ -204,10 +206,13 @@ export function AddProductForm() {
   const [targetUomField, setTargetUomField] = React.useState<'uom' | 'secondaryUom' | null>(null);
 
   const [visibleSections, setVisibleSections] = React.useState<Record<string, boolean>>({
-    attributes: false,
     organization: false,
+    attributes: false,
     ecommerce: false,
   });
+  
+  const draggedImageIndex = React.useRef<number | null>(null);
+  const [dragOverImageIndex, setDragOverImageIndex] = React.useState<number | null>(null);
 
   const [showSecondaryUom, setShowSecondaryUom] = React.useState(false);
 
@@ -215,23 +220,23 @@ export function AddProductForm() {
     resolver: zodResolver(productFormSchema),
     defaultValues: {
         productName: '',
-        alternateName: '',
+        purchasePrice: 0,
+        sellingPriceIncludesGst: false,
+        customerPrices: { regular: 0, b2c: 0, b2b: 0 },
+        hsnCode: '',
+        gstRate: 18,
         sku: '',
-        categoryPath: ['grocery', 'staples-pulses', 'rice'], // Default category
+        categoryPath: ['grocery', 'staples-pulses', 'rice'],
         uom: '',
         secondaryUom: '',
         openingStock: 0,
         location: '',
         minStockLevel: 0,
         reorderQty: 0,
-        purchasePrice: 0,
-        sellingPriceIncludesGst: false,
-        customerPrices: { regular: 0, b2c: 0, b2b: 0 },
-        hsnCode: '',
-        gstRate: 18,
         brand: '',
         model: '',
         barcode: '',
+        alternateName: '',
         tags: [],
         dynamicAttributes: [],
         isListedOnWebsite: false,
@@ -241,6 +246,11 @@ export function AddProductForm() {
         seoTitle: '',
         seoMetaDescription: '',
     },
+  });
+  
+  const { fields: imageFields, move: moveImage, remove: removeImageField, update: updateImageField, append: appendImage } = useFieldArray({
+    control: form.control,
+    name: "productImages"
   });
   
   const [categoryLevels, setCategoryLevels] = React.useState<Category[][]>([initialCategoriesData]);
@@ -327,29 +337,25 @@ export function AddProductForm() {
     []
   );
 
-
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const currentFiles = form.getValues('productImages') || [];
       const newFiles = Array.from(files);
-      const allFiles = [...currentFiles, ...newFiles];
-      form.setValue('productImages', allFiles);
-
-      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-      setImagePreviews(prev => [...prev, ...newPreviews]);
+      
+      newFiles.forEach(file => {
+        appendImage({ file, title: '' });
+        setImagePreviews(prev => [...prev, URL.createObjectURL(file)]);
+      });
     }
   };
 
   const handleRemoveImage = (index: number) => {
-    const currentFiles = form.getValues('productImages') || [];
-    const updatedFiles = currentFiles.filter((_, i) => i !== index);
-    form.setValue('productImages', updatedFiles);
-
-    const updatedPreviews = [...imagePreviews];
-    const removedUrl = updatedPreviews.splice(index, 1);
-    URL.revokeObjectURL(removedUrl[0]); // Clean up memory
-    setImagePreviews(updatedPreviews);
+    const previewUrl = imagePreviews[index];
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    removeImageField(index);
   };
   
   const handleAddLocation = () => {
@@ -408,6 +414,38 @@ export function AddProductForm() {
     const sku = `${category}-${namePart}-${Math.floor(1000 + Math.random() * 9000)}`;
     form.setValue('sku', sku, { shouldValidate: true });
     toast({ title: 'SKU Generated!', description: `New SKU: ${sku}`});
+  };
+  
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    draggedImageIndex.current = index;
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedImageIndex.current !== null && index !== draggedImageIndex.current) {
+        setDragOverImageIndex(index);
+    }
+  };
+  
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    if (draggedImageIndex.current === null || draggedImageIndex.current === targetIndex) return;
+
+    moveImage(draggedImageIndex.current, targetIndex);
+    
+    const newPreviews = [...imagePreviews];
+    const [removed] = newPreviews.splice(draggedImageIndex.current, 1);
+    newPreviews.splice(targetIndex, 0, removed);
+    setImagePreviews(newPreviews);
+    
+    draggedImageIndex.current = null;
+    setDragOverImageIndex(null);
+  };
+  
+  const handleDragEnd = () => {
+    draggedImageIndex.current = null;
+    setDragOverImageIndex(null);
   };
 
   async function onSubmit(data: ProductFormValues) {
@@ -825,6 +863,41 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                     )} />
                 </CardContent>
             </Card>
+            
+            {visibleSections.organization && <Card>
+                <CardHeader><CardTitle className="text-[20px] text-secondary">Organization</CardTitle></CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField name="brand" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Brand</FormLabel><FormControl><Input placeholder="e.g., Logitech" {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField name="model" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Model</FormLabel><FormControl><Input placeholder="e.g., MX Master 3S" {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField name="barcode" control={form.control} render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Barcode</FormLabel>
+                            <div className="relative">
+                                <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <FormControl><Input placeholder="Scan or enter barcode" className="pl-10" {...field} /></FormControl>
+                            </div>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                     <FormField name="alternateName" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>Alternate Name</FormLabel><FormControl><Input placeholder="Optional alternate name" {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField
+                    control={form.control}
+                    name="tags"
+                    render={({ field }) => (
+                        <div className="md:col-span-2">
+                        <FormLabel>Tags/Keywords</FormLabel>
+                        <TagsInput field={field} />
+                        </div>
+                    )}
+                    />
+                </CardContent>
+            </Card>}
 
             {visibleSections.attributes && displayedAttributes.length > 0 && <Card>
                 <CardHeader>
@@ -878,43 +951,6 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                 </CardContent>
             </Card>}
 
-            {visibleSections.organization && (
-                <Card>
-                    <CardHeader><CardTitle className="text-[20px] text-secondary">Organization</CardTitle></CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField name="brand" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Brand</FormLabel><FormControl><Input placeholder="e.g., Logitech" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField name="model" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Model</FormLabel><FormControl><Input placeholder="e.g., MX Master 3S" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField name="barcode" control={form.control} render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Barcode</FormLabel>
-                                <div className="relative">
-                                    <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <FormControl><Input placeholder="Scan or enter barcode" className="pl-10" {...field} /></FormControl>
-                                </div>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                        <FormField name="alternateName" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Alternate Name</FormLabel><FormControl><Input placeholder="Optional alternate name" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField
-                        control={form.control}
-                        name="tags"
-                        render={({ field }) => (
-                            <div className="md:col-span-2">
-                            <FormLabel>Tags/Keywords</FormLabel>
-                            <TagsInput field={field} />
-                            </div>
-                        )}
-                        />
-                    </CardContent>
-                </Card>
-            )}
-
             {visibleSections.ecommerce && <Card>
                 <CardHeader>
                     <div className="flex justify-between items-center">
@@ -932,7 +968,7 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                   <FormField
+                    <FormField
                         control={form.control}
                         name="webShortDescription"
                         render={({ field }) => (
@@ -966,58 +1002,80 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                         </FormItem>
                         )}
                     />
-                    <FormField name="productImages" control={form.control} render={() => (
-                        <FormItem>
-                            <FormLabel>Product Images</FormLabel>
-                            <FormControl>
-                                <div
-                                    className="relative flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50"
-                                    onClick={() => fileInputRef.current?.click()}
-                                >
-                                    <Upload className="h-10 w-10 text-muted-foreground" />
-                                    <p className="mt-2 text-sm text-muted-foreground">
-                                        <span className="font-semibold">Click to upload</span> or drag and drop
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
-                                    <Input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        accept="image/*"
-                                        multiple
-                                        className="hidden"
-                                        onChange={handleImageChange}
-                                    />
-                                </div>
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
+                    <FormItem>
+                        <FormLabel>Product Images</FormLabel>
+                        <FormControl>
+                            <div
+                                className="relative flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <Upload className="h-10 w-10 text-muted-foreground" />
+                                <p className="mt-2 text-sm text-muted-foreground">
+                                    <span className="font-semibold">Click to upload</span> or drag and drop
+                                </p>
+                                <p className="text-xs text-muted-foreground">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
+                                <Input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    className="hidden"
+                                    onChange={handleImageChange}
+                                />
+                            </div>
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
 
                     {imagePreviews.length > 0 && (
                         <div>
                             <Label>Image Gallery Preview</Label>
                             <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                {imagePreviews.map((src, index) => (
-                                    <div key={index} className="relative group aspect-square">
+                                {imageFields.map((field, index) => (
+                                    <div 
+                                        key={field.id} 
+                                        className={cn(
+                                            "relative group aspect-square transition-opacity",
+                                            draggedImageIndex.current === index && 'opacity-50',
+                                            dragOverImageIndex === index && 'border-2 border-primary border-dashed'
+                                        )}
+                                        draggable
+                                        onDragStart={(e) => handleDragStart(e, index)}
+                                        onDragOver={(e) => handleDragOver(e, index)}
+                                        onDrop={(e) => handleDrop(e, index)}
+                                        onDragEnd={handleDragEnd}
+                                        onDragLeave={() => setDragOverImageIndex(null)}
+                                    >
                                         <img
-                                            src={src}
+                                            src={imagePreviews[index]}
                                             alt={`Preview ${index + 1}`}
                                             className="w-full h-full object-cover rounded-md"
-                                            onLoad={() => {
-                                                // Optional: Check if we still need to revoke this URL later
-                                            }}
                                         />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col p-2">
                                             <Button
                                                 type="button"
                                                 variant="destructive"
                                                 size="icon"
-                                                className="h-8 w-8"
+                                                className="absolute top-1 right-1 h-7 w-7"
                                                 onClick={() => handleRemoveImage(index)}
                                             >
                                                 <Trash2 className="h-4 w-4" />
                                                 <span className="sr-only">Remove image</span>
                                             </Button>
+                                            <div className="mt-auto">
+                                                <FormField
+                                                    control={form.control}
+                                                    name={`productImages.${index}.title`}
+                                                    render={({ field }) => (
+                                                        <Input
+                                                            {...field}
+                                                            placeholder="Image Title (SEO)"
+                                                            className="h-8 text-xs text-white bg-black/50 border-white/20 placeholder:text-gray-300"
+                                                            onClick={(e) => e.stopPropagation()} // Prevent drag from starting
+                                                        />
+                                                    )}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
