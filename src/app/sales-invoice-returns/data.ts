@@ -24,7 +24,9 @@ export type SalesInvoice = {
   items: SalesInvoiceItem[];
 };
 
-const customerNames = ["Innovate Inc.", "Solutions Corp.", "Quantum Tech", "Synergy LLC", "Apex Industries", "Starlight Co."];
+import { staticCustomers } from '@/lib/customer-data';
+
+const customerNames = staticCustomers.map(c => c.company || `${c.firstName} ${c.lastName}`);
 const gstTypes = ['CGST&SGST', 'IGST', 'UTGST', 'N/A'] as const;
 const createdByUsers = ['Admin', 'John Doe', 'Jane Smith', 'Peter Jones'];
 const placesOfSupply = ['Maharashtra', 'Delhi', 'Karnataka', 'Tamil Nadu', 'Uttar Pradesh', 'Gujarat'];
