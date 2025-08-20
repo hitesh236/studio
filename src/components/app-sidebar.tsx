@@ -125,9 +125,11 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Purchase Returns">
-                <Redo2 />
-                <span>Purchase Returns</span>
+              <SidebarMenuButton tooltip="Purchase Returns" isActive={pathname.startsWith('/purchase-returns')} asChild>
+                 <Link href="/purchase-returns/new" onClick={handleLinkClick}>
+                    <Redo2 />
+                    <span>Purchase Returns</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -153,8 +155,8 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Stock Purchase" isActive={pathname.startsWith('/purchase/new')} asChild>
-                <Link href="/purchase/new" onClick={handleLinkClick}>
+              <SidebarMenuButton tooltip="Stock Purchase" isActive={pathname.startsWith('/stock-purchase')} asChild>
+                <Link href="/stock-purchase" onClick={handleLinkClick}>
                     <Briefcase />
                     <span>Stock Purchase</span>
                 </Link>
