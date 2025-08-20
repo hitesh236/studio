@@ -3,7 +3,7 @@
 
 import type { PurchaseBill } from "./data";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowUp, ArrowDown, Eye, Edit, CreditCard, Undo2, FileX2 } from "lucide-react";
 import { formatCurrency, cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -126,19 +126,14 @@ export const columns = ({
       accessor: "actions",
       header: "Actions",
       cell: (row: PurchaseBill) => (
-        <div className="text-center">
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                    <DropdownMenuItem>View Bill</DropdownMenuItem>
-                    <DropdownMenuItem>Record Payment</DropdownMenuItem>
-                    <DropdownMenuItem>Create Purchase Return</DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+        <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm"><Eye className="mr-1 h-3.5 w-3.5" /> View</Button>
+            <Button variant="outline" size="sm"><Edit className="mr-1 h-3.5 w-3.5" /> Edit</Button>
+            <Button variant="outline" size="sm"><CreditCard className="mr-1 h-3.5 w-3.5" /> Pay</Button>
+            <Button variant="outline" size="sm"><Undo2 className="mr-1 h-3.5 w-3.5" /> Return</Button>
+            <Button variant="outline" size="sm" className="text-destructive border-destructive/50 hover:bg-destructive/5 hover:text-destructive">
+                <FileX2 className="mr-1 h-3.5 w-3.5" /> Cancel
+            </Button>
         </div>
       ),
     },

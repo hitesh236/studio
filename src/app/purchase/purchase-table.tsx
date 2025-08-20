@@ -25,7 +25,7 @@ export function PurchaseTable({ data }: { data: PurchaseBill[] }) {
   const [sortConfig, setSortConfig] = useState<{
     key: string | null;
     direction: "ascending" | "descending";
-  }>({ key: 'billDate', direction: 'descending' });
+  }>({ key: null, direction: 'ascending' });
 
   const summaryStats = useMemo(() => {
     const totalPayable = data.reduce((acc, bill) => acc + bill.amountDue, 0);
