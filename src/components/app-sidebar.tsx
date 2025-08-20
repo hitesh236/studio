@@ -117,8 +117,8 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-destructive">Money Out</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Purchase" isActive={pathname.startsWith('/purchase-bills')} asChild>
-                 <Link href="/purchase-bills" onClick={handleLinkClick}>
+              <SidebarMenuButton tooltip="Purchase" isActive={pathname.startsWith('/purchase')} asChild>
+                 <Link href="/purchase" onClick={handleLinkClick}>
                   <Receipt />
                   <span>Purchase</span>
                 </Link>

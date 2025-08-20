@@ -19,7 +19,7 @@ export function QuickActions() {
                     </Link>
                 </Button>
                 <Button asChild variant="outline">
-                     <Link href="/purchase-bills">
+                     <Link href="/purchase/new">
                         <PlusCircle className="mr-2 h-4 w-4" /> New Bill
                     </Link>
                 </Button>
