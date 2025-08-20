@@ -138,7 +138,13 @@ export const columns = ({
                     <TooltipContent><p>Record Payment</p></TooltipContent>
                 </Tooltip>
                 <Tooltip>
-                    <TooltipTrigger asChild><Button asChild variant="ghost" size="icon"><Link href="/purchase-returns/new"><Undo2 /></Link></Button></TooltipTrigger>
+                    <TooltipTrigger asChild>
+                        <Button asChild variant="ghost" size="icon">
+                            <Link href={`/purchase-returns/new?billData=${encodeURIComponent(JSON.stringify(row))}`}>
+                                <Undo2 />
+                            </Link>
+                        </Button>
+                    </TooltipTrigger>
                     <TooltipContent><p>Create Return</p></TooltipContent>
                 </Tooltip>
                  <Tooltip>
