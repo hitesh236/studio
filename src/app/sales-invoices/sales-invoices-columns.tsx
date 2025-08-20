@@ -91,9 +91,18 @@ export const columns = ({
       header: getSortableHeader("Invoice Number", "invoiceNumber"),
       cell: (row: SalesInvoice) => (
         <div className={cn("font-medium whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>
-          {row.invoiceNumber}
+          <Link href="/invoice-preview" className="hover:underline">{row.invoiceNumber}</Link>
         </div>
       ),
+    },
+    {
+        accessor: "invoiceType",
+        header: getSortableHeader("Type", "invoiceType"),
+        cell: (row: SalesInvoice) => (
+          <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>
+            <Badge variant="outline">{row.invoiceType}</Badge>
+          </div>
+        ),
     },
     {
       accessor: "customerName",
@@ -124,7 +133,7 @@ export const columns = ({
     },
     {
       accessor: "amountBase",
-      header: getSortableHeader("Amount (BCY)", "amountBase"),
+      header: getSortableHeader("Amount", "amountBase"),
       cell: (row: SalesInvoice) => (
         <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountBase, 'INR')}</div>
       ),
@@ -133,7 +142,7 @@ export const columns = ({
       accessor: "paymentStatus",
       header: getSortableHeader("Payment Status", "paymentStatus"),
       cell: (row: SalesInvoice) => {
-        let variant: "default" | "secondary" | "destructive" | "outline";
+        let variant: "default" | "secondary" | "destructive" | "outline" | "warning";
         switch (row.paymentStatus) {
           case "Paid":
             variant = "default";
@@ -145,6 +154,7 @@ export const columns = ({
             variant = "destructive";
             break;
           case "Outstanding":
+          default:
             variant = "outline";
             break;
         }
@@ -157,14 +167,14 @@ export const columns = ({
     },
     {
       accessor: "amountPaid",
-      header: getSortableHeader("Amount Paid", "amountPaid"),
+      header: getSortableHeader("Paid", "amountPaid"),
       cell: (row: SalesInvoice) => (
         <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountPaid, 'INR')}</div>
       ),
     },
     {
       accessor: "salesReturnAmount",
-      header: getSortableHeader("Return Amount", "salesReturnAmount"),
+      header: getSortableHeader("Return", "salesReturnAmount"),
       cell: (row: SalesInvoice) => (
         <div className={cn("font-mono text-right whitespace-nowrap text-green-600", density === 'compact' && 'py-1 px-2 text-sm')}>
           {row.salesReturnAmount ? formatCurrency(row.salesReturnAmount, 'INR') : '-'}
@@ -173,9 +183,9 @@ export const columns = ({
     },
     {
       accessor: "amountDue",
-      header: getSortableHeader("Amount Due", "amountDue"),
+      header: getSortableHeader("Due", "amountDue"),
       cell: (row: SalesInvoice) => (
-        <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountDue, 'INR')}</div>
+        <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm', row.amountDue > 0 ? 'text-destructive' : 'text-foreground')}>{formatCurrency(row.amountDue, 'INR')}</div>
       ),
     },
     {

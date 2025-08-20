@@ -88,6 +88,7 @@ const availableFilters = [
 const ALL_COLUMNS = [
     { id: 'select', label: 'Select' },
     { id: 'invoiceNumber', label: 'Invoice Number' },
+    { id: 'invoiceType', label: 'Type' },
     { id: 'customerName', label: 'Customer Name' },
     { id: 'invoiceDate', label: 'Invoice Date' },
     { id: 'dueDate', label: 'Due Date' },

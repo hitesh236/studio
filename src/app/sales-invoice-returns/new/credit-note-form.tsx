@@ -94,11 +94,6 @@ export function CreditNoteForm() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [allInvoices, setAllInvoices] = React.useState<SalesInvoice[]>([]);
 
-  React.useEffect(() => {
-    // In a real app, you'd fetch this. For now, we generate it.
-    setAllInvoices(generateSalesInvoices(50));
-  }, []);
-
   const form = useForm<CreditNoteFormValues>({
     resolver: zodResolver(creditNoteFormSchema),
     defaultValues: {
@@ -117,21 +112,44 @@ export function CreditNoteForm() {
     name: 'items',
   });
 
-  const onInvoiceSelect = (invoiceId: string) => {
-    const invoice = allInvoices.find(inv => inv.id === invoiceId);
+  // Populate form if invoice data is in URL
+  React.useEffect(() => {
+    const invoiceDataString = searchParams.get('invoiceData');
+    if (invoiceDataString) {
+      try {
+        const invoiceData: SalesInvoice = JSON.parse(decodeURIComponent(invoiceDataString));
+        onInvoiceSelect(invoiceData.id, [invoiceData]); // Pass invoice directly to avoid needing all invoices
+      } catch (error) {
+        console.error("Failed to parse invoice data from URL", error);
+      }
+    }
+  }, [searchParams]);
+
+  React.useEffect(() => {
+    // In a real app, you'd fetch this. For now, we generate it.
+    if (!searchParams.get('invoiceData')) {
+        setAllInvoices(generateSalesInvoices(50));
+    }
+  }, [searchParams]);
+
+  const onInvoiceSelect = (invoiceId: string, invoiceList: SalesInvoice[]) => {
+    const invoice = invoiceList.find(inv => inv.id === invoiceId);
     if (invoice) {
-        form.setValue('originalInvoiceId', invoice.id, { shouldValidate: true });
-        form.setValue('customerName', invoice.customerName);
-        form.setValue('placeOfSupply', invoice.placeOfSupply);
-        
-        const returnItems = invoice.items.map(item => ({
-            originalItemId: item.id,
-            itemName: item.name,
-            quantity: item.quantity,
-            rate: item.rate,
-            gstRate: 18, // Assuming a standard GST rate for simplicity
-        }));
-        replace(returnItems);
+        form.reset({
+            originalInvoiceId: invoice.id,
+            customerName: invoice.customerName,
+            placeOfSupply: invoice.placeOfSupply,
+            creditNoteNumber: `CN-${invoice.invoiceNumber.split('-')[1]}`,
+            creditNoteDate: new Date(),
+            reasonForReturn: '',
+            items: invoice.items.map(item => ({
+                originalItemId: item.id,
+                itemName: item.name,
+                quantity: item.quantity,
+                rate: item.rate,
+                gstRate: 18, // Assuming a standard GST rate for simplicity
+            })),
+        })
     }
   }
   
@@ -222,7 +240,7 @@ export function CreditNoteForm() {
                                     <CommandItem
                                         value={invoice.id}
                                         key={invoice.id}
-                                        onSelect={() => onInvoiceSelect(invoice.id)}
+                                        onSelect={() => onInvoiceSelect(invoice.id, allInvoices)}
                                     >
                                         <Check
                                         className={cn(
@@ -341,4 +359,3 @@ export function CreditNoteForm() {
     </Form>
   );
 }
-

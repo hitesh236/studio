@@ -26,6 +26,7 @@ export type SalesInvoice = {
   amountDue: number;
   createdBy: string;
   items: SalesInvoiceItem[];
+  invoiceType: 'Item' | 'Service';
 };
 
 import { staticCustomers } from '@/lib/customer-data';
@@ -133,6 +134,7 @@ export function generateSalesInvoices(count: number): SalesInvoice[] {
       amountDue: amountDue,
       createdBy: getRandomElement(createdByUsers),
       items: items,
+      invoiceType: Math.random() > 0.5 ? 'Item' : 'Service',
     };
     invoices.push(invoice);
   }
