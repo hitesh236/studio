@@ -69,6 +69,7 @@ import {
     CommandItem,
     CommandList,
   } from '@/components/ui/command';
+import { Label } from '@/components/ui/label';
 
 const sellerDetails = {
     state: 'Maharashtra',
@@ -235,7 +236,7 @@ export function CreditNoteForm() {
                                     />
                                     <div className="flex flex-col">
                                       <span>{invoice.invoiceNumber} - {invoice.customerName}</span>
-                                      <span className="text-xs text-muted-foreground">{format(invoice.invoiceDate, "dd-MMM-yy")} | {formatCurrency(invoice.amountBase, 'INR')}</span>
+                                      <span className="text-xs text-muted-foreground">{format(invoice.invoiceDate, "dd-MMM-yy")} | {formatCurrency(invoice.amount, 'INR')}</span>
                                     </div>
                                 </CommandItem>
                                 ))}
