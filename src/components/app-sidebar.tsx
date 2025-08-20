@@ -95,18 +95,18 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-green-600 dark:text-green-500">Money In</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Sales Invoices" isActive={pathname.startsWith('/sales-invoices')} asChild>
+                <SidebarMenuButton tooltip="Sales" isActive={pathname.startsWith('/sales-invoices')} asChild>
                     <Link href="/sales-invoices" onClick={handleLinkClick}>
                         <FileText />
-                        <span>Sales Invoices</span>
+                        <span>Sales</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Invoice Returns (Sales)" isActive={pathname.startsWith('/sales-invoice-returns')} asChild>
+              <SidebarMenuButton tooltip="Sales Returns" isActive={pathname.startsWith('/sales-invoice-returns')} asChild>
                 <Link href="/sales-invoice-returns" onClick={handleLinkClick}>
                   <Undo2 />
-                  <span>Invoice Returns (Sales)</span>
+                  <span>Sales Returns</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -125,9 +125,9 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Invoice Returns (Purchase)">
+              <SidebarMenuButton tooltip="Purchase Returns">
                 <Redo2 />
-                <span>Invoice Returns (Purchase)</span>
+                <span>Purchase Returns</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
