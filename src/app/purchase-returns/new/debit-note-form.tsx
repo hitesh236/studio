@@ -30,6 +30,7 @@ const debitNoteItemSchema = z.object({
   quantity: z.coerce.number().min(0.01, 'Quantity must be positive.'),
   rate: z.coerce.number().min(0, 'Rate cannot be negative.'),
   gstRate: z.coerce.number().min(0).max(100).default(18),
+  purchasedQty: z.coerce.number().optional(),
 });
 
 const debitNoteFormSchema = z.object({
@@ -79,6 +80,7 @@ export function DebitNoteForm() {
                 originalItemId: item.id,
                 itemName: item.name,
                 quantity: item.quantity,
+                purchasedQty: item.quantity,
                 rate: item.rate,
                 gstRate: 18, 
             })),
@@ -171,13 +173,6 @@ export function DebitNoteForm() {
                     <Label>Vendor</Label>
                     <Input readOnly value={form.getValues('vendorName') || 'N/A'} className="mt-2 bg-muted/50" />
                 </div>
-                 <FormField control={form.control} name="reasonForReturn" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Reason for Return</FormLabel>
-                        <FormControl><Input placeholder="e.g., Damaged goods" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )} />
               </div>
               <div className="space-y-4">
                 <FormField control={form.control} name="debitNoteNumber" render={({ field }) => (
@@ -191,7 +186,7 @@ export function DebitNoteForm() {
                     <FormItem className="flex flex-col">
                         <FormLabel>Debit Note Date</FormLabel>
                         <Popover><PopoverTrigger asChild><FormControl>
-                            <Button variant="outline" className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                            <Button variant={"outline"} className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
                                 {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
@@ -199,14 +194,23 @@ export function DebitNoteForm() {
                         <FormMessage />
                     </FormItem>
                 )} />
+                <FormField control={form.control} name="reasonForReturn" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Reason for Return</FormLabel>
+                        <FormControl><Input placeholder="e.g., Damaged goods" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )} />
               </div>
             </div>
             <Separator />
-            <div>
+            <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-1/2 min-w-[250px]">Item</TableHead>
+                    <TableHead className="w-1/3 min-w-[250px]">Item</TableHead>
+                    <TableHead className="text-right min-w-[120px]">Purchased Qty</TableHead>
+                    <TableHead className="text-right min-w-[120px]">Returnable Qty</TableHead>
                     <TableHead className="text-right min-w-[120px]">Return Qty</TableHead>
                     <TableHead className="text-right min-w-[120px]">Rate</TableHead>
                     <TableHead className="text-right min-w-[120px]">Amount</TableHead>
@@ -217,6 +221,8 @@ export function DebitNoteForm() {
                   {fields.map((field, index) => (
                     <TableRow key={field.id}>
                       <TableCell><Input value={field.itemName} readOnly className="bg-muted/50" /></TableCell>
+                      <TableCell><Input type="number" className="text-right bg-muted/50" value={field.purchasedQty} readOnly /></TableCell>
+                      <TableCell><Input type="number" className="text-right bg-muted/50" value={field.purchasedQty} readOnly /></TableCell>
                       <TableCell><FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
                       <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="number" className="text-right bg-muted/50" {...field} readOnly />} /></TableCell>
                       <TableCell className="text-right font-mono">{formatCurrency((watchedItems[index]?.quantity || 0) * (watchedItems[index]?.rate || 0), 'INR')}</TableCell>
