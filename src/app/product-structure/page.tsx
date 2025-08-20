@@ -34,6 +34,7 @@ import {
   ChevronsUpDown,
   Check,
   ListFilter,
+  Download,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -67,6 +68,7 @@ import { initialCategoriesData } from '@/lib/categories';
 import { initialAttributes } from '@/lib/attributes';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Form, FormControl, FormDescription, FormMessage, FormField, FormLabel, FormItem } from '@/components/ui/form';
+import Link from 'next/link';
 
 
 // Dummy data for product counts
@@ -703,6 +705,12 @@ export default function ProductStructurePage() {
             <p className="text-muted-foreground">Select industries to filter categories and manage their attributes.</p>
         </div>
         <div className="flex items-center gap-2">
+            <Button asChild variant="outline">
+                <Link href="/sample-product-structure.csv" download>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Sample
+                </Link>
+            </Button>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline">

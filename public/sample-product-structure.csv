@@ -1,0 +1,7 @@
+Category,Sub-Category Level 1,Sub-Category Level 2,Attribute Name,Attribute Type,Attribute Options
+Grocery,Staples & Pulses,Rice,Rice Type,dropdown,"Basmati, Sona Masoori, Kolam, Brown Rice"
+Grocery,Staples & Pulses,Rice,Brand,text,
+Grocery,Staples & Pulses,Rice,Net Weight,text,
+Grocery,Spices & Condiments,,Spice Form,dropdown,"Whole, Powdered, Paste"
+Grocery,Spices & Condiments,,Brand,text,
+Personal Care & Household,Soaps & Shampoos,,Suitable For,dropdown,"Body, Face, Hands"
