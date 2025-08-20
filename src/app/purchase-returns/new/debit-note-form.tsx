@@ -179,11 +179,11 @@ export function DebitNoteForm() {
                 />
                  <div>
                     <Label>Vendor</Label>
-                    <Input readOnly value={form.getValues('vendorName') || 'N/A'} className="mt-2 bg-muted/50" />
+                    <Input disabled value={form.getValues('vendorName') || 'N/A'} className="mt-2" />
                 </div>
                  <div>
                     <Label>Original Invoice No.</Label>
-                    <Input readOnly value={originalBill?.billNumber || 'N/A'} className="mt-2 bg-muted/50" />
+                    <Input disabled value={originalBill?.billNumber || 'N/A'} className="mt-2" />
                 </div>
               </div>
               <div className="space-y-4">
@@ -232,11 +232,11 @@ export function DebitNoteForm() {
                 <TableBody>
                   {fields.map((field, index) => (
                     <TableRow key={field.id}>
-                      <TableCell><Input value={field.itemName} readOnly className="bg-muted/50" /></TableCell>
-                      <TableCell><Input type="number" className="text-right bg-muted/50" value={field.purchasedQty} readOnly /></TableCell>
-                      <TableCell><Input type="number" className="text-right bg-muted/50" value={field.purchasedQty} readOnly /></TableCell>
+                      <TableCell><Input value={field.itemName} disabled /></TableCell>
+                      <TableCell><Input type="number" className="text-right" value={field.purchasedQty} disabled /></TableCell>
+                      <TableCell><Input type="number" className="text-right" value={field.purchasedQty} disabled /></TableCell>
                       <TableCell><FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
-                      <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="number" className="text-right bg-muted/50" {...field} readOnly />} /></TableCell>
+                      <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="number" className="text-right" {...field} disabled />} /></TableCell>
                       <TableCell className="text-right font-mono">{formatCurrency((watchedItems[index]?.quantity || 0) * (watchedItems[index]?.rate || 0), 'INR')}</TableCell>
                       <TableCell><Button variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                     </TableRow>
