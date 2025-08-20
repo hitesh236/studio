@@ -51,7 +51,7 @@ export default function LedgersPage() {
     const [selectedLedgerId, setSelectedLedgerId] = useState<string | null>(null);
 
     React.useEffect(() => {
-        const flattened = flattenLedgers(chartOfAccountsData);
+        const flattened = flattenLedgers(chartOfAccountsData).slice(0, 5);
         setAllLedgers(flattened);
         if (flattened.length > 0) {
             setSelectedLedgerId(flattened[0].id);

@@ -90,7 +90,7 @@ const entries: JournalEntry[] = [
         voucherType: 'Payment',
         description: 'Being the Furniture worth $10,000 purchased with 10% trade discount',
         lines: [
-            { id: 'line-6-1', account: 'Furniture A/c', debit: 10000, credit: 0 },
+            { id: 'line-6-1', account: 'Furniture & Fixtures', debit: 10000, credit: 0 },
             { id: 'line-6-2', account: 'Cash A/c', debit: 0, credit: 9000 },
             { id: 'line-6-3', account: 'Trade Discount A/c', debit: 0, credit: 1000 },
         ],
@@ -228,6 +228,22 @@ const entries: JournalEntry[] = [
         createdBy: 'Admin',
         status: 'Approved'
     },
+    // Add more entries to ensure all ledgers have enough data
+    { id: 'JE-0501-1', date: new Date('2024-05-01'), entryNumber: 'JRNL-2024-0501', voucherType: 'Payment', description: 'Paid for office supplies', lines: [{ id: 'l1', account: 'Office Supplies A/c', debit: 5000, credit: 0 }, { id: 'l2', account: 'HDFC Bank', debit: 0, credit: 5000 }], createdBy: 'Admin', status: 'Approved' },
+    { id: 'JE-0502-1', date: new Date('2024-05-02'), entryNumber: 'JRNL-2024-0502', voucherType: 'Payment', description: 'Paid for computer equipment', lines: [{ id: 'l1', account: 'Computers', debit: 25000, credit: 0 }, { id: 'l2', account: 'HDFC Bank', debit: 0, credit: 25000 }], createdBy: 'Admin', status: 'Approved' },
+    { id: 'JE-0503-1', date: new Date('2024-05-03'), entryNumber: 'JRNL-2024-0503', voucherType: 'Receipt', description: 'Received payment from Innovate Inc.', lines: [{ id: 'l1', account: 'ICICI Bank', debit: 10000, credit: 0 }, { id: 'l2', account: 'Innovate Inc.', debit: 0, credit: 10000 }], createdBy: 'Admin', status: 'Approved' },
+    { id: 'JE-0504-1', date: new Date('2024-05-04'), entryNumber: 'JRNL-2024-0504', voucherType: 'Receipt', description: 'Received payment from Solutions Corp.', lines: [{ id: 'l1', account: 'HDFC Bank', debit: 20000, credit: 0 }, { id: 'l2', account: 'Solutions Corp.', debit: 0, credit: 20000 }], createdBy: 'Admin', status: 'Approved' },
+    { id: 'JE-0505-1', date: new Date('2024-05-05'), entryNumber: 'JRNL-2024-0505', voucherType: 'Payment', description: 'Paid to Cloud Services LLC', lines: [{ id: 'l1', account: 'Cloud Services LLC', debit: 15000, credit: 0 }, { id: 'l2', account: 'HDFC Bank', debit: 0, credit: 15000 }], createdBy: 'Admin', status: 'Approved' },
+    { id: 'JE-0506-1', date: new Date('2024-05-06'), entryNumber: 'JRNL-2024-0506', voucherType: 'Payment', description: 'Paid to Office Supplies R Us', lines: [{ id: 'l1', account: 'Office Supplies R Us', debit: 5000, credit: 0 }, { id: 'l2', account: 'ICICI Bank', debit: 0, credit: 5000 }], createdBy: 'Admin', status: 'Approved' },
+    { id: 'JE-0507-1', date: new Date('2024-05-07'), entryNumber: 'JRNL-2024-0507', voucherType: 'Journal', description: 'GST Payable adjustment', lines: [{ id: 'l1', account: 'GST Payable', debit: 10000, credit: 0 }, { id: 'l2', account: 'HDFC Bank', debit: 0, credit: 10000 }], createdBy: 'Admin', status: 'Approved' },
+    { id: 'JE-0508-1', date: new Date('2024-05-08'), entryNumber: 'JRNL-2024-0508', voucherType: 'Journal', description: 'Capital infusion', lines: [{ id: 'l1', account: 'HDFC Bank', debit: 500000, credit: 0 }, { id: 'l2', account: 'Retained Earnings', debit: 0, credit: 500000 }], createdBy: 'Admin', status: 'Approved' },
+    { id: 'JE-0509-1', date: new Date('2024-05-09'), entryNumber: 'JRNL-2024-0509', voucherType: 'Sales', description: 'Sales to Innovate Inc.', lines: [{ id: 'l1', account: 'Innovate Inc.', debit: 30000, credit: 0 }, { id: 'l2', account: 'Domestic Sales', debit: 0, credit: 30000 }], createdBy: 'Admin', status: 'Approved' },
+    { id: 'JE-0510-1', date: new Date('2024-05-10'), entryNumber: 'JRNL-2024-0510', voucherType: 'Payment', description: 'Purchase of Furniture', lines: [{ id: 'l1', account: 'Furniture & Fixtures', debit: 50000, credit: 0 }, { id: 'l2', account: 'HDFC Bank', debit: 0, credit: 50000 }], createdBy: 'Admin', status: 'Approved' },
+    { id: 'JE-0511-1', date: new Date('2024-05-11'), entryNumber: 'JRNL-2024-0511', voucherType: 'Payment', description: 'Salary payment', lines: [{ id: 'l1', account: 'Salaries & Wages', debit: 150000, credit: 0 }, { id: 'l2', account: 'HDFC Bank', debit: 0, credit: 150000 }], createdBy: 'Admin', status: 'Approved' },
+    { id: 'JE-0512-1', date: new Date('2024-05-12'), entryNumber: 'JRNL-2024-0512', voucherType: 'Payment', description: 'Rent payment', lines: [{ id: 'l1', account: 'Rent & Rates', debit: 60000, credit: 0 }, { id: 'l2', account: 'HDFC Bank', debit: 0, credit: 60000 }], createdBy: 'Admin', status: 'Approved' },
+    { id: 'JE-0513-1', date: new Date('2024-05-13'), entryNumber: 'JRNL-2024-0513', voucherType: 'Sales', description: 'Sales to Solutions Corp.', lines: [{ id: 'l1', account: 'Solutions Corp.', debit: 40000, credit: 0 }, { id: 'l2', account: 'Domestic Sales', debit: 0, credit: 40000 }], createdBy: 'Admin', status: 'Approved' },
+    { id: 'JE-0514-1', date: new Date('2024-05-14'), entryNumber: 'JRNL-2024-0514', voucherType: 'Journal', description: 'Purchase from Cloud Services LLC', lines: [{ id: 'l1', account: 'Purchases', debit: 25000, credit: 0 }, { id: 'l2', account: 'Cloud Services LLC', debit: 0, credit: 25000 }], createdBy: 'Admin', status: 'Approved' },
+    { id: 'JE-0515-1', date: new Date('2024-05-15'), entryNumber: 'JRNL-2024-0515', voucherType: 'Journal', description: 'Depreciation on Computers', lines: [{ id: 'l1', account: 'Depreciation on Computers', debit: 10000, credit: 0 }, { id: 'l2', account: 'Computers', debit: 0, credit: 10000 }], createdBy: 'Admin', status: 'Approved' },
 ];
 
 export const generateJournalEntries = (count: number): JournalEntry[] => {
