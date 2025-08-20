@@ -12,9 +12,13 @@ import {
   Trash2,
   Save,
   Loader2,
+  ChevronsUpDown,
+  Check,
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import type { SalesInvoice } from '@/app/sales-invoices/data';
+import type { SalesInvoice, SalesInvoiceItem } from '@/app/sales-invoices/data';
+import { generateSalesInvoices } from '@/app/sales-invoices/data';
+
 
 import { cn, formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -57,37 +61,33 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
-
-const indianStates = [
-  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
-  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
-  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya',
-  'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim',
-  'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand',
-  'West Bengal', 'Andaman and Nicobar Islands', 'Chandigarh',
-  'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu and Kashmir',
-  'Ladakh', 'Lakshadweep', 'Puducherry',
-];
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+  } from '@/components/ui/command';
 
 const sellerDetails = {
     state: 'Maharashtra',
 };
 
 const creditNoteItemSchema = z.object({
+  originalItemId: z.number(),
   itemName: z.string().min(1, 'Item name is required.'),
-  hsnCode: z.string().optional(),
   quantity: z.coerce.number().min(0.01, 'Quantity must be positive.'),
   rate: z.coerce.number().min(0, 'Rate cannot be negative.'),
   gstRate: z.coerce.number().min(0).max(100).default(18),
 });
 
 const creditNoteFormSchema = z.object({
-  customerName: z.string().min(1, 'Customer name is required.'),
-  placeOfSupply: z.string().min(1, 'Place of supply is required.'),
+  originalInvoiceId: z.string().min(1, 'Original invoice must be selected.'),
+  customerName: z.string(),
+  placeOfSupply: z.string(),
   creditNoteNumber: z.string().min(1, 'Credit Note number is required.'),
   creditNoteDate: z.date(),
-  originalInvoiceNumber: z.string().optional(),
-  originalInvoiceDate: z.date().optional(),
   reasonForReturn: z.string().min(1, 'Reason for return is required.'),
   items: z.array(creditNoteItemSchema).min(1, 'At least one item is required.'),
 });
@@ -98,74 +98,48 @@ export function CreditNoteForm() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  
-  const isFromInvoice = !!searchParams.get('invoiceData');
+  const [allInvoices, setAllInvoices] = React.useState<SalesInvoice[]>([]);
 
-  const customers = [
-    { id: 'cust1', name: 'Innovate Inc.', gstin: '27ABCDE1234F1Z5', address: '123 Tech Park, Mumbai, Maharashtra' },
-    { id: 'cust2', name: 'Solutions Corp.', gstin: '29AABCS1234A1Z5', address: '456 Business Hub, Bengaluru, Karnataka' },
-    { id: 'cust3', name: 'Quantum Tech', gstin: '36AAAAA0000A1Z0', address: '789 Science City, Hyderabad, Telangana' },
-  ];
+  React.useEffect(() => {
+    // In a real app, you'd fetch this. For now, we generate it.
+    setAllInvoices(generateSalesInvoices(50));
+  }, []);
 
   const form = useForm<CreditNoteFormValues>({
     resolver: zodResolver(creditNoteFormSchema),
     defaultValues: {
+      originalInvoiceId: '',
       customerName: '',
       placeOfSupply: '',
-      creditNoteNumber: '',
+      creditNoteNumber: `CN-${Math.floor(Math.random() * 9000) + 1000}`,
       creditNoteDate: new Date(),
-      originalInvoiceNumber: '',
-      originalInvoiceDate: undefined,
       reasonForReturn: '',
-      items: [{ itemName: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 }],
+      items: [],
     },
   });
 
-  React.useEffect(() => {
-    const invoiceDataString = searchParams.get('invoiceData');
-    if (!invoiceDataString) {
-      form.setValue('creditNoteNumber', `CN-${Math.floor(Math.random() * 9000) + 1000}`);
-    }
-  }, [form, searchParams]);
-
-  React.useEffect(() => {
-    const invoiceDataString = searchParams.get('invoiceData');
-    if (invoiceDataString) {
-      try {
-        const invoice: SalesInvoice = JSON.parse(decodeURIComponent(invoiceDataString));
-        const invoiceDate = invoice.invoiceDate ? new Date(invoice.invoiceDate) : undefined;
-
-        form.reset({
-          customerName: invoice.customerName,
-          placeOfSupply: invoice.placeOfSupply,
-          creditNoteNumber: `CN-${Math.floor(Math.random() * 9000) + 1000}`,
-          creditNoteDate: new Date(),
-          originalInvoiceNumber: invoice.invoiceNumber,
-          originalInvoiceDate: invoiceDate,
-          reasonForReturn: '',
-          items: invoice.items.map(item => ({
-            itemName: item.name,
-            hsnCode: '',
-            quantity: item.quantity,
-            rate: item.rate,
-            gstRate: 18,
-          })),
-        });
-      } catch (error) {
-        console.error("Failed to parse invoice data from URL", error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Could not load invoice data for return.'
-        });
-      }
-    }
-  }, [searchParams, form, toast]);
-
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control: form.control,
     name: 'items',
   });
+
+  const onInvoiceSelect = (invoiceId: string) => {
+    const invoice = allInvoices.find(inv => inv.id === invoiceId);
+    if (invoice) {
+        form.setValue('originalInvoiceId', invoice.id, { shouldValidate: true });
+        form.setValue('customerName', invoice.customerName);
+        form.setValue('placeOfSupply', invoice.placeOfSupply);
+        
+        const returnItems = invoice.items.map(item => ({
+            originalItemId: item.id,
+            itemName: item.name,
+            quantity: item.quantity,
+            rate: item.rate,
+            gstRate: 18, // Assuming a standard GST rate for simplicity
+        }));
+        replace(returnItems);
+    }
+  }
   
   const watchedItems = form.watch('items');
   const watchedPlaceOfSupply = form.watch('placeOfSupply');
@@ -208,59 +182,76 @@ export function CreditNoteForm() {
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">New Sales Return (Credit Note)</CardTitle>
-            <CardDescription>Fill out the details for the sales return.</CardDescription>
+            <CardDescription>Select an original invoice to create a return against it.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Customer and General Details */}
+              {/* Invoice and General Details */}
               <div className="space-y-4">
-                 <FormField
+                <FormField
                     control={form.control}
-                    name="customerName"
+                    name="originalInvoiceId"
                     render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Customer</FormLabel>
-                            <Select
-                                onValueChange={(value) => {
-                                    const selectedCustomer = customers.find(c => c.name === value);
-                                    if (selectedCustomer) {
-                                        field.onChange(value);
-                                        const stateMatch = indianStates.find(state => selectedCustomer.address.toLowerCase().includes(state.toLowerCase()));
-                                        if(stateMatch) {
-                                            form.setValue('placeOfSupply', stateMatch);
-                                        }
-                                    }
-                                }}
-                                value={field.value}
-                                disabled={isFromInvoice}
+                    <FormItem className="flex flex-col">
+                        <FormLabel>Original Invoice</FormLabel>
+                        <Popover>
+                        <PopoverTrigger asChild>
+                            <FormControl>
+                            <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                "justify-between",
+                                !field.value && "text-muted-foreground"
+                                )}
                             >
-                                <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a customer" />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {customers.map(customer => (
-                                        <SelectItem key={customer.id} value={customer.name}>
-                                            {customer.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
+                                {field.value
+                                ? allInvoices.find(
+                                    (invoice) => invoice.id === field.value
+                                )?.invoiceNumber
+                                : "Select an invoice"}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                            </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <Command>
+                            <CommandInput placeholder="Search invoice..." />
+                            <CommandEmpty>No invoice found.</CommandEmpty>
+                            <CommandGroup>
+                                {allInvoices.map((invoice) => (
+                                <CommandItem
+                                    value={invoice.invoiceNumber}
+                                    key={invoice.id}
+                                    onSelect={() => onInvoiceSelect(invoice.id)}
+                                >
+                                    <Check
+                                    className={cn(
+                                        "mr-2 h-4 w-4",
+                                        invoice.id === field.value
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                    />
+                                    <div className="flex flex-col">
+                                      <span>{invoice.invoiceNumber} - {invoice.customerName}</span>
+                                      <span className="text-xs text-muted-foreground">{format(invoice.invoiceDate, "dd-MMM-yy")} | {formatCurrency(invoice.amountBase, 'INR')}</span>
+                                    </div>
+                                </CommandItem>
+                                ))}
+                            </CommandGroup>
+                            </Command>
+                        </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                    </FormItem>
                     )}
                 />
-                 <FormField control={form.control} name="placeOfSupply" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Place of Supply</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} disabled={isFromInvoice}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger></FormControl>
-                        <SelectContent>{indianStates.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}</SelectContent>
-                        </Select><FormMessage />
-                    </FormItem>
-                )} />
-                 <FormField control={form.control} name="reasonForReturn" render={({ field }) => (
+                <div>
+                    <Label>Customer</Label>
+                    <Input readOnly value={form.getValues('customerName') || 'N/A'} className="mt-2 bg-muted/50" />
+                </div>
+                <FormField control={form.control} name="reasonForReturn" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Reason for Return</FormLabel>
                         <FormControl><Input placeholder="e.g., Damaged goods" {...field} /></FormControl>
@@ -280,39 +271,15 @@ export function CreditNoteForm() {
                 <FormField control={form.control} name="creditNoteDate" render={({ field }) => (
                     <FormItem className="flex flex-col">
                         <FormLabel>Credit Note Date</FormLabel>
-                        <Popover>
-                            <PopoverTrigger asChild><FormControl>
-                                <Button variant={"outline"} className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
-                                    {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                            </FormControl></PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus /></PopoverContent>
-                        </Popover>
+                        <Popover><PopoverTrigger asChild><FormControl>
+                            <Button variant={"outline"} className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                        </FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus /></PopoverContent></Popover>
                         <FormMessage />
                     </FormItem>
                 )} />
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField control={form.control} name="originalInvoiceNumber" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Original Invoice No.</FormLabel>
-                            <FormControl><Input placeholder="e.g., INV-001" {...field} readOnly={isFromInvoice} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                     <FormField control={form.control} name="originalInvoiceDate" render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                            <FormLabel>Original Invoice Date</FormLabel>
-                            <Popover><PopoverTrigger asChild><FormControl>
-                                <Button variant={"outline"} className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")} disabled={isFromInvoice}>
-                                    {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                            </FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus /></PopoverContent></Popover>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                </div>
               </div>
             </div>
 
@@ -324,8 +291,7 @@ export function CreditNoteForm() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-1/3">Item</TableHead>
-                    <TableHead>HSN/SAC</TableHead>
-                    <TableHead className="text-right">Qty</TableHead>
+                    <TableHead className="text-right">Return Qty</TableHead>
                     <TableHead className="text-right">Rate</TableHead>
                     <TableHead className="text-right">GST%</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
@@ -335,20 +301,18 @@ export function CreditNoteForm() {
                 <TableBody>
                   {fields.map((field, index) => (
                     <TableRow key={field.id}>
-                      <TableCell><FormField control={form.control} name={`items.${index}.itemName`} render={({ field }) => <Input placeholder="Item name" {...field} readOnly={isFromInvoice} />} /></TableCell>
-                      <TableCell><FormField control={form.control} name={`items.${index}.hsnCode`} render={({ field }) => <Input placeholder="HSN Code" {...field} readOnly={isFromInvoice} />} /></TableCell>
+                      <TableCell>
+                          <Input value={field.itemName} readOnly className="bg-muted/50" />
+                      </TableCell>
                       <TableCell><FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
-                      <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
-                      <TableCell><FormField control={form.control} name={`items.${index}.gstRate`} render={({ field }) => <Input type="number" className="text-right" {...field} readOnly={isFromInvoice} />} /></TableCell>
+                      <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="number" className="text-right bg-muted/50" {...field} readOnly />} /></TableCell>
+                      <TableCell><FormField control={form.control} name={`items.${index}.gstRate`} render={({ field }) => <Input type="number" className="text-right bg-muted/50" {...field} readOnly />} /></TableCell>
                       <TableCell className="text-right font-mono">{formatCurrency((watchedItems[index]?.quantity || 0) * (watchedItems[index]?.rate || 0), 'INR')}</TableCell>
                       <TableCell><Button variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-              <Button type="button" variant="outline" className="mt-4" onClick={() => append({ itemName: '', hsnCode: '', quantity: 1, rate: 0, gstRate: 18 })} disabled={isFromInvoice}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Item
-              </Button>
             </div>
 
             <Separator />
