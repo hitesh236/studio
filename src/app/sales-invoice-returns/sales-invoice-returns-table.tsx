@@ -82,10 +82,7 @@ const ALL_COLUMNS = [
     { id: 'invoiceNumber', label: 'Invoice Number' },
     { id: 'customerName', label: 'Customer Name' },
     { id: 'invoiceDate', label: 'Invoice Date' },
-    { id: 'currencyCode', label: 'Currency' },
-    { id: 'exchangeRate', label: 'Exch. Rate' },
-    { id: 'amountForeign', label: 'Amount (FCY)' },
-    { id: 'amountBase', label: 'Amount (BCY)' },
+    { id: 'amount', label: 'Amount' },
     { id: 'totalTaxableValue', label: 'Taxable Value' },
     { id: 'totalGstAmount', label: 'GST Amount' },
     { id: 'gstType', label: 'GST Type' },
@@ -118,7 +115,7 @@ const MobileInvoiceCard = ({ invoice, isExpanded, toggleRowExpansion, selectedRo
                   <p className="text-sm text-muted-foreground">{invoice.customerName}</p>
                 </div>
               </div>
-              <p className="text-lg font-semibold pt-2">{formatCurrency(invoice.amountBase, 'INR')}</p>
+              <p className="text-lg font-semibold pt-2">{formatCurrency(invoice.amount, 'INR')}</p>
               <p className="text-xs text-muted-foreground">Total Amount</p>
             </CardHeader>
           </div>
@@ -131,16 +128,8 @@ const MobileInvoiceCard = ({ invoice, isExpanded, toggleRowExpansion, selectedRo
                   {format(invoice.invoiceDate, "MMM d, yyyy")}
                 </div>
                 <div>
-                  <strong className="text-muted-foreground block">Amount (Base)</strong>
-                  {formatCurrency(invoice.amountBase, 'INR')}
-                </div>
-                 <div>
-                  <strong className="text-muted-foreground block">Amount (FCY)</strong>
-                  {formatCurrency(invoice.amountForeign, invoice.currencyCode)}
-                </div>
-                <div>
-                  <strong className="text-muted-foreground block">Exchange Rate</strong>
-                  {invoice.exchangeRate.toFixed(2)}
+                  <strong className="text-muted-foreground block">Amount</strong>
+                  {formatCurrency(invoice.amount, 'INR')}
                 </div>
                 <div>
                   <strong className="text-muted-foreground block">GST Type</strong>
@@ -227,7 +216,7 @@ export function SalesInvoiceReturnsTable({ data }: { data: SalesInvoice[] }) {
   };
 
   const summaryStats = useMemo(() => {
-    const totalSales = data.reduce((acc, inv) => acc + inv.amountBase, 0);
+    const totalSales = data.reduce((acc, inv) => acc + inv.amount, 0);
     const totalGst = data.reduce((acc, inv) => acc + inv.totalGstAmount, 0);
     const totalInvoices = data.length;
 
@@ -467,13 +456,13 @@ export function SalesInvoiceReturnsTable({ data }: { data: SalesInvoice[] }) {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <SummaryCard
             icon={TrendingUp}
-            title="Total Sales (BCY)"
+            title="Total Sales Return"
             value={formatCurrency(summaryStats.totalSales, 'INR')}
             variant="primary"
           />
           <SummaryCard
             icon={Landmark}
-            title="Total GST"
+            title="Total GST Refund"
             value={formatCurrency(summaryStats.totalGst, 'INR')}
           />
           <SummaryCard
@@ -488,7 +477,7 @@ export function SalesInvoiceReturnsTable({ data }: { data: SalesInvoice[] }) {
             <div className="relative w-full md:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Filter invoices..."
+                placeholder="Filter returns..."
                 value={filter}
                 onChange={(e) => {
                     setFilter(e.target.value);

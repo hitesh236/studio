@@ -12,10 +12,7 @@ export type SalesInvoice = {
   customerName: string;
   invoiceDate: Date;
   dueDate: Date;
-  currencyCode: 'USD' | 'INR' | 'EUR';
-  exchangeRate: number;
-  amountForeign: number;
-  amountBase: number;
+  amount: number;
   totalTaxableValue: number;
   totalGstAmount: number;
   gstType: 'CGST&SGST' | 'IGST' | 'UTGST' | 'N/A';
@@ -29,7 +26,6 @@ export type SalesInvoice = {
 
 const customerNames = ["Innovate Inc.", "Solutions Corp.", "Quantum Tech", "Synergy LLC", "Apex Industries", "Starlight Co."];
 const gstTypes = ['CGST&SGST', 'IGST', 'UTGST', 'N/A'] as const;
-const currencyCodes = ['USD', 'INR', 'EUR'] as const;
 const createdByUsers = ['Admin', 'John Doe', 'Jane Smith', 'Peter Jones'];
 const placesOfSupply = ['Maharashtra', 'Delhi', 'Karnataka', 'Tamil Nadu', 'Uttar Pradesh', 'Gujarat'];
 const itemNames = ['Cloud Hosting', 'Domain Registration', 'SSL Certificate', 'Consulting Hours', 'Support Retainer'];
@@ -42,26 +38,10 @@ export function generateSalesInvoiceReturns(count: number): SalesInvoice[] {
   const now = new Date();
 
   for (let i = 0; i < count; i++) {
-    const currencyCode = getRandomElement(currencyCodes);
-    
-    let exchangeRate: number;
-    switch(currencyCode) {
-        case 'USD':
-            exchangeRate = 83.50;
-            break;
-        case 'EUR':
-            exchangeRate = 90.75;
-            break;
-        case 'INR':
-        default:
-            exchangeRate = 1;
-            break;
-    }
-
     // Generate items for the invoice
     const items: SalesInvoiceItem[] = [];
     const itemCount = Math.floor(Math.random() * 3) + 1; // 1 to 3 items
-    let amountForeign = 0;
+    let amount = 0;
     for (let j = 0; j < itemCount; j++) {
         const quantity = Math.floor(Math.random() * 5) + 1;
         const rate = (Math.floor(Math.random() * 20) + 1) * 50; // Multiple of 50
@@ -71,10 +51,8 @@ export function generateSalesInvoiceReturns(count: number): SalesInvoice[] {
             quantity,
             rate,
         });
-        amountForeign += quantity * rate;
+        amount += quantity * rate;
     }
-
-    const amountBase = amountForeign * exchangeRate;
 
     // Make some due dates in the past for 'Overdue' status
     const invoiceDate = getRandomDate(new Date(now.getFullYear(), now.getMonth() - 2, 1), now);
@@ -85,14 +63,14 @@ export function generateSalesInvoiceReturns(count: number): SalesInvoice[] {
     let amountPaid: number;
 
     if (paymentRandom < 0.25) { // ~25% Paid
-        amountPaid = amountBase;
+        amountPaid = amount;
     } else if (paymentRandom < 0.5) { // ~25% Partially Paid
-        amountPaid = (Math.random() * 0.8 + 0.1) * amountBase; // 10% to 90% paid
+        amountPaid = (Math.random() * 0.8 + 0.1) * amount; // 10% to 90% paid
     } else { // ~50% will have 0 paid
         amountPaid = 0;
     }
     
-    const amountDue = Math.max(0, amountBase - amountPaid);
+    const amountDue = Math.max(0, amount - amountPaid);
 
     let paymentStatus: SalesInvoice['paymentStatus'];
     if (amountDue <= 0.01) { // Use a small epsilon for float comparison
@@ -113,12 +91,9 @@ export function generateSalesInvoiceReturns(count: number): SalesInvoice[] {
       customerName: getRandomElement(customerNames),
       invoiceDate,
       dueDate,
-      currencyCode: currencyCode,
-      exchangeRate,
-      amountForeign: amountForeign,
-      amountBase: amountBase,
-      totalTaxableValue: amountBase * 0.9, // simplified
-      totalGstAmount: amountBase * 0.1, // simplified
+      amount: amount,
+      totalTaxableValue: amount * 0.9, // simplified
+      totalGstAmount: amount * 0.1, // simplified
       gstType: getRandomElement(gstTypes),
       placeOfSupply: getRandomElement(placesOfSupply),
       paymentStatus: paymentStatus,

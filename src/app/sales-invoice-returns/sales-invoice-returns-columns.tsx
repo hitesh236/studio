@@ -111,31 +111,10 @@ export const columns = ({
       ),
     },
     {
-      accessor: "currencyCode",
-      header: "Currency",
+      accessor: "amount",
+      header: getSortableHeader("Amount", "amount"),
       cell: (row: SalesInvoice) => (
-        <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.currencyCode}</div>
-      ),
-    },
-    {
-      accessor: "exchangeRate",
-      header: "Exch. Rate",
-      cell: (row: SalesInvoice) => (
-        <div className={cn("text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{row.exchangeRate.toFixed(2)}</div>
-      ),
-    },
-    {
-      accessor: "amountForeign",
-      header: getSortableHeader("Amount (FCY)", "amountForeign"),
-      cell: (row: SalesInvoice) => (
-        <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountForeign, row.currencyCode)}</div>
-      ),
-    },
-    {
-      accessor: "amountBase",
-      header: getSortableHeader("Amount (BCY)", "amountBase"),
-      cell: (row: SalesInvoice) => (
-        <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amountBase, 'INR')}</div>
+        <div className={cn("font-mono text-right whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.amount, 'INR')}</div>
       ),
     },
     {
