@@ -32,13 +32,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
   Table,
   TableBody,
   TableCell,
@@ -119,7 +112,7 @@ export function CreditNoteForm() {
     },
   });
 
-  const { fields, append, remove, replace } = useFieldArray({
+  const { fields, remove, replace } = useFieldArray({
     control: form.control,
     name: 'items',
   });
@@ -153,7 +146,7 @@ export function CreditNoteForm() {
         subtotal += itemAmount;
     });
 
-    const gstRate = watchedItems.length > 0 ? watchedItems[0].gstRate : 0; // simplified
+    const gstRate = (watchedItems.length > 0 && watchedItems[0]?.gstRate) ? watchedItems[0].gstRate : 0; // simplified
     const totalGst = subtotal * (gstRate / 100);
     const isIntraState = watchedPlaceOfSupply === sellerDetails.state;
 
@@ -216,31 +209,37 @@ export function CreditNoteForm() {
                             </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                            <Command>
-                            <CommandInput placeholder="Search invoice..." />
-                            <CommandEmpty>No invoice found.</CommandEmpty>
-                            <CommandGroup>
-                                {allInvoices.map((invoice) => (
-                                <CommandItem
-                                    value={invoice.invoiceNumber}
-                                    key={invoice.id}
-                                    onSelect={() => onInvoiceSelect(invoice.id)}
-                                >
-                                    <Check
-                                    className={cn(
-                                        "mr-2 h-4 w-4",
-                                        invoice.id === field.value
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                    />
-                                    <div className="flex flex-col">
-                                      <span>{invoice.invoiceNumber} - {invoice.customerName}</span>
-                                      <span className="text-xs text-muted-foreground">{format(invoice.invoiceDate, "dd-MMM-yy")} | {formatCurrency(invoice.amount, 'INR')}</span>
-                                    </div>
-                                </CommandItem>
-                                ))}
-                            </CommandGroup>
+                            <Command filter={(value, search) => {
+                                const invoice = allInvoices.find(inv => inv.id === value);
+                                if (invoice?.invoiceNumber.toLowerCase().includes(search.toLowerCase()) || invoice?.customerName.toLowerCase().includes(search.toLowerCase())) return 1;
+                                return 0;
+                            }}>
+                                <CommandInput placeholder="Search invoice..." />
+                                <CommandList>
+                                <CommandEmpty>No invoice found.</CommandEmpty>
+                                <CommandGroup>
+                                    {allInvoices.map((invoice) => (
+                                    <CommandItem
+                                        value={invoice.id}
+                                        key={invoice.id}
+                                        onSelect={() => onInvoiceSelect(invoice.id)}
+                                    >
+                                        <Check
+                                        className={cn(
+                                            "mr-2 h-4 w-4",
+                                            invoice.id === field.value
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                        />
+                                        <div className="flex flex-col">
+                                        <span>{invoice.invoiceNumber} - {invoice.customerName}</span>
+                                        <span className="text-xs text-muted-foreground">{format(invoice.invoiceDate, "dd-MMM-yy")} | {formatCurrency(invoice.amount, 'INR')}</span>
+                                        </div>
+                                    </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                                </CommandList>
                             </Command>
                         </PopoverContent>
                         </Popover>
@@ -342,3 +341,4 @@ export function CreditNoteForm() {
     </Form>
   );
 }
+
