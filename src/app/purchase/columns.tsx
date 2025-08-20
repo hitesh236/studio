@@ -8,12 +8,11 @@ import { formatCurrency, cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import Link from 'next/link';
 
 type ColumnProps = {
@@ -34,12 +33,10 @@ export const columns = ({
         )}>
         {title}
         {isSorted ? (
-          sortConfig.direction === 'ascending' ? (
-            <ArrowUp className="ml-2 h-4 w-4" />
-          ) : (
-            <ArrowDown className="ml-2 h-4 w-4" />
-          )
-        ) : null}
+          <ArrowUp className="ml-2 h-4 w-4" />
+        ) : (
+          <ArrowDown className="ml-2 h-4 w-4" />
+        )}
       </Button>
     );
   };
@@ -126,15 +123,30 @@ export const columns = ({
       accessor: "actions",
       header: "Actions",
       cell: (row: PurchaseBill) => (
-        <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm"><Eye className="mr-1 h-3.5 w-3.5" /> View</Button>
-            <Button variant="outline" size="sm"><Edit className="mr-1 h-3.5 w-3.5" /> Edit</Button>
-            <Button variant="outline" size="sm"><CreditCard className="mr-1 h-3.5 w-3.5" /> Pay</Button>
-            <Button variant="outline" size="sm"><Undo2 className="mr-1 h-3.5 w-3.5" /> Return</Button>
-            <Button variant="outline" size="sm" className="text-destructive border-destructive/50 hover:bg-destructive/5 hover:text-destructive">
-                <FileX2 className="mr-1 h-3.5 w-3.5" /> Cancel
-            </Button>
-        </div>
+        <TooltipProvider>
+            <div className="flex items-center gap-1">
+                <Tooltip>
+                    <TooltipTrigger asChild><Button asChild variant="ghost" size="icon"><Link href="/purchase-preview"><Eye /></Link></Button></TooltipTrigger>
+                    <TooltipContent><p>View Bill</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger asChild><Button asChild variant="ghost" size="icon"><Link href="/purchase/new"><Edit /></Link></Button></TooltipTrigger>
+                    <TooltipContent><p>Edit Bill</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger asChild><Button variant="ghost" size="icon"><CreditCard /></Button></TooltipTrigger>
+                    <TooltipContent><p>Record Payment</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger asChild><Button asChild variant="ghost" size="icon"><Link href="/purchase-returns/new"><Undo2 /></Link></Button></TooltipTrigger>
+                    <TooltipContent><p>Create Return</p></TooltipContent>
+                </Tooltip>
+                 <Tooltip>
+                    <TooltipTrigger asChild><Button variant="ghost" size="icon" className="text-destructive hover:text-destructive"><FileX2 /></Button></TooltipTrigger>
+                    <TooltipContent><p>Cancel Bill</p></TooltipContent>
+                </Tooltip>
+            </div>
+        </TooltipProvider>
       ),
     },
   ];
