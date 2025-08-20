@@ -50,7 +50,7 @@ export const columns = ({
       header: getSortableHeader("Bill #", "billNumber"),
       cell: (row: PurchaseBill) => (
         <div className="font-medium whitespace-nowrap">
-           <Link href="#" className="hover:underline">{row.billNumber}</Link>
+           <Link href="/purchase-preview" className="hover:underline">{row.billNumber}</Link>
         </div>
       ),
     },
