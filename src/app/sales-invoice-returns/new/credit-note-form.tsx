@@ -112,27 +112,7 @@ export function CreditNoteForm() {
     name: 'items',
   });
 
-  // Populate form if invoice data is in URL
-  React.useEffect(() => {
-    const invoiceDataString = searchParams.get('invoiceData');
-    if (invoiceDataString) {
-      try {
-        const invoiceData: SalesInvoice = JSON.parse(decodeURIComponent(invoiceDataString));
-        onInvoiceSelect(invoiceData.id, [invoiceData]); // Pass invoice directly to avoid needing all invoices
-      } catch (error) {
-        console.error("Failed to parse invoice data from URL", error);
-      }
-    }
-  }, [searchParams]);
-
-  React.useEffect(() => {
-    // In a real app, you'd fetch this. For now, we generate it.
-    if (!searchParams.get('invoiceData')) {
-        setAllInvoices(generateSalesInvoices(50));
-    }
-  }, [searchParams]);
-
-  const onInvoiceSelect = (invoiceId: string, invoiceList: SalesInvoice[]) => {
+  const onInvoiceSelect = React.useCallback((invoiceId: string, invoiceList: SalesInvoice[]) => {
     const invoice = invoiceList.find(inv => inv.id === invoiceId);
     if (invoice) {
         form.reset({
@@ -151,10 +131,37 @@ export function CreditNoteForm() {
             })),
         })
     }
-  }
+  }, [form]);
+
+  // Populate form if invoice data is in URL
+  React.useEffect(() => {
+    const invoiceDataString = searchParams.get('invoiceData');
+    if (invoiceDataString) {
+      try {
+        const invoiceData: SalesInvoice = JSON.parse(decodeURIComponent(invoiceDataString));
+        onInvoiceSelect(invoiceData.id, [invoiceData]);
+        setAllInvoices(prev => {
+            if (prev.find(inv => inv.id === invoiceData.id)) {
+                return prev;
+            }
+            return [...prev, invoiceData];
+        });
+      } catch (error) {
+        console.error("Failed to parse invoice data from URL", error);
+      }
+    }
+  }, [searchParams, onInvoiceSelect]);
+
+  React.useEffect(() => {
+    // In a real app, you'd fetch this. For now, we generate it.
+    if (!searchParams.get('invoiceData')) {
+        setAllInvoices(generateSalesInvoices(50));
+    }
+  }, [searchParams]);
   
   const watchedItems = form.watch('items');
   const watchedPlaceOfSupply = form.watch('placeOfSupply');
+  const originalInvoice = allInvoices.find(inv => inv.id === form.getValues('originalInvoiceId'));
   
   const totals = React.useMemo(() => {
     let subtotal = 0;
@@ -217,7 +224,7 @@ export function CreditNoteForm() {
                                 !field.value && "text-muted-foreground"
                                 )}
                             >
-                                {field.value
+                                {field.value && allInvoices.length > 0
                                 ? allInvoices.find(
                                     (invoice) => invoice.id === field.value
                                 )?.invoiceNumber
@@ -265,20 +272,17 @@ export function CreditNoteForm() {
                     </FormItem>
                     )}
                 />
-                <div>
+                 <div>
                     <Label>Customer</Label>
                     <Input readOnly value={form.getValues('customerName') || 'N/A'} className="mt-2 bg-muted/50" />
                 </div>
-                <FormField control={form.control} name="reasonForReturn" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Reason for Return</FormLabel>
-                        <FormControl><Input placeholder="e.g., Damaged goods" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )} />
               </div>
               {/* Credit Note Details */}
               <div className="space-y-4">
+                 <div>
+                    <Label>Original Invoice No.</Label>
+                    <Input readOnly value={originalInvoice?.invoiceNumber || 'N/A'} className="mt-2 bg-muted/50" />
+                </div>
                 <FormField control={form.control} name="creditNoteNumber" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Credit Note Number</FormLabel>
@@ -298,6 +302,13 @@ export function CreditNoteForm() {
                         <FormMessage />
                     </FormItem>
                 )} />
+                <FormField control={form.control} name="reasonForReturn" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Reason for Return</FormLabel>
+                        <FormControl><Input placeholder="e.g., Damaged goods" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )} />
               </div>
             </div>
 
@@ -308,12 +319,12 @@ export function CreditNoteForm() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-1/3">Item</TableHead>
-                    <TableHead className="text-right">Return Qty</TableHead>
-                    <TableHead className="text-right">Rate</TableHead>
-                    <TableHead className="text-right">GST%</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead></TableHead>
+                    <TableHead className="w-1/3 min-w-[200px]">Item</TableHead>
+                    <TableHead className="text-right min-w-[100px]">Return Qty</TableHead>
+                    <TableHead className="text-right min-w-[120px]">Rate</TableHead>
+                    <TableHead className="text-right min-w-[100px]">GST%</TableHead>
+                    <TableHead className="text-right min-w-[120px]">Amount</TableHead>
+                    <TableHead className="w-12"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
