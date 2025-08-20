@@ -10,6 +10,7 @@ import { Calendar as CalendarIcon, Save, Loader2, ChevronsUpDown, Check, Trash2 
 import { useSearchParams } from 'next/navigation';
 import type { PurchaseBill } from '@/app/purchase/data';
 import { generatePurchaseBills } from '@/app/purchase/data';
+import { generateStockListData, type StockItem } from '@/app/stock-list/data';
 
 import { cn, formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -49,6 +50,7 @@ export function DebitNoteForm() {
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [allBills, setAllBills] = React.useState<PurchaseBill[]>([]);
+  const [stockList, setStockList] = React.useState<StockItem[]>([]);
 
   const form = useForm<DebitNoteFormValues>({
     resolver: zodResolver(debitNoteFormSchema),
@@ -62,21 +64,25 @@ export function DebitNoteForm() {
     },
   });
 
-  const { fields, remove } = useFieldArray({
+  const { fields, remove, replace } = useFieldArray({
     control: form.control,
     name: 'items',
   });
   
-  const onBillSelect = React.useCallback((billId: string, billList: PurchaseBill[]) => {
+  const onBillSelect = React.useCallback((billId: string, billList: PurchaseBill[], currentStock: StockItem[]) => {
     const bill = billList.find(b => b.id === billId);
     if (bill) {
+        const availableItems = bill.items.filter(item => 
+            currentStock.some(stockItem => stockItem.productName === item.name)
+        );
+
         form.reset({
             originalBillId: bill.id,
             vendorName: bill.vendorName,
             debitNoteNumber: `DN-${bill.billNumber.split('-')[2]}`,
             debitNoteDate: new Date(),
             reasonForReturn: '',
-            items: bill.items.map(item => ({
+            items: availableItems.map(item => ({
                 originalItemId: item.id,
                 itemName: item.name,
                 quantity: item.quantity,
@@ -89,11 +95,13 @@ export function DebitNoteForm() {
   }, [form]);
 
   React.useEffect(() => {
+    const stockData = generateStockListData();
+    setStockList(stockData);
     const billDataString = searchParams.get('billData');
     if (billDataString) {
       try {
         const billData: PurchaseBill = JSON.parse(decodeURIComponent(billDataString));
-        onBillSelect(billData.id, [billData]);
+        onBillSelect(billData.id, [billData], stockData);
         setAllBills(prev => {
             if (prev.find(b => b.id === billData.id)) return prev;
             return [...prev, billData];
@@ -158,7 +166,7 @@ export function DebitNoteForm() {
                             <CommandInput placeholder="Search bill..." />
                             <CommandList><CommandEmpty>No bill found.</CommandEmpty><CommandGroup>
                                 {allBills.map((bill) => (
-                                    <CommandItem value={bill.id} key={bill.id} onSelect={() => onBillSelect(bill.id, allBills)}>
+                                    <CommandItem value={bill.id} key={bill.id} onSelect={() => onBillSelect(bill.id, allBills, stockList)}>
                                         <Check className={cn("mr-2 h-4 w-4", bill.id === field.value ? "opacity-100" : "opacity-0")} />
                                         <span>{bill.billNumber} - {bill.vendorName}</span>
                                     </CommandItem>
@@ -172,6 +180,10 @@ export function DebitNoteForm() {
                  <div>
                     <Label>Vendor</Label>
                     <Input readOnly value={form.getValues('vendorName') || 'N/A'} className="mt-2 bg-muted/50" />
+                </div>
+                 <div>
+                    <Label>Original Invoice No.</Label>
+                    <Input readOnly value={originalBill?.billNumber || 'N/A'} className="mt-2 bg-muted/50" />
                 </div>
               </div>
               <div className="space-y-4">
