@@ -164,7 +164,7 @@ export function AppSidebar() {
             </SidebarMenuItem>
              <SidebarMenuItem>
               <SidebarMenuButton tooltip="Stock Adjustment" isActive={pathname.startsWith('/stock-adjustments')} asChild>
-                <Link href="/stock-adjustments/new" onClick={handleLinkClick}>
+                <Link href="/stock-adjustments" onClick={handleLinkClick}>
                     <ArchiveRestore />
                     <span>Stock Adjustment</span>
                 </Link>
