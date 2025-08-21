@@ -41,7 +41,8 @@ import {
     Undo2,
     UserCircle,
     Users,
-    Wallet
+    Wallet,
+    ArchiveRestore
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { usePathname } from 'next/navigation';
@@ -143,6 +144,14 @@ export function AppSidebar() {
                 <Link href="/stock-list" onClick={handleLinkClick}>
                     <LayoutGrid />
                     <span>Stock List</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Stock Adjustment" isActive={pathname.startsWith('/stock-adjustments')} asChild>
+                <Link href="/stock-adjustments/new" onClick={handleLinkClick}>
+                    <ArchiveRestore />
+                    <span>Stock Adjustment</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

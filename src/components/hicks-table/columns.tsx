@@ -131,39 +131,33 @@ export const columns = ({
       header: getSortableHeader("Balance", "balance"),
       cell: (row: Person) => {
         const isCustomer = row.type === 'Customer';
-        const toCollect = isCustomer && row.balance > 0;
-        const toPay = !isCustomer && row.balance < 0;
-        const colorClass = toCollect ? 'text-green-600' : toPay ? 'text-destructive' : '';
+        let balanceText;
+        let colorClass;
+
+        if (row.balance === 0) {
+            balanceText = '-';
+            colorClass = '';
+        } else if ((isCustomer && row.balance > 0) || (!isCustomer && row.balance > 0)) {
+            balanceText = `${formatCurrency(row.balance)} (To Collect)`;
+            colorClass = 'text-green-600';
+        } else {
+            balanceText = `${formatCurrency(Math.abs(row.balance))} (To Pay)`;
+            colorClass = 'text-destructive';
+        }
+        
         return (
-          <div className={cn("font-mono text-right whitespace-nowrap", colorClass, density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(row.balance)}</div>
+          <div className={cn("font-mono text-right whitespace-nowrap", colorClass, density === 'compact' && 'py-1 px-2 text-sm')}>{balanceText}</div>
         )
       },
     },
     {
       accessor: "status",
       header: getSortableHeader("Status", "status"),
-      cell: (row: Person) => {
-        let variant: "default" | "secondary" | "destructive" | "outline";
-        switch (row.status) {
-          case "Converted":
-            variant = "default";
-            break;
-          case "Active":
-            variant = "secondary";
-            break;
-          case "Lost":
-            variant = "destructive";
-            break;
-          case "Follow-Up":
-            variant = "outline";
-            break;
-        }
-        return (
-          <div className={cn(density === 'compact' && 'py-1 px-2')}>
-            <Badge variant={variant} className="w-[100px] justify-center font-normal">{row.status}</Badge>
-          </div>
-        );
-      },
+      cell: (row: Person) => (
+        <div className={cn(density === 'compact' && 'py-1 px-2')}>
+          <Badge variant={row.status === 'Active' ? 'default' : 'outline'} className="w-[100px] justify-center font-normal">{row.status}</Badge>
+        </div>
+      ),
     },
     {
       accessor: "actions",
