@@ -547,21 +547,21 @@ export default function ProductStructurePage() {
     return attributes.filter(attr => attr.isGlobal || attr.assignedCategories.includes(selectedCategory.id));
   }, [attributes, selectedCategory]);
   
-  const processCsvData = (data: any[], existingCategories: Category[], existingAttributes: Attribute[]): { updatedCategories: Category[], updatedAttributes: Attribute[] } => {
-    // Deep copy to avoid direct state mutation
+  const processCsvData = (data: any[], existingCategories: Category[], existingAttributes: Attribute[]): { updatedCategories: Category[], updatedAttributes: Attribute[], summary: { newCategories: string[], newAttributes: string[] }} => {
     const newCategories = JSON.parse(JSON.stringify(existingCategories)) as Category[];
     const newAttributes = JSON.parse(JSON.stringify(existingAttributes)) as Attribute[];
 
     const categoryMap = new Map<string, Category>();
     const attributeMap = new Map<string, Attribute>();
+    const summary = { newCategories: new Set<string>(), newAttributes: new Set<string>() };
 
-    function populateMaps(cats: Category[]) {
+    function populateCategoryMap(cats: Category[]) {
       cats.forEach(c => {
         categoryMap.set(c.name.toLowerCase(), c);
-        if (c.children) populateMaps(c.children);
+        if (c.children) populateCategoryMap(c.children);
       });
     }
-    populateMaps(newCategories);
+    populateCategoryMap(newCategories);
     newAttributes.forEach(a => attributeMap.set(a.name.toLowerCase(), a));
 
     data.forEach(row => {
@@ -573,6 +573,7 @@ export default function ProductStructurePage() {
         industry = { id: `ind-${industryName.toLowerCase().replace(/\s+/g, '-')}`, name: industryName, children: [] };
         newCategories.push(industry);
         categoryMap.set(industryName.toLowerCase(), industry);
+        summary.newCategories.add(industryName);
       }
 
       let currentParent = industry;
@@ -585,6 +586,7 @@ export default function ProductStructurePage() {
           category = { id: `${currentParent.id}-${catName.toLowerCase().replace(/\s+/g, '-')}`, name: catName, children: [] };
           currentParent.children = [...(currentParent.children || []), category];
           categoryMap.set(catName.toLowerCase(), category);
+          summary.newCategories.add(catName);
         }
         currentParent = category;
       }
@@ -604,6 +606,7 @@ export default function ProductStructurePage() {
           };
           newAttributes.push(attribute);
           attributeMap.set(attrName.toLowerCase(), attribute);
+          summary.newAttributes.add(attrName);
         }
         
         if (!attribute.assignedCategories.includes(currentParent.id)) {
@@ -612,7 +615,11 @@ export default function ProductStructurePage() {
       }
     });
 
-    return { updatedCategories: newCategories, updatedAttributes: newAttributes };
+    return { 
+        updatedCategories: newCategories, 
+        updatedAttributes: newAttributes,
+        summary: { newCategories: Array.from(summary.newCategories), newAttributes: Array.from(summary.newAttributes) }
+    };
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -627,12 +634,30 @@ export default function ProductStructurePage() {
       skipEmptyLines: true,
       complete: (results) => {
         try {
-          const { updatedCategories, updatedAttributes } = processCsvData(results.data as any[], categories, attributes);
+          const { updatedCategories, updatedAttributes, summary } = processCsvData(results.data as any[], categories, attributes);
           setCategories(updatedCategories);
           setAttributes(updatedAttributes);
-          // Also update the industries list for the filter dropdown
-          setIndustries(updatedCategories.map(cat => ({id: cat.id, name: cat.name})));
-          toast({ title: 'Success', description: 'Structure imported successfully.' });
+          
+          const newIndustries = updatedCategories.map(cat => ({id: cat.id, name: cat.name}));
+          const newIndustryNames = new Set(newIndustries.map(i => i.name));
+          const oldIndustryNames = new Set(industries.map(i => i.name));
+          const addedIndustries = newIndustries.filter(i => !oldIndustryNames.has(i.name));
+          
+          if (addedIndustries.length > 0) {
+            setIndustries(newIndustries);
+            setSelectedIndustries(prev => [...prev, ...addedIndustries.map(i => i.id)]);
+          }
+          
+          toast({ 
+            title: 'Import Successful', 
+            description: (
+              <div>
+                <p className="font-semibold">Your product structure has been updated.</p>
+                {summary.newCategories.length > 0 && <p className="mt-2 text-xs">New Categories: {summary.newCategories.join(', ')}</p>}
+                {summary.newAttributes.length > 0 && <p className="mt-1 text-xs">New Attributes: {summary.newAttributes.join(', ')}</p>}
+              </div>
+            )
+          });
         } catch (error: any) {
           toast({ variant: 'destructive', title: 'Import Error', description: error.message });
         }
