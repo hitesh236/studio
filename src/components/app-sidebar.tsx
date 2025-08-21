@@ -263,7 +263,7 @@ export function AppSidebar() {
         {canAccessAdmin && <SidebarGroup>
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Company Settings" isActive={pathname.startsWith('/settings')} asChild>
+                    <SidebarMenuButton tooltip="Company Settings" isActive={pathname.startsWith('/settings') && !pathname.startsWith('/settings/user-roles')} asChild>
                         <Link href="/settings" onClick={handleLinkClick}>
                             <Settings />
                             <span>Company Settings</span>
@@ -271,10 +271,10 @@ export function AppSidebar() {
                     </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="User Roles" isActive={pathname.startsWith('/settings/user-roles')} asChild>
+                    <SidebarMenuButton tooltip="Users & Roles" isActive={pathname.startsWith('/settings/user-roles')} asChild>
                         <Link href="/settings/user-roles" onClick={handleLinkClick}>
                             <Shield />
-                            <span>User Roles</span>
+                            <span>Users & Roles</span>
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -297,3 +297,4 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
