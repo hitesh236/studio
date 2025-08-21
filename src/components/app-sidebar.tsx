@@ -111,14 +111,6 @@ export function AppSidebar() {
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
-             <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Recurring Invoices" isActive={pathname.startsWith('/recurring-invoices')} asChild>
-                    <Link href="/recurring-invoices" onClick={handleLinkClick}>
-                        <Repeat />
-                        <span>Recurring Invoices</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton tooltip="Sales Returns" isActive={pathname.startsWith('/sales-invoice-returns')} asChild>
                 <Link href="/sales-invoice-returns" onClick={handleLinkClick}>
@@ -176,14 +168,6 @@ export function AppSidebar() {
                 <Link href="/stock-adjustments" onClick={handleLinkClick}>
                     <ArchiveRestore />
                     <span>Stock Adjustment</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Add Product" isActive={pathname.startsWith('/products/new')} asChild>
-                <Link href="/products/new" onClick={handleLinkClick}>
-                    <PackagePlus />
-                    <span>Add Product</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
