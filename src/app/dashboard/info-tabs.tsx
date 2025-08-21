@@ -113,10 +113,12 @@ export function InfoTabs({ salesData, purchaseData, stockData }: InfoTabsProps) 
   const router = useRouter();
 
   const recentInvoices = React.useMemo(() => {
+    if (!salesData) return [];
     return salesData.sort((a,b) => b.invoiceDate.getTime() - a.invoiceDate.getTime()).slice(0, 5);
   }, [salesData]);
 
   const upcomingBills = React.useMemo(() => {
+    if (!purchaseData) return [];
     return purchaseData
       .filter(bill => bill.paymentStatus !== 'Paid' && bill.dueDate > new Date())
       .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
@@ -124,10 +126,12 @@ export function InfoTabs({ salesData, purchaseData, stockData }: InfoTabsProps) 
   }, [purchaseData]);
 
   const lowStockItems = React.useMemo(() => {
+    if (!stockData) return [];
     return stockData.filter(item => item.status === 'Low Stock').slice(0, 5);
   }, [stockData]);
 
   const expiringSoonItems = React.useMemo(() => {
+    if (!stockData) return [];
     const now = new Date();
     return stockData
       .filter(item => item.expiryDate && differenceInDays(item.expiryDate, now) <= 30 && differenceInDays(item.expiryDate, now) >= 0)
