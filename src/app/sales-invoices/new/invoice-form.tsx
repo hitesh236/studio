@@ -232,10 +232,7 @@ export function InvoiceForm() {
     name: 'items',
   });
   
-  const watchedItems = form.watch('items');
-  const watchedPlaceOfSupply = form.watch('placeOfSupply');
-  const watchedCurrency = form.watch('currency');
-  const watchedPaymentReceived = form.watch('paymentReceived');
+  const watchedFormValues = form.watch();
   
   const handleAddCustomer = () => {
     if (newCustomer.name && newCustomer.address) {
@@ -245,7 +242,6 @@ export function InvoiceForm() {
         form.setValue('customerName', newCustomerData.name);
         form.setValue('customerGstin', newCustomerData.gstin);
         form.setValue('billingAddress', newCustomerData.address);
-        
         const stateMatch = indianStates.find(state => newCustomerData.address.toLowerCase().includes(state.toLowerCase()));
         if(stateMatch) {
             form.setValue('placeOfSupply', stateMatch);
@@ -260,11 +256,12 @@ export function InvoiceForm() {
   }
 
   const totals = React.useMemo(() => {
+    const { items, placeOfSupply, paymentReceived } = watchedFormValues;
     let subtotal = 0;
     let totalDiscount = 0;
     const gstSummary: { [key: number]: { taxable: number; gst: number } } = {};
 
-    watchedItems.forEach(item => {
+    (items || []).forEach(item => {
         const quantity = invoiceType === 'service' ? 1 : (item.quantity || 0);
         const itemAmount = quantity * (item.rate || 0);
         const itemDiscount = itemAmount * ((item.discount || 0) / 100);
@@ -284,7 +281,7 @@ export function InvoiceForm() {
 
     const totalTaxableValue = subtotal - totalDiscount;
     const totalGst = Object.values(gstSummary).reduce((acc, { gst }) => acc + gst, 0);
-    const isIntraState = watchedPlaceOfSupply === sellerDetails.state;
+    const isIntraState = placeOfSupply === sellerDetails.state;
 
     let totalCgst = 0;
     let totalSgst = 0;
@@ -310,11 +307,11 @@ export function InvoiceForm() {
       : manualRoundOff;
     
     const grandTotal = grandTotalBeforeRoundOff + roundOffValue;
-    const amountDue = grandTotal - (watchedPaymentReceived || 0);
+    const amountDue = grandTotal - (paymentReceived || 0);
     const singleGstRate = Object.keys(gstSummary).length === 1 ? Object.keys(gstSummary)[0] : null;
 
     return { subtotal, totalDiscount, totalTaxableValue, grandTotal, totalGst, isIntraState, totalCgst, totalSgst, totalIgst, singleGstRate, amountDue, roundOffValue };
-  }, [watchedItems, watchedPlaceOfSupply, watchedPaymentReceived, autoRoundOff, manualRoundOff, invoiceType]);
+  }, [watchedFormValues, autoRoundOff, manualRoundOff, invoiceType]);
   
   async function onSubmit(data: InvoiceFormValues) {
     setIsSubmitting(true);
@@ -777,13 +774,13 @@ export function InvoiceForm() {
                                 </FormItem>
                                 )}
                             />
-                            {watchedCurrency !== 'INR' && (
+                            {watchedFormValues.currency !== 'INR' && (
                                 <FormField
                                     control={form.control}
                                     name="exchangeRate"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Exchange Rate (1 {watchedCurrency} to INR)</FormLabel>
+                                            <FormLabel>Exchange Rate (1 {watchedFormValues.currency} to INR)</FormLabel>
                                             <FormControl>
                                                 <Input type="number" step="0.01" {...field} />
                                             </FormControl>
@@ -826,7 +823,7 @@ export function InvoiceForm() {
                             </TableHeader>
                             <TableBody>
                             {fields.map((field, index) => {
-                                const item = watchedItems[index];
+                                const item = watchedFormValues.items[index];
                                 const quantity = invoiceType === 'service' ? 1 : (item.quantity || 0);
                                 const itemAmount = quantity * (item.rate || 0);
                                 const itemDiscount = itemAmount * ((item.discount || 0) / 100);
@@ -928,7 +925,7 @@ export function InvoiceForm() {
                                             )}
                                         />
                                     </TableCell>}
-                                    <TableCell className="text-right font-mono">{formatCurrency(taxableAmount, watchedCurrency)}</TableCell>
+                                    <TableCell className="text-right font-mono">{formatCurrency(taxableAmount, watchedFormValues.currency)}</TableCell>
                                     <TableCell>
                                         <FormField
                                             control={form.control}
@@ -952,7 +949,7 @@ export function InvoiceForm() {
                                             )}
                                         />
                                     </TableCell>
-                                    <TableCell className="text-right font-mono">{formatCurrency(totalAmount, watchedCurrency)}</TableCell>
+                                    <TableCell className="text-right font-mono">{formatCurrency(totalAmount, watchedFormValues.currency)}</TableCell>
                                     <TableCell>
                                         <Button
                                         type="button"
@@ -974,7 +971,7 @@ export function InvoiceForm() {
 
                     <div className="md:hidden space-y-4">
                         {fields.map((field, index) => {
-                            const item = watchedItems[index];
+                            const item = watchedFormValues.items[index];
                             const quantity = invoiceType === 'service' ? 1 : (item.quantity || 0);
                             const itemAmount = quantity * (item.rate || 0);
                             const itemDiscount = itemAmount * ((item.discount || 0) / 100);
@@ -1100,11 +1097,11 @@ export function InvoiceForm() {
                                         <div className="space-y-1 text-sm">
                                             <div className="flex justify-between">
                                                 <span className="text-muted-foreground">Taxable Amt.</span>
-                                                <span className="font-mono">{formatCurrency(taxableAmount, watchedCurrency)}</span>
+                                                <span className="font-mono">{formatCurrency(taxableAmount, watchedFormValues.currency)}</span>
                                             </div>
                                             <div className="flex justify-between font-medium">
                                                 <span>Total</span>
-                                                <span className="font-mono">{formatCurrency(totalAmount, watchedCurrency)}</span>
+                                                <span className="font-mono">{formatCurrency(totalAmount, watchedFormValues.currency)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -1135,15 +1132,15 @@ export function InvoiceForm() {
                       <CardContent className="p-4 pt-0 space-y-2 text-sm">
                          <div className="flex justify-between">
                             <span className="text-muted-foreground">CGST</span>
-                            <span className="font-mono">{formatCurrency(totals.totalCgst, watchedCurrency)}</span>
+                            <span className="font-mono">{formatCurrency(totals.totalCgst, watchedFormValues.currency)}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">SGST</span>
-                            <span className="font-mono">{formatCurrency(totals.totalSgst, watchedCurrency)}</span>
+                            <span className="font-mono">{formatCurrency(totals.totalSgst, watchedFormValues.currency)}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">IGST</span>
-                            <span className="font-mono">{formatCurrency(totals.totalIgst, watchedCurrency)}</span>
+                            <span className="font-mono">{formatCurrency(totals.totalIgst, watchedFormValues.currency)}</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -1155,24 +1152,24 @@ export function InvoiceForm() {
                       <CardContent className="p-4 pt-0 space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Subtotal</span>
-                          <span className="font-mono">{formatCurrency(totals.subtotal, watchedCurrency)}</span>
+                          <span className="font-mono">{formatCurrency(totals.subtotal, watchedFormValues.currency)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Total Discount</span>
                           <span className="font-mono text-destructive">
-                            - {formatCurrency(totals.totalDiscount, watchedCurrency)}
+                            - {formatCurrency(totals.totalDiscount, watchedFormValues.currency)}
                           </span>
                         </div>
                         <Separator className="my-1" />
                         <div className="flex justify-between font-medium">
                           <span>Taxable Value</span>
-                          <span className="font-mono">{formatCurrency(totals.totalTaxableValue, watchedCurrency)}</span>
+                          <span className="font-mono">{formatCurrency(totals.totalTaxableValue, watchedFormValues.currency)}</span>
                         </div>
                         <div className="flex justify-between">
                            <span className="text-muted-foreground">
                               {totals.singleGstRate ? `GST (${totals.singleGstRate}%)` : 'Total GST'}
                             </span>
-                          <span className="font-mono">{formatCurrency(totals.totalGst, watchedCurrency)}</span>
+                          <span className="font-mono">{formatCurrency(totals.totalGst, watchedFormValues.currency)}</span>
                         </div>
                         <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2">
@@ -1197,7 +1194,7 @@ export function InvoiceForm() {
                         <Separator className="my-1" />
                         <div className="flex justify-between text-base font-bold">
                           <span>Grand Total</span>
-                          <span className="font-mono">{formatCurrency(totals.grandTotal, watchedCurrency)}</span>
+                          <span className="font-mono">{formatCurrency(totals.grandTotal, watchedFormValues.currency)}</span>
                         </div>
                          <div className="flex justify-end text-xs text-muted-foreground mt-1">
                             <span>Base Currency (INR) {formatCurrency(totals.grandTotal * (form.getValues('exchangeRate') || 1), 'INR')}</span>
@@ -1258,7 +1255,7 @@ export function InvoiceForm() {
                             </CardHeader>
                             <CardContent className="p-4 pt-0">
                                 <div className="text-3xl font-bold font-mono text-destructive">
-                                    {formatCurrency(totals.amountDue, watchedCurrency)}
+                                    {formatCurrency(totals.amountDue, watchedFormValues.currency)}
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">
                                     Base Currency (INR): {formatCurrency(totals.amountDue * (form.getValues('exchangeRate') || 1), 'INR')}
