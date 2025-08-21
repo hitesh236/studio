@@ -130,14 +130,13 @@ export const columns = ({
       accessor: "balance",
       header: getSortableHeader("Balance", "balance"),
       cell: (row: Person) => {
-        const isCustomer = row.type === 'Customer';
         let balanceText;
         let colorClass;
 
         if (row.balance === 0) {
             balanceText = '-';
             colorClass = '';
-        } else if ((isCustomer && row.balance > 0) || (!isCustomer && row.balance > 0)) {
+        } else if (row.balance > 0) {
             balanceText = `${formatCurrency(row.balance)} (To Collect)`;
             colorClass = 'text-green-600';
         } else {

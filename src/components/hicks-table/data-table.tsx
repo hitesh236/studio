@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -26,7 +27,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 interface DataTableProps {
   columns: {
     header: React.ReactNode;
-    accessor: keyof Person | "expander" | "name" | "phone" | "actions" | "select";
+    accessor: keyof Person | "expander" | "name" | "phone" | "actions" | "select" | "type" | "balance";
     cell: (row: Person) => React.ReactNode;
   }[];
   data: Person[];
@@ -56,16 +57,10 @@ const MobileRowCard = ({
 
   let statusVariant: "default" | "secondary" | "destructive" | "outline";
   switch (row.status) {
-    case "Converted":
+    case "Active":
       statusVariant = "default";
       break;
-    case "Active":
-      statusVariant = "secondary";
-      break;
-    case "Lost":
-      statusVariant = "destructive";
-      break;
-    case "Follow-Up":
+    default:
       statusVariant = "outline";
       break;
   }
@@ -104,13 +99,8 @@ const MobileRowCard = ({
                     {row.phone}
                   </div>
                   <div>
-                    <strong className="text-muted-foreground block">Sale Amount</strong>
-                    {formatCurrency(row.saleAmount)}
-                  </div>
-                  <div className="flex items-center">
-                    <strong className="text-muted-foreground mr-1">Rating:</strong>{" "}
-                    <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                    <span className="ml-1">{row.rating.toFixed(1)}</span>
+                    <strong className="text-muted-foreground block">Balance</strong>
+                     {row.balance > 0 ? formatCurrency(row.balance) : `-${formatCurrency(Math.abs(row.balance))}`}
                   </div>
                 </div>
                 <Separator />
@@ -130,13 +120,13 @@ const MobileRowCard = ({
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Button variant="outline" size="sm">
-                    <Eye className="mr-2" /> View
+                    <Eye className="mr-2 h-4 w-4" /> View
                   </Button>
                   <Button variant="outline" size="sm">
-                    <Edit className="mr-2" /> Edit
+                    <Edit className="mr-2 h-4 w-4" /> Edit
                   </Button>
                   <Button variant="destructive" size="sm">
-                    <Trash2 className="mr-2" /> Delete
+                    <Trash2 className="mr-2 h-4 w-4" /> Delete
                   </Button>
                 </div>
               </CardContent>
