@@ -12,9 +12,14 @@ import { QuickActions } from './quick-actions';
 import { DashboardCharts } from './charts';
 import { InfoTabs } from './info-tabs';
 import Loading from '../loading';
-import { formatCurrency } from '@/lib/utils';
-import { DollarSign, Wallet, TrendingUp, TrendingDown } from "lucide-react";
+import { formatCurrency, cn } from '@/lib/utils';
+import { DollarSign, Wallet, TrendingUp, TrendingDown, PackageX, CalendarX2 } from "lucide-react";
 import useUserRole from '@/hooks/use-user-role';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { differenceInDays, format } from 'date-fns';
 
 const kpiLinks: Record<string, string> = {
     "Total Revenue": "/sales-invoices",
@@ -22,6 +27,79 @@ const kpiLinks: Record<string, string> = {
     "Total Receivables": "/sales-invoices",
     "Net Profit": "/profit-loss"
 };
+
+const LowStockCard = ({ items }: { items: StockItem[] }) => (
+    <Card>
+        <CardHeader>
+            <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                    <PackageX className="h-5 w-5 text-destructive" />
+                    <CardTitle>Low Stock Items</CardTitle>
+                </div>
+                <Button asChild variant="link" className="p-0 h-auto">
+                    <Link href="/stock-list">View All</Link>
+                </Button>
+            </div>
+            <CardDescription>Items that have fallen below their minimum stock level.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Product</TableHead>
+                        <TableHead className="text-right">Stock</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {items.slice(0, 5).map(item => (
+                        <TableRow key={item.id}>
+                            <TableCell className="font-medium">{item.productName}</TableCell>
+                            <TableCell className="text-right font-mono text-destructive">{item.stockInHand} {item.uom}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </CardContent>
+    </Card>
+);
+
+const ExpiryCard = ({ items }: { items: StockItem[] }) => (
+    <Card>
+        <CardHeader>
+             <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                    <CalendarX2 className="h-5 w-5 text-destructive" />
+                    <CardTitle>Expiring Soon</CardTitle>
+                </div>
+                <Button asChild variant="link" className="p-0 h-auto">
+                    <Link href="/reports/expiry-report">View Full Report</Link>
+                </Button>
+            </div>
+            <CardDescription>Products that are approaching their expiration date.</CardDescription>
+        </CardHeader>
+        <CardContent>
+             <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Product</TableHead>
+                        <TableHead className="text-right">Expires In</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {items.slice(0, 5).map(item => (
+                        <TableRow key={item.id}>
+                            <TableCell className="font-medium">{item.productName}</TableCell>
+                            <TableCell className="text-right">
+                                <Badge variant="destructive">{item.daysToExpiry} days</Badge>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </CardContent>
+    </Card>
+);
+
 
 export default function Home() {
   const { role } = useUserRole();
@@ -59,6 +137,20 @@ export default function Home() {
 
   }, [salesInvoices, purchaseBills, loading]);
 
+  const lowStockItems = React.useMemo(() => {
+    if (loading || !stockItems) return [];
+    return stockItems.filter(item => item.status === 'Low Stock');
+  }, [stockItems, loading]);
+
+  const expiringSoonItems = React.useMemo(() => {
+    if (loading || !stockItems) return [];
+    const now = new Date();
+    return stockItems
+      .filter(item => item.expiryDate && differenceInDays(item.expiryDate, now) <= 30 && differenceInDays(item.expiryDate, now) >= 0)
+      .sort((a, b) => (a.expiryDate?.getTime() || 0) - (b.expiryDate?.getTime() || 0))
+      .map(item => ({ ...item, daysToExpiry: differenceInDays(item.expiryDate!, now) }));
+  }, [stockItems, loading]);
+
   if (loading) {
     return <Loading />;
   }
@@ -86,7 +178,11 @@ export default function Home() {
         </div>
       </div>
       <div>
-        <InfoTabs salesData={salesInvoices} purchaseData={purchaseBills} stockData={stockItems} />
+        <InfoTabs salesData={salesInvoices} purchaseData={purchaseBills} />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <LowStockCard items={lowStockItems} />
+        <ExpiryCard items={expiringSoonItems} />
       </div>
     </div>
   );
