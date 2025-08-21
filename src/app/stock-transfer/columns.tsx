@@ -36,6 +36,26 @@ const getStatusVariant = (status: StockTransfer['status']) => {
     }
 };
 
+const ActionButtons = ({ row }: { row: StockTransfer }) => {
+    return (
+      <div className="text-center">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem asChild>
+              <Link href={`/stock-transfer/new?data=${encodeURIComponent(JSON.stringify(row))}`}>
+                  <Edit className="mr-2 h-4 w-4" /> Edit
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Cancel</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+};
+
 export const columns = ({ sortConfig, requestSort, expandedRows, toggleRowExpansion }: ColumnProps) => {
   const getSortableHeader = (title: string, key: keyof StockTransfer) => {
     const isSorted = sortConfig.key === key;
@@ -71,30 +91,14 @@ export const columns = ({ sortConfig, requestSort, expandedRows, toggleRowExpans
     { accessor: 'toLocation', header: getSortableHeader('To', 'toLocation'), cell: (row: StockTransfer) => row.toLocation },
     { 
         accessor: 'items', 
-        header: getSortableHeader('items', 'items'), 
+        header: 'Items', 
         cell: (row: StockTransfer) => <p className="text-center">{row.items.length}</p> 
     },
     { accessor: 'initiatedBy', header: getSortableHeader('Initiated By', 'initiatedBy'), cell: (row: StockTransfer) => row.initiatedBy },
     {
       accessor: 'actions',
       header: 'Actions',
-      cell: (row: StockTransfer) => (
-        <div className="text-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem asChild>
-                <Link href={`/stock-transfer/new?data=${encodeURIComponent(JSON.stringify(row))}`}>
-                    <Edit className="mr-2 h-4 w-4" /> Edit
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Cancel</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      ),
+      cell: (row: StockTransfer) => <ActionButtons row={row} />,
     },
   ];
 };
