@@ -32,13 +32,14 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Trash2, PlusCircle, ChevronsUpDown, Check } from 'lucide-react';
+import { Loader2, Save, Trash2, PlusCircle, ChevronsUpDown, Check, CalendarIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
-import { generateStockListData, type StockItem } from '@/app/stock-list/data';
+import { generateSalesInvoiceReturns, type SalesInvoiceItem } from '@/app/sales-invoice-returns/data';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import { Calendar } from '@/components/ui/calendar';
 
 const adjustmentItemSchema = z.object({
   productId: z.string().min(1, 'Product is required.'),
@@ -61,10 +62,10 @@ function StockAdjustmentFormComponent() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [products, setProducts] = React.useState<StockItem[]>([]);
+  const [products, setProducts] = React.useState<SalesInvoiceItem[]>([]);
 
   React.useEffect(() => {
-    setProducts(generateStockListData(50));
+    setProducts(generateSalesInvoiceReturns(50).flatMap(i => i.items));
   }, []);
 
   const form = useForm<StockAdjustmentValues>({
@@ -91,7 +92,7 @@ function StockAdjustmentFormComponent() {
                 date: new Date(data.date),
                 items: data.items.map((item: any) => ({
                     ...item,
-                    currentStock: products.find(p => p.id === item.productId)?.stockInHand || 0,
+                    currentStock: products.find(p => p.id.toString() === item.productId)?.quantity || 0,
                 }))
             });
         } catch (error) {
@@ -126,15 +127,15 @@ function StockAdjustmentFormComponent() {
         <PopoverTrigger asChild>
           <FormControl>
             <Button variant="outline" role="combobox" className={cn("w-full justify-between", !value && "text-muted-foreground")}>
-              {value ? products.find(product => product.id === value)?.productName : "Select item"}
+              {value ? products.find(product => product.id.toString() === value)?.name : "Select item"}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </FormControl>
         </PopoverTrigger>
         <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
           <Command filter={(value, search) => {
-            const product = products.find(p => p.id === value);
-            if (product?.productName.toLowerCase().includes(search.toLowerCase()) || product?.sku.toLowerCase().includes(search)) return 1;
+            const product = products.find(p => p.id.toString() === value);
+            if (product?.name.toLowerCase().includes(search.toLowerCase())) return 1;
             return 0;
           }}>
             <CommandInput placeholder="Search items..." />
@@ -142,14 +143,14 @@ function StockAdjustmentFormComponent() {
               <CommandEmpty>No item found.</CommandEmpty>
               <CommandGroup>
                 {products.map(product => (
-                  <CommandItem value={product.id} key={product.id} onSelect={() => { 
-                    form.setValue(`items.${index}.productId`, product.id);
-                    form.setValue(`items.${index}.productName`, product.productName);
-                    form.setValue(`items.${index}.currentStock`, product.stockInHand);
+                  <CommandItem value={product.id.toString()} key={product.id} onSelect={() => { 
+                    form.setValue(`items.${index}.productId`, product.id.toString());
+                    form.setValue(`items.${index}.productName`, product.name);
+                    form.setValue(`items.${index}.currentStock`, product.quantity);
                     setOpen(false); 
                   }}>
-                    <Check className={cn("mr-2 h-4 w-4", product.id === value ? "opacity-100" : "opacity-0")} />
-                    {product.productName}
+                    <Check className={cn("mr-2 h-4 w-4", product.id.toString() === value ? "opacity-100" : "opacity-0")} />
+                    {product.name}
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -170,8 +171,13 @@ function StockAdjustmentFormComponent() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField name="date" control={form.control} render={({ field }) => (
-                <FormItem><FormLabel>Adjustment Date</FormLabel><Input type="date" {...field} value={format(field.value, 'yyyy-MM-dd')} onChange={(e) => field.onChange(new Date(e.target.value))} /></FormItem>
+               <FormField name="date" control={form.control} render={({ field }) => (
+                <FormItem className="flex flex-col"><FormLabel>Adjustment Date</FormLabel><Popover><PopoverTrigger asChild><FormControl>
+                    <Button variant={"outline"} className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                        {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                </FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus /></PopoverContent></Popover><FormMessage /></FormItem>
               )} />
               <FormField name="reason" control={form.control} render={({ field }) => (
                 <FormItem><FormLabel>Reason</FormLabel>
