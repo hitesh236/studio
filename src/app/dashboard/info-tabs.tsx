@@ -6,13 +6,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency, cn } from "@/lib/utils";
-import { bankAccounts, recentInvoices, upcomingBills } from "./data";
+import { bankAccounts } from "./data";
 import { format, parseISO } from 'date-fns';
 import Link from 'next/link';
 import { useRouter } from "next/navigation";
+import type { SalesInvoice } from "../sales-invoices/data";
+import type { PurchaseBill } from "../purchase/data";
+import * as React from 'react';
+
+interface InfoTabsProps {
+    salesData: SalesInvoice[];
+    purchaseData: PurchaseBill[];
+}
 
 // Mobile Card Components
-const MobileInvoiceCard = ({ invoice }: { invoice: typeof recentInvoices[0] }) => {
+const MobileInvoiceCard = ({ invoice }: { invoice: SalesInvoice }) => {
     const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
         switch (status) {
           case 'Paid': return 'default';
@@ -26,15 +34,15 @@ const MobileInvoiceCard = ({ invoice }: { invoice: typeof recentInvoices[0] }) =
             <Card className="hover:border-primary">
                 <CardHeader className="p-4 flex flex-row items-center justify-between">
                     <div>
-                        <CardTitle className="text-base">{invoice.id}</CardTitle>
-                        <CardDescription>{invoice.customer}</CardDescription>
+                        <CardTitle className="text-base">{invoice.invoiceNumber}</CardTitle>
+                        <CardDescription>{invoice.customerName}</CardDescription>
                     </div>
-                    <Badge variant={getStatusVariant(invoice.status)}>{invoice.status}</Badge>
+                    <Badge variant={getStatusVariant(invoice.paymentStatus)}>{invoice.paymentStatus}</Badge>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
                     <div className="flex justify-between items-baseline">
                         <p className="text-sm text-muted-foreground">Amount</p>
-                        <p className="text-lg font-mono">{formatCurrency(invoice.amount, 'INR')}</p>
+                        <p className="text-lg font-mono">{formatCurrency(invoice.amountBase, 'INR')}</p>
                     </div>
                 </CardContent>
             </Card>
@@ -42,16 +50,16 @@ const MobileInvoiceCard = ({ invoice }: { invoice: typeof recentInvoices[0] }) =
     )
 };
 
-const MobileBillCard = ({ bill }: { bill: typeof upcomingBills[0] }) => {
+const MobileBillCard = ({ bill }: { bill: PurchaseBill }) => {
     return (
         <Card>
             <CardHeader className="p-4">
-                <CardTitle className="text-base">{bill.vendor}</CardTitle>
-                <CardDescription>Bill #{bill.id}</CardDescription>
+                <CardTitle className="text-base">{bill.vendorName}</CardTitle>
+                <CardDescription>Bill #{bill.billNumber}</CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-0">
                  <div className="flex justify-between items-baseline">
-                    <p className="text-sm text-muted-foreground">Due: {format(parseISO(bill.dueDate), 'dd-MMM-yyyy')}</p>
+                    <p className="text-sm text-muted-foreground">Due: {format(bill.dueDate, 'dd-MMM-yyyy')}</p>
                     <p className="text-lg font-mono">{formatCurrency(bill.amount, 'INR')}</p>
                 </div>
             </CardContent>
@@ -75,8 +83,19 @@ const MobileAccountCard = ({ account }: { account: typeof bankAccounts[0] }) => 
     )
 };
 
-export function InfoTabs() {
+export function InfoTabs({ salesData, purchaseData }: InfoTabsProps) {
   const router = useRouter();
+
+  const recentInvoices = React.useMemo(() => {
+    return salesData.sort((a,b) => b.invoiceDate.getTime() - a.invoiceDate.getTime()).slice(0, 5);
+  }, [salesData]);
+
+  const upcomingBills = React.useMemo(() => {
+    return purchaseData
+      .filter(bill => bill.paymentStatus !== 'Paid' && bill.dueDate > new Date())
+      .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
+      .slice(0, 5);
+  }, [purchaseData]);
 
   const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
@@ -119,12 +138,12 @@ export function InfoTabs() {
                                     <TableRow key={invoice.id} className="group hover:bg-muted/50 cursor-pointer" onClick={() => router.push('/invoice-preview')}>
                                         <TableCell className="font-medium">
                                             <Link href="/invoice-preview" className="hover:underline group-hover:text-primary">
-                                                {invoice.id}
+                                                {invoice.invoiceNumber}
                                             </Link>
                                         </TableCell>
-                                        <TableCell>{invoice.customer}</TableCell>
-                                        <TableCell className="text-right font-mono">{formatCurrency(invoice.amount, 'INR')}</TableCell>
-                                        <TableCell className="text-center"><Badge variant={getStatusVariant(invoice.status)}>{invoice.status}</Badge></TableCell>
+                                        <TableCell>{invoice.customerName}</TableCell>
+                                        <TableCell className="text-right font-mono">{formatCurrency(invoice.amountBase, 'INR')}</TableCell>
+                                        <TableCell className="text-center"><Badge variant={getStatusVariant(invoice.paymentStatus)}>{invoice.paymentStatus}</Badge></TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -150,9 +169,9 @@ export function InfoTabs() {
                             <TableBody>
                                 {upcomingBills.map(bill => (
                                     <TableRow key={bill.id}>
-                                        <TableCell className="font-medium">{bill.id}</TableCell>
-                                        <TableCell>{bill.vendor}</TableCell>
-                                        <TableCell>{format(parseISO(bill.dueDate), 'dd-MMM-yyyy')}</TableCell>
+                                        <TableCell className="font-medium">{bill.billNumber}</TableCell>
+                                        <TableCell>{bill.vendorName}</TableCell>
+                                        <TableCell>{format(bill.dueDate, 'dd-MMM-yyyy')}</TableCell>
                                         <TableCell className="text-right font-mono">{formatCurrency(bill.amount, 'INR')}</TableCell>
                                     </TableRow>
                                 ))}

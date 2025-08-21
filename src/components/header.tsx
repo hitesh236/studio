@@ -16,8 +16,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
-import { LogOut, User, LayoutGrid, BookOpen, FileText, Eye, Globe, UserCircle, Palette, MonitorPlay, Tags } from 'lucide-react';
+import { LogOut, User, LayoutGrid, BookOpen, FileText, Eye, Globe, UserCircle, Palette, MonitorPlay, Tags, UserCog, UserCheck, UserX } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import useUserRole from '@/hooks/use-user-role';
 
 const componentMenuItems = [
     { href: '/ledgers', icon: BookOpen, label: 'Ledgers' },
@@ -56,11 +57,28 @@ const MegaMenu = () => (
 );
 
 export function Header() {
+  const { role, setRole } = useUserRole();
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-6 shrink-0">
       <SidebarTrigger className="flex" />
       <div className="flex-1" />
       <div className="flex items-center gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <UserCog className="mr-2 h-4 w-4" />
+              Role: {role}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuLabel>Switch Role (For Demo)</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setRole('Admin')}><UserCog className="mr-2 h-4 w-4 text-destructive" /> Admin</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setRole('Accountant')}><User className="mr-2 h-4 w-4 text-primary" /> Accountant</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setRole('Auditor')}><UserCheck className="mr-2 h-4 w-4 text-green-600" /> Auditor</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setRole('Guest')}><UserX className="mr-2 h-4 w-4 text-muted-foreground" /> Guest</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button asChild variant="outline">
             <Link href="/pos">
                 <MonitorPlay className="mr-2 h-4 w-4" />

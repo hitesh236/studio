@@ -42,23 +42,30 @@ import {
     UserCircle,
     Users,
     Wallet,
-    ArchiveRestore
+    ArchiveRestore,
+    Repeat
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import * as React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import useUserRole from '@/hooks/use-user-role';
 
 export function AppSidebar() {
   const { state, isMobile, setOpen, setOpenMobile } = useSidebar();
   const pathname = usePathname();
+  const { role } = useUserRole();
 
   const handleLinkClick = () => {
     if (isMobile) {
       setOpenMobile(false);
     }
   };
+  
+  const canAccessAdmin = role === 'Admin';
+  const canAccessAccounting = role === 'Admin' || role === 'Accountant';
+  const canAccessReports = role === 'Admin' || role === 'Accountant' || role === 'Auditor';
 
   return (
     <Sidebar collapsible="icon">
@@ -92,7 +99,7 @@ export function AppSidebar() {
             </SidebarMenuItem>
         </SidebarMenu>
         
-        <SidebarGroup>
+        {canAccessAccounting && <SidebarGroup>
           <SidebarGroupLabel className="text-green-600 dark:text-green-500">Money In</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -100,6 +107,14 @@ export function AppSidebar() {
                     <Link href="/sales-invoices" onClick={handleLinkClick}>
                         <FileText />
                         <span>Sales</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Recurring Invoices" isActive={pathname.startsWith('/recurring-invoices')} asChild>
+                    <Link href="/recurring-invoices" onClick={handleLinkClick}>
+                        <Repeat />
+                        <span>Recurring Invoices</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
@@ -112,9 +127,9 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-        </SidebarGroup>
+        </SidebarGroup>}
         
-        <SidebarGroup>
+        {canAccessAccounting && <SidebarGroup>
           <SidebarGroupLabel className="text-destructive">Money Out</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -134,9 +149,9 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-        </SidebarGroup>
+        </SidebarGroup>}
 
-        <SidebarGroup>
+        {canAccessAccounting && <SidebarGroup>
           <SidebarGroupLabel>Stock</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -180,9 +195,9 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-        </SidebarGroup>
+        </SidebarGroup>}
 
-        <SidebarGroup>
+        {canAccessAccounting && <SidebarGroup>
           <SidebarGroupLabel>Accounts &amp; Books</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -202,9 +217,9 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-        </SidebarGroup>
+        </SidebarGroup>}
 
-        <SidebarGroup>
+        {canAccessReports && <SidebarGroup>
           <SidebarGroupLabel>Reports</SidebarGroupLabel>
           <SidebarMenu>
              <SidebarMenuItem>
@@ -239,12 +254,6 @@ export function AppSidebar() {
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Invoice Overviews">
-                <BookOpen />
-                <span>Invoice Overviews</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton tooltip="Stock Summary" isActive={pathname.startsWith('/stock-summary')} asChild>
                 <Link href="/stock-summary" onClick={handleLinkClick}>
@@ -254,9 +263,9 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-        </SidebarGroup>
+        </SidebarGroup>}
 
-        <SidebarGroup>
+        {canAccessAdmin && <SidebarGroup>
           <SidebarGroupLabel>GST Filing</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -268,11 +277,11 @@ export function AppSidebar() {
                 </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-        </SidebarGroup>
+        </SidebarGroup>}
       </SidebarContent>
       
       <SidebarFooter>
-        <SidebarGroup>
+        {canAccessAdmin && <SidebarGroup>
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton tooltip="Company Settings" isActive={pathname.startsWith('/settings')} asChild>
@@ -291,7 +300,7 @@ export function AppSidebar() {
                     </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>
-        </SidebarGroup>
+        </SidebarGroup>}
         <SidebarSeparator />
         <div className="flex items-center gap-2 p-2.5">
             <Avatar className="h-8 w-8">
@@ -301,7 +310,7 @@ export function AppSidebar() {
             {state === 'expanded' && (
                 <div>
                     <p className="text-sm font-semibold">Jane Doe</p>
-                    <p className="text-xs text-muted-foreground">jane.doe@hicks.inc</p>
+                    <p className="text-xs text-muted-foreground">{role}</p>
                 </div>
             )}
         </div>

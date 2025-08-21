@@ -4,13 +4,17 @@
 import { Bar, BarChart, Line, LineChart, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { chartData } from './data';
 import { formatCurrency } from '@/lib/utils';
 import {
   ChartTooltip,
   ChartTooltipContent,
   ChartContainer,
 } from "@/components/ui/chart"
+import type { SalesInvoice } from '../sales-invoices/data';
+import type { PurchaseBill } from '../purchase/data';
+import * as React from 'react';
+import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns';
+
 
 const chartConfig = {
   income: {
@@ -31,9 +35,61 @@ const chartConfig = {
   }
 } satisfies import("@/components/ui/chart").ChartConfig;
 
+interface DashboardChartsProps {
+    salesData: SalesInvoice[];
+    purchaseData: PurchaseBill[];
+}
 
-export function DashboardCharts() {
+export function DashboardCharts({ salesData, purchaseData }: DashboardChartsProps) {
     const triggerClasses = "rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:border data-[state=inactive]:border-border data-[state=inactive]:bg-transparent";
+
+    const incomeExpenseData = React.useMemo(() => {
+        const data = [];
+        for (let i = 5; i >= 0; i--) {
+            const date = subMonths(new Date(), i);
+            const monthStart = startOfMonth(date);
+            const monthEnd = endOfMonth(date);
+
+            const income = salesData
+                .filter(inv => inv.invoiceDate >= monthStart && inv.invoiceDate <= monthEnd)
+                .reduce((acc, inv) => acc + inv.amountBase, 0);
+
+            const expense = purchaseData
+                .filter(bill => bill.billDate >= monthStart && bill.billDate <= monthEnd)
+                .reduce((acc, bill) => acc + bill.amount, 0);
+            
+            data.push({
+                month: format(date, 'MMM'),
+                income,
+                expense,
+            });
+        }
+        return data;
+    }, [salesData, purchaseData]);
+
+    const cashFlowData = React.useMemo(() => {
+        const data = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            
+            const cashIn = salesData
+                .filter(inv => format(inv.invoiceDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd'))
+                .reduce((acc, inv) => acc + inv.amountPaid, 0);
+
+            const cashOut = purchaseData
+                .filter(bill => format(bill.billDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd'))
+                .reduce((acc, bill) => acc + bill.amountPaid, 0);
+            
+            data.push({
+                date: format(date, 'dd/MM'),
+                cashIn,
+                cashOut,
+            });
+        }
+        return data;
+    }, [salesData, purchaseData]);
+
 
     return (
         <Card>
@@ -49,7 +105,7 @@ export function DashboardCharts() {
                     </TabsList>
                     <TabsContent value="income-expense">
                         <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                            <BarChart data={chartData.incomeExpense}>
+                            <BarChart data={incomeExpenseData}>
                                 <CartesianGrid vertical={false} />
                                 <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
                                 <YAxis tickFormatter={(value) => formatCurrency(value as number, 'INR').slice(0, -3)} />
@@ -62,7 +118,7 @@ export function DashboardCharts() {
                     </TabsContent>
                     <TabsContent value="cash-flow">
                         <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                            <LineChart data={chartData.cashFlow}>
+                            <LineChart data={cashFlowData}>
                                 <CartesianGrid vertical={false} />
                                 <XAxis dataKey="date" tickLine={false} tickMargin={10} axisLine={false} />
                                 <YAxis tickFormatter={(value) => formatCurrency(value as number, 'INR').slice(0, -3)} />
