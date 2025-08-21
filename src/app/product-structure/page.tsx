@@ -552,16 +552,18 @@ export default function ProductStructurePage() {
     const newAttributes = JSON.parse(JSON.stringify(existingAttributes)) as Attribute[];
 
     const categoryMap = new Map<string, Category>();
+    const existingCategoryNames = new Set<string>();
     const attributeMap = new Map<string, Attribute>();
     const summary = { newCategories: new Set<string>(), newAttributes: new Set<string>() };
 
-    function populateCategoryMap(cats: Category[]) {
+    function populateMaps(cats: Category[]) {
       cats.forEach(c => {
         categoryMap.set(c.name.toLowerCase(), c);
-        if (c.children) populateCategoryMap(c.children);
+        existingCategoryNames.add(c.name.toLowerCase());
+        if (c.children) populateMaps(c.children);
       });
     }
-    populateCategoryMap(newCategories);
+    populateMaps(newCategories);
     newAttributes.forEach(a => attributeMap.set(a.name.toLowerCase(), a));
 
     data.forEach(row => {
