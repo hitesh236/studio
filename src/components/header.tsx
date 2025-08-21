@@ -75,7 +75,6 @@ export function Header() {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setRole('Admin')}><UserCog className="mr-2 h-4 w-4 text-destructive" /> Admin</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setRole('Accountant')}><User className="mr-2 h-4 w-4 text-primary" /> Accountant</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setRole('Auditor')}><UserCheck className="mr-2 h-4 w-4 text-green-600" /> Auditor</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setRole('Guest')}><UserX className="mr-2 h-4 w-4 text-muted-foreground" /> Guest</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
