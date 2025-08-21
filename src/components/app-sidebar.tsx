@@ -156,27 +156,11 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Transfer Stock" isActive={pathname.startsWith('/stock-transfer')} asChild>
-                <Link href="/stock-transfer" onClick={handleLinkClick}>
-                    <Truck />
-                    <span>Transfer Stock</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
               <SidebarMenuButton tooltip="Stock Adjustment" isActive={pathname.startsWith('/stock-adjustments')} asChild>
                 <Link href="/stock-adjustments" onClick={handleLinkClick}>
                     <ArchiveRestore />
                     <span>Stock Adjustment</span>
                 </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="UOM" isActive={pathname.startsWith('/uom')} asChild>
-                 <Link href="/uom" onClick={handleLinkClick}>
-                    <Box />
-                    <span>UOM</span>
-                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
