@@ -42,6 +42,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import useUserRole from '@/hooks/use-user-role';
+import Link from 'next/link';
 
 type Role = 'Admin' | 'Accountant' | 'Auditor' | 'Guest';
 
@@ -145,14 +146,21 @@ export default function UserRolesPage() {
     <div data-section="main-content" className="p-4 sm:p-6 lg:p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">User Management</h1>
-        <Dialog>
-            <DialogTrigger asChild>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Invite User
-                </Button>
-            </DialogTrigger>
-            <InviteUserDialog onInvite={handleInviteUser} />
-        </Dialog>
+        <div className="flex gap-2">
+            <Button asChild variant="outline">
+                <Link href="/settings/user-roles/new">
+                    <PlusCircle className="mr-2 h-4 w-4" /> Create New Role
+                </Link>
+            </Button>
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Invite User
+                    </Button>
+                </DialogTrigger>
+                <InviteUserDialog onInvite={handleInviteUser} />
+            </Dialog>
+        </div>
       </div>
       <Card>
         <CardHeader>
@@ -234,4 +242,3 @@ export default function UserRolesPage() {
     </div>
   );
 }
-
