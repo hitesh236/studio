@@ -37,7 +37,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { generateStockListData, type StockItem } from '@/app/stock-list/data';
-import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Table,
@@ -70,8 +70,9 @@ type StockTransferValues = z.infer<typeof stockTransferSchema>;
 
 const locations = ['Main Warehouse', 'Store', 'Shop A', 'Shop B'];
 
-function StockTransferFormComponent() {
+export function StockTransferForm() {
   const { toast } = useToast();
+  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [products, setProducts] = React.useState<StockItem[]>([]);
 
@@ -94,6 +95,26 @@ function StockTransferFormComponent() {
     control: form.control,
     name: 'items',
   });
+
+  React.useEffect(() => {
+    const dataString = searchParams.get('data');
+    if (dataString) {
+        try {
+            const data = JSON.parse(decodeURIComponent(dataString));
+            form.reset({
+                ...data,
+                date: new Date(data.date),
+                items: data.items.map((item: any) => ({
+                    ...item,
+                    availableStock: products.find(p => p.id === item.productId)?.stockInHand || 0,
+                }))
+            });
+        } catch (error) {
+            console.error("Failed to parse adjustment data from URL", error);
+        }
+    }
+  }, [searchParams, form, products]);
+
 
   async function onSubmit(data: StockTransferValues) {
     setIsSubmitting(true);
@@ -242,12 +263,4 @@ function StockTransferFormComponent() {
       </CardContent>
     </Card>
   );
-}
-
-export function StockTransferForm() {
-    return (
-        <Suspense fallback={<div>Loading form...</div>}>
-            <StockTransferFormComponent />
-        </Suspense>
-    )
 }
