@@ -35,10 +35,6 @@ import { Label } from '@/components/ui/label';
 const calculateTotal = (node: Ledger, period: 'current' | 'previous' = 'current'): number => {
     const balanceKey = period === 'current' ? 'balance' : 'previousBalance';
     if (node.type === 'ledger') {
-        // For COGS, closing stock is a credit, hence negative to reduce expense
-        if (node.id === 'ledger-closing-stock') {
-            return (node as any)[balanceKey] || 0;
-        }
         return (node as any)[balanceKey] || 0;
     }
     if (node.children) {
@@ -51,8 +47,9 @@ const calculateTotal = (node: Ledger, period: 'current' | 'previous' = 'current'
 const ReportRow = ({ node, level, showPercentages, totalRevenue, showComparison }: { node: Ledger; level: number; showPercentages: boolean; totalRevenue: number; showComparison: boolean }) => {
     const isGroup = node.type === 'group';
     const currentTotal = calculateTotal(node, 'current');
+    // Display closing stock as a positive number even though its value is negative for calculation
     const displayTotal = node.id === 'ledger-closing-stock' ? Math.abs(currentTotal) : currentTotal;
-    const percentage = totalRevenue > 0 ? (currentTotal / totalRevenue) * 100 : 0;
+    const percentage = totalRevenue > 0 && currentTotal !== 0 ? (currentTotal / totalRevenue) * 100 : 0;
     
     const textOpacityClass = level === 0 ? 'opacity-100' : level === 1 ? 'opacity-90' : 'opacity-80';
 
@@ -85,8 +82,9 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, showComparison 
             layout
             className={cn(
                 "flex items-start justify-between py-1.5",
-                 isGroup && `font-bold border-t mt-2 pt-2 rounded-md`,
-                 groupBgClass
+                 isGroup && `font-bold mt-2 pt-2 rounded-md`,
+                 groupBgClass,
+                 node.id === 'cogs' && 'border-t'
             )}
             style={{ paddingLeft: `${finalPaddingLeft}px`, paddingRight: `${finalPaddingRight}px` }}
         >
@@ -141,9 +139,10 @@ const ReportRow = ({ node, level, showPercentages, totalRevenue, showComparison 
                     "font-mono text-sm text-right shrink-0",
                     !isGroup && "font-normal",
                     isGroup && 'pl-2',
-                    textOpacityClass
+                    textOpacityClass,
+                    node.id === 'ledger-closing-stock' && 'text-green-600'
                 )}>
-                    {isGroup || node.balance !== undefined ? formatCurrency(displayTotal, 'INR') : null}
+                    {node.id === 'ledger-closing-stock' && '(-)'} {isGroup || node.balance !== undefined ? formatCurrency(displayTotal, 'INR') : null}
                 </span>
             )}
         </motion.div>
@@ -234,18 +233,34 @@ export default function ProfitAndLossPage() {
   
     const totalIncome = calculateTotal(incomeData, 'current');
     const totalPreviousIncome = calculateTotal(incomeData, 'previous');
-    const totalExpenses = calculateTotal(expenseData, 'current');
-    const totalPreviousExpenses = calculateTotal(expenseData, 'previous');
+    
+    // Separate Direct and Indirect Expenses for clear calculation
+    const directExpensesData = expenseData.children?.find(g => g.id === 'direct-expenses');
+    const indirectExpensesData = expenseData.children?.find(g => g.id === 'indirect-expenses');
+
+    if (!directExpensesData || !indirectExpensesData) {
+        return <div>Error: Direct or Indirect Expenses not found.</div>
+    }
+
+    const totalDirectExpenses = calculateTotal(directExpensesData, 'current');
+    const totalPreviousDirectExpenses = calculateTotal(directExpensesData, 'previous');
+    const totalIndirectExpenses = calculateTotal(indirectExpensesData, 'current');
+    const totalPreviousIndirectExpenses = calculateTotal(indirectExpensesData, 'previous');
+    
+    const grossProfit = totalIncome - totalDirectExpenses;
+    const previousGrossProfit = totalPreviousIncome - totalPreviousDirectExpenses;
+    
     const incomeTaxAmount = 85000;
     const previousIncomeTaxAmount = 75000;
     
-    const profitBeforeTax = totalIncome - totalExpenses;
-    const previousProfitBeforeTax = totalPreviousIncome - totalPreviousExpenses;
+    const profitBeforeTax = grossProfit - totalIndirectExpenses;
+    const previousProfitBeforeTax = previousGrossProfit - totalPreviousIndirectExpenses;
     const netProfitAfterTax = profitBeforeTax - incomeTaxAmount;
     const previousNetProfitAfterTax = previousProfitBeforeTax - previousIncomeTaxAmount;
     
     const totalRevenue = totalIncome;
 
+    const grossProfitPercentage = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
     const profitBeforeTaxPercentage = totalRevenue > 0 ? (profitBeforeTax / totalRevenue) * 100 : 0;
     const netProfitPercentage = totalRevenue > 0 ? (netProfitAfterTax / totalRevenue) * 100 : 0;
 
@@ -471,3 +486,5 @@ export default function ProfitAndLossPage() {
     </div>
   );
 }
+
+    
