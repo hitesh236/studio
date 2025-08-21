@@ -59,6 +59,7 @@ const ALL_COLUMNS = [
     { id: 'purchasePrice', label: 'Purchase Price' },
     { id: 'sellingPrice', label: 'Selling Price' },
     { id: 'location', label: 'Location' },
+    { id: 'expiryDate', label: 'Expiry Date' },
     { id: 'actions', label: 'Actions' },
 ];
 
@@ -103,6 +104,10 @@ const MobileStockCard = ({ item }: { item: StockItem }) => (
                 <span className="text-muted-foreground">Location</span>
                 <span>{item.location}</span>
             </div>
+             {item.expiryDate && <div className="flex justify-between">
+                <span className="text-muted-foreground">Expiry</span>
+                <span>{item.expiryDate.toLocaleDateString()}</span>
+            </div>}
         </CardContent>
     </Card>
 );
@@ -317,6 +322,7 @@ export function StockListTable({ data }: { data: StockItem[] }) {
                                                 case 'purchasePrice': return <span className="font-mono text-right block">{formatCurrency(item.purchasePrice, 'INR')}</span>;
                                                 case 'sellingPrice': return <span className="font-mono text-right block">{formatCurrency(item.sellingPrice, 'INR')}</span>;
                                                 case 'location': return item.location;
+                                                case 'expiryDate': return item.expiryDate ? item.expiryDate.toLocaleDateString() : 'N/A';
                                                 case 'actions': return <div className="text-center"><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem><DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div>;
                                                 default: return null;
                                             }

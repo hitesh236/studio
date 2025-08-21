@@ -326,7 +326,7 @@ export function PurchaseBillForm() {
   
   const handleUpdateBatches = (itemIndex: number, batches: BatchValues[]) => {
     const totalQuantity = batches.reduce((sum, b) => sum + (b.quantity || 0), 0);
-    const currentItem = form.getValues(`items.${index}`);
+    const currentItem = form.getValues(`items.${itemIndex}`);
     update(itemIndex, { ...currentItem, batches, quantity: totalQuantity });
   };
   
@@ -570,8 +570,8 @@ export function PurchaseBillForm() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-1/3 min-w-[250px]">Item</TableHead>
-                    {showAccountColumn && <TableHead className="w-1/4 min-w-[200px]">Account</TableHead>}
+                    <TableHead className="w-1/3 min-w-[250px]">{activeTab === 'inventory' ? 'Item' : 'Asset'}</TableHead>
+                    {showAccountColumn && <TableHead className="min-w-[200px]">Account</TableHead>}
                     <TableHead className="min-w-[120px]">HSN/SAC</TableHead>
                     <TableHead className="text-right min-w-[100px]">Qty</TableHead>
                     <TableHead className="text-right min-w-[100px]">Rate</TableHead>

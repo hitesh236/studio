@@ -51,12 +51,13 @@ const locations = ['Main Warehouse', 'Store', 'Shop'];
 
 const getRandomElement = <T>(arr: T[] | readonly T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
-export const generateStockListData = (): StockItem[] => {
+export const generateStockListData = (count: number = 20): StockItem[] => {
   const data: StockItem[] = [];
   let i = 0;
 
   for (const [category, products] of Object.entries(groceryProducts)) {
     for (const product of products) {
+      if (i >= count) break;
       const purchasePrice = Math.floor(Math.random() * 150) + 10;
       const sellingPrice = purchasePrice * (1 + (Math.random() * 0.4 + 0.1)); // 10% to 50% markup
       
@@ -84,6 +85,7 @@ export const generateStockListData = (): StockItem[] => {
       });
       i++;
     }
+    if (i >= count) break;
   }
   return data;
 };
