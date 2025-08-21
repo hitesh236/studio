@@ -17,7 +17,7 @@ export default function StockListPage() {
   const [stockItems, setStockItems] = React.useState<StockItem[] | null>(null);
 
   React.useEffect(() => {
-    setStockItems(generateStockListData());
+    setStockItems(generateStockListData(10));
   }, []);
 
   const summaryStats = React.useMemo(() => {
