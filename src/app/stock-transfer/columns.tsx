@@ -69,7 +69,6 @@ export const columns = ({ sortConfig, requestSort, expandedRows, toggleRowExpans
     { accessor: 'date', header: getSortableHeader('Date', 'date'), cell: (row: StockTransfer) => format(row.date, 'dd MMM, yyyy') },
     { accessor: 'fromLocation', header: getSortableHeader('From', 'fromLocation'), cell: (row: StockTransfer) => row.fromLocation },
     { accessor: 'toLocation', header: getSortableHeader('To', 'toLocation'), cell: (row: StockTransfer) => row.toLocation },
-    { accessor: 'status', header: getSortableHeader('Status', 'status'), cell: (row: StockTransfer) => <Badge variant={getStatusVariant(row.status)}>{row.status}</Badge> },
     { 
         accessor: 'items', 
         header: getSortableHeader('items', 'items'), 
