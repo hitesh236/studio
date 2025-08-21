@@ -6,6 +6,7 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Papa from 'papaparse';
 import {
   Card,
   CardContent,
@@ -35,6 +36,7 @@ import {
   Check,
   ListFilter,
   Download,
+  Upload,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -531,6 +533,8 @@ export default function ProductStructurePage() {
 
   const [isIndustryDialogOpen, setIsIndustryDialogOpen] = React.useState(false);
 
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
 
   const displayedCategories = React.useMemo(() => {
     return categories.filter(cat => selectedIndustries.includes(cat.id));
@@ -542,6 +546,93 @@ export default function ProductStructurePage() {
     // For now, it's a direct match or global.
     return attributes.filter(attr => attr.isGlobal || attr.assignedCategories.includes(selectedCategory.id));
   }, [attributes, selectedCategory]);
+  
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      toast({ variant: 'destructive', title: 'No file selected.' });
+      return;
+    }
+    
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        try {
+          const { newCategories, newAttributes } = processCsvData(results.data as any[]);
+          setCategories(newCategories);
+          setIndustries(newCategories.map(cat => ({id: cat.id, name: cat.name})));
+          setAttributes(newAttributes);
+          toast({ title: 'Success', description: 'Structure imported successfully.' });
+        } catch (error: any) {
+          toast({ variant: 'destructive', title: 'Import Error', description: error.message });
+        }
+      },
+      error: (error: any) => {
+        toast({ variant: 'destructive', title: 'CSV Parsing Error', description: error.message });
+      },
+    });
+
+    // Reset file input
+    event.target.value = '';
+  };
+  
+  const processCsvData = (data: any[]): { newCategories: Category[], newAttributes: Attribute[] } => {
+    const categoryMap = new Map<string, Category>();
+    const attributeMap = new Map<string, Attribute>();
+
+    data.forEach(row => {
+      // Process Categories
+      const industryName = row['Industry']?.trim();
+      if (!industryName) return;
+
+      let industry = categoryMap.get(industryName);
+      if (!industry) {
+        industry = { id: industryName.toLowerCase().replace(/\s+/g, '-'), name: industryName, children: [] };
+        categoryMap.set(industryName, industry);
+      }
+
+      let currentParent = industry;
+      for (let i = 1; i <= 5; i++) { // Assuming max 5 levels of sub-categories
+        const catName = row[`Category Level ${i}`]?.trim();
+        if (!catName) break;
+
+        let category = currentParent.children?.find(c => c.name === catName);
+        if (!category) {
+          category = { id: `${currentParent.id}-${catName.toLowerCase().replace(/\s+/g, '-')}`, name: catName, children: [] };
+          currentParent.children = [...(currentParent.children || []), category];
+        }
+        currentParent = category;
+      }
+      
+      // Process Attributes
+      const attrName = row['Attribute Name']?.trim();
+      if (attrName) {
+        let attribute = attributeMap.get(attrName);
+        if (!attribute) {
+          const attrType = row['Attribute Type']?.trim().toLowerCase() || 'text';
+          attribute = {
+            id: `attr-${attrName.toLowerCase().replace(/\s+/g, '-')}`,
+            name: attrName,
+            type: ['text', 'dropdown', 'checkbox', 'date'].includes(attrType) ? attrType as AttributeType : 'text',
+            isGlobal: false,
+            assignedCategories: [],
+            options: row['Attribute Options']?.split(',').map((o:string) => o.trim()).filter(Boolean) || [],
+          };
+          attributeMap.set(attrName, attribute);
+        }
+        
+        if (!attribute.assignedCategories.includes(currentParent.id)) {
+            attribute.assignedCategories.push(currentParent.id);
+        }
+      }
+    });
+
+    return { 
+        newCategories: Array.from(categoryMap.values()),
+        newAttributes: Array.from(attributeMap.values()),
+    };
+  };
 
   const handleToggleIndustry = (industryId: string) => {
     setSelectedIndustries(prev => {
@@ -710,6 +801,17 @@ export default function ProductStructurePage() {
                     <Download className="mr-2 h-4 w-4" />
                     Download Sample
                 </Link>
+            </Button>
+            <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                <Upload className="mr-2 h-4 w-4" />
+                Upload CSV
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept=".csv"
+                    onChange={handleFileUpload}
+                />
             </Button>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
