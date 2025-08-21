@@ -16,27 +16,27 @@ export function QuickActions() {
             <CardHeader>
                 <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 gap-4">
+            <CardContent className="flex flex-col gap-2">
                 {canCreate && (
                     <>
-                        <Button asChild variant="outline">
+                        <Button asChild variant="outline" className="justify-start">
                             <Link href="/sales-invoices/new">
                                 <PlusCircle className="mr-2 h-4 w-4" /> New Invoice
                             </Link>
                         </Button>
-                        <Button asChild variant="outline">
+                        <Button asChild variant="outline" className="justify-start">
                             <Link href="/purchase/new">
                                 <PlusCircle className="mr-2 h-4 w-4" /> New Bill
                             </Link>
                         </Button>
-                        <Button asChild variant="outline">
+                        <Button asChild variant="outline" className="justify-start">
                             <Link href="/journal-entries/new">
                                 <PlusCircle className="mr-2 h-4 w-4" /> New Journal Entry
                             </Link>
                         </Button>
                     </>
                 )}
-                 <Button asChild variant="outline">
+                 <Button asChild variant="outline" className="justify-start">
                      <Link href="/gst-reports">
                         <FileSpreadsheet className="mr-2 h-4 w-4" /> View Reports
                     </Link>
