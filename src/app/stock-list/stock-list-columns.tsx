@@ -46,7 +46,13 @@ export const columns = ({ sortConfig, requestSort }: ColumnProps) => {
   }
 
   return [
-    { accessor: 'productName', header: getSortableHeader('Product Name', 'productName'), cell: (row: StockItem) => <p className="font-medium">{row.productName}</p> },
+    { accessor: 'productName', header: getSortableHeader('Product Name', 'productName'), cell: (row: StockItem) => (
+        <p className="font-medium">
+             <Link href={`/stock-history?product=${encodeURIComponent(row.productName)}`} className="hover:underline text-primary">
+                {row.productName}
+            </Link>
+        </p>
+    ) },
     { accessor: 'sku', header: getSortableHeader('SKU', 'sku'), cell: (row: StockItem) => row.sku },
     { accessor: 'category', header: getSortableHeader('Category', 'category'), cell: (row: StockItem) => row.category },
     { accessor: 'stockInHand', header: getSortableHeader('Stock on Hand', 'stockInHand'), cell: (row: StockItem) => <p className="text-right font-mono">{row.stockInHand} {row.uom}</p> },
