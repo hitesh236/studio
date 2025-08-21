@@ -14,12 +14,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Search, ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight, ListFilter } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Search, ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight, ListFilter, Box, AlertTriangle, CheckCircle, PackageX } from 'lucide-react';
+import { cn, formatCurrency } from '@/lib/utils';
 import { columns } from './stock-list-columns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { SummaryCard } from '../sales-invoices/summary-card';
 
 export function StockListTable({ data }: { data: StockItem[] }) {
   const [filter, setFilter] = React.useState('');
@@ -32,6 +33,13 @@ export function StockListTable({ data }: { data: StockItem[] }) {
   
   const uniqueCategories = React.useMemo(() => Array.from(new Set(data.map(item => item.category))), [data]);
   const uniqueStatuses = React.useMemo(() => Array.from(new Set(data.map(item => item.status))), [data]);
+
+  const summaryStats = React.useMemo(() => {
+    const totalValue = data.reduce((acc, item) => acc + (item.purchasePrice * item.stockInHand), 0);
+    const lowStockItems = data.filter(item => item.status === 'Low Stock').length;
+    const outOfStockItems = data.filter(item => item.status === 'Out of Stock').length;
+    return { totalValue, lowStockItems, outOfStockItems };
+  }, [data]);
 
   const filteredData = React.useMemo(() => {
     return data.filter(item =>
@@ -81,6 +89,12 @@ export function StockListTable({ data }: { data: StockItem[] }) {
 
   return (
     <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <SummaryCard icon={Box} title="Total Stock Value" value={formatCurrency(summaryStats.totalValue, 'INR')} variant="primary" />
+          <SummaryCard icon={AlertTriangle} title="Low Stock Items" value={`${summaryStats.lowStockItems}`} />
+          <SummaryCard icon={PackageX} title="Out of Stock Items" value={`${summaryStats.outOfStockItems}`} />
+      </div>
+
       <div className="flex flex-col sm:flex-row gap-2 justify-between">
         <div className="relative w-full sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

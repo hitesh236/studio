@@ -1,4 +1,6 @@
 
+import { initialCategoriesData } from '@/lib/categories';
+import type { Category } from '@/lib/types';
 
 export type StockItem = {
     id: string;
@@ -32,7 +34,19 @@ const productNames = [
     'Surf Excel Matic Liquid Detergent (1L)',
 ];
 
-const categories = ['Staples', 'Spices', 'Beverages', 'Dairy', 'Snacks', 'Oils', 'Home Care'];
+const flattenCategories = (categories: Category[]): string[] => {
+    const flatList: string[] = [];
+    categories.forEach(cat => {
+        if (cat.children && cat.children.length > 0) {
+            flatList.push(...flattenCategories(cat.children));
+        } else {
+            flatList.push(cat.name);
+        }
+    });
+    return flatList;
+};
+
+const categories = flattenCategories(initialCategoriesData);
 const locations = ['Main Warehouse', 'Store Shelf A', 'Store Shelf B', 'Cold Storage'];
 const uoms = ['pcs', 'kg', 'g', 'L', 'ml', 'pkt'];
 
@@ -45,7 +59,8 @@ export function generateStockListData(count: number = 20): StockItem[] {
   const now = new Date();
 
   for (let i = 0; i < count; i++) {
-    const stockInHand = Math.floor(Math.random() * 200);
+    // Ensure some items are out of stock
+    const stockInHand = Math.random() < 0.15 ? 0 : Math.floor(Math.random() * 200);
     const purchasePrice = Math.floor(Math.random() * 500) + 50;
     const sellingPrice = purchasePrice * (1 + (Math.random() * 0.2 + 0.1)); // 10-30% markup
     
