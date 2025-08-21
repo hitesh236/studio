@@ -77,4 +77,3 @@ export function generateStockListData(count: number = 20): StockItem[] {
   }
   return items;
 }
-

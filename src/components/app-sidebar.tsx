@@ -45,6 +45,7 @@ import {
     ArchiveRestore,
     Repeat,
     Truck,
+    List,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { usePathname } from 'next/navigation';
@@ -147,6 +148,14 @@ export function AppSidebar() {
         {canAccessAccounting && <SidebarGroup>
           <SidebarGroupLabel>Stock</SidebarGroupLabel>
           <SidebarMenu>
+             <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Stock List" isActive={pathname.startsWith('/stock-list')} asChild>
+                    <Link href="/stock-list" onClick={handleLinkClick}>
+                        <List />
+                        <span>Stock List</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
              <SidebarMenuItem>
               <SidebarMenuButton tooltip="Stock Adjustment" isActive={pathname.startsWith('/stock-adjustments')} asChild>
                 <Link href="/stock-adjustments" onClick={handleLinkClick}>
