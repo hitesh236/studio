@@ -63,21 +63,6 @@ export function Header() {
       <SidebarTrigger className="flex" />
       <div className="flex-1" />
       <div className="flex items-center gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              <UserCog className="mr-2 h-4 w-4" />
-              Role: {role}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>Switch Role (For Demo)</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setRole('Admin')}><UserCog className="mr-2 h-4 w-4 text-destructive" /> Admin</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setRole('Accountant')}><User className="mr-2 h-4 w-4 text-primary" /> Accountant</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setRole('Guest')}><UserX className="mr-2 h-4 w-4 text-muted-foreground" /> Guest</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
         <Button asChild variant="outline">
             <Link href="/pos">
                 <MonitorPlay className="mr-2 h-4 w-4" />
