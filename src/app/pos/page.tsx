@@ -348,6 +348,7 @@ const AddCustomerDialog = ({ open, onOpenChange, onCustomerAdd, initialValue }: 
             gstin: '-',
             type: 'Customer',
             balance: 0,
+            lastSeen: new Date(),
         };
         onCustomerAdd(newCustomer);
         onOpenChange(false);
@@ -456,64 +457,65 @@ const PrintableReceipt = React.forwardRef<HTMLDivElement, {
         igst: number;
         total: number;
     };
+    payments: Payment[];
     customerName: string;
     documentType: 'Invoice' | 'Receipt';
     documentNumber: string;
-}>(({ cart, totals, customerName, documentType, documentNumber }, ref) => {
+}>(({ cart, totals, payments, customerName, documentType, documentNumber }, ref) => {
+
+    const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+    const amountDue = totals.total - totalPaid;
+
     return (
-        <div ref={ref} className="text-sm font-mono bg-white text-black p-4">
-            <h3 className="text-center font-bold text-lg">
-                {documentType === 'Invoice' ? 'Tax Invoice' : 'Hicks Inc.'}
-            </h3>
-            <p className="text-center text-xs">{documentType} #: {documentNumber}</p>
-            <p className="text-center text-xs">Date: {format(new Date(), 'dd-MMM-yyyy')}</p>
-            <Separator className="my-2 border-black" />
-            <p>Customer: {customerName}</p>
-            <Separator className="my-2 border-black" />
+        <div ref={ref} className="p-1 font-mono text-xs text-black bg-white" style={{ width: '288px' }}>
+            <div className="text-center space-y-1">
+                <h3 className="font-bold text-sm">Hicks Inc.</h3>
+                <p>123 Business Rd, Mumbai</p>
+                <p>GSTIN: 27ABCDE1234F1Z5</p>
+                <p>{documentType} #: {documentNumber}</p>
+                <p>Date: {format(new Date(), 'dd-MMM-yy hh:mm a')}</p>
+            </div>
+            <div className="border-t border-b border-black border-dashed my-2 py-1">
+                <p>Customer: {customerName}</p>
+            </div>
             <table className="w-full">
               <thead>
                 <tr>
-                  <th className="text-left">Item</th>
-                  <th className="text-center">Qty</th>
-                  <th className="text-right">Price</th>
-                  <th className="text-right">Total</th>
+                  <th className="text-left font-normal pb-1">Item</th>
+                  <th className="text-center font-normal pb-1">Qty</th>
+                  <th className="text-right font-normal pb-1">Rate</th>
+                  <th className="text-right font-normal pb-1">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {cart.map(item => (
-                  <tr key={item.id}>
-                    <td>{item.productName}</td>
-                    <td className="text-center">{item.quantity}</td>
-                    <td className="text-right">{item.sellingPrice.toFixed(2)}</td>
-                    <td className="text-right">{(item.quantity * item.sellingPrice).toFixed(2)}</td>
+                  <tr key={item.id} className="align-top">
+                    <td className="pb-1">{item.productName}</td>
+                    <td className="text-center pb-1">{item.quantity}</td>
+                    <td className="text-right pb-1">{item.sellingPrice.toFixed(2)}</td>
+                    <td className="text-right pb-1">{(item.quantity * item.sellingPrice).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            <Separator className="my-2 border-black border-dashed" />
-            <div className="flex justify-end">
-              <div className="w-48">
-                <div className="flex justify-between">
-                  <span>Subtotal:</span>
-                  <span>{totals.subtotal.toFixed(2)}</span>
-                </div>
-                {(totals.itemDiscount + totals.orderDiscount) > 0 && (
-                    <div className="flex justify-between">
-                        <span>Discount:</span>
-                        <span>- {(totals.itemDiscount + totals.orderDiscount).toFixed(2)}</span>
-                    </div>
-                )}
-                 {totals.cgst > 0 && <div className="flex justify-between"><span>CGST:</span><span>{totals.cgst.toFixed(2)}</span></div>}
-                 {totals.sgst > 0 && <div className="flex justify-between"><span>SGST:</span><span>{totals.sgst.toFixed(2)}</span></div>}
-                 {totals.igst > 0 && <div className="flex justify-between"><span>IGST:</span><span>{totals.igst.toFixed(2)}</span></div>}
-                <div className="flex justify-between font-bold text-base mt-1">
-                  <span>TOTAL:</span>
-                  <span>{totals.total.toFixed(2)}</span>
-                </div>
-              </div>
+            <div className="border-t border-black border-dashed my-1"></div>
+            <div className="space-y-1">
+                <div className="flex justify-between"><span>Subtotal:</span><span>{totals.subtotal.toFixed(2)}</span></div>
+                {(totals.itemDiscount + totals.orderDiscount) > 0 && <div className="flex justify-between"><span>Discount:</span><span>-{(totals.itemDiscount + totals.orderDiscount).toFixed(2)}</span></div>}
+                {totals.cgst > 0 && <div className="flex justify-between"><span>CGST:</span><span>{totals.cgst.toFixed(2)}</span></div>}
+                {totals.sgst > 0 && <div className="flex justify-between"><span>SGST:</span><span>{totals.sgst.toFixed(2)}</span></div>}
+                {totals.igst > 0 && <div className="flex justify-between"><span>IGST:</span><span>{totals.igst.toFixed(2)}</span></div>}
+                <div className="border-t border-black my-1"></div>
+                <div className="flex justify-between font-bold text-sm"><span>TOTAL:</span><span>{totals.total.toFixed(2)}</span></div>
+                <div className="border-t border-black border-dashed my-1"></div>
+                {payments.map(p => (
+                    <div key={p.id} className="flex justify-between"><span>Paid ({p.method}):</span><span>{p.amount.toFixed(2)}</span></div>
+                ))}
+                <div className="flex justify-between font-bold"><span>Amount Due:</span><span>{amountDue.toFixed(2)}</span></div>
             </div>
-            <Separator className="my-2 border-black" />
-            <p className="text-center">Thank you!</p>
+            <div className="text-center mt-2">
+                <p>Thank you!</p>
+            </div>
         </div>
     );
 });
@@ -542,6 +544,7 @@ export default function PosPage() {
     const barcodeInputRef = React.useRef<HTMLInputElement>(null);
     const [heldBills, setHeldBills] = React.useState<HeldBill[]>([]);
     const [showHeldBills, setShowHeldBills] = React.useState(false);
+    const [finalizedPayments, setFinalizedPayments] = React.useState<Payment[]>([]);
     
     const [orderDiscount, setOrderDiscount] = React.useState(0);
     const [orderDiscountType, setOrderDiscountType] = React.useState<'%' | 'fixed'>('%');
@@ -686,6 +689,7 @@ export default function PosPage() {
     const handlePaymentSuccess = (payments: Payment[]) => {
         const docType = shouldGenerateInvoice(payments) ? 'Invoice' : 'Receipt';
         setFinalDocumentType(docType);
+        setFinalizedPayments(payments);
 
         toast({
             title: `${docType} Created!`,
@@ -703,6 +707,7 @@ export default function PosPage() {
         setActiveCategory('All');
         setOrderDiscount(0);
         setOrderDiscountType('%');
+        setFinalizedPayments([]);
         barcodeInputRef.current?.focus();
     };
     
@@ -710,8 +715,8 @@ export default function PosPage() {
         const printContent = printRef.current;
         if (printContent) {
           const originalContents = document.body.innerHTML;
-          const printContents = printContent.innerHTML;
-          document.body.innerHTML = printContents;
+          const printContentsHTML = printContent.outerHTML;
+          document.body.innerHTML = `<html><head><title>Print</title></head><body>${printContentsHTML}</body></html>`;
           window.print();
           document.body.innerHTML = originalContents;
           window.location.reload();
@@ -1040,15 +1045,18 @@ export default function PosPage() {
                     </AlertDialogContent>
                 </AlertDialog>
 
-                <div className="hidden print:block">
-                     <PrintableReceipt
-                        ref={printRef}
-                        cart={cart}
-                        totals={cartTotals}
-                        customerName={customerName}
-                        documentType={finalDocumentType}
-                        documentNumber={documentNumber}
-                    />
+                <div className="hidden">
+                    <div className="print-content">
+                         <PrintableReceipt
+                            ref={printRef}
+                            cart={cart}
+                            totals={cartTotals}
+                            payments={finalizedPayments}
+                            customerName={customerName}
+                            documentType={finalDocumentType}
+                            documentNumber={documentNumber}
+                        />
+                    </div>
                 </div>
             </div>
         </TooltipProvider>

@@ -46,6 +46,7 @@ import {
     Repeat,
     Truck,
     List,
+    CalendarX2,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { usePathname } from 'next/navigation';
@@ -229,6 +230,14 @@ export function AppSidebar() {
                 <Link href="/stock-summary" onClick={handleLinkClick}>
                   <LayoutGrid />
                   <span>Stock Summary</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Expiry Report" isActive={pathname.startsWith('/reports/expiry-report')} asChild>
+                <Link href="/reports/expiry-report" onClick={handleLinkClick}>
+                  <CalendarX2 />
+                  <span>Expiry Report</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
