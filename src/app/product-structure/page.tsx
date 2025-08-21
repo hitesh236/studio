@@ -559,10 +559,10 @@ export default function ProductStructurePage() {
       skipEmptyLines: true,
       complete: (results) => {
         try {
-          const { newCategories, newAttributes } = processCsvData(results.data as any[]);
-          setCategories(newCategories);
-          setIndustries(newCategories.map(cat => ({id: cat.id, name: cat.name})));
-          setAttributes(newAttributes);
+          const { updatedCategories, updatedAttributes } = processCsvData(results.data as any[], categories, attributes);
+          setCategories(updatedCategories);
+          setIndustries(updatedCategories.map(cat => ({id: cat.id, name: cat.name})));
+          setAttributes(updatedAttributes);
           toast({ title: 'Success', description: 'Structure imported successfully.' });
         } catch (error: any) {
           toast({ variant: 'destructive', title: 'Import Error', description: error.message });
@@ -574,33 +574,50 @@ export default function ProductStructurePage() {
     });
 
     // Reset file input
-    event.target.value = '';
+    if (event.target) {
+        event.target.value = '';
+    }
   };
   
-  const processCsvData = (data: any[]): { newCategories: Category[], newAttributes: Attribute[] } => {
-    const categoryMap = new Map<string, Category>();
-    const attributeMap = new Map<string, Attribute>();
+  const processCsvData = (data: any[], existingCategories: Category[], existingAttributes: Attribute[]): { updatedCategories: Category[], updatedAttributes: Attribute[] } => {
+    const newCategories = JSON.parse(JSON.stringify(existingCategories)) as Category[];
+    const newAttributes = JSON.parse(JSON.stringify(existingAttributes)) as Attribute[];
 
+    const categoryMapByName = new Map<string, Category>();
+    const attributeMapByName = new Map<string, Attribute>();
+
+    // Pre-populate maps with existing data
+    const populateCategoryMap = (cats: Category[]) => {
+        cats.forEach(c => {
+            categoryMapByName.set(c.name.toLowerCase(), c);
+            if(c.children) populateCategoryMap(c.children);
+        });
+    };
+    populateCategoryMap(newCategories);
+    newAttributes.forEach(a => attributeMapByName.set(a.name.toLowerCase(), a));
+    
     data.forEach(row => {
       // Process Categories
       const industryName = row['Industry']?.trim();
       if (!industryName) return;
 
-      let industry = categoryMap.get(industryName);
+      let industry = categoryMapByName.get(industryName.toLowerCase());
       if (!industry) {
         industry = { id: industryName.toLowerCase().replace(/\s+/g, '-'), name: industryName, children: [] };
-        categoryMap.set(industryName, industry);
+        newCategories.push(industry);
+        categoryMapByName.set(industryName.toLowerCase(), industry);
       }
 
       let currentParent = industry;
       for (let i = 1; i <= 5; i++) { // Assuming max 5 levels of sub-categories
         const catName = row[`Category Level ${i}`]?.trim();
         if (!catName) break;
-
-        let category = currentParent.children?.find(c => c.name === catName);
+        
+        let category = currentParent.children?.find(c => c.name.toLowerCase() === catName.toLowerCase());
         if (!category) {
           category = { id: `${currentParent.id}-${catName.toLowerCase().replace(/\s+/g, '-')}`, name: catName, children: [] };
           currentParent.children = [...(currentParent.children || []), category];
+          categoryMapByName.set(catName.toLowerCase(), category);
         }
         currentParent = category;
       }
@@ -608,7 +625,7 @@ export default function ProductStructurePage() {
       // Process Attributes
       const attrName = row['Attribute Name']?.trim();
       if (attrName) {
-        let attribute = attributeMap.get(attrName);
+        let attribute = attributeMapByName.get(attrName.toLowerCase());
         if (!attribute) {
           const attrType = row['Attribute Type']?.trim().toLowerCase() || 'text';
           attribute = {
@@ -619,7 +636,8 @@ export default function ProductStructurePage() {
             assignedCategories: [],
             options: row['Attribute Options']?.split(',').map((o:string) => o.trim()).filter(Boolean) || [],
           };
-          attributeMap.set(attrName, attribute);
+          newAttributes.push(attribute);
+          attributeMapByName.set(attrName.toLowerCase(), attribute);
         }
         
         if (!attribute.assignedCategories.includes(currentParent.id)) {
@@ -629,8 +647,8 @@ export default function ProductStructurePage() {
     });
 
     return { 
-        newCategories: Array.from(categoryMap.values()),
-        newAttributes: Array.from(attributeMap.values()),
+        updatedCategories: newCategories,
+        updatedAttributes: newAttributes,
     };
   };
 
