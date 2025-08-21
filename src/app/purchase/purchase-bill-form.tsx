@@ -326,7 +326,7 @@ export function PurchaseBillForm() {
   
   const handleUpdateBatches = (itemIndex: number, batches: BatchValues[]) => {
     const totalQuantity = batches.reduce((sum, b) => sum + (b.quantity || 0), 0);
-    const currentItem = form.getValues(`items.${itemIndex}`);
+    const currentItem = form.getValues(`items.${index}`);
     update(itemIndex, { ...currentItem, batches, quantity: totalQuantity });
   };
   
@@ -418,7 +418,7 @@ export function PurchaseBillForm() {
     );
   };
   
-  const showAccountColumn = activeTab === 'inventory';
+  const showAccountColumn = activeTab === 'assets';
 
   return (
     <Form {...form}>
@@ -570,14 +570,14 @@ export function PurchaseBillForm() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-1/3">Item</TableHead>
-                    {showAccountColumn && <TableHead className="w-1/4">Account</TableHead>}
-                    <TableHead>HSN/SAC</TableHead>
-                    <TableHead className="text-right">Qty</TableHead>
-                    <TableHead className="text-right">Rate</TableHead>
-                    <TableHead className="text-right">GST%</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead></TableHead>
+                    <TableHead className="w-1/3 min-w-[250px]">Item</TableHead>
+                    {showAccountColumn && <TableHead className="w-1/4 min-w-[200px]">Account</TableHead>}
+                    <TableHead className="min-w-[120px]">HSN/SAC</TableHead>
+                    <TableHead className="text-right min-w-[100px]">Qty</TableHead>
+                    <TableHead className="text-right min-w-[100px]">Rate</TableHead>
+                    <TableHead className="text-right min-w-[100px]">GST%</TableHead>
+                    <TableHead className="text-right min-w-[120px]">Amount</TableHead>
+                    <TableHead className="w-12"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -618,9 +618,9 @@ export function PurchaseBillForm() {
                       <TableCell>
                          <div className="flex items-center gap-1">
                             <FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => <Input type="number" className="text-right" {...field} readOnly={(field.value > 0 && !!watchedItems[index]?.batches && watchedItems[index]?.batches?.length > 0)} />} />
-                             <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => setActiveItemForBatch({ item: watchedItems[index], index })}>
+                            {activeTab === 'inventory' && <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => setActiveItemForBatch({ item: watchedItems[index], index })}>
                                 <Layers className="h-4 w-4" />
-                            </Button>
+                            </Button>}
                          </div>
                       </TableCell>
                       <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
