@@ -3,7 +3,6 @@
 
 import * as React from 'react';
 import type { StockAdjustment } from './data';
-import { format } from 'date-fns';
 import {
   Table,
   TableBody,
@@ -11,59 +10,20 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Search, MoreHorizontal, ArrowUp, ArrowDown, Edit, Trash2 } from 'lucide-react';
+import { Search, ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
-
-type ColumnProps = {
-  sortConfig: { key: keyof StockAdjustment | null; direction: 'ascending' | 'descending' };
-  requestSort: (key: keyof StockAdjustment) => void;
-};
-
-const columns = ({ sortConfig, requestSort }: ColumnProps) => {
-  const getSortableHeader = (title: string, key: keyof StockAdjustment) => {
-    const isSorted = sortConfig.key === key;
-    return (
-      <Button variant="ghost" onClick={() => requestSort(key)}>
-        {title}
-        {isSorted && (sortConfig.direction === 'ascending' ? <ArrowUp className="ml-2 h-4 w-4" /> : <ArrowDown className="ml-2 h-4 w-4" />)}
-      </Button>
-    );
-  };
-
-  return [
-    { accessor: 'adjustmentNumber', header: getSortableHeader('Number', 'adjustmentNumber'), cell: (row: StockAdjustment) => <p className="font-medium">{row.adjustmentNumber}</p> },
-    { accessor: 'date', header: getSortableHeader('Date', 'date'), cell: (row: StockAdjustment) => format(row.date, 'dd MMM, yyyy') },
-    { accessor: 'reason', header: getSortableHeader('Reason', 'reason'), cell: (row: StockAdjustment) => <Badge variant="outline">{row.reason}</Badge> },
-    { accessor: 'itemsAdjusted', header: getSortableHeader('Items Adjusted', 'itemsAdjusted'), cell: (row: StockAdjustment) => <p className="text-center">{row.itemsAdjusted}</p> },
-    { accessor: 'adjustedBy', header: getSortableHeader('Adjusted By', 'adjustedBy'), cell: (row: StockAdjustment) => row.adjustedBy },
-    {
-      accessor: 'actions',
-      header: 'Actions',
-      cell: (row: StockAdjustment) => (
-        <div className="text-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      ),
-    },
-  ];
-};
+import { columns } from './stock-adjustments-columns';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export function StockAdjustmentsTable({ data }: { data: StockAdjustment[] }) {
   const [filter, setFilter] = React.useState('');
   const [sortConfig, setSortConfig] = React.useState<{ key: keyof StockAdjustment | null; direction: 'ascending' | 'descending' }>({ key: 'date', direction: 'descending' });
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState("10");
 
   const filteredData = React.useMemo(() => {
     return data.filter(adj =>
@@ -85,6 +45,15 @@ export function StockAdjustmentsTable({ data }: { data: StockAdjustment[] }) {
     return dataToSort;
   }, [filteredData, sortConfig]);
   
+  const totalPages = Math.ceil(sortedData.length / Number(rowsPerPage === 'all' ? sortedData.length : rowsPerPage));
+
+  const paginatedData = React.useMemo(() => {
+    if (rowsPerPage === 'all') return sortedData;
+    const start = page * Number(rowsPerPage);
+    const end = start + Number(rowsPerPage);
+    return sortedData.slice(start, end);
+  }, [sortedData, page, rowsPerPage]);
+
   const requestSort = (key: keyof StockAdjustment) => {
     let direction: 'ascending' | 'descending' = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -114,7 +83,7 @@ export function StockAdjustmentsTable({ data }: { data: StockAdjustment[] }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedData.map(adj => (
+            {paginatedData.map(adj => (
               <TableRow key={adj.id}>
                 {tableColumns.map(col => <TableCell key={col.accessor}>{col.cell(adj)}</TableCell>)}
               </TableRow>
@@ -122,6 +91,43 @@ export function StockAdjustmentsTable({ data }: { data: StockAdjustment[] }) {
           </TableBody>
         </Table>
       </div>
+       <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-muted-foreground">
+              Page {page + 1} of {totalPages}
+            </p>
+            <div className="flex items-center space-x-2">
+              <p className="text-sm text-muted-foreground">Rows:</p>
+              <Select value={rowsPerPage} onValueChange={setRowsPerPage}>
+                <SelectTrigger className="w-[80px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center space-x-1">
+              <Button variant="outline" size="icon" onClick={() => setPage(0)} disabled={page === 0}>
+                <ChevronsLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" onClick={() => setPage(totalPages - 1)} disabled={page >= totalPages - 1}>
+                <ChevronsRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
     </div>
   );
 }
