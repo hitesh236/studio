@@ -37,6 +37,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { generateStockListData, type StockItem } from '@/app/stock-list/data';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 const adjustmentItemSchema = z.object({
   productId: z.string().min(1, 'Product is required.'),
@@ -55,8 +57,9 @@ const stockAdjustmentSchema = z.object({
 
 type StockAdjustmentValues = z.infer<typeof stockAdjustmentSchema>;
 
-export function StockAdjustmentForm() {
+function StockAdjustmentFormComponent() {
   const { toast } = useToast();
+  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [products, setProducts] = React.useState<StockItem[]>([]);
 
@@ -78,6 +81,26 @@ export function StockAdjustmentForm() {
     name: 'items',
   });
 
+  React.useEffect(() => {
+    const dataString = searchParams.get('data');
+    if (dataString) {
+        try {
+            const data = JSON.parse(decodeURIComponent(dataString));
+            form.reset({
+                ...data,
+                date: new Date(data.date),
+                items: data.items.map((item: any) => ({
+                    ...item,
+                    currentStock: products.find(p => p.id === item.productId)?.stockInHand || 0,
+                }))
+            });
+        } catch (error) {
+            console.error("Failed to parse adjustment data from URL", error);
+        }
+    }
+  }, [searchParams, form, products]);
+
+
   async function onSubmit(data: StockAdjustmentValues) {
     setIsSubmitting(true);
     console.log('Stock Adjustment Data:', data);
@@ -94,7 +117,7 @@ export function StockAdjustmentForm() {
     setIsSubmitting(false);
   }
 
-  const ProductCombobox = ({ index, onProductSelect }: { index: number, onProductSelect: (product: StockItem, index: number) => void }) => {
+  const ProductCombobox = ({ index }: { index: number }) => {
     const [open, setOpen] = React.useState(false);
     const value = form.watch(`items.${index}.productId`);
 
@@ -120,7 +143,9 @@ export function StockAdjustmentForm() {
               <CommandGroup>
                 {products.map(product => (
                   <CommandItem value={product.id} key={product.id} onSelect={() => { 
-                    onProductSelect(product, index);
+                    form.setValue(`items.${index}.productId`, product.id);
+                    form.setValue(`items.${index}.productName`, product.productName);
+                    form.setValue(`items.${index}.currentStock`, product.stockInHand);
                     setOpen(false); 
                   }}>
                     <Check className={cn("mr-2 h-4 w-4", product.id === value ? "opacity-100" : "opacity-0")} />
@@ -170,11 +195,7 @@ export function StockAdjustmentForm() {
                 <div key={field.id} className="grid grid-cols-[1fr_100px_100px_100px_auto] gap-2 items-start border p-2 rounded-md">
                    <FormField name={`items.${index}.productId`} control={form.control} render={({ field }) => (
                       <FormItem>
-                         <ProductCombobox index={index} onProductSelect={(product, idx) => {
-                            form.setValue(`items.${idx}.productId`, product.id);
-                            form.setValue(`items.${idx}.productName`, product.productName);
-                            form.setValue(`items.${idx}.currentStock`, product.stockInHand);
-                         }} />
+                         <ProductCombobox index={index} />
                         <FormMessage />
                       </FormItem>
                    )} />
@@ -209,4 +230,12 @@ export function StockAdjustmentForm() {
       </CardContent>
     </Card>
   );
+}
+
+export function StockAdjustmentForm() {
+    return (
+        <Suspense fallback={<div>Loading form...</div>}>
+            <StockAdjustmentFormComponent />
+        </Suspense>
+    )
 }

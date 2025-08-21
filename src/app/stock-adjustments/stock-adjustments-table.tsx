@@ -14,16 +14,61 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Search, ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { columns } from './stock-adjustments-columns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const ExpandedRowContent = ({ items }: { items: StockAdjustment['items'] }) => {
+    return (
+        <div className="p-4 bg-muted/50">
+            <h4 className="font-semibold mb-2">Adjustment Details:</h4>
+            <div className="rounded-md border bg-background">
+                 <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Product Name</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead className="text-right">Quantity</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {items.map((item, index) => (
+                            <TableRow key={index}>
+                                <TableCell>{item.productName}</TableCell>
+                                <TableCell>
+                                    <span className={cn('font-medium', item.adjustmentType === 'addition' ? 'text-green-600' : 'text-red-600')}>
+                                        {item.adjustmentType === 'addition' ? 'Addition' : 'Reduction'}
+                                    </span>
+                                </TableCell>
+                                <TableCell className="text-right">{item.quantity}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+        </div>
+    )
+}
 
 export function StockAdjustmentsTable({ data }: { data: StockAdjustment[] }) {
   const [filter, setFilter] = React.useState('');
   const [sortConfig, setSortConfig] = React.useState<{ key: keyof StockAdjustment | null; direction: 'ascending' | 'descending' }>({ key: 'date', direction: 'descending' });
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState("10");
+  const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set());
+
+  const toggleRowExpansion = (id: string) => {
+    setExpandedRows(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(id)) {
+            newSet.delete(id);
+        } else {
+            newSet.add(id);
+        }
+        return newSet;
+    })
+  };
 
   const filteredData = React.useMemo(() => {
     return data.filter(adj =>
@@ -37,8 +82,14 @@ export function StockAdjustmentsTable({ data }: { data: StockAdjustment[] }) {
     const dataToSort = [...filteredData];
     if (sortConfig.key) {
       dataToSort.sort((a, b) => {
-        if (a[sortConfig.key!] < b[sortConfig.key!]) return sortConfig.direction === 'ascending' ? -1 : 1;
-        if (a[sortConfig.key!] > b[sortConfig.key!]) return sortConfig.direction === 'ascending' ? 1 : -1;
+        const aValue = a[sortConfig.key as keyof StockAdjustment];
+        const bValue = b[sortConfig.key as keyof StockAdjustment];
+        
+        if (aValue === undefined || aValue === null) return 1;
+        if (bValue === undefined || bValue === null) return -1;
+
+        if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
         return 0;
       });
     }
@@ -62,7 +113,7 @@ export function StockAdjustmentsTable({ data }: { data: StockAdjustment[] }) {
     setSortConfig({ key, direction });
   };
 
-  const tableColumns = columns({ sortConfig, requestSort });
+  const tableColumns = columns({ sortConfig, requestSort, expandedRows, toggleRowExpansion });
 
   return (
     <div className="space-y-4">
@@ -79,14 +130,23 @@ export function StockAdjustmentsTable({ data }: { data: StockAdjustment[] }) {
         <Table>
           <TableHeader>
             <TableRow>
-              {tableColumns.map(col => <TableHead key={col.accessor}>{col.header}</TableHead>)}
+              {tableColumns.map(col => <TableHead key={String(col.accessor)}>{col.header}</TableHead>)}
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedData.map(adj => (
-              <TableRow key={adj.id}>
-                {tableColumns.map(col => <TableCell key={col.accessor}>{col.cell(adj)}</TableCell>)}
-              </TableRow>
+              <React.Fragment key={adj.id}>
+                <TableRow>
+                    {tableColumns.map(col => <TableCell key={String(col.accessor)}>{col.cell(adj)}</TableCell>)}
+                </TableRow>
+                {expandedRows.has(adj.id) && (
+                    <TableRow>
+                        <TableCell colSpan={tableColumns.length}>
+                            <ExpandedRowContent items={adj.items} />
+                        </TableCell>
+                    </TableRow>
+                )}
+              </React.Fragment>
             ))}
           </TableBody>
         </Table>
