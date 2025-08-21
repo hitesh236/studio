@@ -555,6 +555,15 @@ export default function ProductStructurePage() {
     const existingCategoryNames = new Set<string>();
     const attributeMap = new Map<string, Attribute>();
     const summary = { newCategories: new Set<string>(), newAttributes: new Set<string>() };
+    
+    const originalExistingCategoryNames = new Set<string>();
+    function populateOriginalNames(cats: Category[]) {
+      cats.forEach(c => {
+        originalExistingCategoryNames.add(c.name.toLowerCase());
+        if (c.children) populateOriginalNames(c.children);
+      });
+    }
+    populateOriginalNames(existingCategories);
 
     function populateMaps(cats: Category[]) {
       cats.forEach(c => {
@@ -567,7 +576,7 @@ export default function ProductStructurePage() {
     newAttributes.forEach(a => attributeMap.set(a.name.toLowerCase(), a));
 
     data.forEach(row => {
-      const industryName = row['Category']?.trim(); // Corrected column name
+      const industryName = row['Category']?.trim();
       if (!industryName) return;
       
       let industry = categoryMap.get(industryName.toLowerCase());
@@ -575,13 +584,15 @@ export default function ProductStructurePage() {
         industry = { id: `ind-${industryName.toLowerCase().replace(/\s+/g, '-')}`, name: industryName, children: [] };
         newCategories.push(industry);
         categoryMap.set(industryName.toLowerCase(), industry);
-        summary.newCategories.add(industryName);
+        if (!originalExistingCategoryNames.has(industryName.toLowerCase())) {
+          summary.newCategories.add(industryName);
+        }
       }
 
       let currentParent = industry;
-      // Corrected loop for sub-categories
+
       for (let i = 1; i <= 5; i++) {
-        const colName = i === 1 ? 'Sub-Category Level 1' : `Sub-Category Level ${i}`;
+        const colName = `Sub-Category Level ${i}`;
         const catName = row[colName]?.trim();
         if (!catName) break;
         
@@ -590,7 +601,9 @@ export default function ProductStructurePage() {
           category = { id: `${currentParent.id}-${catName.toLowerCase().replace(/\s+/g, '-')}`, name: catName, children: [] };
           currentParent.children = [...(currentParent.children || []), category];
           categoryMap.set(catName.toLowerCase(), category);
-          summary.newCategories.add(catName);
+          if (!originalExistingCategoryNames.has(catName.toLowerCase())) {
+            summary.newCategories.add(catName);
+          }
         }
         currentParent = category;
       }
@@ -890,7 +903,7 @@ export default function ProductStructurePage() {
         <aside className="w-full lg:w-72 shrink-0">
           <Card>
             <CardHeader>
-              <CardTitle className="text-[20px]">Product Categories</CardTitle>
+              <CardTitle className="text-[15px]">Industry & Product Categories</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-1">

@@ -43,7 +43,8 @@ import {
     Users,
     Wallet,
     ArchiveRestore,
-    Repeat
+    Repeat,
+    Truck,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { usePathname } from 'next/navigation';
@@ -159,6 +160,14 @@ export function AppSidebar() {
                 <Link href="/stock-list" onClick={handleLinkClick}>
                     <LayoutGrid />
                     <span>Stock List</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Transfer Stock" isActive={pathname.startsWith('/stock-transfer')} asChild>
+                <Link href="/stock-transfer" onClick={handleLinkClick}>
+                    <Truck />
+                    <span>Transfer Stock</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
