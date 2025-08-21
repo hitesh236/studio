@@ -3,7 +3,7 @@
 'use client';
 
 import * as React from 'react';
-import { Search, Barcode, Plus, Minus, Trash2, X, CreditCard, Printer, Eye, ChevronsUpDown, Check as CheckIcon, Package, CheckCircle2, PlusCircle, Percent, Receipt } from 'lucide-react';
+import { Search, Barcode, Plus, Minus, Trash2, X, CreditCard, Printer, Eye, ChevronsUpDown, Check as CheckIcon, Package, CheckCircle2, PlusCircle, Percent, Receipt, Hand, ListCollapse } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -51,6 +51,16 @@ type CartItem = StockItem & {
     discount: number; 
     discountType: '%' | 'fixed';
 };
+
+type HeldBill = {
+    id: number;
+    cart: CartItem[];
+    customerId: string;
+    customerName: string;
+    time: Date;
+    notes: string;
+};
+
 
 const ProductCard = ({ product, onAddToCart }: { product: StockItem, onAddToCart: (product: StockItem) => void }) => {
     return (
@@ -529,6 +539,9 @@ export default function PosPage() {
     const [editingDiscountId, setEditingDiscountId] = React.useState<string | null>(null);
     const [discountInputValue, setDiscountInputValue] = React.useState<string>('');
     const printRef = React.useRef<HTMLDivElement>(null);
+    const barcodeInputRef = React.useRef<HTMLInputElement>(null);
+    const [heldBills, setHeldBills] = React.useState<HeldBill[]>([]);
+    const [showHeldBills, setShowHeldBills] = React.useState(false);
     
     const [orderDiscount, setOrderDiscount] = React.useState(0);
     const [orderDiscountType, setOrderDiscountType] = React.useState<'%' | 'fixed'>('%');
@@ -690,6 +703,7 @@ export default function PosPage() {
         setActiveCategory('All');
         setOrderDiscount(0);
         setOrderDiscountType('%');
+        barcodeInputRef.current?.focus();
     };
     
     const handlePrintReceipt = () => {
@@ -702,6 +716,54 @@ export default function PosPage() {
           document.body.innerHTML = originalContents;
           window.location.reload();
         }
+    };
+    
+    const handleBarcodeScan = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const barcode = e.currentTarget.value.trim();
+            if (barcode) {
+                const product = products.find(p => p.sku === barcode || p.id === barcode);
+                if (product) {
+                    addToCart(product);
+                    toast({ title: 'Item Added', description: `${product.productName} added to cart.` });
+                } else {
+                    toast({ variant: 'destructive', title: 'Product Not Found', description: `No product found with barcode: ${barcode}` });
+                }
+                e.currentTarget.value = '';
+            }
+        }
+    };
+    
+    const handleHoldBill = () => {
+        if (cart.length === 0) {
+            toast({ variant: 'destructive', title: 'Cart is empty' });
+            return;
+        }
+        const newHeldBill: HeldBill = {
+            id: Date.now(),
+            cart,
+            customerId: selectedCustomerId,
+            customerName: customerName,
+            time: new Date(),
+            notes: orderNotes
+        };
+        setHeldBills(prev => [...prev, newHeldBill]);
+        toast({ title: 'Bill Held', description: `Bill for ${customerName} has been put on hold.`});
+        handleNewOrder();
+    };
+    
+    const handleRecallBill = (bill: HeldBill) => {
+        if (cart.length > 0) {
+            toast({ variant: 'destructive', title: 'Cannot recall bill', description: 'Please clear or complete the current cart first.' });
+            return;
+        }
+        setCart(bill.cart);
+        setSelectedCustomerId(bill.customerId);
+        setOrderNotes(bill.notes);
+        setHeldBills(prev => prev.filter(b => b.id !== bill.id));
+        setShowHeldBills(false);
+        toast({ title: 'Bill Recalled', description: `Resumed bill for ${bill.customerName}.` });
     };
 
     return (
@@ -718,7 +780,7 @@ export default function PosPage() {
                                 </div>
                                 <div className="relative">
                                     <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input placeholder="Scan Barcode" className="pl-10" />
+                                    <Input ref={barcodeInputRef} placeholder="Scan Barcode" className="pl-10" onKeyDown={handleBarcodeScan} />
                                 </div>
                             </div>
                             <ScrollArea className="w-full whitespace-nowrap">
@@ -741,13 +803,17 @@ export default function PosPage() {
                     </div>
 
                     {/* Right Side - Cart */}
-                    <div className={cn("flex flex-col h-full bg-card rounded-lg shadow-sm overflow-hidden", isOrderComplete ? 'hidden print:flex' : 'flex')}>
+                    <div className={cn("flex flex-col h-full bg-card rounded-lg shadow-sm overflow-hidden", isOrderComplete ? 'hidden print:flex' : 'flex', showHeldBills ? 'hidden' : 'flex')}>
                         <CardHeader>
                             <div className="flex justify-between items-center">
                                 <CardTitle>Current Order</CardTitle>
-                                {cart.length > 0 && (
-                                    <Button variant="destructive" size="sm" onClick={() => setIsClearCartAlertOpen(true)}>Clear Cart</Button>
-                                )}
+                                <div className="flex items-center gap-1">
+                                    <Button variant="outline" size="sm" onClick={handleHoldBill}><Hand className="mr-1 h-4 w-4" /> Hold</Button>
+                                    <Button variant="outline" size="sm" onClick={() => setShowHeldBills(true)} className="relative">
+                                        <ListCollapse className="mr-1 h-4 w-4" /> Recall
+                                        {heldBills.length > 0 && <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 justify-center rounded-full">{heldBills.length}</Badge>}
+                                    </Button>
+                                </div>
                             </div>
                             <div className="pt-2">
                                 <Label htmlFor="customer-name">Customer</Label>
@@ -876,14 +942,46 @@ export default function PosPage() {
                                         <span className="font-mono">{formatCurrency(cartTotals.total, 'INR')}</span>
                                     </div>
                                 </div>
-                                <div className="w-full mt-4">
+                                <div className="w-full mt-4 flex gap-2">
                                      <Button size="lg" className="w-full" onClick={() => setIsPaymentDialogOpen(true)}>
                                         <CreditCard className="mr-2 h-5 w-5" />
                                         Pay Now
                                     </Button>
+                                     <Button size="lg" variant="destructive" onClick={() => setIsClearCartAlertOpen(true)}>
+                                        Clear
+                                    </Button>
                                 </div>
                             </CardFooter>
                         )}
+                    </div>
+                    
+                    {/* Held Bills Panel */}
+                    <div className={cn("flex-col h-full bg-card rounded-lg shadow-sm overflow-hidden", showHeldBills ? 'flex' : 'hidden')}>
+                        <CardHeader className="flex-row justify-between items-center">
+                            <CardTitle>Recalled Bills</CardTitle>
+                            <Button variant="ghost" size="icon" onClick={() => setShowHeldBills(false)}><X className="h-5 w-5" /></Button>
+                        </CardHeader>
+                        <ScrollArea className="flex-1">
+                            <CardContent className="p-4 pt-0 space-y-3">
+                                {heldBills.length === 0 ? (
+                                    <div className="text-center text-muted-foreground py-12">No bills on hold.</div>
+                                ) : (
+                                    heldBills.map(bill => (
+                                        <Card key={bill.id} className="cursor-pointer hover:border-primary" onClick={() => handleRecallBill(bill)}>
+                                            <CardContent className="p-3">
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <p className="font-semibold">{bill.customerName}</p>
+                                                        <p className="text-xs text-muted-foreground">{format(bill.time, "p")}</p>
+                                                    </div>
+                                                    <p className="font-mono font-bold text-lg">{formatCurrency(bill.cart.reduce((sum, item) => sum + item.quantity * item.sellingPrice, 0), 'INR')}</p>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))
+                                )}
+                            </CardContent>
+                        </ScrollArea>
                     </div>
 
                     {/* Post-Order Screen */}
@@ -934,7 +1032,7 @@ export default function PosPage() {
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction asChild>
-                                <Button variant="destructive" onClick={() => { setCart([]); setIsClearCartAlertOpen(false); }}>
+                                <Button variant="destructive" onClick={() => { setCart([]); setOrderNotes(''); setOrderDiscount(0); setIsClearCartAlertOpen(false); }}>
                                     Clear Cart
                                 </Button>
                             </AlertDialogAction>
