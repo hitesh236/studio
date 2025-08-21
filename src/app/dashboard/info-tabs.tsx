@@ -7,16 +7,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency, cn } from "@/lib/utils";
 import { bankAccounts } from "./data";
-import { format, parseISO } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import Link from 'next/link';
 import { useRouter } from "next/navigation";
 import type { SalesInvoice } from "../sales-invoices/data";
 import type { PurchaseBill } from "../purchase/data";
+import type { StockItem } from "../stock-list/data";
 import * as React from 'react';
+import { Button } from "@/components/ui/button";
 
 interface InfoTabsProps {
     salesData: SalesInvoice[];
     purchaseData: PurchaseBill[];
+    stockData: StockItem[];
 }
 
 // Mobile Card Components
@@ -83,7 +86,30 @@ const MobileAccountCard = ({ account }: { account: typeof bankAccounts[0] }) => 
     )
 };
 
-export function InfoTabs({ salesData, purchaseData }: InfoTabsProps) {
+const MobileStockCard = ({ item }: { item: StockItem }) => (
+    <Card>
+        <CardHeader className="p-3 flex-row items-center justify-between">
+            <CardTitle className="text-sm">{item.productName}</CardTitle>
+            <Badge variant={item.status === 'Low Stock' ? 'secondary' : 'destructive'}>
+                {item.stockInHand} left
+            </Badge>
+        </CardHeader>
+    </Card>
+)
+
+const MobileExpiryCard = ({ item }: { item: StockItem & { daysToExpiry: number } }) => (
+     <Card>
+        <CardHeader className="p-3 flex-row items-center justify-between">
+            <CardTitle className="text-sm">{item.productName}</CardTitle>
+            <Badge variant="destructive">
+                Expires in {item.daysToExpiry} days
+            </Badge>
+        </CardHeader>
+    </Card>
+)
+
+
+export function InfoTabs({ salesData, purchaseData, stockData }: InfoTabsProps) {
   const router = useRouter();
 
   const recentInvoices = React.useMemo(() => {
@@ -96,6 +122,19 @@ export function InfoTabs({ salesData, purchaseData }: InfoTabsProps) {
       .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
       .slice(0, 5);
   }, [purchaseData]);
+
+  const lowStockItems = React.useMemo(() => {
+    return stockData.filter(item => item.status === 'Low Stock').slice(0, 5);
+  }, [stockData]);
+
+  const expiringSoonItems = React.useMemo(() => {
+    const now = new Date();
+    return stockData
+      .filter(item => item.expiryDate && differenceInDays(item.expiryDate, now) <= 30 && differenceInDays(item.expiryDate, now) >= 0)
+      .sort((a, b) => (a.expiryDate?.getTime() || 0) - (b.expiryDate?.getTime() || 0))
+      .map(item => ({ ...item, daysToExpiry: differenceInDays(item.expiryDate!, now) }))
+      .slice(0, 5);
+  }, [stockData]);
 
   const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
@@ -112,13 +151,15 @@ export function InfoTabs({ salesData, purchaseData }: InfoTabsProps) {
     <Card>
         <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>A quick look at your recent financial activities.</CardDescription>
+            <CardDescription>A quick look at your recent financial activities and inventory status.</CardDescription>
         </CardHeader>
         <CardContent>
             <Tabs defaultValue="invoices">
                 <TabsList className="bg-transparent p-0 justify-start gap-2 h-auto flex-wrap">
                     <TabsTrigger value="invoices" className={triggerClasses}>Recent Invoices</TabsTrigger>
                     <TabsTrigger value="bills" className={triggerClasses}>Upcoming Bills</TabsTrigger>
+                    <TabsTrigger value="low-stock" className={triggerClasses}>Low Stock</TabsTrigger>
+                    <TabsTrigger value="expiring-soon" className={triggerClasses}>Expiring Soon</TabsTrigger>
                     <TabsTrigger value="banks" className={triggerClasses}>Bank Accounts</TabsTrigger>
                 </TabsList>
                 <TabsContent value="invoices">
@@ -181,6 +222,46 @@ export function InfoTabs({ salesData, purchaseData }: InfoTabsProps) {
                     {/* Mobile Card View */}
                     <div className="md:hidden space-y-4 mt-4">
                         {upcomingBills.map(bill => <MobileBillCard key={bill.id} bill={bill} />)}
+                    </div>
+                </TabsContent>
+                <TabsContent value="low-stock">
+                    <div className="hidden md:block">
+                        <Table>
+                            <TableHeader><TableRow><TableHead>Product</TableHead><TableHead>Category</TableHead><TableHead className="text-right">Stock on Hand</TableHead></TableRow></TableHeader>
+                            <TableBody>
+                                {lowStockItems.map(item => (
+                                    <TableRow key={item.id}><TableCell className="font-medium">{item.productName}</TableCell><TableCell>{item.category}</TableCell><TableCell className="text-right font-mono">{item.stockInHand} {item.uom}</TableCell></TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                    <div className="md:hidden space-y-4 mt-4">
+                        {lowStockItems.map(item => <MobileStockCard key={item.id} item={item} />)}
+                    </div>
+                    <div className="mt-4 flex justify-end">
+                        <Button asChild variant="link"><Link href="/stock-list">View All Low Stock Items</Link></Button>
+                    </div>
+                </TabsContent>
+                 <TabsContent value="expiring-soon">
+                     <div className="hidden md:block">
+                        <Table>
+                            <TableHeader><TableRow><TableHead>Product</TableHead><TableHead>Expiry Date</TableHead><TableHead className="text-right">Days Left</TableHead></TableRow></TableHeader>
+                            <TableBody>
+                                {expiringSoonItems.map(item => (
+                                    <TableRow key={item.id}>
+                                        <TableCell className="font-medium">{item.productName}</TableCell>
+                                        <TableCell>{format(item.expiryDate!, 'dd MMM, yyyy')}</TableCell>
+                                        <TableCell className="text-right"><Badge variant="destructive">{item.daysToExpiry} days</Badge></TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                    <div className="md:hidden space-y-4 mt-4">
+                        {expiringSoonItems.map(item => <MobileExpiryCard key={item.id} item={item} />)}
+                    </div>
+                     <div className="mt-4 flex justify-end">
+                        <Button asChild variant="link"><Link href="/reports/expiry-report">View Full Expiry Report</Link></Button>
                     </div>
                 </TabsContent>
                 <TabsContent value="banks">

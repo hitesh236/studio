@@ -5,6 +5,7 @@ import Link from 'next/link';
 import * as React from 'react';
 import { generateSalesInvoices, type SalesInvoice } from '../sales-invoices/data';
 import { generatePurchaseBills, type PurchaseBill } from '../purchase/data';
+import { generateStockListData, type StockItem } from '../stock-list/data';
 import { kpiData } from './data';
 import { SummaryCard } from '../sales-invoices/summary-card';
 import { QuickActions } from './quick-actions';
@@ -26,14 +27,17 @@ export default function Home() {
   const { role } = useUserRole();
   const [salesInvoices, setSalesInvoices] = React.useState<SalesInvoice[]>([]);
   const [purchaseBills, setPurchaseBills] = React.useState<PurchaseBill[]>([]);
+  const [stockItems, setStockItems] = React.useState<StockItem[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
     // In a real app, you would fetch this data
     const sales = generateSalesInvoices(100);
     const purchases = generatePurchaseBills(50);
+    const stock = generateStockListData(50);
     setSalesInvoices(sales);
     setPurchaseBills(purchases);
+    setStockItems(stock);
     setLoading(false);
   }, []);
 
@@ -82,7 +86,7 @@ export default function Home() {
         </div>
       </div>
       <div>
-        <InfoTabs salesData={salesInvoices} purchaseData={purchaseBills} />
+        <InfoTabs salesData={salesInvoices} purchaseData={purchaseBills} stockData={stockItems} />
       </div>
     </div>
   );
