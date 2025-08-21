@@ -567,9 +567,9 @@ export default function ProductStructurePage() {
     newAttributes.forEach(a => attributeMap.set(a.name.toLowerCase(), a));
 
     data.forEach(row => {
-      const industryName = row['Industry']?.trim();
+      const industryName = row['Category']?.trim(); // Corrected column name
       if (!industryName) return;
-
+      
       let industry = categoryMap.get(industryName.toLowerCase());
       if (!industry) {
         industry = { id: `ind-${industryName.toLowerCase().replace(/\s+/g, '-')}`, name: industryName, children: [] };
@@ -579,8 +579,10 @@ export default function ProductStructurePage() {
       }
 
       let currentParent = industry;
+      // Corrected loop for sub-categories
       for (let i = 1; i <= 5; i++) {
-        const catName = row[`Category Level ${i}`]?.trim();
+        const colName = i === 1 ? 'Sub-Category Level 1' : `Sub-Category Level ${i}`;
+        const catName = row[colName]?.trim();
         if (!catName) break;
         
         let category = categoryMap.get(catName.toLowerCase());
@@ -650,16 +652,24 @@ export default function ProductStructurePage() {
             setSelectedIndustries(prev => [...prev, ...addedIndustries.map(i => i.id)]);
           }
           
-          toast({ 
-            title: 'Import Successful', 
-            description: (
-              <div>
-                <p className="font-semibold">Your product structure has been updated.</p>
-                {summary.newCategories.length > 0 && <p className="mt-2 text-xs">New Categories: {summary.newCategories.join(', ')}</p>}
-                {summary.newAttributes.length > 0 && <p className="mt-1 text-xs">New Attributes: {summary.newAttributes.join(', ')}</p>}
-              </div>
-            )
-          });
+          if (summary.newCategories.length > 0 || summary.newAttributes.length > 0) {
+            toast({
+              title: 'Import Successful',
+              description: (
+                <div>
+                  <p className="font-semibold">Your product structure has been updated.</p>
+                  {summary.newCategories.length > 0 && <p className="mt-2 text-xs">New Categories: {summary.newCategories.join(', ')}</p>}
+                  {summary.newAttributes.length > 0 && <p className="mt-1 text-xs">New Attributes: {summary.newAttributes.join(', ')}</p>}
+                </div>
+              ),
+            });
+          } else {
+             toast({ 
+                title: 'Import Complete', 
+                description: 'No new categories or attributes were added.'
+             });
+          }
+
         } catch (error: any) {
           toast({ variant: 'destructive', title: 'Import Error', description: error.message });
         }
