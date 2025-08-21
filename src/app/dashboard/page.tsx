@@ -63,7 +63,7 @@ const LowStockCard = ({ items }: { items: StockItem[] }) => (
     </Card>
 );
 
-const ExpiryCard = ({ items }: { items: StockItem[] }) => (
+const ExpiryCard = ({ items }: { items: (StockItem & { daysToExpiry: number })[] }) => (
     <Card>
         <CardHeader>
              <div className="flex justify-between items-center">
