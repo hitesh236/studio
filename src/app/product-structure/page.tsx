@@ -547,6 +547,74 @@ export default function ProductStructurePage() {
     return attributes.filter(attr => attr.isGlobal || attr.assignedCategories.includes(selectedCategory.id));
   }, [attributes, selectedCategory]);
   
+  const processCsvData = (data: any[], existingCategories: Category[], existingAttributes: Attribute[]): { updatedCategories: Category[], updatedAttributes: Attribute[] } => {
+    // Deep copy to avoid direct state mutation
+    const newCategories = JSON.parse(JSON.stringify(existingCategories)) as Category[];
+    const newAttributes = JSON.parse(JSON.stringify(existingAttributes)) as Attribute[];
+
+    const categoryMap = new Map<string, Category>();
+    const attributeMap = new Map<string, Attribute>();
+
+    function populateMaps(cats: Category[]) {
+      cats.forEach(c => {
+        categoryMap.set(c.name.toLowerCase(), c);
+        if (c.children) populateMaps(c.children);
+      });
+    }
+    populateMaps(newCategories);
+    newAttributes.forEach(a => attributeMap.set(a.name.toLowerCase(), a));
+
+    data.forEach(row => {
+      const industryName = row['Industry']?.trim();
+      if (!industryName) return;
+
+      let industry = categoryMap.get(industryName.toLowerCase());
+      if (!industry) {
+        industry = { id: `ind-${industryName.toLowerCase().replace(/\s+/g, '-')}`, name: industryName, children: [] };
+        newCategories.push(industry);
+        categoryMap.set(industryName.toLowerCase(), industry);
+      }
+
+      let currentParent = industry;
+      for (let i = 1; i <= 5; i++) {
+        const catName = row[`Category Level ${i}`]?.trim();
+        if (!catName) break;
+        
+        let category = categoryMap.get(catName.toLowerCase());
+        if (!category) {
+          category = { id: `${currentParent.id}-${catName.toLowerCase().replace(/\s+/g, '-')}`, name: catName, children: [] };
+          currentParent.children = [...(currentParent.children || []), category];
+          categoryMap.set(catName.toLowerCase(), category);
+        }
+        currentParent = category;
+      }
+      
+      const attrName = row['Attribute Name']?.trim();
+      if (attrName) {
+        let attribute = attributeMap.get(attrName.toLowerCase());
+        if (!attribute) {
+          const attrType = row['Attribute Type']?.trim().toLowerCase() || 'text';
+          attribute = {
+            id: `attr-${attrName.toLowerCase().replace(/\s+/g, '-')}`,
+            name: attrName,
+            type: ['text', 'dropdown', 'checkbox', 'date'].includes(attrType) ? attrType as AttributeType : 'text',
+            isGlobal: false,
+            assignedCategories: [],
+            options: row['Attribute Options']?.split(',').map((o:string) => o.trim()).filter(Boolean) || [],
+          };
+          newAttributes.push(attribute);
+          attributeMap.set(attrName.toLowerCase(), attribute);
+        }
+        
+        if (!attribute.assignedCategories.includes(currentParent.id)) {
+          attribute.assignedCategories.push(currentParent.id);
+        }
+      }
+    });
+
+    return { updatedCategories: newCategories, updatedAttributes: newAttributes };
+  };
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
@@ -561,8 +629,9 @@ export default function ProductStructurePage() {
         try {
           const { updatedCategories, updatedAttributes } = processCsvData(results.data as any[], categories, attributes);
           setCategories(updatedCategories);
-          setIndustries(updatedCategories.map(cat => ({id: cat.id, name: cat.name})));
           setAttributes(updatedAttributes);
+          // Also update the industries list for the filter dropdown
+          setIndustries(updatedCategories.map(cat => ({id: cat.id, name: cat.name})));
           toast({ title: 'Success', description: 'Structure imported successfully.' });
         } catch (error: any) {
           toast({ variant: 'destructive', title: 'Import Error', description: error.message });
@@ -573,85 +642,11 @@ export default function ProductStructurePage() {
       },
     });
 
-    // Reset file input
     if (event.target) {
         event.target.value = '';
     }
   };
   
-  const processCsvData = (data: any[], existingCategories: Category[], existingAttributes: Attribute[]): { updatedCategories: Category[], updatedAttributes: Attribute[] } => {
-    const newCategories = JSON.parse(JSON.stringify(existingCategories)) as Category[];
-    const newAttributes = JSON.parse(JSON.stringify(existingAttributes)) as Attribute[];
-
-    const categoryMapByName = new Map<string, Category>();
-    const attributeMapByName = new Map<string, Attribute>();
-
-    // Pre-populate maps with existing data
-    const populateCategoryMap = (cats: Category[]) => {
-        cats.forEach(c => {
-            categoryMapByName.set(c.name.toLowerCase(), c);
-            if(c.children) populateCategoryMap(c.children);
-        });
-    };
-    populateCategoryMap(newCategories);
-    newAttributes.forEach(a => attributeMapByName.set(a.name.toLowerCase(), a));
-    
-    data.forEach(row => {
-      // Process Categories
-      const industryName = row['Industry']?.trim();
-      if (!industryName) return;
-
-      let industry = categoryMapByName.get(industryName.toLowerCase());
-      if (!industry) {
-        industry = { id: industryName.toLowerCase().replace(/\s+/g, '-'), name: industryName, children: [] };
-        newCategories.push(industry);
-        categoryMapByName.set(industryName.toLowerCase(), industry);
-      }
-
-      let currentParent = industry;
-      for (let i = 1; i <= 5; i++) { // Assuming max 5 levels of sub-categories
-        const catName = row[`Category Level ${i}`]?.trim();
-        if (!catName) break;
-        
-        let category = currentParent.children?.find(c => c.name.toLowerCase() === catName.toLowerCase());
-        if (!category) {
-          category = { id: `${currentParent.id}-${catName.toLowerCase().replace(/\s+/g, '-')}`, name: catName, children: [] };
-          currentParent.children = [...(currentParent.children || []), category];
-          categoryMapByName.set(catName.toLowerCase(), category);
-        }
-        currentParent = category;
-      }
-      
-      // Process Attributes
-      const attrName = row['Attribute Name']?.trim();
-      if (attrName) {
-        let attribute = attributeMapByName.get(attrName.toLowerCase());
-        if (!attribute) {
-          const attrType = row['Attribute Type']?.trim().toLowerCase() || 'text';
-          attribute = {
-            id: `attr-${attrName.toLowerCase().replace(/\s+/g, '-')}`,
-            name: attrName,
-            type: ['text', 'dropdown', 'checkbox', 'date'].includes(attrType) ? attrType as AttributeType : 'text',
-            isGlobal: false,
-            assignedCategories: [],
-            options: row['Attribute Options']?.split(',').map((o:string) => o.trim()).filter(Boolean) || [],
-          };
-          newAttributes.push(attribute);
-          attributeMapByName.set(attrName.toLowerCase(), attribute);
-        }
-        
-        if (!attribute.assignedCategories.includes(currentParent.id)) {
-            attribute.assignedCategories.push(currentParent.id);
-        }
-      }
-    });
-
-    return { 
-        updatedCategories: newCategories,
-        updatedAttributes: newAttributes,
-    };
-  };
-
   const handleToggleIndustry = (industryId: string) => {
     setSelectedIndustries(prev => {
         const newSet = new Set(prev);
@@ -660,7 +655,6 @@ export default function ProductStructurePage() {
         } else {
             newSet.add(industryId);
         }
-        // If the currently selected category is part of the unchecked industry, reset it.
         const selectedCategoryIndustry = findRootParent(categories, selectedCategory?.id || '');
         if (selectedCategoryIndustry && selectedCategoryIndustry.id === industryId && !newSet.has(industryId)) {
             setSelectedCategory(null);
@@ -671,7 +665,7 @@ export default function ProductStructurePage() {
   
   const findRootParent = (categories: Category[], childId: string): Category | null => {
       for (const cat of categories) {
-        if (cat.id === childId) return cat; // It's a root itself
+        if (cat.id === childId) return cat; 
         let found = false;
         const findInChildren = (current: Category): boolean => {
             if (current.id === childId) return true;
@@ -710,9 +704,7 @@ export default function ProductStructurePage() {
     };
 
     if (editingCategory) {
-        // Edit logic
         setCategories(prev => {
-            // Remove the old category first
             const withoutOld = JSON.parse(JSON.stringify(prev));
             let categoryToMove: Category | null = null;
             
@@ -730,13 +722,11 @@ export default function ProductStructurePage() {
             }
             const updatedCategories = findAndRemove(withoutOld);
 
-            if (!categoryToMove) return prev; // Should not happen
+            if (!categoryToMove) return prev; 
             
-            // Update the category details
             categoryToMove.name = name;
             categoryToMove.id = name.toLowerCase().replace(/\s+/g, '-');
             
-            // Add it to the new parent
             if (!parentId) {
                 updatedCategories.push(categoryToMove);
             } else {
@@ -758,7 +748,6 @@ export default function ProductStructurePage() {
         });
         toast({ title: 'Category Updated' });
     } else {
-        // Add logic
         if (!parentId) {
             if (selectedIndustries.length !== 1) {
                 toast({ variant: 'destructive', title: 'Please select one industry to add a top-level category to.'});
