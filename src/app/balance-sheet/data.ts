@@ -54,6 +54,7 @@ export const assetsData: Ledger = {
         children: [
             { id: 'ledger-loans-to-employees', name: 'Loans to Employees', type: 'ledger', balance: 100000, previousBalance: 90000 },
             { id: 'ledger-advance-to-others', name: 'Advance to Others', type: 'ledger', balance: 50000, previousBalance: 40000 },
+            { id: 'ledger-tds-receivable', name: 'TDS Receivable', type: 'ledger', balance: 25000, previousBalance: 20000 },
             { id: 'ledger-security-deposits', name: 'Security Deposits', type: 'ledger', balance: 200000, previousBalance: 200000 },
         ]
     },
@@ -84,7 +85,7 @@ export const liabilitiesData: Ledger = {
               name: 'Capital',
               type: 'group',
               children: [
-                  { id: 'ledger-partners-capital', name: 'Partner’s Capital', type: 'ledger', balance: 9190000, previousBalance: 8500000 },
+                  { id: 'ledger-partners-capital', name: 'Partner’s Capital', type: 'ledger', balance: 9165000, previousBalance: 8500000 },
                   { id: 'ledger-drawings', name: 'Drawings', type: 'ledger', balance: -200000, previousBalance: -150000 },
               ]
           }

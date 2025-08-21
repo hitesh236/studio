@@ -31,13 +31,22 @@ export const ledgerData: Ledger[] = [
               { id: 'cash-in-hand', name: 'Cash-in-hand', type: 'group', children: [
                 { id: 'ledger-cash', name: 'Cash', type: 'ledger', balance: 50000 },
               ] },
-              { id: 'deposits-asset', name: 'Deposits (Asset)', type: 'group', children: [] },
-              { id: 'loans-advances-asset', name: 'Loans & Advances (Asset)', type: 'group', children: [] },
+              { id: 'deposits-asset', name: 'Deposits (Asset)', type: 'group', children: [
+                { id: 'ledger-security-deposits', name: 'Security Deposits', type: 'ledger', balance: 200000 },
+              ]},
+              { id: 'loans-advances-asset', name: 'Loans & Advances (Asset)', type: 'group', children: [
+                { id: 'ledger-tds-receivable', name: 'TDS Receivable', type: 'ledger', balance: 25000 },
+              ]},
               { id: 'stock-in-hand', name: 'Stock-in-hand', type: 'group', children: [] },
               { id: 'sundry-debtors', name: 'Sundry Debtors', type: 'group', children: [
                 { id: 'ledger-customer-a', name: 'Innovate Inc.', type: 'ledger', balance: 89500 },
                 { id: 'ledger-customer-b', name: 'Solutions Corp.', type: 'ledger', balance: 124000 },
               ] },
+              { id: 'gst-input-credit', name: 'GST Input Credit', type: 'group', children: [
+                 { id: 'ledger-igst-input', name: 'IGST Input Credit', type: 'ledger', balance: 35000 },
+                 { id: 'ledger-cgst-input', name: 'CGST Input Credit', type: 'ledger', balance: 20000 },
+                 { id: 'ledger-sgst-input', name: 'SGST Input Credit', type: 'ledger', balance: 20000 },
+              ]},
             ]
         },
         {
@@ -77,7 +86,9 @@ export const ledgerData: Ledger[] = [
               { id: 'duties-taxes', name: 'Duties & Taxes', type: 'group', children: [
                  { id: 'ledger-gst', name: 'GST Payable', type: 'ledger', balance: 45000 },
               ] },
-              { id: 'provisions', name: 'Provisions', type: 'group', children: [] },
+              { id: 'provisions', name: 'Provisions', type: 'group', children: [
+                { id: 'ledger-provision-expenses', name: 'Provision for Expenses', type: 'ledger', balance: 15000 },
+              ] },
               { id: 'sundry-creditors', name: 'Sundry Creditors', type: 'group', children: [
                 { id: 'ledger-vendor-a', name: 'Cloud Services LLC', type: 'ledger', balance: 65000 },
                 { id: 'ledger-vendor-b', name: 'Office Supplies R Us', type: 'ledger', balance: 22000 },
@@ -145,6 +156,7 @@ export const ledgerData: Ledger[] = [
                     children: [
                         { id: 'ledger-domestic-sales', name: 'Domestic Sales', type: 'ledger', balance: 1250000, previousBalance: 1100000 },
                         { id: 'ledger-export-sales', name: 'Export Sales', type: 'ledger', balance: 350000, previousBalance: 320000 },
+                        { id: 'ledger-discounts-received', name: 'Discounts Received', type: 'ledger', balance: -15000, previousBalance: -12000 }
                     ]
                 },
                 { id: 'ledger-other-direct', name: 'Other Direct Income', type: 'ledger', balance: 25000, previousBalance: 20000 }
@@ -182,6 +194,7 @@ export const ledgerData: Ledger[] = [
                     children: [
                          { id: 'ledger-opening-stock', name: 'Opening Stock', type: 'ledger', balance: 150000, previousBalance: 140000 },
                          { id: 'ledger-purchases', name: 'Purchases', type: 'ledger', balance: 450000, previousBalance: 420000 },
+                         { id: 'ledger-carriage-inwards', name: 'Carriage Inwards', type: 'ledger', balance: 25000, previousBalance: 22000 },
                          { id: 'ledger-closing-stock', name: 'Closing Stock', type: 'ledger', balance: -200000, previousBalance: -180000 },
                     ]
                 },
@@ -211,6 +224,7 @@ export const ledgerData: Ledger[] = [
                         { id: 'ledger-rent', name: 'Rent & Rates', type: 'ledger', balance: 120000, previousBalance: 120000 },
                         { id: 'ledger-office-supplies', name: 'Printing & Stationery', type: 'ledger', balance: 35000, previousBalance: 30000 },
                         { id: 'ledger-internet', name: 'Telephone & Internet', type: 'ledger', balance: 25000, previousBalance: 22000 },
+                        { id: 'ledger-spoilage', name: 'Spoilage & Expiry Loss', type: 'ledger', balance: 12000, previousBalance: 10000 },
                         { id: 'ledger-misc-operating-exp', name: 'Miscellaneous Operating Expenses', type: 'ledger', balance: 11500, previousBalance: 10000 },
                     ]
                 },
@@ -231,6 +245,7 @@ export const ledgerData: Ledger[] = [
                         { id: 'ledger-advertising', name: 'Advertising & Marketing', type: 'ledger', balance: 75000, previousBalance: 70000 },
                         { id: 'ledger-freight-outward', name: 'Freight Outward', type: 'ledger', balance: 30000, previousBalance: 28000 },
                         { id: 'ledger-sales-commission', name: 'Sales Commission', type: 'ledger', balance: 50000, previousBalance: 45000 },
+                        { id: 'ledger-sales-discounts', name: 'Sales Discounts', type: 'ledger', balance: 25000, previousBalance: 20000 },
                     ]
                 },
                 {
