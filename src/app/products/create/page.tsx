@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -283,12 +284,12 @@ export default function CreateProductPage() {
 
         renderVariantHeader();
 
-        const valueArrays = attrs.map(a => a.values);
-        const combos = cartesian(valueArrays);
-
         const productCodeInput = document.getElementById("productCode") as HTMLInputElement;
         const productNameInput = document.getElementById("productName") as HTMLInputElement;
         const baseCode = productCodeInput?.value || productNameInput?.value || "PROD";
+        
+        const valueArrays = attrs.map(a => a.values);
+        const combos = cartesian(valueArrays);
         
         state.variants = combos.map(values => ({
             values, // aligned to attrs order
