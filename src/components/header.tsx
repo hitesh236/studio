@@ -39,6 +39,7 @@ const uiMenuItems = [
     { href: '/invoice-preview-fc', icon: Globe, label: 'Invoice Preview FC' },
     { href: '/customer-portfolio', icon: UserCircle, label: 'Customer Portfolio' },
     { href: '/ui', icon: Palette, label: 'UI' },
+    { href: '/products/create', icon: PackagePlus, label: 'Create Product' },
 ];
 
 const MegaMenu = () => (
