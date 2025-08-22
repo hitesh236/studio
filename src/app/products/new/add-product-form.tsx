@@ -822,13 +822,13 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                     <div className="space-y-2">
                         <FormField name="uom" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Primary UOM</FormLabel>
-                                <div className="flex items-center gap-2">
-                                <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger></FormControl><SelectContent>
+                                <div className="relative flex items-center">
+                                <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="pr-12"><SelectValue placeholder="Select unit" /></SelectTrigger></FormControl><SelectContent>
                                     {activeSimpleUnits.map(unit => <SelectItem key={unit.id} value={unit.id}>{unit.name} ({unit.abbreviation})</SelectItem>)}
                                 </SelectContent></Select>
                                 <Dialog open={isUomDialogOpen} onOpenChange={setIsUomDialogOpen}>
                                     <DialogTrigger asChild>
-                                        <Button type="button" variant="outline" size="icon" onClick={() => { setTargetUomField('uom'); setIsUomDialogOpen(true); }}>
+                                        <Button type="button" variant="outline" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" onClick={() => { setTargetUomField('uom'); setIsUomDialogOpen(true); }}>
                                             <PlusCircle className="h-4 w-4" />
                                         </Button>
                                     </DialogTrigger>
@@ -895,10 +895,10 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Location/Warehouse</FormLabel>
-                                <div className="flex items-center gap-2">
+                                <div className="relative flex items-center">
                                     <Select onValueChange={field.onChange} value={field.value}>
                                         <FormControl>
-                                            <SelectTrigger>
+                                            <SelectTrigger className="pr-12">
                                                 <SelectValue placeholder="Select location" />
                                             </SelectTrigger>
                                         </FormControl>
@@ -908,7 +908,7 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                                     </Select>
                                     <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
                                         <DialogTrigger asChild>
-                                            <Button type="button" variant="outline" className="w-auto">Add New</Button>
+                                            <Button type="button" variant="outline" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-auto px-3">Add New</Button>
                                         </DialogTrigger>
                                         <DialogContent>
                                             <DialogHeader>
