@@ -2,12 +2,12 @@
 import type { Attribute } from './types';
 
 export const initialAttributes: Attribute[] = [
-    { id: 'attr-brand', name: 'Brand', type: 'text', isGlobal: true, assignedCategories: [] },
-    { id: 'attr-net-weight', name: 'Net Weight', type: 'text', isGlobal: true, assignedCategories: [] },
-    { id: 'attr-mfg-date', name: 'Manufacturing Date', type: 'date', isGlobal: true, assignedCategories: [] },
+    { id: 'attr-brand', name: 'Brand', type: 'text', isGlobal: false, assignedCategories: [] },
+    { id: 'attr-net-weight', name: 'Net Weight', type: 'text', isGlobal: false, assignedCategories: [] },
+    { id: 'attr-mfg-date', name: 'Manufacturing Date', type: 'date', isGlobal: false, assignedCategories: [] },
     { id: 'attr-exp-date', name: 'Expiry Date', type: 'date', isGlobal: true, assignedCategories: [] },
-    { id: 'attr-fssai', name: 'FSSAI License No.', type: 'text', isGlobal: true, assignedCategories: [] },
-    { id: 'attr-dietary-info', name: 'Dietary Information', type: 'dropdown', options: ['Vegetarian', 'Vegan', 'Gluten-Free', 'Organic'], isGlobal: true, assignedCategories: [] },
+    { id: 'attr-fssai', name: 'FSSAI License No.', type: 'text', isGlobal: false, assignedCategories: [] },
+    { id: 'attr-dietary-info', name: 'Dietary Information', type: 'dropdown', options: ['Vegetarian', 'Vegan', 'Gluten-Free', 'Organic'], isGlobal: false, assignedCategories: [] },
 
     // Category-specific attributes
     { id: 'attr-rice-type', name: 'Rice Type', type: 'dropdown', options: ['Basmati', 'Sona Masoori', 'Kolam', 'Brown Rice'], isGlobal: false, assignedCategories: ['rice'] },
