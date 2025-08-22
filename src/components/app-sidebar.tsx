@@ -83,24 +83,26 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/'} asChild>
-                <Link href="/" onClick={handleLinkClick}>
-                    <LayoutDashboard />
-                    <span>Dashboard</span>
-                </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-           <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Parties" isActive={pathname.startsWith('/parties')} asChild>
-                    <Link href="/parties" onClick={handleLinkClick}>
-                        <Users />
-                        <span>Parties</span>
+        <SidebarGroup>
+            <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/'} asChild>
+                    <Link href="/" onClick={handleLinkClick}>
+                        <LayoutDashboard />
+                        <span>Dashboard</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
-        </SidebarMenu>
+            <SidebarMenuItem>
+                    <SidebarMenuButton tooltip="Parties" isActive={pathname.startsWith('/parties')} asChild>
+                        <Link href="/parties" onClick={handleLinkClick}>
+                            <Users />
+                            <span>Parties</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </SidebarGroup>
         
         {canAccessAccounting && <SidebarGroup>
           <SidebarGroupLabel className="text-green-600 dark:text-green-500">Money In</SidebarGroupLabel>
@@ -297,4 +299,3 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
-
