@@ -104,6 +104,7 @@ const productFormSchema = z.object({
   uom: z.string().min(1, "Unit of Measurement is required."),
   secondaryUom: z.string().optional(),
   openingStock: z.coerce.number().min(0, "Opening stock must be non-negative.").default(0),
+  openingStockValue: z.coerce.number().optional(),
   location: z.string().optional(),
   minStockLevel: z.coerce.number().optional(),
   reorderQty: z.coerce.number().optional(),
@@ -283,6 +284,7 @@ export function AddProductForm() {
         uom: '',
         secondaryUom: '',
         openingStock: 0,
+        openingStockValue: 0,
         location: '',
         minStockLevel: 0,
         reorderQty: 0,
@@ -816,7 +818,7 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                     <CardTitle className="text-[20px] text-secondary">Units & Stock</CardTitle>
                     <CardDescription>Manage measurement units and inventory levels.</CardDescription>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <FormField name="uom" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Primary UOM</FormLabel>
@@ -879,9 +881,14 @@ const PriceBreakdown = ({ price, gstRate, includesGst }: { price?: number; gstRa
                             </Button>
                         )}
                     </div>
-                    <FormField name="openingStock" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Opening Stock</FormLabel><FormControl><Input type="number" placeholder="0" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
+                     <div className="grid grid-cols-2 gap-4">
+                        <FormField name="openingStock" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Opening Stock</FormLabel><FormControl><Input type="number" placeholder="0" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                         <FormField name="openingStockValue" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>Opening Stock Value</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                    </div>
                     <FormField
                         name="location"
                         control={form.control}
