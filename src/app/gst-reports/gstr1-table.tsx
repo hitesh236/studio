@@ -168,4 +168,3 @@ export function Gstr1Table({ data }: Gstr1TableProps) {
     </div>
   );
 }
-

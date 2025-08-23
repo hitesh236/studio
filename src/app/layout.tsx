@@ -5,6 +5,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Header } from '@/components/header';
+import { PageTransitionWrapper } from '@/components/page-transition-wrapper';
 
 export const metadata: Metadata = {
   title: 'HicksTable',
@@ -35,7 +36,9 @@ export default function RootLayout({
             <div className="flex flex-col flex-1 min-w-0">
               <Header />
               <main className="flex-1">
-                {children}
+                <PageTransitionWrapper>
+                    {children}
+                </PageTransitionWrapper>
               </main>
             </div>
           </SidebarProvider>
