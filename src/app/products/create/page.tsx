@@ -2,30 +2,23 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Trash2, X, Sparkles, AlertTriangle } from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { PlusCircle, Trash2, X, Sparkles, ChevronsUpDown, Check } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { initialCategoriesData, type Category } from '@/lib/categories';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
+import { initialSimpleUnits, type SimpleUnit } from '@/lib/uom-data';
 
 type Attribute = {
   name: string;
@@ -90,8 +83,6 @@ export default function CreateProductPage() {
   // Core Product State
   const [productName, setProductName] = React.useState('');
   const [productCode, setProductCode] = React.useState('');
-  const [category, setCategory] = React.useState('');
-  const [uom, setUom] = React.useState('');
   const [shortDesc, setShortDesc] = React.useState('');
 
   // Descriptive Attributes State
@@ -109,6 +100,61 @@ export default function CreateProductPage() {
 
   // Variants State
   const [variants, setVariants] = React.useState<Variant[]>([]);
+
+  // Category State
+  const [categoryPath, setCategoryPath] = React.useState<string[]>([]);
+  const [categoryLevels, setCategoryLevels] = React.useState<Category[][]>([initialCategoriesData]);
+
+  // UOM State
+  const [uom, setUom] = React.useState('');
+  const [simpleUnits, setSimpleUnits] = React.useState<SimpleUnit[]>(initialSimpleUnits);
+  const [isUomDialogOpen, setIsUomDialogOpen] = React.useState(false);
+  const [newUom, setNewUom] = React.useState({ name: '', abbreviation: '' });
+  const activeSimpleUnits = React.useMemo(() => simpleUnits.filter(u => u.status !== 'disabled'), [simpleUnits]);
+  
+  React.useEffect(() => {
+    let currentCategories = initialCategoriesData;
+    const newLevels: Category[][] = [currentCategories];
+    for (const catId of categoryPath) {
+      const foundCat = currentCategories.find(c => c.id === catId);
+      if (foundCat && foundCat.children) {
+        currentCategories = foundCat.children;
+        newLevels.push(currentCategories);
+      } else {
+        break;
+      }
+    }
+    setCategoryLevels(newLevels);
+  }, [categoryPath]);
+
+  const handleCategoryChange = (level: number, value: string) => {
+    const newPath = categoryPath.slice(0, level);
+    if (value) {
+      newPath.push(value);
+    }
+    setCategoryPath(newPath);
+  };
+
+  const handleAddUom = () => {
+    if (newUom.name.trim() && newUom.abbreviation.trim()) {
+        if (simpleUnits.some(u => u.name.toLowerCase() === newUom.name.toLowerCase() || u.abbreviation.toLowerCase() === newUom.abbreviation.toLowerCase())) {
+            toast({ variant: 'destructive', title: 'Unit already exists.'});
+            return;
+        }
+        const newUnit: SimpleUnit = { 
+            id: newUom.abbreviation.toLowerCase(),
+            name: newUom.name.trim(), 
+            abbreviation: newUom.abbreviation.trim(),
+            status: 'active',
+        };
+        setSimpleUnits(prev => [...prev, newUnit]);
+        setUom(newUnit.id);
+        toast({ title: 'UOM Added' });
+        setIsUomDialogOpen(false);
+        setNewUom({ name: '', abbreviation: '' });
+    }
+  };
+
 
   const handleDescriptiveAttrChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -188,7 +234,7 @@ export default function CreateProductPage() {
   
   const handleSaveProduct = () => {
     console.log({
-        product: { productName, productCode, category, uom, shortDesc },
+        product: { productName, productCode, categoryPath, uom, shortDesc },
         descriptive: descriptiveAttrs,
         inventory: stockAttrs,
         variants: variants
@@ -198,37 +244,93 @@ export default function CreateProductPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">
-      <h1 className="text-2xl font-bold">Add Product — Grocery</h1>
+      <h1 className="text-xl font-bold">Add Product</h1>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>1) Core Product (Parent)</CardTitle>
+            <CardTitle>Core Product</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-             <div className="grid grid-cols-2 gap-4">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div><Label htmlFor="productName">Product Name *</Label><Input id="productName" value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="e.g., Amul Milk" /></div>
-                <div><Label htmlFor="productCode">Product Code</Label><Input id="productCode" value={productCode} onChange={(e) => setProductCode(e.target.value)} placeholder="e.g., MLK-AMUL" /></div>
+                <div><Label htmlFor="productCode">Product Code (for SKU prefix)</Label><Input id="productCode" value={productCode} onChange={(e) => setProductCode(e.target.value)} placeholder="e.g., MLK-AMUL" /></div>
             </div>
-             <div className="grid grid-cols-2 gap-4">
-                <div><Label htmlFor="category">Category</Label><Input id="category" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="e.g., Dairy" /></div>
-                <div><Label htmlFor="uom">Base UOM</Label><Input id="uom" value={uom} onChange={(e) => setUom(e.target.value)} placeholder="e.g., piece, bottle, kg" /></div>
+            <div>
+                <Label>Category</Label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    {categoryLevels.map((levelCategories, level) => (
+                        <Select
+                            key={level}
+                            onValueChange={(value) => handleCategoryChange(level, value)}
+                            value={categoryPath[level] || ''}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder={`Select Level ${level + 1}`} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {levelCategories.map((cat) => (
+                                    <SelectItem key={cat.id} value={cat.id}>
+                                        {cat.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    ))}
+                </div>
+            </div>
+             <div>
+                <Label htmlFor="uom">Base UOM</Label>
+                <div className="relative flex items-center">
+                    <Select onValueChange={setUom} value={uom}>
+                        <SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger>
+                        <SelectContent>
+                            {activeSimpleUnits.map(unit => <SelectItem key={unit.id} value={unit.id}>{unit.name} ({unit.abbreviation})</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                    <Dialog open={isUomDialogOpen} onOpenChange={setIsUomDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button type="button" variant="outline" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-auto px-3">
+                                Add New
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Add New Unit</DialogTitle>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="uom-name">Unit Name</Label>
+                                    <Input id="uom-name" value={newUom.name} onChange={e => setNewUom(u => ({...u, name: e.target.value}))} placeholder="e.g., Pieces"/>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="uom-abbr">Abbreviation</Label>
+                                    <Input id="uom-abbr" value={newUom.abbreviation} onChange={e => setNewUom(u => ({...u, abbreviation: e.target.value}))} placeholder="e.g., pcs"/>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <DialogClose asChild><Button variant="outline" type="button">Cancel</Button></DialogClose>
+                                <Button type="button" onClick={handleAddUom}>Save Unit</Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                </div>
             </div>
             <div><Label htmlFor="shortDesc">Short Description</Label><Textarea id="shortDesc" value={shortDesc} onChange={(e) => setShortDesc(e.target.value)} placeholder="One-liner for internal search" /></div>
             <p className="text-xs text-muted-foreground">This does not create SKUs. SKUs are created below from inventory-driving attributes only.</p>
           </CardContent>
         </Card>
-
+        
         <Card>
           <CardHeader>
-            <CardTitle>2) Descriptive Attributes</CardTitle>
+            <CardTitle>2) Descriptive Attributes (won’t create SKUs)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div><Label htmlFor="material">Material / Ingredients</Label><Input id="material" name="material" value={descriptiveAttrs.material} onChange={handleDescriptiveAttrChange} placeholder="e.g., Cow milk" /></div>
                 <div><Label htmlFor="storage">Storage / Handling</Label><Input id="storage" name="storage" value={descriptiveAttrs.storage} onChange={handleDescriptiveAttrChange} placeholder="e.g., Keep refrigerated" /></div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div><Label htmlFor="origin">Country of Origin</Label><Input id="origin" name="origin" value={descriptiveAttrs.origin} onChange={handleDescriptiveAttrChange} placeholder="e.g., India" /></div>
                 <div><Label htmlFor="certifications">Certifications</Label><Input id="certifications" name="certifications" value={descriptiveAttrs.certifications} onChange={handleDescriptiveAttrChange} placeholder="e.g., FSSAI" /></div>
             </div>
@@ -241,6 +343,7 @@ export default function CreateProductPage() {
       <Card>
         <CardHeader>
           <CardTitle>3) Inventory-Driving Attributes (these create SKUs)</CardTitle>
+          <CardDescription>Only add attributes you truly stock and reorder by. Fewer attributes → fewer SKUs.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
