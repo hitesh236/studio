@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { initialSimpleUnits, initialCompoundUnits, type SimpleUnit, type CompoundUnit } from '@/lib/uom-data';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import type { Attribute } from '@/lib/types';
 import { FormControl } from '@/components/ui/form';
 
@@ -421,12 +421,12 @@ export default function CreateProductPage() {
   
   return (
     <div className="space-y-6 p-2.5">
-      <h1 className="font-bold text-xl">Add Product</h1>
+      <h1 className="font-bold text-[20px]">Add Product</h1>
 
       <div className="space-y-6">
         <Card className="w-full">
           <CardHeader>
-            <CardTitle className="text-lg">Core Product</CardTitle>
+            <CardTitle className="text-lg font-bold text-[18px]">Core Product</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -655,7 +655,7 @@ export default function CreateProductPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Create Stock</CardTitle>
+            <CardTitle className="text-lg font-bold text-[18px]">Create Stock</CardTitle>
             <CardDescription>
               Add attributes that you stock and reorder by. Fewer attributes lead to fewer SKUs.
             </CardDescription>
@@ -754,7 +754,7 @@ export default function CreateProductPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Variants (SKUs) & Stock</CardTitle>
+            <CardTitle className="text-lg font-bold text-[18px]">Variants (SKUs) & Stock</CardTitle>
             <CardDescription>
               Low stock items (Available ≤ Reorder Point) are highlighted in red.
             </CardDescription>
@@ -887,7 +887,7 @@ export default function CreateProductPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Descriptive Attributes</CardTitle>
+            <CardTitle className="text-lg font-bold text-[18px]">Descriptive Attributes</CardTitle>
             <CardDescription>
               Use these for search/filter. They won’t multiply SKUs or stock
               tracking.
@@ -946,7 +946,7 @@ export default function CreateProductPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Actions</CardTitle>
+            <CardTitle className="text-lg font-bold text-[18px]">Actions</CardTitle>
           </CardHeader>
           <CardContent className="flex gap-4">
             <Button variant="outline">Save Draft</Button>
