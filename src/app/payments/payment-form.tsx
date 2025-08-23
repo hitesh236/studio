@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useForm, useFieldArray, useWatch } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
@@ -97,7 +97,7 @@ export function PaymentForm({ type, onSuccess }: PaymentFormProps) {
     },
   });
   
-  const { fields, replace } = useFieldArray({
+  const { fields, replace, update } = useFieldArray({
     control: form.control,
     name: 'allocations'
   });
@@ -115,7 +115,9 @@ export function PaymentForm({ type, onSuccess }: PaymentFormProps) {
         ? allInvoices.filter(inv => inv.customerName === party.company && inv.paymentStatus !== 'Paid') 
         : allBills.filter(bill => bill.vendorName === party.company && bill.paymentStatus !== 'Paid');
       
-      const newAllocations = outstandingDocuments.map(doc => ({
+      const sortedDocuments = outstandingDocuments.sort((a,b) => a.dueDate.getTime() - b.dueDate.getTime());
+
+      const newAllocations = sortedDocuments.map(doc => ({
         invoiceId: doc.id,
         invoiceNumber: type === 'receipt' ? (doc as SalesInvoice).invoiceNumber : (doc as PurchaseBill).billNumber,
         dueDate: doc.dueDate,
@@ -129,6 +131,27 @@ export function PaymentForm({ type, onSuccess }: PaymentFormProps) {
     }
   }, [partyId, type, parties, allInvoices, allBills, replace]);
   
+  React.useEffect(() => {
+    let remainingAmount = totalAmountReceived;
+    const currentAllocations = form.getValues('allocations');
+    
+    const newAllocations = currentAllocations.map(alloc => {
+      if (remainingAmount > 0) {
+        const amountToAllocate = Math.min(remainingAmount, alloc.amountDue);
+        remainingAmount -= amountToAllocate;
+        return { ...alloc, allocatedAmount: amountToAllocate };
+      }
+      return { ...alloc, allocatedAmount: 0 };
+    });
+    
+    // Check if allocations actually changed to prevent infinite loop
+    const hasChanged = JSON.stringify(newAllocations) !== JSON.stringify(currentAllocations);
+    if (hasChanged) {
+        replace(newAllocations);
+    }
+
+  }, [totalAmountReceived, partyId]); // Re-run when total amount or party changes
+
   const unallocatedAmount = React.useMemo(() => {
     const totalAllocated = watchedAllocations.reduce((sum, alloc) => sum + (alloc.allocatedAmount || 0), 0);
     return totalAmountReceived - totalAllocated;
@@ -141,6 +164,19 @@ export function PaymentForm({ type, onSuccess }: PaymentFormProps) {
     toast({ title: "Success", description: `${type === 'receipt' ? 'Receipt' : 'Payment'} recorded successfully.` });
     onSuccess(data);
     setIsSubmitting(false);
+  }
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (e.target.value === '0') {
+      e.target.value = '';
+    }
+  };
+
+  const handleAmountBlur = (e: React.FocusEvent<HTMLInputElement>, index: number) => {
+    const value = parseFloat(e.target.value);
+    if(isNaN(value)) {
+        update(index, { ...watchedAllocations[index], allocatedAmount: 0});
+    }
   }
 
   return (
@@ -181,9 +217,11 @@ export function PaymentForm({ type, onSuccess }: PaymentFormProps) {
         <Separator />
         <div className="flex flex-col md:flex-row gap-4 items-end">
             <FormField control={form.control} name="totalAmountReceived" render={({ field }) => (
-                <FormItem><FormLabel>Amount {type === 'receipt' ? 'Received' : 'Paid'}</FormLabel><FormControl><Input type="text" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Amount {type === 'receipt' ? 'Received' : 'Paid'}</FormLabel><FormControl>
+                    <Input type="text" placeholder="0.00" {...field} onFocus={handleFocus} />
+                </FormControl><FormMessage /></FormItem>
             )}/>
-            <div className="p-2 border rounded-md bg-muted text-sm flex-1">
+            <div className="p-2 border rounded-md bg-muted text-sm flex-1 w-full">
                 <div className="flex justify-between">
                     <span className="text-muted-foreground">Unallocated Amount:</span>
                     <span className={cn("font-semibold", unallocatedAmount > 0 ? "text-green-600" : unallocatedAmount < 0 ? "text-destructive" : "")}>
@@ -195,18 +233,36 @@ export function PaymentForm({ type, onSuccess }: PaymentFormProps) {
         <div className="h-64 overflow-y-auto border rounded-md">
             <Table>
                 <TableHeader><TableRow><TableHead>Invoice No.</TableHead><TableHead>Due Date</TableHead><TableHead className="text-right">Amount Due</TableHead><TableHead className="w-48 text-right">Payment</TableHead></TableRow></TableHeader>
-                <TableBody>{fields.map((field, index) => (
-                    <TableRow key={field.id}>
-                        <TableCell>{field.invoiceNumber}</TableCell>
-                        <TableCell>{format(field.dueDate, 'dd-MMM-yy')}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(field.amountDue, 'INR')}</TableCell>
-                        <TableCell>
-                            <FormField control={form.control} name={`allocations.${index}.allocatedAmount`} render={({ field }) => (
-                                <Input type="text" className="text-right" {...field} placeholder="0.00" onChange={(e) => field.onChange(Math.min(parseFloat(e.target.value) || 0, watchedAllocations[index].amountDue))} />
-                            )}/>
-                        </TableCell>
-                    </TableRow>
-                ))}</TableBody>
+                <TableBody>{fields.map((field, index) => {
+                    const isFullyPaid = (field.allocatedAmount || 0) >= field.amountDue;
+                    return (
+                        <TableRow key={field.id} className={cn(isFullyPaid && "bg-green-100 dark:bg-green-900/50")}>
+                            <TableCell>{field.invoiceNumber}</TableCell>
+                            <TableCell>{format(field.dueDate, 'dd-MMM-yy')}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(field.amountDue, 'INR')}</TableCell>
+                            <TableCell>
+                                <Controller
+                                    control={form.control}
+                                    name={`allocations.${index}.allocatedAmount`}
+                                    render={({ field: controllerField }) => (
+                                        <Input 
+                                            type="text" 
+                                            className="text-right" 
+                                            {...controllerField}
+                                            onFocus={handleFocus}
+                                            onBlur={(e) => handleAmountBlur(e, index)}
+                                            onChange={(e) => {
+                                                const value = parseFloat(e.target.value) || 0;
+                                                const amountToAllocate = Math.min(value, watchedAllocations[index].amountDue);
+                                                controllerField.onChange(amountToAllocate);
+                                            }}
+                                        />
+                                    )}
+                                />
+                            </TableCell>
+                        </TableRow>
+                    )
+                })}</TableBody>
             </Table>
         </div>
         <FormField control={form.control} name="notes" render={({ field }) => (
