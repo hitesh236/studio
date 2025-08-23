@@ -26,7 +26,6 @@ type Variant = {
   barcode: string;
   price: number | '';
   stock: number | '';
-  allocated: number | '';
   reorderPoint: number | '';
 };
 
@@ -157,6 +156,14 @@ export default function CreateProductPage() {
   // Core Product State
   const [productName, setProductName] = React.useState('');
   const [productCode, setProductCode] = React.useState('');
+  const [purchasePrice, setPurchasePrice] = React.useState<number | ''>('');
+  const [sellingPrices, setSellingPrices] = React.useState({
+    regular: '',
+    b2c: '',
+    b2b: '',
+  });
+  const [gstRate, setGstRate] = React.useState<number>(18);
+
 
   // Descriptive Attributes State
   const [descriptiveAttrs, setDescriptiveAttrs] = React.useState<{
@@ -380,7 +387,6 @@ export default function CreateProductPage() {
         barcode: '',
         price: '',
         stock: 0,
-        allocated: 0,
         reorderPoint: 0,
       };
     });
@@ -414,8 +420,8 @@ export default function CreateProductPage() {
   const addedAttributeNames = new Set(stockAttrs.map((a) => a.name));
   
   return (
-    <div className="space-y-6 p-4 md:p-2.5">
-      <h1 className="font-bold text-[20px]">Add Product</h1>
+    <div className="space-y-6 p-2.5">
+      <h1 className="font-bold text-xl">Add Product</h1>
 
       <div className="space-y-6">
         <Card className="w-full">
@@ -602,6 +608,48 @@ export default function CreateProductPage() {
                 )}
               </div>
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div>
+                  <Label htmlFor="purchasePrice">Purchase Price</Label>
+                  <Input
+                      id="purchasePrice"
+                      type="number"
+                      value={purchasePrice}
+                      onChange={(e) => setPurchasePrice(parseFloat(e.target.value) || '')}
+                      placeholder="0.00"
+                  />
+              </div>
+               <div>
+                  <Label htmlFor="gstRate">GST Rate</Label>
+                  <Select value={String(gstRate)} onValueChange={(v) => setGstRate(Number(v))}>
+                      <SelectTrigger id="gstRate">
+                          <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                          {[0, 5, 12, 18, 28].map(r => (
+                              <SelectItem key={r} value={String(r)}>{r}%</SelectItem>
+                          ))}
+                      </SelectContent>
+                  </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Selling Prices</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2 p-4 border rounded-md">
+                 <div>
+                    <Label htmlFor="price-regular" className="text-sm font-normal">Regular</Label>
+                    <Input id="price-regular" type="number" placeholder="0.00" value={sellingPrices.regular} onChange={e => setSellingPrices(p => ({ ...p, regular: e.target.value }))} />
+                 </div>
+                 <div>
+                    <Label htmlFor="price-b2c" className="text-sm font-normal">B2C</Label>
+                    <Input id="price-b2c" type="number" placeholder="0.00" value={sellingPrices.b2c} onChange={e => setSellingPrices(p => ({ ...p, b2c: e.target.value }))} />
+                 </div>
+                 <div>
+                    <Label htmlFor="price-b2b" className="text-sm font-normal">B2B</Label>
+                    <Input id="price-b2b" type="number" placeholder="0.00" value={sellingPrices.b2b} onChange={e => setSellingPrices(p => ({ ...p, b2b: e.target.value }))} />
+                 </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -609,12 +657,12 @@ export default function CreateProductPage() {
           <CardHeader>
             <CardTitle className="text-lg">Create Stock</CardTitle>
             <CardDescription>
-              Only add attributes you truly stock and reorder by. Fewer attributes → fewer SKUs.
+              Add attributes that you stock and reorder by. Fewer attributes lead to fewer SKUs.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
-              <div className="w-full">
+               <div className="w-full">
                 <Label>Common grocery attributes</Label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {presetAttributes.map((preset) => (
@@ -656,7 +704,7 @@ export default function CreateProductPage() {
                   {stockAttrs.map((attr, index) => (
                     <div
                       key={index}
-                      className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center"
+                      className="grid grid-cols-1 md:grid-cols-[1fr,2fr] gap-4 items-center"
                     >
                       <div className="flex items-center gap-2">
                         <Button
@@ -723,19 +771,16 @@ export default function CreateProductPage() {
                     <TableHead>Barcode</TableHead>
                     <TableHead className="text-right">Price</TableHead>
                     <TableHead className="text-right">Stock</TableHead>
-                    <TableHead className="text-right">Allocated</TableHead>
-                    <TableHead className="text-right">Available</TableHead>
+                    <TableHead className="text-right">Stock Value</TableHead>
                     <TableHead className="text-right">Reorder Point</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {variants.length > 0 ? (
                     variants.map((variant) => {
-                      const available =
-                        Number(variant.stock || 0) -
-                        Number(variant.allocated || 0);
+                      const stockValue = (Number(variant.stock) || 0) * (Number(purchasePrice) || 0);
                       const isLowStock =
-                        available <= Number(variant.reorderPoint || 0);
+                        Number(variant.stock || 0) <= Number(variant.reorderPoint || 0);
                       return (
                         <TableRow
                           key={variant.id}
@@ -803,23 +848,8 @@ export default function CreateProductPage() {
                               }
                             />
                           </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              className="text-right min-w-[70px]"
-                              placeholder="0"
-                              value={variant.allocated}
-                              onChange={(e) =>
-                                handleVariantChange(
-                                  variant.id,
-                                  'allocated',
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </TableCell>
-                          <TableCell className="text-right font-mono">
-                            {available}
+                           <TableCell className="text-right font-mono">
+                            {formatCurrency(stockValue, 'INR')}
                           </TableCell>
                           <TableCell>
                             <Input
@@ -842,7 +872,7 @@ export default function CreateProductPage() {
                   ) : (
                     <TableRow>
                       <TableCell
-                        colSpan={stockAttrs.length + 7}
+                        colSpan={stockAttrs.length + 6}
                         className="h-24 text-center text-muted-foreground"
                       >
                         No variants generated.
@@ -864,11 +894,11 @@ export default function CreateProductPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.keys(descriptiveAttrs).map(key => {
                     const attrName = availableDescAttrs.find(a => slug(a) === key) || key;
                     return (
-                      <div key={key} className="flex items-end gap-2">
+                      <div key={key} className="grid grid-cols-[1fr_auto] items-end gap-2">
                         <div className="flex-1">
                           <Label htmlFor={`desc-${key}`}>{attrName}</Label>
                           <Input
