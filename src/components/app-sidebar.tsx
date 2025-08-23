@@ -47,6 +47,7 @@ import {
     Truck,
     List,
     CalendarX2,
+    Banknote,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { usePathname } from 'next/navigation';
@@ -123,6 +124,14 @@ export function AppSidebar() {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Receipts" isActive={pathname === '/payments' && new URLSearchParams(window.location.search).get('type') === 'receipt'} asChild>
+                <Link href="/payments?type=receipt" onClick={handleLinkClick}>
+                    <Banknote />
+                    <span>Receipts</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>}
         
@@ -142,6 +151,14 @@ export function AppSidebar() {
                  <Link href="/purchase-returns/new" onClick={handleLinkClick}>
                     <Redo2 />
                     <span>Purchase Returns</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Payments" isActive={pathname === '/payments' && new URLSearchParams(window.location.search).get('type') === 'payment'} asChild>
+                <Link href="/payments?type=payment" onClick={handleLinkClick}>
+                    <Banknote />
+                    <span>Payments</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
