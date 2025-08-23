@@ -85,6 +85,7 @@ import { cn, formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import type { Ledger } from '@/lib/ledger-data';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const nonDeletableGroupIds = new Set([
   'assets', 'current-assets', 'fixed-assets', 'investments', 'misc-expenses-asset',
@@ -283,6 +284,8 @@ export function LedgerView({ data }: { data: Ledger[] }) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newAccountName, setNewAccountName] = useState('');
   const [newSelectedParent, setNewSelectedParent] = useState<string | null>(null);
+  const [newOpeningBalance, setNewOpeningBalance] = useState('');
+  const [newBalanceType, setNewBalanceType] = useState<'debit' | 'credit'>('debit');
 
   const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
@@ -342,7 +345,12 @@ export function LedgerView({ data }: { data: Ledger[] }) {
     return allGroups.filter((group) => !invalidIds.includes(group.value));
   }, [editingLedger, ledgers, allGroups]);
 
-  const resetCreateForm = () => { setNewAccountName(''); setNewSelectedParent(null); };
+  const resetCreateForm = () => { 
+      setNewAccountName(''); 
+      setNewSelectedParent(null);
+      setNewOpeningBalance('');
+      setNewBalanceType('debit');
+  };
   const resetGroupForm = () => { setNewGroupName(''); setNewGroupParent(null); };
 
   const handleCreateLedger = () => {
@@ -350,7 +358,13 @@ export function LedgerView({ data }: { data: Ledger[] }) {
       toast({ title: 'Missing Information', description: 'Ledger name and parent group are required.', variant: 'destructive' });
       return;
     }
-    const newLedger: Ledger = { id: `ledger-${Date.now()}`, name: newAccountName.trim(), type: 'ledger' };
+    const balance = parseFloat(newOpeningBalance) || 0;
+    const newLedger: Ledger = { 
+        id: `ledger-${Date.now()}`, 
+        name: newAccountName.trim(), 
+        type: 'ledger',
+        balance: newBalanceType === 'debit' ? balance : -balance,
+    };
     const addLedgerToParent = (nodes: Ledger[], parentId: string, newLedger: Ledger): Ledger[] => {
       return nodes.map((node) => {
         if (node.id === parentId) return { ...node, children: [...(node.children || []), newLedger] };
@@ -573,8 +587,19 @@ export function LedgerView({ data }: { data: Ledger[] }) {
                 </Dialog>
                 <Dialog open={isCreateDialogOpen} onOpenChange={(open) => { setIsCreateDialogOpen(open); if (!open) resetCreateForm(); }}>
                     <DialogTrigger asChild><Button><PlusCircle className="mr-2 h-4 w-4" />Add Ledger</Button></DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]"><DialogHeader><DialogTitle>Add New Ledger</DialogTitle><DialogDescription>Add a new ledger to an existing group.</DialogDescription></DialogHeader>
-                    <div className="grid gap-4 py-4"><div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="name" className="text-right">Name</Label><Input id="name" value={newAccountName} onChange={(e) => setNewAccountName(e.target.value)} className="col-span-3" placeholder="e.g. Office Supplies"/></div><div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="parent" className="text-right">Parent Group</Label><div className="col-span-3"><ParentGroupCombobox value={newSelectedParent} onChange={setNewSelectedParent} placeholder="Select a parent group" groups={allGroups}/></div></div></div>
+                    <DialogContent className="sm:max-w-[480px]"><DialogHeader><DialogTitle>Add New Ledger</DialogTitle><DialogDescription>Add a new ledger to an existing group.</DialogDescription></DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="name" className="text-right">Name</Label><Input id="name" value={newAccountName} onChange={(e) => setNewAccountName(e.target.value)} className="col-span-3" placeholder="e.g. Office Supplies"/></div>
+                        <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="parent" className="text-right">Parent Group</Label><div className="col-span-3"><ParentGroupCombobox value={newSelectedParent} onChange={setNewSelectedParent} placeholder="Select a parent group" groups={allGroups}/></div></div>
+                        <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="opening-balance" className="text-right">Opening Balance</Label><Input id="opening-balance" type="text" value={newOpeningBalance} onChange={(e) => setNewOpeningBalance(e.target.value)} className="col-span-3" placeholder="0.00"/></div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label className="text-right">Balance Type</Label>
+                            <RadioGroup onValueChange={(value: 'debit' | 'credit') => setNewBalanceType(value)} value={newBalanceType} className="col-span-3 flex items-center space-x-4">
+                                <div className="flex items-center space-x-2"><RadioGroupItem value="debit" id="debit" /><Label htmlFor="debit">Debit</Label></div>
+                                <div className="flex items-center space-x-2"><RadioGroupItem value="credit" id="credit" /><Label htmlFor="credit">Credit</Label></div>
+                            </RadioGroup>
+                        </div>
+                    </div>
                     <DialogFooter><DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose><Button onClick={handleCreateLedger}>Create</Button></DialogFooter>
                     </DialogContent>
                 </Dialog>

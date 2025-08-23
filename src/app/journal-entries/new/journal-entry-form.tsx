@@ -70,6 +70,7 @@ import {
   DialogTrigger,
   DialogClose,
 } from '@/components/ui/dialog';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 // Import from lib/ledger-data
 import type { Ledger as Account } from '@/lib/ledger-data';
@@ -114,6 +115,8 @@ function JournalEntryFormComponent() {
     const [isLedgerDialogOpen, setIsLedgerDialogOpen] = React.useState(false);
     const [newLedgerName, setNewLedgerName] = React.useState('');
     const [newLedgerParent, setNewLedgerParent] = React.useState<string | null>(null);
+    const [newLedgerOpeningBalance, setNewLedgerOpeningBalance] = React.useState('');
+    const [newLedgerBalanceType, setNewLedgerBalanceType] = React.useState<'debit' | 'credit'>('debit');
   
     const form = useForm<JournalEntryFormValues>({
       resolver: zodResolver(journalEntryFormSchema),
@@ -234,11 +237,14 @@ function JournalEntryFormComponent() {
           });
           return;
       }
+      
+      const balance = parseFloat(newLedgerOpeningBalance) || 0;
 
       const newLedger: Account = {
           id: `ledger-${Date.now()}`,
           name: newLedgerName.trim(),
           type: 'ledger',
+          balance: newLedgerBalanceType === 'debit' ? balance : -balance,
       };
 
       const addLedgerToParent = (nodes: Account[], parentId: string, ledgerToAdd: Account): Account[] => {
@@ -258,6 +264,8 @@ function JournalEntryFormComponent() {
       setIsLedgerDialogOpen(false);
       setNewLedgerName('');
       setNewLedgerParent(null);
+      setNewLedgerOpeningBalance('');
+      setNewLedgerBalanceType('debit');
     };
 
     const AccountCombobox = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
@@ -387,6 +395,17 @@ function JournalEntryFormComponent() {
                                             groups={allGroups}
                                         />
                                     </div>
+                                </div>
+                                 <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="opening-balance" className="text-right">Opening Balance</Label>
+                                    <Input id="opening-balance" type="number" value={newLedgerOpeningBalance} onChange={(e) => setNewLedgerOpeningBalance(e.target.value)} className="col-span-3" placeholder="0.00" />
+                                </div>
+                                 <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label className="text-right">Balance Type</Label>
+                                     <RadioGroup onValueChange={(value: 'debit' | 'credit') => setNewLedgerBalanceType(value)} value={newLedgerBalanceType} className="col-span-3 flex items-center space-x-4">
+                                        <div className="flex items-center space-x-2"><RadioGroupItem value="debit" id="debit" /><Label htmlFor="debit">Debit</Label></div>
+                                        <div className="flex items-center space-x-2"><RadioGroupItem value="credit" id="credit" /><Label htmlFor="credit">Credit</Label></div>
+                                    </RadioGroup>
                                 </div>
                             </div>
                             <DialogFooter>
