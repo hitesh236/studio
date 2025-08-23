@@ -17,15 +17,17 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn, formatCurrency } from '@/lib/utils';
 import type { Attribute } from '@/lib/types';
-import { FormControl } from '@/components/ui/form';
+import { FormControl, FormField } from '@/components/ui/form';
+import { Switch } from '@/components/ui/switch';
 
 type Variant = {
   id: string;
   values: { [key: string]: string };
   sku: string;
   barcode: string;
-  price: number | '';
+  price: { regular: number | ''; b2b: number | ''; b2c: number | '' };
   stock: number | '';
+  stockValue: number | '';
   reorderPoint: number | '';
 };
 
@@ -157,12 +159,8 @@ export default function CreateProductPage() {
   const [productName, setProductName] = React.useState('');
   const [productCode, setProductCode] = React.useState('');
   const [purchasePrice, setPurchasePrice] = React.useState<number | ''>('');
-  const [sellingPrices, setSellingPrices] = React.useState({
-    regular: '',
-    b2c: '',
-    b2b: '',
-  });
   const [gstRate, setGstRate] = React.useState<number>(18);
+  const [sellingPriceIncludesGst, setSellingPriceIncludesGst] = React.useState(false);
 
 
   // Descriptive Attributes State
@@ -385,8 +383,9 @@ export default function CreateProductPage() {
           combo
         ),
         barcode: '',
-        price: '',
+        price: { regular: '', b2b: '', b2c: '' },
         stock: 0,
+        stockValue: '',
         reorderPoint: 0,
       };
     });
@@ -395,11 +394,25 @@ export default function CreateProductPage() {
 
   const handleVariantChange = (
     id: string,
-    field: keyof Omit<Variant, 'id' | 'values'>,
+    field: keyof Omit<Variant, 'id' | 'values' | 'price'>,
     value: string | number
   ) => {
     setVariants((prev) =>
       prev.map((v) => (v.id === id ? { ...v, [field]: value } : v))
+    );
+  };
+
+  const handlePriceChange = (
+    id: string,
+    priceType: 'regular' | 'b2b' | 'b2c',
+    value: string | number
+  ) => {
+    setVariants(prev =>
+      prev.map(v =>
+        v.id === id
+          ? { ...v, price: { ...v.price, [priceType]: value } }
+          : v
+      )
     );
   };
 
@@ -420,7 +433,7 @@ export default function CreateProductPage() {
   const addedAttributeNames = new Set(stockAttrs.map((a) => a.name));
   
   return (
-    <div className="space-y-6 p-2.5">
+    <div className="space-y-6 p-4 md:p-2.5">
       <h1 className="font-bold text-[20px]">Add Product</h1>
 
       <div className="space-y-6">
@@ -633,23 +646,6 @@ export default function CreateProductPage() {
                   </Select>
               </div>
             </div>
-            <div>
-              <Label>Selling Prices</Label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2 p-4 border rounded-md">
-                 <div>
-                    <Label htmlFor="price-regular" className="text-sm font-normal">Regular</Label>
-                    <Input id="price-regular" type="number" placeholder="0.00" value={sellingPrices.regular} onChange={e => setSellingPrices(p => ({ ...p, regular: e.target.value }))} />
-                 </div>
-                 <div>
-                    <Label htmlFor="price-b2c" className="text-sm font-normal">B2C</Label>
-                    <Input id="price-b2c" type="number" placeholder="0.00" value={sellingPrices.b2c} onChange={e => setSellingPrices(p => ({ ...p, b2c: e.target.value }))} />
-                 </div>
-                 <div>
-                    <Label htmlFor="price-b2b" className="text-sm font-normal">B2B</Label>
-                    <Input id="price-b2b" type="number" placeholder="0.00" value={sellingPrices.b2b} onChange={e => setSellingPrices(p => ({ ...p, b2b: e.target.value }))} />
-                 </div>
-              </div>
-            </div>
           </CardContent>
         </Card>
 
@@ -754,7 +750,17 @@ export default function CreateProductPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-bold text-[18px]">Variants (SKUs) & Stock</CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-lg font-bold text-[18px]">Variants (SKUs) & Stock</CardTitle>
+               <div className="flex items-center space-x-2">
+                <Switch
+                  id="include-gst"
+                  checked={sellingPriceIncludesGst}
+                  onCheckedChange={setSellingPriceIncludesGst}
+                />
+                <Label htmlFor="include-gst">Selling Prices Including GST</Label>
+              </div>
+            </div>
             <CardDescription>
               Low stock items (Available ≤ Reorder Point) are highlighted in red.
             </CardDescription>
@@ -769,8 +775,8 @@ export default function CreateProductPage() {
                     ))}
                     <TableHead>SKU</TableHead>
                     <TableHead>Barcode</TableHead>
-                    <TableHead className="text-right">Price</TableHead>
-                    <TableHead className="text-right">Stock</TableHead>
+                    <TableHead className="min-w-[150px]">Selling Prices</TableHead>
+                    <TableHead className="text-right">Opening Stock</TableHead>
                     <TableHead className="text-right">Stock Value</TableHead>
                     <TableHead className="text-right">Reorder Point</TableHead>
                   </TableRow>
@@ -778,7 +784,6 @@ export default function CreateProductPage() {
                 <TableBody>
                   {variants.length > 0 ? (
                     variants.map((variant) => {
-                      const stockValue = (Number(variant.stock) || 0) * (Number(purchasePrice) || 0);
                       const isLowStock =
                         Number(variant.stock || 0) <= Number(variant.reorderPoint || 0);
                       return (
@@ -818,21 +823,31 @@ export default function CreateProductPage() {
                               }
                             />
                           </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              className="text-right min-w-[80px]"
-                              placeholder="0.00"
-                              value={variant.price}
-                              onChange={(e) =>
-                                handleVariantChange(
-                                  variant.id,
-                                  'price',
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </TableCell>
+                           <TableCell>
+                                <div className="space-y-1">
+                                    <Input
+                                    type="number"
+                                    placeholder="Regular Price"
+                                    className="h-7 text-xs"
+                                    value={variant.price.regular}
+                                    onChange={(e) => handlePriceChange(variant.id, 'regular', e.target.value)}
+                                    />
+                                    <Input
+                                    type="number"
+                                    placeholder="B2B Price"
+                                    className="h-7 text-xs"
+                                    value={variant.price.b2b}
+                                    onChange={(e) => handlePriceChange(variant.id, 'b2b', e.target.value)}
+                                    />
+                                    <Input
+                                    type="number"
+                                    placeholder="B2C Price"
+                                    className="h-7 text-xs"
+                                    value={variant.price.b2c}
+                                    onChange={(e) => handlePriceChange(variant.id, 'b2c', e.target.value)}
+                                    />
+                                </div>
+                            </TableCell>
                           <TableCell>
                             <Input
                               type="number"
@@ -848,8 +863,20 @@ export default function CreateProductPage() {
                               }
                             />
                           </TableCell>
-                           <TableCell className="text-right font-mono">
-                            {formatCurrency(stockValue, 'INR')}
+                           <TableCell>
+                            <Input
+                              type="number"
+                              className="text-right min-w-[80px]"
+                              placeholder="0.00"
+                              value={variant.stockValue}
+                              onChange={(e) =>
+                                handleVariantChange(
+                                  variant.id,
+                                  'stockValue',
+                                  e.target.value
+                                )
+                              }
+                            />
                           </TableCell>
                           <TableCell>
                             <Input
@@ -872,7 +899,7 @@ export default function CreateProductPage() {
                   ) : (
                     <TableRow>
                       <TableCell
-                        colSpan={stockAttrs.length + 6}
+                        colSpan={stockAttrs.length + 7}
                         className="h-24 text-center text-muted-foreground"
                       >
                         No variants generated.
