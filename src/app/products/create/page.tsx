@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Trash2, X, Sparkles, ChevronsUpDown, Check, Layers, Save, Barcode } from 'lucide-react';
+import { PlusCircle, Trash2, X, Sparkles, ChevronsUpDown, Check, Layers, Save, Barcode, Percent, Receipt } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { initialCategoriesData, type Category } from '@/lib/categories';
@@ -17,7 +17,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn, formatCurrency } from '@/lib/utils';
 import type { Attribute } from '@/lib/types';
-import { FormControl, FormField } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 
 type Variant = {
@@ -152,6 +151,12 @@ export default function CreateProductPage() {
   const [isUomDialogOpen, setIsUomDialogOpen] = React.useState(false);
   const [newUom, setNewUom] = React.useState({ name: '', abbreviation: '' });
   const [showSecondaryUom, setShowSecondaryUom] = React.useState(false);
+
+  // Location State
+  const [location, setLocation] = React.useState('');
+  const [locations, setLocations] = React.useState(['Main Warehouse', 'Store', 'Shop']);
+  const [isLocationDialogOpen, setIsLocationDialogOpen] = React.useState(false);
+  const [newLocation, setNewLocation] = React.useState('');
 
   const activeSimpleUnits = React.useMemo(
     () => simpleUnits.filter((u) => u.status !== 'disabled'),
@@ -369,6 +374,21 @@ export default function CreateProductPage() {
       )
     );
   };
+  
+  const handleAddLocation = () => {
+    if (newLocation.trim()) {
+        if (locations.some(loc => loc.toLowerCase() === newLocation.trim().toLowerCase())) {
+            toast({ title: 'Location already exists.', variant: 'destructive' });
+            return;
+        }
+        const updatedLocations = [...locations, newLocation.trim()];
+        setLocations(updatedLocations);
+        setLocation(newLocation.trim());
+        toast({ title: 'Location added successfully.' });
+        setIsLocationDialogOpen(false);
+        setNewLocation('');
+    }
+  };
 
   const handleSaveProduct = () => {
     console.log({
@@ -458,74 +478,82 @@ export default function CreateProductPage() {
                   </Select>
               </div>
             </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-bold text-[18px]">Units & Stock</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="uom" className="text-sm">Base UOM</Label>
-                    <div className="flex items-center gap-2">
-                      <Select onValueChange={setUom} value={uom}>
-                          <SelectTrigger>
-                          <SelectValue placeholder="Select unit" />
-                          </SelectTrigger>
-                          <SelectContent>
-                          {activeSimpleUnits.map((unit) => (
-                              <SelectItem key={unit.id} value={unit.id}>
-                              {unit.name} ({unit.abbreviation})
-                              </SelectItem>
-                          ))}
-                          </SelectContent>
-                      </Select>
-                      <Dialog
-                          open={isUomDialogOpen}
-                          onOpenChange={setIsUomDialogOpen}
-                      >
-                          <DialogTrigger asChild>
-                          <Button type="button" variant="outline" className="shrink-0">
-                            Add New
-                          </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                          <DialogHeader>
-                              <DialogTitle>Add New Unit</DialogTitle>
-                          </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                              <div className="space-y-2">
-                              <Label htmlFor="uom-name">Unit Name</Label>
-                              <Input
-                                  id="uom-name"
-                                  value={newUom.name}
-                                  onChange={(e) =>
-                                  setNewUom((u) => ({ ...u, name: e.target.value }))
-                                  }
-                                  placeholder="e.g., Pieces"
-                              />
-                              </div>
-                              <div className="space-y-2">
-                              <Label htmlFor="uom-abbr">Abbreviation</Label>
-                              <Input
-                                  id="uom-abbr"
-                                  value={newUom.abbreviation}
-                                  onChange={(e) =>
-                                  setNewUom((u) => ({
-                                      ...u,
-                                      abbreviation: e.target.value,
-                                  }))
-                                  }
-                                  placeholder="e.g., pcs"
-                              />
-                              </div>
-                          </div>
-                          <DialogFooter>
-                              <DialogClose asChild>
-                              <Button variant="outline" type="button">
-                                  Cancel
-                              </Button>
-                              </DialogClose>
-                              <Button type="button" onClick={handleAddUom}>
-                              Save Unit
-                              </Button>
-                          </DialogFooter>
-                          </DialogContent>
-                      </Dialog>
+                    <div className="relative flex items-center">
+                        <Select onValueChange={setUom} value={uom}>
+                            <SelectTrigger className="pr-12">
+                            <SelectValue placeholder="Select unit" />
+                            </SelectTrigger>
+                            <SelectContent>
+                            {activeSimpleUnits.map((unit) => (
+                                <SelectItem key={unit.id} value={unit.id}>
+                                {unit.name} ({unit.abbreviation})
+                                </SelectItem>
+                            ))}
+                            </SelectContent>
+                        </Select>
+                        <Dialog
+                            open={isUomDialogOpen}
+                            onOpenChange={setIsUomDialogOpen}
+                        >
+                            <DialogTrigger asChild>
+                            <Button type="button" variant="outline" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7">
+                                <PlusCircle className="h-4 w-4" />
+                            </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Add New Unit</DialogTitle>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="space-y-2">
+                                <Label htmlFor="uom-name">Unit Name</Label>
+                                <Input
+                                    id="uom-name"
+                                    value={newUom.name}
+                                    onChange={(e) =>
+                                    setNewUom((u) => ({ ...u, name: e.target.value }))
+                                    }
+                                    placeholder="e.g., Pieces"
+                                />
+                                </div>
+                                <div className="space-y-2">
+                                <Label htmlFor="uom-abbr">Abbreviation</Label>
+                                <Input
+                                    id="uom-abbr"
+                                    value={newUom.abbreviation}
+                                    onChange={(e) =>
+                                    setNewUom((u) => ({
+                                        ...u,
+                                        abbreviation: e.target.value,
+                                    }))
+                                    }
+                                    placeholder="e.g., pcs"
+                                />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                <Button variant="outline" type="button">
+                                    Cancel
+                                </Button>
+                                </DialogClose>
+                                <Button type="button" onClick={handleAddUom}>
+                                Save Unit
+                                </Button>
+                            </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </div>
                 </div>
                 <div className="space-y-2">
@@ -586,6 +614,47 @@ export default function CreateProductPage() {
                         </Button>
                         )
                     )}
+                </div>
+            </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                    <Label htmlFor="location">Location/Warehouse</Label>
+                    <div className="relative flex items-center">
+                        <Select onValueChange={setLocation} value={location}>
+                            <SelectTrigger className="pr-12">
+                            <SelectValue placeholder="Select location" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {locations.map((loc) => (
+                                    <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button type="button" variant="outline" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7">
+                                    <PlusCircle className="h-4 w-4" />
+                                </Button>
+                            </DialogTrigger>
+                             <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Add New Location</DialogTitle>
+                                </DialogHeader>
+                                <div className="grid gap-4 py-4">
+                                    <Label htmlFor="location-name">Location Name</Label>
+                                    <Input id="location-name" value={newLocation} onChange={e => setNewLocation(e.target.value)} />
+                                </div>
+                                <DialogFooter>
+                                    <DialogClose asChild><Button variant="outline" type="button">Cancel</Button></DialogClose>
+                                    <Button type="button" onClick={handleAddLocation}>Save Location</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
+                </div>
+                 <div>
+                    <Label>Reorder Point</Label>
+                    <Input placeholder="e.g. 10" />
                 </div>
             </div>
           </CardContent>
@@ -938,5 +1007,3 @@ export default function CreateProductPage() {
     </div>
   );
 }
-
-    
