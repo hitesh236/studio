@@ -72,88 +72,6 @@ function buildSku(baseCode: string, attrNames: string[], values: string[]) {
   return parts.filter(Boolean).join('-');
 }
 
-type StockItem = any;
-
-const ProductCombobox = ({
-  value,
-  onChange,
-  onProductSelect,
-  products,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  onProductSelect: (product: StockItem) => void;
-  products: StockItem[];
-}) => {
-  const [open, setOpen] = React.useState(false);
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <FormControl>
-          <Button
-            variant="outline"
-            role="combobox"
-            className={cn(
-              'w-full justify-between',
-              !value && 'text-muted-foreground'
-            )}
-          >
-            {value
-              ? products.find((product) => product.id === value)?.productName
-              : 'Select item'}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </FormControl>
-      </PopoverTrigger>
-      <PopoverContent className="w-full p-0" style={{minWidth: 'var(--radix-popover-trigger-width)'}}>
-        <Command
-          filter={(value, search) => {
-            const product = products.find((p) => p.id === value);
-            if (
-              product?.productName.toLowerCase().includes(search.toLowerCase()) ||
-              product?.sku.toLowerCase().includes(search)
-            )
-              return 1;
-            return 0;
-          }}
-        >
-          <CommandInput placeholder="Search items..." />
-          <CommandList>
-            <CommandEmpty>No item found.</CommandEmpty>
-            <CommandGroup>
-              {products.map((product) => (
-                <CommandItem
-                  value={product.id}
-                  key={product.id}
-                  onSelect={() => {
-                    onChange(product.id);
-                    onProductSelect(product);
-                    setOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      'mr-2 h-4 w-4',
-                      product.id === value ? 'opacity-100' : 'opacity-0'
-                    )}
-                  />
-                  <div className="flex justify-between w-full">
-                    <span>{product.productName}</span>
-                    <span className="text-muted-foreground text-xs">
-                      {product.sku}
-                    </span>
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  );
-};
-
-
 export default function CreateProductPage() {
   const { toast } = useToast();
 
@@ -434,7 +352,7 @@ export default function CreateProductPage() {
   const addedAttributeNames = new Set(stockAttrs.map((a) => a.name));
   
   return (
-    <div className="space-y-6 p-2.5">
+    <div className="space-y-6 p-4 md:p-2.5">
       <h1 className="font-bold text-[20px]">Add Product</h1>
 
       <div className="space-y-6">
@@ -488,157 +406,135 @@ export default function CreateProductPage() {
                 ))}
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <Label>Unit of Measurement</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                        <div>
-                            <Label htmlFor="uom" className="text-xs text-muted-foreground">Base UOM</Label>
-                            <div className="relative flex items-center">
-                            <Select onValueChange={setUom} value={uom}>
-                                <SelectTrigger>
-                                <SelectValue placeholder="Select unit" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                {activeSimpleUnits.map((unit) => (
-                                    <SelectItem key={unit.id} value={unit.id}>
-                                    {unit.name} ({unit.abbreviation})
-                                    </SelectItem>
-                                ))}
-                                </SelectContent>
-                            </Select>
-                            <Dialog
-                                open={isUomDialogOpen}
-                                onOpenChange={setIsUomDialogOpen}
-                            >
-                                <DialogTrigger asChild>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-auto px-3"
-                                >
-                                    Add New
-                                </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>Add New Unit</DialogTitle>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                    <div className="space-y-2">
-                                    <Label htmlFor="uom-name">Unit Name</Label>
-                                    <Input
-                                        id="uom-name"
-                                        value={newUom.name}
-                                        onChange={(e) =>
-                                        setNewUom((u) => ({ ...u, name: e.target.value }))
-                                        }
-                                        placeholder="e.g., Pieces"
-                                    />
-                                    </div>
-                                    <div className="space-y-2">
-                                    <Label htmlFor="uom-abbr">Abbreviation</Label>
-                                    <Input
-                                        id="uom-abbr"
-                                        value={newUom.abbreviation}
-                                        onChange={(e) =>
-                                        setNewUom((u) => ({
-                                            ...u,
-                                            abbreviation: e.target.value,
-                                        }))
-                                        }
-                                        placeholder="e.g., pcs"
-                                    />
-                                    </div>
-                                </div>
-                                <DialogFooter>
-                                    <DialogClose asChild>
-                                    <Button variant="outline" type="button">
-                                        Cancel
-                                    </Button>
-                                    </DialogClose>
-                                    <Button type="button" onClick={handleAddUom}>
-                                    Save Unit
-                                    </Button>
-                                </DialogFooter>
-                                </DialogContent>
-                            </Dialog>
-                            </div>
-                        </div>
-                        <div>
-                            <Label className="text-xs text-muted-foreground">Secondary UOM</Label>
-                            <div className="flex items-center gap-2">
-                            {showSecondaryUom ? (
-                                <>
-                                <Select
-                                    onValueChange={setSecondaryUom}
-                                    value={secondaryUom}
-                                    disabled={secondaryUomOptions.length === 0}
-                                >
-                                    <SelectTrigger>
-                                    <SelectValue
-                                        placeholder={
-                                        secondaryUomOptions.length > 0
-                                            ? 'Select secondary unit'
-                                            : 'No conversion found'
-                                        }
-                                    />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                    {secondaryUomOptions.map((unit) => (
-                                        <SelectItem key={unit.id} value={unit.id}>
-                                        {unit.name} ({unit.abbreviation})
-                                        </SelectItem>
-                                    ))}
-                                    </SelectContent>
-                                </Select>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="text-destructive shrink-0"
-                                    onClick={() => {
-                                    setShowSecondaryUom(false);
-                                    setSecondaryUom('');
-                                    }}
-                                >
-                                    <X className="h-4 w-4" />
-                                </Button>
-                                </>
-                            ) : (
-                                uom && (
-                                <Button
-                                    type="button"
-                                    variant="link"
-                                    className="p-0 h-9"
-                                    onClick={() => setShowSecondaryUom(true)}
-                                >
-                                    + Add Secondary Unit
-                                </Button>
-                                )
-                            )}
-                            </div>
-                            {conversionRate && (
-                            <p className="text-xs text-muted-foreground pt-1">
-                                {conversionRate}
-                            </p>
-                            )}
-                        </div>
+            <div className="space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="uom" className="text-sm">Base UOM</Label>
+                    <div className="flex items-center gap-2">
+                      <Select onValueChange={setUom} value={uom}>
+                          <SelectTrigger>
+                          <SelectValue placeholder="Select unit" />
+                          </SelectTrigger>
+                          <SelectContent>
+                          {activeSimpleUnits.map((unit) => (
+                              <SelectItem key={unit.id} value={unit.id}>
+                              {unit.name} ({unit.abbreviation})
+                              </SelectItem>
+                          ))}
+                          </SelectContent>
+                      </Select>
+                      <Dialog
+                          open={isUomDialogOpen}
+                          onOpenChange={setIsUomDialogOpen}
+                      >
+                          <DialogTrigger asChild>
+                          <Button type="button" variant="outline" className="shrink-0">
+                            Add New
+                          </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                          <DialogHeader>
+                              <DialogTitle>Add New Unit</DialogTitle>
+                          </DialogHeader>
+                          <div className="grid gap-4 py-4">
+                              <div className="space-y-2">
+                              <Label htmlFor="uom-name">Unit Name</Label>
+                              <Input
+                                  id="uom-name"
+                                  value={newUom.name}
+                                  onChange={(e) =>
+                                  setNewUom((u) => ({ ...u, name: e.target.value }))
+                                  }
+                                  placeholder="e.g., Pieces"
+                              />
+                              </div>
+                              <div className="space-y-2">
+                              <Label htmlFor="uom-abbr">Abbreviation</Label>
+                              <Input
+                                  id="uom-abbr"
+                                  value={newUom.abbreviation}
+                                  onChange={(e) =>
+                                  setNewUom((u) => ({
+                                      ...u,
+                                      abbreviation: e.target.value,
+                                  }))
+                                  }
+                                  placeholder="e.g., pcs"
+                              />
+                              </div>
+                          </div>
+                          <DialogFooter>
+                              <DialogClose asChild>
+                              <Button variant="outline" type="button">
+                                  Cancel
+                              </Button>
+                              </DialogClose>
+                              <Button type="button" onClick={handleAddUom}>
+                              Save Unit
+                              </Button>
+                          </DialogFooter>
+                          </DialogContent>
+                      </Dialog>
                     </div>
                 </div>
-               <div>
-                  <Label htmlFor="gstRate">GST Rate</Label>
-                  <Select value={String(gstRate)} onValueChange={(v) => setGstRate(Number(v))}>
-                      <SelectTrigger id="gstRate">
-                          <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                          {[0, 5, 12, 18, 28].map(r => (
-                              <SelectItem key={r} value={String(r)}>{r}%</SelectItem>
-                          ))}
-                      </SelectContent>
-                  </Select>
-              </div>
+                <div className="space-y-2">
+                    <Label className="text-sm">Secondary UOM</Label>
+                    <div className="flex items-center gap-2">
+                    {showSecondaryUom ? (
+                        <>
+                        <Select
+                            onValueChange={setSecondaryUom}
+                            value={secondaryUom}
+                            disabled={secondaryUomOptions.length === 0}
+                        >
+                            <SelectTrigger>
+                            <SelectValue
+                                placeholder={
+                                secondaryUomOptions.length > 0
+                                    ? 'Select secondary unit'
+                                    : 'No conversion found'
+                                }
+                            />
+                            </SelectTrigger>
+                            <SelectContent>
+                            {secondaryUomOptions.map((unit) => (
+                                <SelectItem key={unit.id} value={unit.id}>
+                                {unit.name} ({unit.abbreviation})
+                                </SelectItem>
+                            ))}
+                            </SelectContent>
+                        </Select>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive shrink-0"
+                            onClick={() => {
+                            setShowSecondaryUom(false);
+                            setSecondaryUom('');
+                            }}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                        </>
+                    ) : (
+                        uom && (
+                        <Button
+                            type="button"
+                            variant="link"
+                            className="p-0 h-9"
+                            onClick={() => setShowSecondaryUom(true)}
+                        >
+                            + Add Secondary Unit
+                        </Button>
+                        )
+                    )}
+                    </div>
+                    {conversionRate && (
+                    <p className="text-xs text-muted-foreground pt-1">
+                        {conversionRate}
+                    </p>
+                    )}
+                </div>
             </div>
           </CardContent>
         </Card>
@@ -941,7 +837,7 @@ export default function CreateProductPage() {
               <Label>Add another descriptive attribute</Label>
               <div className="flex gap-2 mt-2">
                  <Select onValueChange={handleSelectDescAttr} value={selectedDescAttr}>
-                    <SelectTrigger>
+                    <SelectTrigger className="max-w-[50%]">
                         <SelectValue placeholder="Select an attribute" />
                     </SelectTrigger>
                     <SelectContent>
