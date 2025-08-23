@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Trash2, X, Sparkles, ChevronsUpDown, Check, Layers, Save } from 'lucide-react';
+import { PlusCircle, Trash2, X, Sparkles, ChevronsUpDown, Check, Layers, Save, Barcode } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { initialCategoriesData, type Category } from '@/lib/categories';
@@ -25,6 +25,7 @@ type Variant = {
   values: { [key: string]: string };
   sku: string;
   barcode: string;
+  buyingPrice: number | '';
   price: { regular: number | ''; b2b: number | ''; b2c: number | '' };
   stock: number | '';
   stockValue: number | '';
@@ -71,6 +72,39 @@ function buildSku(baseCode: string, attrNames: string[], values: string[]) {
   });
   return parts.filter(Boolean).join('-');
 }
+
+const PriceBreakdown = ({ sellingPrice, buyingPrice, gstRate, includesGst }: { sellingPrice?: number | ''; buyingPrice?: number | ''; gstRate: number; includesGst: boolean; }) => {
+    const sp = Number(sellingPrice) || 0;
+    const bp = Number(buyingPrice) || 0;
+
+    if (sp === 0) return null;
+
+    let basePrice: number;
+    let gstAmount: number;
+
+    if (includesGst) {
+        basePrice = sp / (1 + gstRate / 100);
+        gstAmount = sp - basePrice;
+    } else {
+        basePrice = sp;
+        gstAmount = sp * (gstRate / 100);
+    }
+
+    const margin = basePrice - bp;
+    const marginPercentage = bp > 0 ? (margin / bp) * 100 : 0;
+
+    return (
+        <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+            <p>Base: {formatCurrency(basePrice, 'INR')}</p>
+            <p>GST: {formatCurrency(gstAmount, 'INR')}</p>
+            {bp > 0 && (
+                <p className={cn(margin > 0 ? 'text-green-600' : 'text-destructive')}>
+                    Margin: {formatCurrency(margin, 'INR')} ({marginPercentage.toFixed(1)}%)
+                </p>
+            )}
+        </div>
+    );
+};
 
 export default function CreateProductPage() {
   const { toast } = useToast();
@@ -302,6 +336,7 @@ export default function CreateProductPage() {
           combo
         ),
         barcode: '',
+        buyingPrice: '',
         price: { regular: '', b2b: '', b2c: '' },
         stock: 0,
         stockValue: '',
@@ -383,27 +418,44 @@ export default function CreateProductPage() {
                 />
               </div>
             </div>
-            <div>
-              <Label>Category</Label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                {categoryLevels.map((levelCategories, level) => (
-                  <Select
-                    key={level}
-                    onValueChange={(value) => handleCategoryChange(level, value)}
-                    value={categoryPath[level] || ''}
-                  >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Category</Label>
+                <div className="grid grid-cols-1 gap-2">
+                  {categoryLevels.map((levelCategories, level) => (
+                    <Select
+                      key={level}
+                      onValueChange={(value) => handleCategoryChange(level, value)}
+                      value={categoryPath[level] || ''}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={`Select Level ${level + 1}`} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {levelCategories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ))}
+                </div>
+              </div>
+              <div>
+                  <Label>GST Rate (%)</Label>
+                  <Select onValueChange={(v) => setGstRate(Number(v))} value={String(gstRate)}>
                     <SelectTrigger>
-                      <SelectValue placeholder={`Select Level ${level + 1}`} />
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {levelCategories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
+                      {[0, 5, 12, 18, 28].map((rate) => (
+                        <SelectItem key={rate} value={String(rate)}>
+                          {rate}%
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                ))}
               </div>
             </div>
             <div className="space-y-4">
@@ -477,44 +529,50 @@ export default function CreateProductPage() {
                     </div>
                 </div>
                 <div className="space-y-2">
-                    <Label className="text-sm">Secondary UOM</Label>
-                    <div className="flex items-center gap-2">
                     {showSecondaryUom ? (
                         <>
-                        <Select
-                            onValueChange={setSecondaryUom}
-                            value={secondaryUom}
-                            disabled={secondaryUomOptions.length === 0}
-                        >
-                            <SelectTrigger>
-                            <SelectValue
-                                placeholder={
-                                secondaryUomOptions.length > 0
-                                    ? 'Select secondary unit'
-                                    : 'No conversion found'
-                                }
-                            />
-                            </SelectTrigger>
-                            <SelectContent>
-                            {secondaryUomOptions.map((unit) => (
-                                <SelectItem key={unit.id} value={unit.id}>
-                                {unit.name} ({unit.abbreviation})
-                                </SelectItem>
-                            ))}
-                            </SelectContent>
-                        </Select>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive shrink-0"
-                            onClick={() => {
-                            setShowSecondaryUom(false);
-                            setSecondaryUom('');
-                            }}
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
+                          <Label className="text-sm">Secondary UOM</Label>
+                          <div className="flex items-center gap-2">
+                            <Select
+                                onValueChange={setSecondaryUom}
+                                value={secondaryUom}
+                                disabled={secondaryUomOptions.length === 0}
+                            >
+                                <SelectTrigger>
+                                <SelectValue
+                                    placeholder={
+                                    secondaryUomOptions.length > 0
+                                        ? 'Select secondary unit'
+                                        : 'No conversion found'
+                                    }
+                                />
+                                </SelectTrigger>
+                                <SelectContent>
+                                {secondaryUomOptions.map((unit) => (
+                                    <SelectItem key={unit.id} value={unit.id}>
+                                    {unit.name} ({unit.abbreviation})
+                                    </SelectItem>
+                                ))}
+                                </SelectContent>
+                            </Select>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive shrink-0"
+                                onClick={() => {
+                                setShowSecondaryUom(false);
+                                setSecondaryUom('');
+                                }}
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          {conversionRate && (
+                            <p className="text-xs text-muted-foreground pt-1">
+                                {conversionRate}
+                            </p>
+                            )}
                         </>
                     ) : (
                         uom && (
@@ -527,12 +585,6 @@ export default function CreateProductPage() {
                             + Add Secondary Unit
                         </Button>
                         )
-                    )}
-                    </div>
-                    {conversionRate && (
-                    <p className="text-xs text-muted-foreground pt-1">
-                        {conversionRate}
-                    </p>
                     )}
                 </div>
             </div>
@@ -664,7 +716,7 @@ export default function CreateProductPage() {
                       <TableHead key={slug(attr.name)}>{attr.name}</TableHead>
                     ))}
                     <TableHead>SKU</TableHead>
-                    <TableHead>Barcode</TableHead>
+                    <TableHead>Buying Price</TableHead>
                     <TableHead className="min-w-[150px]">Selling Prices</TableHead>
                     <TableHead className="text-right">Opening Stock</TableHead>
                     <TableHead className="text-right">Stock Value</TableHead>
@@ -687,31 +739,43 @@ export default function CreateProductPage() {
                             </TableCell>
                           ))}
                           <TableCell>
-                            <Input
-                              className="min-w-[120px]"
-                              value={variant.sku}
-                              onChange={(e) =>
-                                handleVariantChange(
-                                  variant.id,
-                                  'sku',
-                                  e.target.value
-                                )
-                              }
-                            />
+                            <div className="space-y-1">
+                                <Input
+                                className="min-w-[120px]"
+                                value={variant.sku}
+                                onChange={(e) =>
+                                    handleVariantChange(
+                                    variant.id,
+                                    'sku',
+                                    e.target.value
+                                    )
+                                }
+                                />
+                                <div className="relative">
+                                    <Barcode className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        className="min-w-[120px] pl-8"
+                                        placeholder="Barcode"
+                                        value={variant.barcode}
+                                        onChange={(e) =>
+                                            handleVariantChange(
+                                            variant.id,
+                                            'barcode',
+                                            e.target.value
+                                            )
+                                        }
+                                    />
+                                </div>
+                            </div>
                           </TableCell>
                           <TableCell>
-                            <Input
-                              className="min-w-[120px]"
-                              placeholder="Barcode"
-                              value={variant.barcode}
-                              onChange={(e) =>
-                                handleVariantChange(
-                                  variant.id,
-                                  'barcode',
-                                  e.target.value
-                                )
-                              }
-                            />
+                             <Input
+                                type="text"
+                                className="text-right min-w-[90px]"
+                                placeholder="0.00"
+                                value={variant.buyingPrice}
+                                onChange={(e) => handleVariantChange(variant.id, 'buyingPrice', e.target.value)}
+                              />
                           </TableCell>
                            <TableCell>
                                 <div className="space-y-1">
@@ -722,20 +786,23 @@ export default function CreateProductPage() {
                                     value={variant.price.regular}
                                     onChange={(e) => handlePriceChange(variant.id, 'regular', e.target.value)}
                                     />
+                                    <PriceBreakdown sellingPrice={variant.price.regular} buyingPrice={variant.buyingPrice} gstRate={gstRate} includesGst={sellingPriceIncludesGst} />
                                     <Input
                                     type="text"
                                     placeholder="B2B Price"
-                                    className="h-7 text-xs"
+                                    className="h-7 text-xs mt-2"
                                     value={variant.price.b2b}
                                     onChange={(e) => handlePriceChange(variant.id, 'b2b', e.target.value)}
                                     />
+                                     <PriceBreakdown sellingPrice={variant.price.b2b} buyingPrice={variant.buyingPrice} gstRate={gstRate} includesGst={sellingPriceIncludesGst} />
                                     <Input
                                     type="text"
                                     placeholder="B2C Price"
-                                    className="h-7 text-xs"
+                                    className="h-7 text-xs mt-2"
                                     value={variant.price.b2c}
                                     onChange={(e) => handlePriceChange(variant.id, 'b2c', e.target.value)}
                                     />
+                                     <PriceBreakdown sellingPrice={variant.price.b2c} buyingPrice={variant.buyingPrice} gstRate={gstRate} includesGst={sellingPriceIncludesGst} />
                                 </div>
                             </TableCell>
                           <TableCell>
@@ -860,8 +927,8 @@ export default function CreateProductPage() {
             </div>
           </CardContent>
         </Card>
-
-        <div className="flex gap-4 justify-end">
+        
+        <div className="flex justify-end gap-4">
             <Button variant="outline">Save Draft</Button>
             <Button onClick={handleSaveProduct}>
               <Save className="mr-2 h-4 w-4" /> Save Product
@@ -871,3 +938,5 @@ export default function CreateProductPage() {
     </div>
   );
 }
+
+    
