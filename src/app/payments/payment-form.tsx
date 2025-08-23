@@ -152,7 +152,7 @@ export function PaymentForm({ type, onSuccess }: PaymentFormProps) {
         </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormField control={form.control} name="partyId" render={({ field }) => (
-                <FormItem><FormLabel>Select {type === 'receipt' ? 'Customer' : 'Vendor'}</FormLabel><Popover><PopoverTrigger asChild><FormControl>
+                <FormItem><FormLabel>Select {type === 'receipt' ? 'Customer' : 'Vendor'}</FormLabel><Popover modal={false}><PopoverTrigger asChild><FormControl>
                     <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
                         {field.value ? parties.find(p => p.id === field.value)?.company : `Select ${type === 'receipt' ? 'Customer' : 'Vendor'}`}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -181,7 +181,7 @@ export function PaymentForm({ type, onSuccess }: PaymentFormProps) {
         <Separator />
         <div className="flex flex-col md:flex-row gap-4 items-end">
             <FormField control={form.control} name="totalAmountReceived" render={({ field }) => (
-                <FormItem><FormLabel>Amount {type === 'receipt' ? 'Received' : 'Paid'}</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Amount {type === 'receipt' ? 'Received' : 'Paid'}</FormLabel><FormControl><Input type="text" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
             )}/>
             <div className="p-2 border rounded-md bg-muted text-sm flex-1">
                 <div className="flex justify-between">
@@ -202,7 +202,7 @@ export function PaymentForm({ type, onSuccess }: PaymentFormProps) {
                         <TableCell className="text-right">{formatCurrency(field.amountDue, 'INR')}</TableCell>
                         <TableCell>
                             <FormField control={form.control} name={`allocations.${index}.allocatedAmount`} render={({ field }) => (
-                                <Input type="number" className="text-right" {...field} placeholder="0.00" onChange={(e) => field.onChange(Math.min(parseFloat(e.target.value) || 0, watchedAllocations[index].amountDue))} />
+                                <Input type="text" className="text-right" {...field} placeholder="0.00" onChange={(e) => field.onChange(Math.min(parseFloat(e.target.value) || 0, watchedAllocations[index].amountDue))} />
                             )}/>
                         </TableCell>
                     </TableRow>
