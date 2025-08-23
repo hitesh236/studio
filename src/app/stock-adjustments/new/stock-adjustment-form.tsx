@@ -215,7 +215,7 @@ function StockAdjustmentFormComponent() {
                     </SelectContent></Select></FormItem>
                    )} />
                    <FormField name={`items.${index}.quantity`} control={form.control} render={({ field }) => (
-                     <FormItem><FormControl><Input type="number" placeholder="Qty" {...field} /></FormControl><FormMessage /></FormItem>
+                     <FormItem><FormControl><Input type="text" placeholder="Qty" {...field} /></FormControl><FormMessage /></FormItem>
                    )} />
                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => remove(index)}><Trash2 className="h-4 w-4" /></Button>
                 </div>

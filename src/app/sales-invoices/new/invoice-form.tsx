@@ -441,7 +441,7 @@ export function InvoiceForm() {
                                             </div>
                                              <div className="space-y-2">
                                                 <Label>Starting No.</Label>
-                                                <Input type="number" value={numberingSettings.startingNumber} onChange={e => setNumberingSettings(s => ({...s, startingNumber: Number(e.target.value)}))} />
+                                                <Input type="text" value={numberingSettings.startingNumber} onChange={e => setNumberingSettings(s => ({...s, startingNumber: Number(e.target.value)}))} />
                                             </div>
                                         </div>
                                         <div>
@@ -782,7 +782,7 @@ export function InvoiceForm() {
                                         <FormItem>
                                             <FormLabel>Exchange Rate (1 {watchedFormValues.currency} to INR)</FormLabel>
                                             <FormControl>
-                                                <Input type="number" step="0.01" {...field} />
+                                                <Input type="text" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -876,7 +876,7 @@ export function InvoiceForm() {
                                             render={({ field }) => (
                                                 <FormItem>
                                                     <FormControl>
-                                                        <Input type="number" className="text-right min-w-[60px]" {...field} />
+                                                        <Input type="text" className="text-right min-w-[60px]" {...field} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -904,7 +904,7 @@ export function InvoiceForm() {
                                             render={({ field }) => (
                                                 <FormItem>
                                                     <FormControl>
-                                                        <Input type="number" className="text-right min-w-[80px]" {...field} />
+                                                        <Input type="text" className="text-right min-w-[80px]" {...field} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -918,7 +918,7 @@ export function InvoiceForm() {
                                             render={({ field }) => (
                                                 <FormItem>
                                                     <FormControl>
-                                                        <Input type="number" className="text-right min-w-[70px]" {...field} />
+                                                        <Input type="text" className="text-right min-w-[70px]" {...field} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -1035,7 +1035,7 @@ export function InvoiceForm() {
                                                     render={({ field }) => (
                                                         <FormItem>
                                                             <FormLabel>Quantity</FormLabel>
-                                                            <FormControl><Input type="number" {...field} /></FormControl>
+                                                            <FormControl><Input type="text" {...field} /></FormControl>
                                                             <FormMessage />
                                                         </FormItem>
                                                     )}
@@ -1058,7 +1058,7 @@ export function InvoiceForm() {
                                                 render={({ field }) => (
                                                     <FormItem>
                                                         <FormLabel>{invoiceType === 'item' ? 'Rate' : 'Amount'}</FormLabel>
-                                                        <FormControl><Input type="number" {...field} /></FormControl>
+                                                        <FormControl><Input type="text" {...field} /></FormControl>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
@@ -1069,7 +1069,7 @@ export function InvoiceForm() {
                                                 render={({ field }) => (
                                                     <FormItem>
                                                         <FormLabel>Discount (%)</FormLabel>
-                                                        <FormControl><Input type="number" {...field} /></FormControl>
+                                                        <FormControl><Input type="text" {...field} /></FormControl>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
@@ -1182,8 +1182,7 @@ export function InvoiceForm() {
                                 />
                             </div>
                             <Input
-                                type="number"
-                                step="0.01"
+                                type="text"
                                 className="h-7 w-24 text-right font-mono p-1"
                                 value={autoRoundOff ? totals.roundOffValue.toFixed(2) : manualRoundOff}
                                 onChange={(e) => setManualRoundOff(parseFloat(e.target.value) || 0)}
@@ -1217,7 +1216,7 @@ export function InvoiceForm() {
                                     <FormItem>
                                         <FormLabel>Amount Received</FormLabel>
                                         <FormControl>
-                                            <Input type="number" placeholder="0.00" {...field} />
+                                            <Input type="text" placeholder="0.00" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

@@ -201,7 +201,7 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                     )}/>
                      <div className="flex items-end gap-2">
                         <FormField name="openingBalance" control={form.control} render={({ field }) => (
-                            <FormItem className="flex-1"><FormLabel>Opening Balance</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem className="flex-1"><FormLabel>Opening Balance</FormLabel><FormControl><Input type="text" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                         <FormField name="balanceType" control={form.control} render={({ field }) => (
                             <FormItem className="space-y-3"><FormControl>
@@ -289,10 +289,10 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                             <FormItem><FormLabel>Contact Person</FormLabel><FormControl><Input placeholder="e.g., John Doe" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                         <FormField name="creditLimit" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Credit Limit (Amount)</FormLabel><FormControl><Input type="number" placeholder="e.g., 50000" {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Credit Limit (Amount)</FormLabel><FormControl><Input type="text" placeholder="e.g., 50000" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                         <FormField name="creditLimitDays" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Credit Limit (Days)</FormLabel><FormControl><Input type="number" placeholder="e.g., 30" {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Credit Limit (Days)</FormLabel><FormControl><Input type="text" placeholder="e.g., 30" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                          <FormField name="gstin" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>GSTIN / Tax ID</FormLabel><FormControl><Input placeholder="Optional GSTIN" {...field} /></FormControl><FormMessage /></FormItem>

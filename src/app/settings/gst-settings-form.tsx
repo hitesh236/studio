@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -118,7 +119,7 @@ export function GstSettingsForm() {
                 </Label>
                 <Input
                   id="gst-rate"
-                  type="number"
+                  type="text"
                   value={newRate}
                   onChange={e => setNewRate(e.target.value)}
                   className="col-span-3"

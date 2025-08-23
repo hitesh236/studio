@@ -453,7 +453,7 @@ function JournalEntryFormComponent() {
                                                 render={({ field: amountField }) => (
                                                     <FormItem>
                                                         <FormControl>
-                                                            <Input type="number" className="text-right" placeholder="0.00" {...amountField} onChange={(e) => amountField.onChange(parseFloat(e.target.value) || 0)} />
+                                                            <Input type="text" className="text-right" placeholder="0.00" {...amountField} onChange={(e) => amountField.onChange(parseFloat(e.target.value) || 0)} />
                                                         </FormControl>
                                                         {(form.watch(`debitLines.${index}.amount`) || 0) > 0 && <FormDescription className="text-right text-destructive text-xs">{numberToWords(form.watch(`debitLines.${index}.amount`))}</FormDescription>}
                                                         <FormMessage />
@@ -496,7 +496,7 @@ function JournalEntryFormComponent() {
                                                 render={({ field: amountField }) => (
                                                     <FormItem>
                                                         <FormControl>
-                                                            <Input type="number" className="text-right" placeholder="0.00" {...amountField} onChange={(e) => amountField.onChange(parseFloat(e.target.value) || 0)} />
+                                                            <Input type="text" className="text-right" placeholder="0.00" {...amountField} onChange={(e) => amountField.onChange(parseFloat(e.target.value) || 0)} />
                                                         </FormControl>
                                                          {(form.watch(`creditLines.${index}.amount`) || 0) > 0 && <FormDescription className="text-right text-destructive text-xs">{numberToWords(form.watch(`creditLines.${index}.amount`))}</FormDescription>}
                                                         <FormMessage />

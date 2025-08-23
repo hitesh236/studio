@@ -179,7 +179,7 @@ const BatchDialog = ({
                         </div>
                         <div className="space-y-1">
                              {index === 0 && <Label>Quantity</Label>}
-                            <Input type="number" value={batch.quantity} onChange={(e) => handleBatchChange(batch.id, 'quantity', parseFloat(e.target.value))} />
+                            <Input type="text" value={batch.quantity} onChange={(e) => handleBatchChange(batch.id, 'quantity', parseFloat(e.target.value))} />
                         </div>
                         <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleRemoveBatch(batch.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
@@ -617,14 +617,14 @@ export function PurchaseBillForm() {
                       <TableCell><FormField control={form.control} name={`items.${index}.hsnCode`} render={({ field }) => <Input placeholder="HSN Code" {...field} />} /></TableCell>
                       <TableCell>
                          <div className="flex items-center gap-1">
-                            <FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => <Input type="number" className="text-right" {...field} readOnly={(field.value > 0 && !!watchedItems[index]?.batches && watchedItems[index]?.batches?.length > 0)} />} />
+                            <FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => <Input type="text" className="text-right" {...field} readOnly={(field.value > 0 && !!watchedItems[index]?.batches && watchedItems[index]?.batches?.length > 0)} />} />
                             {activeTab === 'inventory' && <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => setActiveItemForBatch({ item: watchedItems[index], index })}>
                                 <Layers className="h-4 w-4" />
                             </Button>}
                          </div>
                       </TableCell>
-                      <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
-                      <TableCell><FormField control={form.control} name={`items.${index}.gstRate`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
+                      <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="text" className="text-right" {...field} />} /></TableCell>
+                      <TableCell><FormField control={form.control} name={`items.${index}.gstRate`} render={({ field }) => <Input type="text" className="text-right" {...field} />} /></TableCell>
                       <TableCell className="text-right font-mono">{formatCurrency((watchedItems[index]?.quantity || 0) * (watchedItems[index]?.rate || 0), 'INR')}</TableCell>
                       <TableCell><Button variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                     </TableRow>

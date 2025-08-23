@@ -368,7 +368,7 @@ function CompanySettingForm() {
                             <FormField name="decimalPlaces" control={form.control} render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Decimal Places</FormLabel>
-                                    <FormControl><Input type="number" {...field} /></FormControl>
+                                    <FormControl><Input type="text" {...field} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
@@ -482,4 +482,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-    

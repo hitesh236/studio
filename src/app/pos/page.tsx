@@ -172,7 +172,7 @@ const PaymentDialog = ({ open, onOpenChange, totalAmount, onPaymentSuccess }: { 
                                      <Label htmlFor={`amount-${payment.id}`}>Amount</Label>
                                      <Input
                                         id={`amount-${payment.id}`}
-                                        type="number"
+                                        type="text"
                                         value={payment.amount}
                                         onChange={(e) => handleUpdatePayment(payment.id, 'amount', parseFloat(e.target.value) || 0)}
                                         placeholder="0.00"
@@ -852,7 +852,7 @@ export default function PosPage() {
                                                         <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => updateQuantity(item.id, 1)}><Plus className="h-4 w-4" /></Button>
                                                         <div className="flex items-center rounded-md border">
                                                             <Input 
-                                                                type="number" 
+                                                                type="text" 
                                                                 value={editingDiscountId === item.id ? discountInputValue : item.discount} 
                                                                 onFocus={() => {
                                                                     setEditingDiscountId(item.id);
@@ -904,7 +904,7 @@ export default function PosPage() {
                                         <Label htmlFor="order-discount" className="text-muted-foreground">Order Discount</Label>
                                         <div className="flex items-center rounded-md border w-32">
                                             <Input
-                                                type="number"
+                                                type="text"
                                                 id="order-discount"
                                                 value={orderDiscount}
                                                 onChange={(e) => setOrderDiscount(parseFloat(e.target.value) || 0)}

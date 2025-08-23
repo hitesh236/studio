@@ -9,9 +9,9 @@ import { format } from 'date-fns';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -233,7 +233,7 @@ export function StockTransferForm() {
                             </TableCell>
                              <TableCell>
                                 <FormField name={`items.${index}.quantity`} control={form.control} render={({ field }) => (
-                                    <FormItem><FormControl><Input type="number" placeholder="Qty" {...field} className="text-right" /></FormControl><FormMessage /></FormItem>
+                                    <FormItem><FormControl><Input type="text" placeholder="Qty" {...field} className="text-right" /></FormControl><FormMessage /></FormItem>
                                 )} />
                              </TableCell>
                              <TableCell>
