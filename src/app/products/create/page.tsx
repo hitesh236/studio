@@ -7,9 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Trash2, X, Sparkles, ChevronsUpDown, Check } from 'lucide-react';
+import { PlusCircle, Trash2, X, Sparkles, ChevronsUpDown, Check, Layers } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -18,7 +17,7 @@ import { initialCategoriesData, type Category } from '@/lib/categories';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
-import { initialSimpleUnits, type SimpleUnit } from '@/lib/uom-data';
+import { initialSimpleUnits, initialCompoundUnits, type SimpleUnit, type CompoundUnit } from '@/lib/uom-data';
 
 type Attribute = {
   name: string;
@@ -83,7 +82,6 @@ export default function CreateProductPage() {
   // Core Product State
   const [productName, setProductName] = React.useState('');
   const [productCode, setProductCode] = React.useState('');
-  const [shortDesc, setShortDesc] = React.useState('');
 
   // Descriptive Attributes State
   const [descriptiveAttrs, setDescriptiveAttrs] = React.useState({
@@ -107,11 +105,28 @@ export default function CreateProductPage() {
 
   // UOM State
   const [uom, setUom] = React.useState('');
+  const [secondaryUom, setSecondaryUom] = React.useState('');
   const [simpleUnits, setSimpleUnits] = React.useState<SimpleUnit[]>(initialSimpleUnits);
   const [isUomDialogOpen, setIsUomDialogOpen] = React.useState(false);
   const [newUom, setNewUom] = React.useState({ name: '', abbreviation: '' });
+  const [showSecondaryUom, setShowSecondaryUom] = React.useState(false);
+  
   const activeSimpleUnits = React.useMemo(() => simpleUnits.filter(u => u.status !== 'disabled'), [simpleUnits]);
   
+  const secondaryUomOptions = React.useMemo(() => {
+    if (!uom) return [];
+    return initialCompoundUnits
+        .filter(cu => cu.firstUnit.id === uom)
+        .map(cu => cu.secondUnit);
+  }, [uom]);
+
+  const conversionRate = React.useMemo(() => {
+    if (!uom || !secondaryUom) return null;
+    const compound = initialCompoundUnits.find(cu => cu.firstUnit.id === uom && cu.secondUnit.id === secondaryUom);
+    if (!compound) return null;
+    return `1 ${compound.firstUnit.name} = ${compound.conversion} ${compound.secondUnit.name}`;
+  }, [uom, secondaryUom]);
+
   React.useEffect(() => {
     let currentCategories = initialCategoriesData;
     const newLevels: Category[][] = [currentCategories];
@@ -234,7 +249,7 @@ export default function CreateProductPage() {
   
   const handleSaveProduct = () => {
     console.log({
-        product: { productName, productCode, categoryPath, uom, shortDesc },
+        product: { productName, productCode, categoryPath, uom, secondaryUom },
         descriptive: descriptiveAttrs,
         inventory: stockAttrs,
         variants: variants
@@ -244,12 +259,12 @@ export default function CreateProductPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">
-      <h1 className="text-xl font-bold">Add Product</h1>
+      <h1 className="font-bold text-[20px]">Add Product</h1>
 
       <div className="space-y-6">
-        <Card>
+        <Card className="w-full">
           <CardHeader>
-            <CardTitle>Core Product</CardTitle>
+            <CardTitle className="text-[18px]">Core Product</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -279,51 +294,76 @@ export default function CreateProductPage() {
                     ))}
                 </div>
             </div>
-             <div>
-                <Label htmlFor="uom">Base UOM</Label>
-                <div className="relative flex items-center">
-                    <Select onValueChange={setUom} value={uom}>
-                        <SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger>
-                        <SelectContent>
-                            {activeSimpleUnits.map(unit => <SelectItem key={unit.id} value={unit.id}>{unit.name} ({unit.abbreviation})</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                    <Dialog open={isUomDialogOpen} onOpenChange={setIsUomDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button type="button" variant="outline" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-auto px-3">
-                                Add New
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <Label htmlFor="uom">Base UOM</Label>
+                    <div className="relative flex items-center">
+                        <Select onValueChange={setUom} value={uom}>
+                            <SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger>
+                            <SelectContent>
+                                {activeSimpleUnits.map(unit => <SelectItem key={unit.id} value={unit.id}>{unit.name} ({unit.abbreviation})</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        <Dialog open={isUomDialogOpen} onOpenChange={setIsUomDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button type="button" variant="outline" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-auto px-3">
+                                    Add New
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Add New Unit</DialogTitle>
+                                </DialogHeader>
+                                <div className="grid gap-4 py-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="uom-name">Unit Name</Label>
+                                        <Input id="uom-name" value={newUom.name} onChange={e => setNewUom(u => ({...u, name: e.target.value}))} placeholder="e.g., Pieces"/>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="uom-abbr">Abbreviation</Label>
+                                        <Input id="uom-abbr" value={newUom.abbreviation} onChange={e => setNewUom(u => ({...u, abbreviation: e.target.value}))} placeholder="e.g., pcs"/>
+                                    </div>
+                                </div>
+                                <DialogFooter>
+                                    <DialogClose asChild><Button variant="outline" type="button">Cancel</Button></DialogClose>
+                                    <Button type="button" onClick={handleAddUom}>Save Unit</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
+                </div>
+                <div>
+                    <Label>Secondary UOM</Label>
+                     <div className="flex items-center gap-2">
+                        {showSecondaryUom ? (
+                            <>
+                                <Select onValueChange={setSecondaryUom} value={secondaryUom} disabled={secondaryUomOptions.length === 0}>
+                                    <SelectTrigger><SelectValue placeholder={secondaryUomOptions.length > 0 ? "Select secondary unit" : "No conversion found"} /></SelectTrigger>
+                                    <SelectContent>
+                                        {secondaryUomOptions.map(unit => <SelectItem key={unit.id} value={unit.id}>{unit.name} ({unit.abbreviation})</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                                <Button type="button" variant="ghost" size="icon" className="text-destructive shrink-0" onClick={() => { setShowSecondaryUom(false); setSecondaryUom(''); }}>
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </>
+                        ) : (
+                           uom && <Button type="button" variant="link" className="p-0 h-9" onClick={() => setShowSecondaryUom(true)}>
+                                + Add Secondary Unit
                             </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Add New Unit</DialogTitle>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="uom-name">Unit Name</Label>
-                                    <Input id="uom-name" value={newUom.name} onChange={e => setNewUom(u => ({...u, name: e.target.value}))} placeholder="e.g., Pieces"/>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="uom-abbr">Abbreviation</Label>
-                                    <Input id="uom-abbr" value={newUom.abbreviation} onChange={e => setNewUom(u => ({...u, abbreviation: e.target.value}))} placeholder="e.g., pcs"/>
-                                </div>
-                            </div>
-                            <DialogFooter>
-                                <DialogClose asChild><Button variant="outline" type="button">Cancel</Button></DialogClose>
-                                <Button type="button" onClick={handleAddUom}>Save Unit</Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
+                        )}
+                    </div>
+                    {conversionRate && <p className="text-xs text-muted-foreground pt-1">{conversionRate}</p>}
                 </div>
             </div>
-            <div><Label htmlFor="shortDesc">Short Description</Label><Textarea id="shortDesc" value={shortDesc} onChange={(e) => setShortDesc(e.target.value)} placeholder="One-liner for internal search" /></div>
             <p className="text-xs text-muted-foreground">This does not create SKUs. SKUs are created below from inventory-driving attributes only.</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader>
-            <CardTitle>2) Descriptive Attributes (won’t create SKUs)</CardTitle>
+            <CardTitle className="text-[18px]">Descriptive Attributes</CardTitle>
+            <CardDescription>Use these for search/filter. They won’t multiply SKUs or stock tracking.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -335,14 +375,13 @@ export default function CreateProductPage() {
                 <div><Label htmlFor="certifications">Certifications</Label><Input id="certifications" name="certifications" value={descriptiveAttrs.certifications} onChange={handleDescriptiveAttrChange} placeholder="e.g., FSSAI" /></div>
             </div>
             <div><Label htmlFor="tags">Tags (comma separated)</Label><Input id="tags" name="tags" value={descriptiveAttrs.tags} onChange={handleDescriptiveAttrChange} placeholder="e.g., dairy, breakfast, protein" /></div>
-            <p className="text-xs text-muted-foreground">Use these for search/filter. They won’t multiply SKUs or stock tracking.</p>
           </CardContent>
         </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>3) Inventory-Driving Attributes (these create SKUs)</CardTitle>
+          <CardTitle className="text-[18px]">Create Stock</CardTitle>
           <CardDescription>Only add attributes you truly stock and reorder by. Fewer attributes → fewer SKUs.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -351,7 +390,7 @@ export default function CreateProductPage() {
                     <Label>Common grocery attributes</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
                         {['Brand', 'Pack Size', 'Flavor', 'Fat %', 'Color'].map(preset => (
-                            <Button key={preset} variant="outline" size="sm" onClick={() => handleAddStockAttr(preset)}>
+                            <Button key={preset} type="button" variant="outline" size="sm" onClick={() => handleAddStockAttr(preset)}>
                                 <PlusCircle className="mr-2 h-4 w-4" /> {preset}
                             </Button>
                         ))}
@@ -360,7 +399,7 @@ export default function CreateProductPage() {
                     <Label>Add custom attribute</Label>
                     <div className="flex gap-2 mt-2">
                         <Input value={customAttrName} onChange={e => setCustomAttrName(e.target.value)} placeholder="e.g., Region, Plug Type" />
-                        <Button onClick={() => handleAddStockAttr(customAttrName)}>Add Attribute</Button>
+                        <Button type="button" onClick={() => handleAddStockAttr(customAttrName)}>Add Attribute</Button>
                     </div>
                 </div>
                 <div>
@@ -369,7 +408,7 @@ export default function CreateProductPage() {
                         {stockAttrs.length > 0 ? stockAttrs.map((attr, index) => (
                             <Badge key={index} variant="secondary" className="text-base py-1 px-3">
                                 {attr.name}
-                                <button className="ml-2 rounded-full hover:bg-destructive/20" onClick={() => handleRemoveStockAttr(index)}>
+                                <button type="button" className="ml-2 rounded-full hover:bg-destructive/20" onClick={() => handleRemoveStockAttr(index)}>
                                     <X className="h-4 w-4" />
                                 </button>
                             </Badge>
@@ -396,10 +435,10 @@ export default function CreateProductPage() {
             </div>}
             
             <div className="flex gap-4">
-                <Button onClick={handleGenerateVariants}>
+                <Button type="button" onClick={handleGenerateVariants}>
                     <Sparkles className="mr-2 h-4 w-4" /> Generate Variants
                 </Button>
-                <Button variant="ghost" onClick={() => setVariants([])}>Clear Variants</Button>
+                <Button type="button" variant="ghost" onClick={() => setVariants([])}>Clear Variants</Button>
             </div>
         </CardContent>
       </Card>
