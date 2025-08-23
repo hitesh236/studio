@@ -257,8 +257,12 @@ export default function CreateProductPage() {
     toast({ title: "Product Saved!", description: "Check the console for the saved data structure."});
   };
 
+  const presetAttributes = ['Brand', 'Pack Size', 'Flavor', 'Fat %', 'Color'];
+  const addedAttributeNames = new Set(stockAttrs.map(a => a.name));
+
+
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+    <div className="space-y-6">
       <h1 className="font-bold text-[20px]">Add Product</h1>
 
       <div className="space-y-6">
@@ -356,6 +360,16 @@ export default function CreateProductPage() {
                     {conversionRate && <p className="text-xs text-muted-foreground pt-1">{conversionRate}</p>}
                 </div>
             </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <Label htmlFor="opening-stock">Opening Stock</Label>
+                    <Input id="opening-stock" type="number" placeholder="0" />
+                </div>
+                <div>
+                    <Label htmlFor="opening-stock-value">Opening Stock Value</Label>
+                    <Input id="opening-stock-value" type="number" placeholder="0.00" />
+                </div>
+             </div>
             <p className="text-xs text-muted-foreground">This does not create SKUs. SKUs are created below from inventory-driving attributes only.</p>
           </CardContent>
         </Card>
@@ -385,49 +399,45 @@ export default function CreateProductPage() {
           <CardDescription>Only add attributes you truly stock and reorder by. Fewer attributes → fewer SKUs.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-4">
                 <div>
                     <Label>Common grocery attributes</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
-                        {['Brand', 'Pack Size', 'Flavor', 'Fat %', 'Color'].map(preset => (
-                            <Button key={preset} type="button" variant="outline" size="sm" onClick={() => handleAddStockAttr(preset)}>
+                        {presetAttributes.map(preset => (
+                            <Button key={preset} type="button" variant="outline" size="sm" onClick={() => handleAddStockAttr(preset)} disabled={addedAttributeNames.has(preset)}>
                                 <PlusCircle className="mr-2 h-4 w-4" /> {preset}
                             </Button>
                         ))}
                     </div>
-                    <Separator className="my-4" />
+                </div>
+                <div>
                     <Label>Add custom attribute</Label>
                     <div className="flex gap-2 mt-2">
                         <Input value={customAttrName} onChange={e => setCustomAttrName(e.target.value)} placeholder="e.g., Region, Plug Type" />
                         <Button type="button" onClick={() => handleAddStockAttr(customAttrName)}>Add Attribute</Button>
                     </div>
                 </div>
-                <div>
-                    <Label>Selected attributes</Label>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                        {stockAttrs.length > 0 ? stockAttrs.map((attr, index) => (
-                            <Badge key={index} variant="secondary" className="text-base py-1 px-3">
-                                {attr.name}
-                                <button type="button" className="ml-2 rounded-full hover:bg-destructive/20" onClick={() => handleRemoveStockAttr(index)}>
-                                    <X className="h-4 w-4" />
-                                </button>
-                            </Badge>
-                        )) : <p className="text-sm text-muted-foreground">None yet. Add attributes to generate variants.</p>}
-                    </div>
-                </div>
             </div>
             
             {stockAttrs.length > 0 && <div className="space-y-4 pt-4 border-t">
-                <Label>Attribute Values</Label>
-                <div className="grid md:grid-cols-2 gap-4">
+                <Label>Selected Attributes & Values</Label>
+                 <div className="space-y-4">
                     {stockAttrs.map((attr, index) => (
-                        <div key={index}>
-                            <Label htmlFor={`attr-values-${index}`}>{attr.name} (comma separated)</Label>
+                        <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                            <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => handleRemoveStockAttr(index)}>
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                                <Input 
+                                    value={attr.name} 
+                                    onChange={e => handleStockAttrChange(index, 'name', e.target.value)}
+                                    className="font-semibold"
+                                />
+                            </div>
                             <Input 
-                                id={`attr-values-${index}`}
                                 value={attr.values.join(', ')} 
                                 onChange={e => handleStockAttrChange(index, 'values', e.target.value)}
-                                placeholder="e.g., 500ml, 1L, 2L"
+                                placeholder="Enter comma-separated values (e.g., 500ml, 1L)"
                             />
                         </div>
                     ))}
