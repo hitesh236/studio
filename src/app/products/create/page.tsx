@@ -366,64 +366,6 @@ export default function CreateProductPage() {
 
   return (
     <>
-      <style>{`
-        :root {
-          --bg: #f7f9fb;
-          --card: #ffffff;
-          --muted: #6b7280;
-          --text: #111827;
-          --line: #e5e7eb;
-          --accent: #2563eb;
-          --warn: #f59e0b;
-          --danger: #ef4444;
-          --ok: #10b981;
-          --radius: 10px;
-        }
-        .dark {
-          --bg: #121826;
-          --card: #1f2937;
-          --muted: #9ca3af;
-          --text: #f9fafb;
-          --line: #374151;
-        }
-        h1 { margin: 0 0 16px; }
-        .grid { display: grid; gap: 16px; }
-        .two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        @media (max-width: 900px){ .two { grid-template-columns: 1fr; } }
-        section {
-          background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px;
-        }
-        section > h2 {
-          margin: 0 0 12px; font-size: 18px; display: flex; align-items: center; gap: 8px;
-        }
-        label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; }
-        input[type="text"], input[type="number"], input[type="date"], textarea, select {
-          width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--text);
-        }
-        textarea { min-height: 70px; resize: vertical; }
-        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .row-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
-        .pill {
-          display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px dashed var(--line);
-          border-radius: 999px; font-size: 12px; background: var(--card); margin: 4px 6px 0 0;
-        }
-        .small { font-size: 12px; color: var(--muted); }
-        .btn {
-          border: 1px solid var(--line); background: var(--card); color: var(--text); padding: 10px 14px; border-radius: 10px; cursor: pointer;
-        }
-        .btn-primary { background: var(--accent); color: #fff; border: none; }
-        .btn-ghost { background: transparent; border: none;}
-        .btn-danger { background: var(--danger); color: #fff; border: none; }
-        .toolbar { display: flex; gap: 10px; flex-wrap: wrap; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border-bottom: 1px solid var(--line); padding: 10px; text-align: left; vertical-align: middle; }
-        th { font-size: 12px; color: var(--muted); font-weight: 600; }
-        tr.low td { background: #fff6f6; }
-        .dark tr.low td { background: #450a0a; }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #eef2ff; color: #3730a3; font-size: 11px; }
-        .hint { color: var(--muted); font-size: 12px; }
-        .divider { height: 1px; background: var(--line); margin: 8px 0 16px; }
-      `}</style>
       <div className='p-6'>
         <h1>Add Product — Grocery</h1>
 
@@ -433,26 +375,26 @@ export default function CreateProductPage() {
             <h2>1) Core Product (Parent)</h2>
             <div className="row">
               <div>
-                <label htmlFor="productName">Product Name *</label>
+                <label>Product Name *</label>
                 <input id="productName" type="text" placeholder="e.g., Amul Milk" />
               </div>
               <div>
-                <label htmlFor="productCode">Product Code (for SKU prefix)</label>
+                <label>Product Code (for SKU prefix)</label>
                 <input id="productCode" type="text" placeholder="e.g., MLK-AMUL" />
               </div>
             </div>
             <div className="row">
               <div>
-                <label htmlFor="category">Category</label>
+                <label>Category</label>
                 <input id="category" type="text" placeholder="e.g., Dairy" />
               </div>
               <div>
-                <label htmlFor="uom">Base UOM</label>
+                <label>Base UOM</label>
                 <input id="uom" type="text" placeholder="e.g., piece, bottle, kg" />
               </div>
             </div>
             <div>
-              <label htmlFor="shortDesc">Short Description</label>
+              <label>Short Description</label>
               <textarea id="shortDesc" placeholder="One-liner for internal search"></textarea>
             </div>
             <div className="hint">This does not create SKUs. SKUs are created below from inventory-driving attributes only.</div>
@@ -463,26 +405,26 @@ export default function CreateProductPage() {
             <h2>2) Descriptive Attributes (won’t create SKUs)</h2>
             <div className="row">
               <div>
-                <label htmlFor="attrMaterial">Material / Ingredients</label>
+                <label>Material / Ingredients</label>
                 <input id="attrMaterial" type="text" placeholder="e.g., Cow milk" />
               </div>
               <div>
-                <label htmlFor="attrStorage">Storage / Handling</label>
+                <label>Storage / Handling</label>
                 <input id="attrStorage" type="text" placeholder="e.g., Keep refrigerated" />
               </div>
             </div>
             <div className="row">
               <div>
-                <label htmlFor="attrOrigin">Country of Origin</label>
+                <label>Country of Origin</label>
                 <input id="attrOrigin" type="text" placeholder="e.g., India" />
               </div>
               <div>
-                <label htmlFor="attrCert">Certifications</label>
+                <label>Certifications</label>
                 <input id="attrCert" type="text" placeholder="e.g., FSSAI" />
               </div>
             </div>
             <div>
-              <label htmlFor="attrTags">Tags (comma separated)</label>
+              <label>Tags (comma separated)</label>
               <input id="attrTags" type="text" placeholder="e.g., dairy, breakfast, protein" />
             </div>
             <div className="hint">Use these for search/filter. They won’t multiply SKUs or stock tracking.</div>
