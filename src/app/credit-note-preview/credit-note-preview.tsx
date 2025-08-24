@@ -107,7 +107,9 @@ export function CreditNotePreview({ creditNote }: CreditNotePreviewProps) {
             <section className="flex justify-between items-start gap-8 print:gap-4">
                 <div className="flex-1 space-y-2 print:text-xs">
                      <h4 className="font-semibold">Amount in Words:</h4>
-                    <p className="text-muted-foreground">{numberToWords(totals.grandTotal)}</p>
+                     {typeof totals.grandTotal === 'number' && (
+                        <p className="text-muted-foreground">{numberToWords(totals.grandTotal)}</p>
+                    )}
                 </div>
                  <div className="w-full max-w-sm space-y-2 print:text-xs">
                     <div className="flex justify-between"><span className="text-muted-foreground">Subtotal:</span><span className="font-mono">{formatCurrency(totals.subtotal, 'INR')}</span></div>
