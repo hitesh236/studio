@@ -24,13 +24,14 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, GitCompareArrows, AlertTriangle, Scale, Settings, ArrowUp, ArrowDown, Calendar as CalendarIcon } from 'lucide-react';
+import { Upload, GitCompareArrows, AlertTriangle, Scale, Settings, ArrowUp, ArrowDown, Calendar as CalendarIcon, X } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import type { BankTransaction, BookTransaction } from './data';
 import type { DateRange } from 'react-day-picker';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
 
 type SortConfig = {
     key: keyof BankTransaction | keyof BookTransaction | null;
@@ -243,9 +244,65 @@ export function ReconciliationClient({ initialBankTransactions, initialBookTrans
     toast({ title: 'Reconciled!', description: `${selectedBank.size} bank and ${selectedBook.size} book transactions have been reconciled.`});
   };
 
+  const reconciliationContent = (
+     <div className="space-y-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <TransactionTable
+                title="Bank Statement"
+                transactions={sortedAndFilteredTransactions.bank}
+                selected={selectedBank}
+                onSelect={(id) => setSelectedBank(prev => {
+                    const newSet = new Set(prev);
+                    newSet.has(id) ? newSet.delete(id) : newSet.add(id);
+                    return newSet;
+                })}
+                type="bank"
+                onManualAdd={() => fileInputRef.current?.click()}
+                sortConfig={bankSortConfig}
+                requestSort={(key) => requestSort(key, 'bank')}
+            />
+            <TransactionTable
+                title="Book Entries (Bank Ledger)"
+                transactions={sortedAndFilteredTransactions.book}
+                selected={selectedBook}
+                onSelect={(id) => setSelectedBook(prev => {
+                    const newSet = new Set(prev);
+                    newSet.has(id) ? newSet.delete(id) : newSet.add(id);
+                    return newSet;
+                })}
+                type="book"
+                sortConfig={bookSortConfig}
+                requestSort={(key) => requestSort(key, 'book')}
+            />
+            <input type="file" ref={fileInputRef} className="hidden" accept=".csv" onChange={handleFileUpload} />
+        </div>
+        <Card>
+            <CardHeader><CardTitle>Reconciliation Summary</CardTitle></CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                <div className="p-4 bg-muted rounded-lg">
+                    <p className="text-sm text-muted-foreground">Bank Transactions Total</p>
+                    <p className="text-2xl font-bold font-mono">{formatCurrency(totals.bankTotal, 'INR')}</p>
+                </div>
+                <div className="p-4 bg-muted rounded-lg">
+                    <p className="text-sm text-muted-foreground">Book Transactions Total</p>
+                    <p className="text-2xl font-bold font-mono">{formatCurrency(totals.bookTotal, 'INR')}</p>
+                </div>
+                <div className={cn("p-4 rounded-lg", Math.abs(totals.difference) > 0.01 ? 'bg-destructive/20' : 'bg-green-500/20')}>
+                    <p className="text-sm text-muted-foreground">Difference</p>
+                    <p className="text-2xl font-bold font-mono">{formatCurrency(totals.difference, 'INR')}</p>
+                </div>
+            </CardContent>
+            <CardFooter className="flex justify-end">
+                <Button onClick={handleReconcile} disabled={selectedBank.size === 0 || selectedBook.size === 0 || Math.abs(totals.difference) > 0.01}>
+                    <Scale className="mr-2 h-4 w-4" /> Reconcile
+                </Button>
+            </CardFooter>
+        </Card>
+     </div>
+  );
+
   return (
-    <div className={cn("p-4 sm:p-6 lg:p-8 space-y-6", isFullWidth && 'max-w-full px-2')}>
-      {!isFullWidth && (
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
         <Card>
           <CardHeader>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -273,78 +330,33 @@ export function ReconciliationClient({ initialBankTransactions, initialBookTrans
                           </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                          <DropdownMenuCheckboxItem
-                              checked={isFullWidth}
-                              onCheckedChange={setIsFullWidth}
-                          >
-                              Full Width View
-                          </DropdownMenuCheckboxItem>
+                          <DropdownMenuItem onSelect={() => setIsFullWidth(true)}>
+                              Full Screen View
+                          </DropdownMenuItem>
                       </DropdownMenuContent>
                   </DropdownMenu>
               </div>
             </div>
           </CardHeader>
         </Card>
-      )}
       
-      <div className={cn("grid grid-cols-1 gap-6", isFullWidth ? 'lg:grid-cols-[1fr_1fr]' : 'lg:grid-cols-2')}>
-        <TransactionTable
-            title="Bank Statement"
-            transactions={sortedAndFilteredTransactions.bank}
-            selected={selectedBank}
-            onSelect={(id) => setSelectedBank(prev => {
-                const newSet = new Set(prev);
-                newSet.has(id) ? newSet.delete(id) : newSet.add(id);
-                return newSet;
-            })}
-            type="bank"
-            onManualAdd={() => fileInputRef.current?.click()}
-            sortConfig={bankSortConfig}
-            requestSort={(key) => requestSort(key, 'bank')}
-        />
-        <TransactionTable
-            title="Book Entries (Bank Ledger)"
-            transactions={sortedAndFilteredTransactions.book}
-            selected={selectedBook}
-            onSelect={(id) => setSelectedBook(prev => {
-                const newSet = new Set(prev);
-                newSet.has(id) ? newSet.delete(id) : newSet.add(id);
-                return newSet;
-            })}
-            type="book"
-            sortConfig={bookSortConfig}
-            requestSort={(key) => requestSort(key, 'book')}
-        />
-        <input type="file" ref={fileInputRef} className="hidden" accept=".csv" onChange={handleFileUpload} />
-      </div>
+      {reconciliationContent}
 
-      <Card>
-        <CardHeader>
-            <CardTitle>Reconciliation Summary</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-            <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Bank Transactions Total</p>
-                <p className="text-2xl font-bold font-mono">{formatCurrency(totals.bankTotal, 'INR')}</p>
-            </div>
-            <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Book Transactions Total</p>
-                <p className="text-2xl font-bold font-mono">{formatCurrency(totals.bookTotal, 'INR')}</p>
-            </div>
-             <div className={cn("p-4 rounded-lg", Math.abs(totals.difference) > 0.01 ? 'bg-destructive/20' : 'bg-green-500/20')}>
-                <p className="text-sm text-muted-foreground">Difference</p>
-                <p className="text-2xl font-bold font-mono">{formatCurrency(totals.difference, 'INR')}</p>
-            </div>
-        </CardContent>
-        <CardFooter className="flex justify-end">
-            <Button
-                onClick={handleReconcile}
-                disabled={selectedBank.size === 0 || selectedBook.size === 0 || Math.abs(totals.difference) > 0.01}
-            >
-                <Scale className="mr-2 h-4 w-4" /> Reconcile
+      <Dialog open={isFullWidth} onOpenChange={setIsFullWidth}>
+        <DialogContent className="max-w-full w-full h-full p-4 sm:p-6 flex flex-col">
+          <DialogClose asChild>
+            <Button variant="ghost" size="icon" className="absolute top-4 right-4 z-10">
+              <X className="h-6 w-6" />
+              <span className="sr-only">Close</span>
             </Button>
-        </CardFooter>
-      </Card>
+          </DialogClose>
+          <div className="flex-1 overflow-y-auto pt-8">
+            {reconciliationContent}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
+    
