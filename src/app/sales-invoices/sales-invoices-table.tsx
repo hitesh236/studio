@@ -61,7 +61,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "../ui/separator";
 import { SummaryCard } from "./summary-card";
 import {
   Tooltip,
@@ -80,6 +80,8 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { PaymentForm } from '../payments/payment-form';
+
 
 const availableFilters = [
   { id: "paymentStatus", label: "Payment Status" },
@@ -99,106 +101,6 @@ const ALL_COLUMNS = [
     { id: 'amountDue', label: 'Due' },
     { id: 'actions', label: 'Actions' },
   ];
-
-const AddPaymentDialog = ({ 
-    invoice, 
-    isOpen, 
-    onOpenChange,
-    onPaymentSuccess
-}: { 
-    invoice: SalesInvoice | null, 
-    isOpen: boolean, 
-    onOpenChange: (open: boolean) => void,
-    onPaymentSuccess: (invoiceId: string, paymentAmount: number) => void
-}) => {
-    const { toast } = useToast();
-    const [amount, setAmount] = React.useState('');
-    const [paymentMode, setPaymentMode] = React.useState('bank');
-
-    React.useEffect(() => {
-        if (invoice) {
-            setAmount(invoice.amountDue.toString());
-        } else {
-            setAmount('');
-        }
-    }, [invoice]);
-
-    if (!invoice) return null;
-
-    const handleSave = () => {
-        const parsedAmount = parseFloat(amount);
-        if (isNaN(parsedAmount) || parsedAmount <= 0) {
-            toast({
-                title: 'Invalid Amount',
-                description: 'Please enter a valid payment amount.',
-                variant: 'destructive',
-            });
-            return;
-        }
-
-        if (parsedAmount > invoice.amountDue) {
-             toast({
-                title: 'Invalid Amount',
-                description: 'Payment cannot be more than the amount due.',
-                variant: 'destructive',
-            });
-            return;
-        }
-
-        toast({
-            title: "Payment Recorded",
-            description: `Payment of ${formatCurrency(parsedAmount, 'INR')} for invoice ${invoice.invoiceNumber} has been recorded.`
-        });
-        onPaymentSuccess(invoice.id, parsedAmount);
-        onOpenChange(false);
-    }
-
-    return (
-        <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Add Payment for {invoice.invoiceNumber}</DialogTitle>
-                    <DialogDescription>
-                        Current amount due is {formatCurrency(invoice.amountDue, 'INR')}.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="amount" className="text-right">Amount</Label>
-                        <Input
-                            id="amount"
-                            type="number"
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            className="col-span-3"
-                            placeholder="Enter amount"
-                        />
-                    </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="payment-mode" className="text-right">Payment Mode</Label>
-                        <Select onValueChange={setPaymentMode} defaultValue={paymentMode}>
-                             <SelectTrigger id="payment-mode" className="col-span-3">
-                                <SelectValue placeholder="Select a mode" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="bank">Bank Transfer</SelectItem>
-                                <SelectItem value="cash">Cash</SelectItem>
-                                <SelectItem value="upi">UPI</SelectItem>
-                                <SelectItem value="cheque">Cheque</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-                <DialogFooter>
-                    <DialogClose asChild>
-                        <Button variant="outline">Cancel</Button>
-                    </DialogClose>
-                    <Button onClick={handleSave}>Save Payment</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
-};
 
 export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[] }) {
   const [data, setData] = useState<SalesInvoice[]>(initialData);
@@ -299,8 +201,8 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
         switch(key) {
             case 'invoiceDate':
             case 'dueDate':
-                valA = a[key].getTime();
-                valB = b[key].getTime();
+                valA = (a[key] as Date).getTime();
+                valB = (b[key] as Date).getTime();
                 break;
             default:
                 valA = (a as any)[key];
@@ -397,6 +299,7 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
         return inv;
       })
     );
+    setIsPaymentDialogOpen(false);
   };
 
   const tableColumns = useMemo(() => {
@@ -843,12 +746,17 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
           )}
         </div>
         
-        <AddPaymentDialog
-            invoice={invoiceForPayment}
-            isOpen={isPaymentDialogOpen}
-            onOpenChange={setIsPaymentDialogOpen}
-            onPaymentSuccess={handlePaymentSuccess}
-        />
+        <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+            <DialogContent className="max-w-4xl p-0">
+                <div className="max-h-[90vh] overflow-y-auto p-6">
+                    <PaymentForm 
+                        type="receipt" 
+                        onSuccess={() => {}} 
+                        // You'll need to pass customer and invoice info here
+                    />
+                </div>
+            </DialogContent>
+        </Dialog>
       </div>
     </TooltipProvider>
   );

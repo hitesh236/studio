@@ -12,114 +12,14 @@ import { Separator } from '@/components/ui/separator';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import Loading from '../loading';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-
-
-const AddPaymentDialog = ({ invoice, isOpen, onOpenChange }: { invoice: SampleInvoice | null, isOpen: boolean, onOpenChange: (open: boolean) => void }) => {
-    const { toast } = useToast();
-    const [amount, setAmount] = React.useState('');
-    const [paymentMode, setPaymentMode] = React.useState('bank');
-
-    React.useEffect(() => {
-        if (!isOpen) {
-            setAmount('');
-            setPaymentMode('bank');
-        } else if (invoice) {
-            setAmount(invoice.totals.amountDue.toString());
-        }
-    }, [isOpen, invoice]);
-
-    if (!invoice) return null;
-
-    const handleSave = () => {
-        const parsedAmount = parseFloat(amount);
-        if (isNaN(parsedAmount) || parsedAmount <= 0) {
-            toast({
-                title: 'Invalid Amount',
-                description: 'Please enter a valid payment amount.',
-                variant: 'destructive',
-            });
-            return;
-        }
-
-        if (parsedAmount > invoice.totals.amountDue) {
-             toast({
-                title: 'Invalid Amount',
-                description: 'Payment cannot be more than the amount due.',
-                variant: 'destructive',
-            });
-            return;
-        }
-
-        toast({
-            title: "Payment Recorded",
-            description: `Payment of ${formatCurrency(parsedAmount, 'INR')} has been recorded.`
-        });
-        onOpenChange(false);
-        setAmount('');
-    }
-
-
-    return (
-        <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Add Payment for {invoice.invoiceDetails.number}</DialogTitle>
-                    <DialogDescription>
-                        Current amount due is {formatCurrency(invoice.totals.amountDue, 'INR')}.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="amount" className="text-right">Amount</Label>
-                        <Input
-                            id="amount"
-                            type="number"
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            className="col-span-3"
-                            placeholder="Enter amount"
-                        />
-                    </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="payment-mode" className="text-right">Payment Mode</Label>
-                        <Select onValueChange={setPaymentMode} defaultValue={paymentMode}>
-                             <SelectTrigger id="payment-mode" className="col-span-3">
-                                <SelectValue placeholder="Select a mode" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="bank">Bank Transfer</SelectItem>
-                                <SelectItem value="cash">Cash</SelectItem>
-                                <SelectItem value="upi">UPI</SelectItem>
-                                <SelectItem value="cheque">Cheque</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-                <DialogFooter>
-                    <DialogClose asChild>
-                        <Button variant="outline">Cancel</Button>
-                    </DialogClose>
-                    <Button onClick={handleSave}>Save Payment</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
-};
+import { PaymentForm } from '../payments/payment-form';
 
 const InvoicePreviewPageContent = () => {
   const searchParams = useSearchParams();
@@ -142,6 +42,11 @@ const InvoicePreviewPageContent = () => {
 
   const handlePrint = () => {
     window.print();
+  };
+  
+  const handlePaymentSuccess = () => {
+    setIsPaymentDialogOpen(false);
+    // Here you would typically refetch or update the invoice data
   };
 
   const isPaid = invoice.invoiceDetails.status === 'Paid';
@@ -202,11 +107,21 @@ const InvoicePreviewPageContent = () => {
           <InvoicePreview invoice={invoice} />
         </div>
 
-        <AddPaymentDialog 
-              invoice={invoice}
-              isOpen={isPaymentDialogOpen} 
-              onOpenChange={setIsPaymentDialogOpen} 
-        />
+        <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+            <DialogContent className="max-w-4xl p-0">
+                <div className="max-h-[90vh] overflow-y-auto p-6">
+                    <PaymentForm 
+                        type="receipt" 
+                        onSuccess={handlePaymentSuccess}
+                        // Pass initial data to pre-fill the form
+                        initialData={{
+                            partyId: invoice.id, // Assuming invoice ID can map to a customer ID
+                            totalAmountReceived: invoice.totals.amountDue,
+                        }}
+                    />
+                </div>
+            </DialogContent>
+        </Dialog>
       </div>
     </TooltipProvider>
   );

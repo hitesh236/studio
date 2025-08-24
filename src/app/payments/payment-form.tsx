@@ -76,9 +76,13 @@ type Allocation = z.infer<typeof paymentAllocationSchema>;
 interface PaymentFormProps {
     type: 'receipt' | 'payment';
     onSuccess: (data: any) => void;
+    initialData?: {
+        partyId?: string;
+        totalAmountReceived?: number;
+    }
 }
 
-export function PaymentForm({ type, onSuccess }: PaymentFormProps) {
+export function PaymentForm({ type, onSuccess, initialData }: PaymentFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -89,10 +93,10 @@ export function PaymentForm({ type, onSuccess }: PaymentFormProps) {
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentFormSchema),
     defaultValues: {
-      partyId: '',
+      partyId: initialData?.partyId || '',
       paymentDate: new Date(),
       paymentMode: 'bank',
-      totalAmountReceived: 0,
+      totalAmountReceived: initialData?.totalAmountReceived || 0,
       allocations: [],
     },
   });
@@ -186,13 +190,17 @@ export function PaymentForm({ type, onSuccess }: PaymentFormProps) {
         </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormField control={form.control} name="partyId" render={({ field }) => (
-                <FormItem><FormLabel>Select {type === 'receipt' ? 'Customer' : 'Vendor'}</FormLabel><Popover modal={false}><PopoverTrigger asChild><FormControl>
+                <FormItem><FormLabel>Select {type === 'receipt' ? 'Customer' : 'Vendor'}</FormLabel><Popover modal={true}><PopoverTrigger asChild><FormControl>
                     <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
                         {field.value ? parties.find(p => p.id === field.value)?.company : `Select ${type === 'receipt' ? 'Customer' : 'Vendor'}`}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
-                </FormControl></PopoverTrigger><PopoverContent className="w-[--radix-popover-trigger-width] p-0"><Command><CommandInput placeholder="Search party..." /><CommandList><CommandEmpty>No party found.</CommandEmpty><CommandGroup>
-                    {parties.map(party => <CommandItem value={party.company} key={party.id} onSelect={() => form.setValue("partyId", party.id)}>
+                </FormControl></PopoverTrigger><PopoverContent className="w-[--radix-popover-trigger-width] p-0"><Command filter={(value, search) => {
+                    const party = parties.find(p => p.id === value);
+                    if (party?.company.toLowerCase().includes(search.toLowerCase())) return 1;
+                    return 0;
+                }}><CommandInput placeholder="Search party..." /><CommandList><CommandEmpty>No party found.</CommandEmpty><CommandGroup>
+                    {parties.map(party => <CommandItem value={party.id} key={party.id} onSelect={() => form.setValue("partyId", party.id)}>
                         <Check className={cn("mr-2 h-4 w-4", party.id === field.value ? "opacity-100" : "opacity-0")}/>
                         {party.company}
                     </CommandItem>)}
@@ -223,7 +231,7 @@ export function PaymentForm({ type, onSuccess }: PaymentFormProps) {
                 <div className="flex justify-between">
                     <span className="text-muted-foreground">Unallocated Amount:</span>
                     <span className={cn("font-semibold", unallocatedAmount > 0 ? "text-green-600" : unallocatedAmount < 0 ? "text-destructive" : "")}>
-                        {formatCurrency(unallocatedAmount)}
+                        {formatCurrency(unallocatedAmount, 'INR')}
                     </span>
                 </div>
             </div>
@@ -235,9 +243,9 @@ export function PaymentForm({ type, onSuccess }: PaymentFormProps) {
                     const isFullyPaid = (field.allocatedAmount || 0) >= field.amountDue;
                     return (
                         <TableRow key={field.id} className={cn(isFullyPaid && "bg-green-100 dark:bg-green-900/50")}>
-                            <TableCell className="px-2 py-1.5">{field.invoiceNumber}</TableCell>
-                            <TableCell className="px-2 py-1.5">{format(field.dueDate, 'dd-MMM-yy')}</TableCell>
-                            <TableCell className="text-right px-2 py-1.5">{formatCurrency(field.amountDue)}</TableCell>
+                            <TableCell className="px-2 py-1.5 text-xs sm:text-sm">{field.invoiceNumber}</TableCell>
+                            <TableCell className="px-2 py-1.5 text-xs sm:text-sm">{format(field.dueDate, 'dd-MMM-yy')}</TableCell>
+                            <TableCell className="text-right px-2 py-1.5 text-xs sm:text-sm">{formatCurrency(field.amountDue, 'INR')}</TableCell>
                             <TableCell className="px-2 py-1.5">
                                 <Controller
                                     control={form.control}
