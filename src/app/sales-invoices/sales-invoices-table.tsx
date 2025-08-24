@@ -116,10 +116,14 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
   const [filterValues, setFilterValues] = useState<{
     paymentStatuses: string[];
-    dateRange: { from: Date | undefined; to: Date | undefined };
+    dateRange: DateRange;
+    fromInput: string;
+    toInput: string;
   }>({
     paymentStatuses: [],
     dateRange: { from: undefined, to: undefined },
+    fromInput: '',
+    toInput: '',
   });
   
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false);
@@ -389,35 +393,56 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
             setFilterValues(prev => ({...prev, paymentStatuses: []}));
             break;
         case 'dateRange':
-            setFilterValues(prev => ({...prev, dateRange: { from: undefined, to: undefined }}));
+            setFilterValues(prev => ({...prev, dateRange: { from: undefined, to: undefined }, fromInput: '', toInput: ''}));
             break;
     }
     setPageAndClearSelection(0);
   };
-  
-  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'from' | 'to') => {
-    const input = e.target.value.replace(/[^\d]/g, '');
-    let formatted = input;
 
-    if (input.length > 2) {
-        formatted = `${input.slice(0, 2)}/${input.slice(2)}`;
-    }
-    if (input.length > 4) {
-        formatted = `${input.slice(0, 2)}/${input.slice(2, 4)}/${input.slice(4, 6)}`;
-    }
-
-    e.target.value = formatted.slice(0, 8);
+  const parseTallyDate = (input: string): Date | null => {
+    if (!input) return null;
     
-    if (formatted.length === 8) {
-      const parsedDate = parse(formatted, 'dd/MM/yy', new Date());
-      if (isValid(parsedDate)) {
+    const parts = input.split(/[/.-]/);
+    let day: number, month: number, year: number;
+    const now = new Date();
+
+    if (parts.length === 1) { // e.g., "15"
+        day = parseInt(parts[0], 10);
+        month = now.getMonth();
+        year = now.getFullYear();
+    } else if (parts.length === 2) { // e.g., "15/3"
+        day = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10) - 1;
+        year = now.getFullYear();
+    } else { // e.g., "15/3/24"
+        day = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10) - 1;
+        year = parseInt(parts[2], 10);
+        if (year < 100) {
+            year += 2000;
+        }
+    }
+    
+    if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+
+    const date = new Date(year, month, day);
+    return isValid(date) ? date : null;
+  };
+  
+  const handleDateInputBlur = (field: 'from' | 'to') => {
+    const inputKey = field === 'from' ? 'fromInput' : 'toInput';
+    const inputValue = filterValues[inputKey];
+    const parsedDate = parseTallyDate(inputValue);
+
+    if (parsedDate) {
         setFilterValues(prev => ({
-          ...prev,
-          dateRange: { ...prev.dateRange, [field]: parsedDate }
+            ...prev,
+            dateRange: { ...prev.dateRange, [field]: parsedDate },
+            [inputKey]: format(parsedDate, 'dd-MMM-yyyy')
         }));
-      }
     }
   };
+
 
   const handleDragStart = (e: React.DragEvent, columnId: string) => {
     draggedColumn.current = columnId;
@@ -519,23 +544,32 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
                                         <Input
                                             id="date-from"
                                             type="text"
-                                            placeholder="DD/MM/YY"
-                                            defaultValue={filterValues.dateRange.from ? format(filterValues.dateRange.from, 'dd/MM/yy') : ''}
-                                            onChange={(e) => handleDateInputChange(e, 'from')}
+                                            placeholder="e.g. 15.3.24"
+                                            value={filterValues.fromInput}
+                                            onChange={(e) => setFilterValues(prev => ({ ...prev, fromInput: e.target.value }))}
+                                            onBlur={() => handleDateInputBlur('from')}
                                         />
                                     </div>
                                     <div className="space-y-1">
                                         <Label htmlFor="date-to" className="text-xs">To</Label>
-                                        <Input
+                                         <Input
                                             id="date-to"
                                             type="text"
-                                            placeholder="DD/MM/YY"
-                                            defaultValue={filterValues.dateRange.to ? format(filterValues.dateRange.to, 'dd/MM/yy') : ''}
-                                            onChange={(e) => handleDateInputChange(e, 'to')}
+                                            placeholder="e.g. 31.3.24"
+                                            value={filterValues.toInput}
+                                            onChange={(e) => setFilterValues(prev => ({ ...prev, toInput: e.target.value }))}
+                                            onBlur={() => handleDateInputBlur('to')}
                                         />
                                     </div>
                                 </div>
-                                <Calendar initialFocus mode="range" defaultMonth={filterValues.dateRange.from} selected={filterValues.dateRange} onSelect={(range) => setFilterValues(prev => ({...prev, dateRange: range || {from: undefined, to: undefined}}))} numberOfMonths={2}/>
+                                <Calendar initialFocus mode="range" defaultMonth={filterValues.dateRange.from} selected={filterValues.dateRange} onSelect={(range) => {
+                                    setFilterValues(prev => ({
+                                        ...prev,
+                                        dateRange: range || {from: undefined, to: undefined},
+                                        fromInput: range?.from ? format(range.from, 'dd-MMM-yyyy') : '',
+                                        toInput: range?.to ? format(range.to, 'dd-MMM-yyyy') : '',
+                                    }))
+                                }} numberOfMonths={2}/>
                             </PopoverContent>
                         </Popover>
                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
