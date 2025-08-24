@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { LogOut, User, LayoutGrid, BookOpen, FileText, Eye, Globe, UserCircle, Palette, MonitorPlay, Tags, Repeat, PackagePlus, Box, Truck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import useUserRole from '@/hooks/use-user-role';
+import { GlobalSearch } from './global-search';
 
 const accountingMenuItems = [
     { href: '/recurring-invoices', icon: Repeat, label: 'Recurring Invoices' },
@@ -95,7 +96,9 @@ export function Header() {
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-6 shrink-0">
       <SidebarTrigger className="flex" />
-      <div className="flex-1" />
+       <div className="flex-1">
+        <GlobalSearch />
+      </div>
       <div className="flex items-center gap-2">
         <Button asChild variant="outline">
             <Link href="/pos">
