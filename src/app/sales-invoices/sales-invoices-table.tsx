@@ -62,7 +62,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "../ui/separator";
+import { Separator } from "@/components/ui/separator";
 import { SummaryCard } from "./summary-card";
 import {
   Tooltip,
