@@ -8,7 +8,8 @@ export type SalesInvoiceItem = {
 
 export type SalesInvoice = {
   id: string;
-  invoiceNumber: string;
+  invoiceNumber: string; // This will now represent the Credit Note number
+  originalInvoiceNumber: string; // New field for the original invoice
   customerName: string;
   invoiceDate: Date;
   dueDate: Date;
@@ -89,7 +90,8 @@ export function generateSalesInvoiceReturns(count: number): SalesInvoice[] {
 
     const invoice: SalesInvoice = {
       id: `uuid-R-${1000 + i}`,
-      invoiceNumber: `INV-R-${1000 + i}`,
+      invoiceNumber: `CN-${2000 + i}`, // This is the Credit Note number
+      originalInvoiceNumber: `INV-${1000 + i}`, // This is the original Invoice number
       customerName: getRandomElement(customerNames),
       invoiceDate,
       dueDate,

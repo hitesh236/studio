@@ -85,10 +85,11 @@ export const columns = ({
     },
     {
       accessor: "invoiceNumber",
-      header: getSortableHeader("Invoice Number", "invoiceNumber"),
+      header: getSortableHeader("Credit Note # / Original Inv #", "invoiceNumber"),
       cell: (row: SalesInvoice) => (
         <div className={cn("font-medium whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>
-          {row.invoiceNumber}
+          <div>{row.invoiceNumber}</div>
+          <div className="text-xs text-muted-foreground">{row.originalInvoiceNumber}</div>
         </div>
       ),
     },
@@ -103,7 +104,7 @@ export const columns = ({
     },
     {
       accessor: "invoiceDate",
-      header: getSortableHeader("Invoice Date", "invoiceDate"),
+      header: getSortableHeader("Date", "invoiceDate"),
       cell: (row: SalesInvoice) => (
         <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>
           {format(row.invoiceDate, "MMM d, yyyy")}
@@ -158,39 +159,28 @@ export const columns = ({
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}>
                   <Eye className="h-4 w-4" />
-                  <span className="sr-only">View Invoice</span>
+                  <span className="sr-only">View Credit Note</span>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent><p>View Invoice</p></TooltipContent>
+              <TooltipContent><p>View Credit Note</p></TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}>
                   <Pencil className="h-4 w-4" />
-                  <span className="sr-only">Edit Invoice</span>
+                  <span className="sr-only">Edit Credit Note</span>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent><p>Edit Invoice</p></TooltipContent>
+              <TooltipContent><p>Edit Credit Note</p></TooltipContent>
             </Tooltip>
-            {canAddPayment && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}>
-                    <CreditCard className="h-4 w-4" />
-                    <span className="sr-only">Add Payment</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent><p>Add Payment</p></TooltipContent>
-              </Tooltip>
-            )}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-destructive hover:text-destructive", density === 'compact' && 'h-6 w-6')}>
                   <FileX2 className="h-4 w-4" />
-                  <span className="sr-only">Cancel Invoice</span>
+                  <span className="sr-only">Cancel Credit Note</span>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent><p>Cancel Invoice</p></TooltipContent>
+              <TooltipContent><p>Cancel Credit Note</p></TooltipContent>
             </Tooltip>
           </div>
         )
