@@ -103,12 +103,14 @@ const creditNoteFormSchema = z.object({
 
 type CreditNoteFormValues = z.infer<typeof creditNoteFormSchema>;
 
-const PrintableCreditNote = React.forwardRef<HTMLDivElement, { note: CreditNoteFormValues; totals: any }>(({ note, totals }, ref) => {
+let allInvoices: SalesInvoice[] = [];
+
+const PrintableCreditNote = React.forwardRef<HTMLDivElement, { note: CreditNoteFormValues; totals: any; originalInvoiceNumber: string; }>(({ note, totals, originalInvoiceNumber }, ref) => {
     return (
       <div ref={ref} className="p-4 font-sans text-sm text-black bg-white">
         <div className="text-center space-y-1 mb-4">
           <h2 className="text-lg font-bold">Credit Note</h2>
-          <p className="text-xs">Original Invoice: {allInvoices.find(inv => inv.id === note.originalInvoiceId)?.invoiceNumber}</p>
+          <p className="text-xs">Original Invoice: {originalInvoiceNumber}</p>
         </div>
         <div className="grid grid-cols-2 gap-2 text-xs mb-4">
           <div><strong>Credit Note No:</strong> {note.creditNoteNumber}</div>
@@ -154,7 +156,6 @@ const PrintableCreditNote = React.forwardRef<HTMLDivElement, { note: CreditNoteF
 });
 PrintableCreditNote.displayName = "PrintableCreditNote";
 
-let allInvoices: SalesInvoice[] = [];
 
 export function CreditNoteForm() {
   const { toast } = useToast();
@@ -432,7 +433,7 @@ export function CreditNoteForm() {
                     The credit note has been saved. You can now print it.
                 </DialogDescription>
             </DialogHeader>
-            <PrintableCreditNote ref={printRef} note={noteToPrint!} totals={totals} />
+            <PrintableCreditNote ref={printRef} note={noteToPrint!} totals={totals} originalInvoiceNumber={originalInvoice?.invoiceNumber || ''} />
             <DialogFooter className="sm:justify-between">
                  <DialogClose asChild>
                     <Button type="button" variant="secondary">Close</Button>
