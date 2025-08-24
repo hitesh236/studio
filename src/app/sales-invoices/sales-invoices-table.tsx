@@ -395,13 +395,27 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
     setPageAndClearSelection(0);
   };
   
-  const handleDateInputChange = (field: 'from' | 'to', value: string) => {
-    const parsedDate = parse(value, 'yyyy-MM-dd', new Date());
-    if (isValid(parsedDate)) {
+  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'from' | 'to') => {
+    const input = e.target.value.replace(/[^\d]/g, '');
+    let formatted = input;
+
+    if (input.length > 2) {
+        formatted = `${input.slice(0, 2)}/${input.slice(2)}`;
+    }
+    if (input.length > 4) {
+        formatted = `${input.slice(0, 2)}/${input.slice(2, 4)}/${input.slice(4, 6)}`;
+    }
+
+    e.target.value = formatted.slice(0, 8);
+    
+    if (formatted.length === 8) {
+      const parsedDate = parse(formatted, 'dd/MM/yy', new Date());
+      if (isValid(parsedDate)) {
         setFilterValues(prev => ({
-            ...prev,
-            dateRange: { ...prev.dateRange, [field]: parsedDate }
+          ...prev,
+          dateRange: { ...prev.dateRange, [field]: parsedDate }
         }));
+      }
     }
   };
 
@@ -505,9 +519,9 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
                                         <Input
                                             id="date-from"
                                             type="text"
-                                            placeholder="YYYY-MM-DD"
-                                            defaultValue={filterValues.dateRange.from ? format(filterValues.dateRange.from, 'yyyy-MM-dd') : ''}
-                                            onBlur={(e) => handleDateInputChange('from', e.target.value)}
+                                            placeholder="DD/MM/YY"
+                                            defaultValue={filterValues.dateRange.from ? format(filterValues.dateRange.from, 'dd/MM/yy') : ''}
+                                            onChange={(e) => handleDateInputChange(e, 'from')}
                                         />
                                     </div>
                                     <div className="space-y-1">
@@ -515,9 +529,9 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
                                         <Input
                                             id="date-to"
                                             type="text"
-                                            placeholder="YYYY-MM-DD"
-                                            defaultValue={filterValues.dateRange.to ? format(filterValues.dateRange.to, 'yyyy-MM-dd') : ''}
-                                            onBlur={(e) => handleDateInputChange('to', e.target.value)}
+                                            placeholder="DD/MM/YY"
+                                            defaultValue={filterValues.dateRange.to ? format(filterValues.dateRange.to, 'dd/MM/yy') : ''}
+                                            onChange={(e) => handleDateInputChange(e, 'to')}
                                         />
                                     </div>
                                 </div>
@@ -814,5 +828,3 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
     </TooltipProvider>
   );
 }
-
-    
