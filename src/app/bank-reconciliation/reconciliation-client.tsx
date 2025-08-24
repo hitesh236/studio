@@ -243,45 +243,47 @@ export function ReconciliationClient({ initialBankTransactions, initialBookTrans
 
   return (
     <div className={cn("p-4 sm:p-6 lg:p-8 space-y-6", isFullWidth && 'max-w-full px-2')}>
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-             <div>
-                <CardTitle className="text-2xl">Bank Reconciliation</CardTitle>
-                <CardDescription>Match your bank statement with your books to ensure everything is in order.</CardDescription>
-             </div>
-             <div className="flex items-center gap-2">
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button id="date" variant="outline" className={cn("w-full sm:w-[260px] justify-start text-left font-normal", !date && "text-muted-foreground")}>
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {date?.from ? (date.to ? <>{format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}</> : format(date.from, "LLL dd, y")) : <span>Filter by date</span>}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="end">
-                        <Calendar initialFocus mode="range" defaultMonth={date?.from} selected={date} onSelect={setDate} numberOfMonths={2} />
-                    </PopoverContent>
-                </Popover>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="icon">
-                            <Settings className="h-4 w-4" />
-                            <span className="sr-only">View Options</span>
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuCheckboxItem
-                            checked={isFullWidth}
-                            onCheckedChange={setIsFullWidth}
-                        >
-                            Full Width View
-                        </DropdownMenuCheckboxItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+      {!isFullWidth && (
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+               <div>
+                  <CardTitle className="text-2xl">Bank Reconciliation</CardTitle>
+                  <CardDescription>Match your bank statement with your books to ensure everything is in order.</CardDescription>
+               </div>
+               <div className="flex items-center gap-2">
+                  <Popover>
+                      <PopoverTrigger asChild>
+                          <Button id="date" variant="outline" className={cn("w-full sm:w-[260px] justify-start text-left font-normal", !date && "text-muted-foreground")}>
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {date?.from ? (date.to ? <>{format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}</> : format(date.from, "LLL dd, y")) : <span>Filter by date</span>}
+                          </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="end">
+                          <Calendar initialFocus mode="range" defaultMonth={date?.from} selected={date} onSelect={setDate} numberOfMonths={2} />
+                      </PopoverContent>
+                  </Popover>
+                  <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="icon">
+                              <Settings className="h-4 w-4" />
+                              <span className="sr-only">View Options</span>
+                          </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                          <DropdownMenuCheckboxItem
+                              checked={isFullWidth}
+                              onCheckedChange={setIsFullWidth}
+                          >
+                              Full Width View
+                          </DropdownMenuCheckboxItem>
+                      </DropdownMenuContent>
+                  </DropdownMenu>
+              </div>
             </div>
-          </div>
-        </CardHeader>
-      </Card>
+          </CardHeader>
+        </Card>
+      )}
       
       <div className={cn("grid grid-cols-1 gap-6", isFullWidth ? 'lg:grid-cols-[1fr_1fr]' : 'lg:grid-cols-2')}>
         <TransactionTable
