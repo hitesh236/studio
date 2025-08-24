@@ -21,6 +21,7 @@ import {
   CheckCircle2,
   Download,
   Landmark,
+  Calendar as CalendarIcon,
 } from "lucide-react";
 import Link from 'next/link';
 
@@ -61,7 +62,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "../ui/separator";
 import { SummaryCard } from "./summary-card";
 import {
   Tooltip,
@@ -75,11 +76,14 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import type { DateRange } from "react-day-picker";
 import { PaymentForm } from '../payments/payment-form';
+import { Calendar } from '@/components/ui/calendar';
 
 
 const availableFilters = [
   { id: "paymentStatus", label: "Payment Status" },
+  { id: "dateRange", label: "Date Range" },
 ];
 
 const ALL_COLUMNS = [
@@ -112,8 +116,10 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
   const [filterValues, setFilterValues] = useState<{
     paymentStatuses: string[];
+    dateRange: { from: Date | undefined; to: Date | undefined };
   }>({
     paymentStatuses: [],
+    dateRange: { from: undefined, to: undefined },
   });
   
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false);
@@ -166,6 +172,18 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
       results = results.filter((p) => filterValues.paymentStatuses.includes(p.paymentStatus));
     }
     
+    if (activeFilters.has("dateRange")) {
+      const { from, to } = filterValues.dateRange;
+      if (from) {
+        results = results.filter((p) => p.invoiceDate >= from);
+      }
+      if (to) {
+        const toDate = new Date(to);
+        toDate.setHours(23, 59, 59, 999);
+        results = results.filter((p) => p.invoiceDate <= toDate);
+      }
+    }
+    
     return results;
   }, [data, filter, activeFilters, filterValues]);
 
@@ -196,8 +214,8 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
         switch(key) {
             case 'invoiceDate':
             case 'dueDate':
-                valA = (a[key] as Date).getTime();
-                valB = (b[key] as Date).getTime();
+                valA = (a[key as keyof SalesInvoice] as Date).getTime();
+                valB = (b[key as keyof SalesInvoice] as Date).getTime();
                 break;
             default:
                 valA = (a as any)[key];
@@ -449,6 +467,27 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
                             </DropdownMenuContent>
                         </DropdownMenu>
                         <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
+                    </div>
+                );
+            case 'dateRange':
+                return (
+                    <div key={filterId} className="flex items-center gap-2">
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" className="w-auto">
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    Date Range
+                                    <Separator orientation="vertical" className="mx-2 h-4 bg-border" />
+                                    {filterValues.dateRange.from ? (
+                                        <span className="text-primary">{format(filterValues.dateRange.from, "LLL dd, y")}</span>
+                                    ) : <span className="text-muted-foreground">Any</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar initialFocus mode="range" defaultMonth={filterValues.dateRange.from} selected={filterValues.dateRange} onSelect={(range) => setFilterValues(prev => ({...prev, dateRange: range || {from: undefined, to: undefined}}))} numberOfMonths={2}/>
+                            </PopoverContent>
+                        </Popover>
+                         <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFilter(filterId)}><X className="h-4 w-4" /></Button>
                     </div>
                 );
             default:
