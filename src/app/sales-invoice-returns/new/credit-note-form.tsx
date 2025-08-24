@@ -14,13 +14,14 @@ import {
   Loader2,
   ChevronsUpDown,
   Check,
+  Printer,
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import type { SalesInvoice, SalesInvoiceItem } from '@/app/sales-invoices/data';
 import { generateSalesInvoices } from '@/app/sales-invoices/data';
 
 
-import { cn, formatCurrency } from '@/lib/utils';
+import { cn, formatCurrency, numberToWords } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -38,6 +39,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from '@/components/ui/table';
 import {
   Card,
@@ -63,6 +65,15 @@ import {
     CommandList,
   } from '@/components/ui/command';
 import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
 
 const sellerDetails = {
     state: 'Maharashtra',
@@ -71,9 +82,13 @@ const sellerDetails = {
 const creditNoteItemSchema = z.object({
   originalItemId: z.number(),
   itemName: z.string().min(1, 'Item name is required.'),
-  quantity: z.coerce.number().min(0.01, 'Quantity must be positive.'),
+  quantity: z.coerce.number().min(0.01, 'Quantity must be positive.').max(Number.MAX_SAFE_INTEGER, "Quantity is too large"),
+  purchasedQty: z.coerce.number().optional(),
   rate: z.coerce.number().min(0, 'Rate cannot be negative.'),
   gstRate: z.coerce.number().min(0).max(100).default(18),
+}).refine(data => !data.purchasedQty || data.quantity <= data.purchasedQty, {
+    message: "Return quantity cannot exceed purchased quantity.",
+    path: ["quantity"],
 });
 
 const creditNoteFormSchema = z.object({
@@ -88,11 +103,65 @@ const creditNoteFormSchema = z.object({
 
 type CreditNoteFormValues = z.infer<typeof creditNoteFormSchema>;
 
+const PrintableCreditNote = React.forwardRef<HTMLDivElement, { note: CreditNoteFormValues; totals: any }>(({ note, totals }, ref) => {
+    return (
+      <div ref={ref} className="p-4 font-sans text-sm text-black bg-white">
+        <div className="text-center space-y-1 mb-4">
+          <h2 className="text-lg font-bold">Credit Note</h2>
+          <p className="text-xs">Original Invoice: {allInvoices.find(inv => inv.id === note.originalInvoiceId)?.invoiceNumber}</p>
+        </div>
+        <div className="grid grid-cols-2 gap-2 text-xs mb-4">
+          <div><strong>Credit Note No:</strong> {note.creditNoteNumber}</div>
+          <div className="text-right"><strong>Date:</strong> {format(note.creditNoteDate, 'dd-MMM-yyyy')}</div>
+          <div className="col-span-2"><strong>To:</strong> {note.customerName}</div>
+        </div>
+        <Separator className="my-2 border-black" />
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="h-auto p-1 text-black">Item</TableHead>
+              <TableHead className="h-auto p-1 text-black text-right">Qty</TableHead>
+              <TableHead className="h-auto p-1 text-black text-right">Rate</TableHead>
+              <TableHead className="h-auto p-1 text-black text-right">Amount</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {note.items.map(item => (
+              <TableRow key={item.originalItemId}>
+                <TableCell className="p-1">{item.itemName}</TableCell>
+                <TableCell className="p-1 text-right">{item.quantity}</TableCell>
+                <TableCell className="p-1 text-right">{item.rate.toFixed(2)}</TableCell>
+                <TableCell className="p-1 text-right">{(item.quantity * item.rate).toFixed(2)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <Separator className="my-2 border-black border-dashed" />
+        <div className="flex justify-end">
+            <div className="w-48 text-xs">
+                <div className="flex justify-between"><span>Subtotal:</span><span>{totals.subtotal.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span>GST:</span><span>{totals.totalGst.toFixed(2)}</span></div>
+                <Separator className="my-1 border-black" />
+                <div className="flex justify-between font-bold"><span>Total:</span><span>{totals.grandTotal.toFixed(2)}</span></div>
+            </div>
+        </div>
+         <div className="text-xs mt-4">
+            <p><strong>Amount in Words:</strong> {numberToWords(totals.grandTotal)}.</p>
+            <p className="mt-2"><strong>Reason:</strong> {note.reasonForReturn}</p>
+        </div>
+      </div>
+    );
+});
+PrintableCreditNote.displayName = "PrintableCreditNote";
+
+let allInvoices: SalesInvoice[] = [];
+
 export function CreditNoteForm() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [allInvoices, setAllInvoices] = React.useState<SalesInvoice[]>([]);
+  const [noteToPrint, setNoteToPrint] = React.useState<CreditNoteFormValues | null>(null);
+  const printRef = React.useRef<HTMLDivElement>(null);
 
   const form = useForm<CreditNoteFormValues>({
     resolver: zodResolver(creditNoteFormSchema),
@@ -105,6 +174,7 @@ export function CreditNoteForm() {
       reasonForReturn: '',
       items: [],
     },
+    mode: 'onChange',
   });
 
   const { fields, remove, replace } = useFieldArray({
@@ -126,6 +196,7 @@ export function CreditNoteForm() {
                 originalItemId: item.id,
                 itemName: item.name,
                 quantity: item.quantity,
+                purchasedQty: item.quantity,
                 rate: item.rate,
                 gstRate: 18, // Assuming a standard GST rate for simplicity
             })),
@@ -135,29 +206,18 @@ export function CreditNoteForm() {
 
   // Populate form if invoice data is in URL
   React.useEffect(() => {
+    const generatedInvoices = generateSalesInvoices(50);
+    allInvoices = generatedInvoices;
     const invoiceDataString = searchParams.get('invoiceData');
     if (invoiceDataString) {
       try {
         const invoiceData: SalesInvoice = JSON.parse(decodeURIComponent(invoiceDataString));
-        onInvoiceSelect(invoiceData.id, [invoiceData]);
-        setAllInvoices(prev => {
-            if (prev.find(inv => inv.id === invoiceData.id)) {
-                return prev;
-            }
-            return [...prev, invoiceData];
-        });
+        onInvoiceSelect(invoiceData.id, [invoiceData, ...allInvoices]);
       } catch (error) {
         console.error("Failed to parse invoice data from URL", error);
       }
     }
   }, [searchParams, onInvoiceSelect]);
-
-  React.useEffect(() => {
-    // In a real app, you'd fetch this. For now, we generate it.
-    if (!searchParams.get('invoiceData')) {
-        setAllInvoices(generateSalesInvoices(50));
-    }
-  }, [searchParams]);
   
   const watchedItems = form.watch('items');
   const watchedPlaceOfSupply = form.watch('placeOfSupply');
@@ -171,7 +231,7 @@ export function CreditNoteForm() {
         subtotal += itemAmount;
     });
 
-    const gstRate = (watchedItems.length > 0 && watchedItems[0]?.gstRate) ? watchedItems[0].gstRate : 0; // simplified
+    const gstRate = (watchedItems.length > 0 && watchedItems[0]?.gstRate) ? watchedItems[0].gstRate : 18; // simplified
     const totalGst = subtotal * (gstRate / 100);
     const isIntraState = watchedPlaceOfSupply === sellerDetails.state;
 
@@ -184,6 +244,18 @@ export function CreditNoteForm() {
     return { subtotal, grandTotal, totalGst, totalCgst, totalSgst, totalIgst };
   }, [watchedItems, watchedPlaceOfSupply]);
   
+  const handlePrint = () => {
+    const printContent = printRef.current;
+    if (printContent) {
+        const originalContents = document.body.innerHTML;
+        const printContentsHTML = printContent.outerHTML;
+        document.body.innerHTML = `<html><head><title>Print Credit Note</title><style>@media print { body { -webkit-print-color-adjust: exact; } }</style></head><body>${printContentsHTML}</body></html>`;
+        window.print();
+        document.body.innerHTML = originalContents;
+        window.location.reload();
+    }
+  };
+
   async function onSubmit(data: CreditNoteFormValues) {
     setIsSubmitting(true);
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -192,10 +264,12 @@ export function CreditNoteForm() {
       title: "Credit Note Created",
       description: `Credit Note ${data.creditNoteNumber} has been successfully created.`,
     });
+    setNoteToPrint(data);
     setIsSubmitting(false);
   }
 
   return (
+    <>
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Card>
@@ -217,16 +291,9 @@ export function CreditNoteForm() {
                             <Button
                                 variant="outline"
                                 role="combobox"
-                                className={cn(
-                                "justify-between",
-                                !field.value && "text-muted-foreground"
-                                )}
+                                className={cn("justify-between", !field.value && "text-muted-foreground")}
                             >
-                                {field.value && allInvoices.length > 0
-                                ? allInvoices.find(
-                                    (invoice) => invoice.id === field.value
-                                )?.invoiceNumber
-                                : "Select an invoice"}
+                                {field.value && allInvoices.length > 0 ? allInvoices.find( (invoice) => invoice.id === field.value )?.invoiceNumber : "Select an invoice"}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                         </FormControl></PopoverTrigger><PopoverContent className="w-[--radix-popover-trigger-width] p-0"><Command filter={(value, search) => {
@@ -252,7 +319,7 @@ export function CreditNoteForm() {
                                         />
                                         <div className="flex flex-col">
                                         <span>{invoice.invoiceNumber} - {invoice.customerName}</span>
-                                        <span className="text-xs text-muted-foreground">{format(invoice.invoiceDate, "dd-MMM-yy")} | {formatCurrency(invoice.amountBase, 'INR')}</span>
+                                        <span className="text-xs text-muted-foreground">{format(new Date(invoice.invoiceDate), "dd-MMM-yy")} | {formatCurrency(invoice.amountBase, 'INR')}</span>
                                         </div>
                                     </CommandItem>
                                     ))}
@@ -264,14 +331,14 @@ export function CreditNoteForm() {
                 />
                  <div>
                     <Label>Customer</Label>
-                    <Input readOnly value={form.getValues('customerName') || 'N/A'} className="mt-2 bg-muted/50" />
+                    <Input readOnly disabled value={form.getValues('customerName') || 'N/A'} className="mt-2 cursor-not-allowed focus-visible:ring-0 focus-visible:ring-offset-0" />
                 </div>
               </div>
               {/* Credit Note Details */}
               <div className="space-y-4">
                  <div>
                     <Label>Original Invoice No.</Label>
-                    <Input readOnly value={originalInvoice?.invoiceNumber || 'N/A'} className="mt-2 bg-muted/50" />
+                    <Input readOnly disabled value={originalInvoice?.invoiceNumber || 'N/A'} className="mt-2 cursor-not-allowed focus-visible:ring-0 focus-visible:ring-offset-0" />
                 </div>
                 <FormField control={form.control} name="creditNoteNumber" render={({ field }) => (
                     <FormItem>
@@ -310,9 +377,9 @@ export function CreditNoteForm() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-1/3 min-w-[200px]">Item</TableHead>
+                    <TableHead className="text-right min-w-[120px]">Purchased Qty</TableHead>
                     <TableHead className="text-right min-w-[120px]">Return Qty</TableHead>
                     <TableHead className="text-right min-w-[120px]">Rate</TableHead>
-                    <TableHead className="text-right min-w-[100px]">GST%</TableHead>
                     <TableHead className="text-right min-w-[120px]">Amount</TableHead>
                     <TableHead className="w-12"></TableHead>
                   </TableRow>
@@ -320,14 +387,12 @@ export function CreditNoteForm() {
                 <TableBody>
                   {fields.map((field, index) => (
                     <TableRow key={field.id}>
-                      <TableCell>
-                          <Input value={field.itemName} readOnly className="bg-muted/50" />
-                      </TableCell>
-                      <TableCell><FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => <Input type="number" className="text-right" {...field} />} /></TableCell>
-                      <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="number" className="text-right bg-muted/50" {...field} readOnly />} /></TableCell>
-                      <TableCell><FormField control={form.control} name={`items.${index}.gstRate`} render={({ field }) => <Input type="number" className="text-right bg-muted/50" {...field} readOnly />} /></TableCell>
+                      <TableCell><Input value={field.itemName} disabled className="cursor-not-allowed focus-visible:ring-0 focus-visible:ring-offset-0" /></TableCell>
+                      <TableCell><Input type="number" className="text-right cursor-not-allowed focus-visible:ring-0 focus-visible:ring-offset-0" value={field.purchasedQty} disabled /></TableCell>
+                      <TableCell><FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => <Input type="text" className="text-right" {...field} />} /></TableCell>
+                      <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="text" className="text-right cursor-not-allowed focus-visible:ring-0 focus-visible:ring-offset-0" {...field} readOnly />} /></TableCell>
                       <TableCell className="text-right font-mono">{formatCurrency((watchedItems[index]?.quantity || 0) * (watchedItems[index]?.rate || 0), 'INR')}</TableCell>
-                      <TableCell><Button variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
+                      <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -358,5 +423,26 @@ export function CreditNoteForm() {
         </div>
       </form>
     </Form>
+
+    <Dialog open={!!noteToPrint} onOpenChange={(open) => !open && setNoteToPrint(null)}>
+        <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+                <DialogTitle>Credit Note Created</DialogTitle>
+                <DialogDescription>
+                    The credit note has been saved. You can now print it.
+                </DialogDescription>
+            </DialogHeader>
+            <PrintableCreditNote ref={printRef} note={noteToPrint!} totals={totals} />
+            <DialogFooter className="sm:justify-between">
+                 <DialogClose asChild>
+                    <Button type="button" variant="secondary">Close</Button>
+                 </DialogClose>
+                 <Button type="button" onClick={handlePrint}>
+                    <Printer className="mr-2 h-4 w-4" /> Print
+                 </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+    </>
   );
 }
