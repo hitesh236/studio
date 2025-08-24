@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import useUserRole from '@/hooks/use-user-role';
 import { GlobalSearch } from './global-search';
 import { generateNotifications, type Notification } from '@/lib/notifications';
+import { PWAInstaller } from './pwa-installer';
 
 const accountingMenuItems = [
     { href: '/recurring-invoices', icon: Repeat, label: 'Recurring Invoices' },
@@ -43,7 +44,6 @@ const uiMenuItems = [
     { href: '/customer-portfolio', icon: UserCircle, label: 'Customer Portfolio' },
     { href: '/ui', icon: Palette, label: 'UI' },
     { href: '/products/create', icon: PackagePlus, label: 'Create Product' },
-    { href: '#', icon: DownloadIcon, label: 'Install App', disabled: true },
 ];
 
 const MegaMenu = () => (
@@ -81,13 +81,14 @@ const MegaMenu = () => (
                 <div className="space-y-1">
                      <DropdownMenuLabel>UI</DropdownMenuLabel>
                     {uiMenuItems.map(item => (
-                        <DropdownMenuItem key={item.href} asChild disabled={item.disabled}>
+                        <DropdownMenuItem key={item.href} asChild>
                             <Link href={item.href} className="flex items-center gap-2">
                                 <item.icon className="h-4 w-4 text-muted-foreground" />
                                 <span>{item.label}</span>
                             </Link>
                         </DropdownMenuItem>
                     ))}
+                     <PWAInstaller />
                 </div>
             </div>
         </DropdownMenuContent>
