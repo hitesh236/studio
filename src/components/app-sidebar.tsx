@@ -48,6 +48,7 @@ import {
     List,
     CalendarX2,
     Banknote,
+    GitCompareArrows,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { usePathname } from 'next/navigation';
@@ -211,6 +212,14 @@ export function AppSidebar() {
                 <Link href="/journal-entries" onClick={handleLinkClick}>
                     <BookOpen />
                     <span>All Entries</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Bank Reconciliation" isActive={pathname.startsWith('/bank-reconciliation')} asChild>
+                <Link href="/bank-reconciliation" onClick={handleLinkClick}>
+                    <GitCompareArrows />
+                    <span>Bank Reconciliation</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
