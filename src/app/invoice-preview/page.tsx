@@ -26,6 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import Loading from '../loading';
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 
 const AddPaymentDialog = ({ invoice, isOpen, onOpenChange }: { invoice: SampleInvoice | null, isOpen: boolean, onOpenChange: (open: boolean) => void }) => {
@@ -156,42 +157,58 @@ const InvoicePreviewPageContent = () => {
   };
 
   return (
-    <div data-section="main-content" className="p-4 sm:p-6 lg:p-8 print:p-0">
-      <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold text-center sm:text-left">Invoice Preview</h1>
+    <TooltipProvider>
+      <div data-section="main-content" className="p-4 sm:p-6 lg:p-8 print:p-0">
+        <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden">
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold text-center sm:text-left">Invoice Preview</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={getStatusVariant(status)} className={cn(status === 'Partially Paid' && 'text-xs')}>
+              {status}
+            </Badge>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" onClick={handlePrint}>
+                        <Printer className="h-4 w-4" />
+                        <span className="sr-only">Print</span>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Print</p>
+                </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon">
+                        <Download className="h-4 w-4" />
+                        <span className="sr-only">Download PDF</span>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Download PDF</p>
+                </TooltipContent>
+            </Tooltip>
+            {!isPaid && (
+              <Button onClick={() => setIsPaymentDialogOpen(true)}>
+                <CreditCard className="mr-2 h-4 w-4" />
+                Add Payment
+              </Button>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant={getStatusVariant(status)} className={cn(status === 'Partially Paid' && 'text-xs')}>
-            {status}
-          </Badge>
-          {!isPaid && (
-            <Button onClick={() => setIsPaymentDialogOpen(true)}>
-              <CreditCard className="mr-2 h-4 w-4" />
-              Add Payment
-            </Button>
-          )}
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="mr-2 h-4 w-4" />
-            Print
-          </Button>
-          <Button>
-            <Download className="mr-2 h-4 w-4" />
-            Download PDF
-          </Button>
+        <Separator className="mb-8 print:hidden" />
+        <div className="max-w-4xl mx-auto bg-card p-0 sm:p-4 md:p-8 rounded-lg shadow-sm border print:shadow-none print:border-none print:rounded-none">
+          <InvoicePreview invoice={invoice} />
         </div>
-      </div>
-      <Separator className="mb-8 print:hidden" />
-      <div className="max-w-4xl mx-auto bg-card p-0 sm:p-4 md:p-8 rounded-lg shadow-sm border print:shadow-none print:border-none print:rounded-none">
-        <InvoicePreview invoice={invoice} />
-      </div>
 
-      <AddPaymentDialog 
-            invoice={invoice}
-            isOpen={isPaymentDialogOpen} 
-            onOpenChange={setIsPaymentDialogOpen} 
-      />
-    </div>
+        <AddPaymentDialog 
+              invoice={invoice}
+              isOpen={isPaymentDialogOpen} 
+              onOpenChange={setIsPaymentDialogOpen} 
+        />
+      </div>
+    </TooltipProvider>
   );
 }
 
@@ -202,4 +219,3 @@ export default function InvoicePreviewPage() {
         </Suspense>
     );
 }
-
