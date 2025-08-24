@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import type { DateRange } from 'react-day-picker';
-import { format } from 'date-fns';
+import { format, isValid, parse } from 'date-fns';
 import { Calendar as CalendarIcon, FileSpreadsheet, Download, AlertTriangle } from 'lucide-react';
 
 import {
@@ -32,6 +32,7 @@ import { generateGstr1Data, generateGstr3bData, type Gstr1Data, type Gstr3bData 
 import { Gstr1Table } from './gstr1-table';
 import { Gstr3bTable } from './gstr3b-table';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
 
 const gstReports = [
   { value: 'gstr-1', label: 'GSTR-1', description: 'Outward Supplies' },
@@ -86,6 +87,13 @@ export function ReportsGenerator() {
         description: `Generating ${reportInfo.label} for the period ${format(date.from, 'LLL dd, y')} to ${format(date.to, 'LLL dd, y')}.`,
     });
     setShowReport(true);
+  };
+  
+  const handleDateInputChange = (field: 'from' | 'to', value: string) => {
+    const parsedDate = parse(value, 'yyyy-MM-dd', new Date());
+    if (isValid(parsedDate)) {
+        setDate(prev => ({ ...prev, [field]: parsedDate }));
+    }
   };
   
   const renderReportTable = () => {
@@ -194,6 +202,28 @@ export function ReportsGenerator() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
+                 <div className="flex items-center gap-2 p-4 border-b">
+                    <div className="space-y-1">
+                        <Label htmlFor="date-from" className="text-xs">From</Label>
+                        <Input
+                            id="date-from"
+                            type="text"
+                            placeholder="YYYY-MM-DD"
+                            defaultValue={date?.from ? format(date.from, 'yyyy-MM-dd') : ''}
+                            onBlur={(e) => handleDateInputChange('from', e.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="date-to" className="text-xs">To</Label>
+                        <Input
+                            id="date-to"
+                            type="text"
+                            placeholder="YYYY-MM-DD"
+                            defaultValue={date?.to ? format(date.to, 'yyyy-MM-dd') : ''}
+                            onBlur={(e) => handleDateInputChange('to', e.target.value)}
+                        />
+                    </div>
+                </div>
                 <Calendar
                   initialFocus
                   mode="range"
