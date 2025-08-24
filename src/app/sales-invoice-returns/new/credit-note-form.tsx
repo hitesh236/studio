@@ -18,7 +18,7 @@ import {
   Printer,
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import type { SalesInvoice, SalesInvoiceItem } from '@/app/sales-invoices/data';
+import type { SalesInvoice } from '@/app/sales-invoices/data';
 import { generateSalesInvoices } from '@/app/sales-invoices/data';
 
 
@@ -40,7 +40,6 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  TableFooter,
 } from '@/components/ui/table';
 import {
   Card,
@@ -83,10 +82,13 @@ const sellerDetails = {
 const creditNoteItemSchema = z.object({
   originalItemId: z.number(),
   itemName: z.string().min(1, 'Item name is required.'),
-  quantity: z.coerce.number().min(0.01, 'Quantity must be positive.').max(Number.MAX_SAFE_INTEGER, "Quantity is too large"),
+  quantity: z.coerce.number().min(0, 'Quantity cannot be negative.'),
   purchasedQty: z.coerce.number().optional(),
   rate: z.coerce.number().min(0, 'Rate cannot be negative.'),
   gstRate: z.coerce.number().min(0).max(100).default(18),
+}).refine(data => data.quantity <= (data.purchasedQty || 0), {
+    message: 'Return quantity cannot exceed purchased quantity.',
+    path: ['quantity'],
 });
 
 const creditNoteFormSchema = z.object({
@@ -103,7 +105,7 @@ type CreditNoteFormValues = z.infer<typeof creditNoteFormSchema>;
 
 let allInvoices: SalesInvoice[] = [];
 
-const PrintableCreditNote = React.forwardRef<HTMLDivElement, { note: CreditNoteFormValues; totals: any; originalInvoiceNumber: string; }>(({ note, totals, originalInvoiceNumber }, ref) => {
+const PrintableCreditNote = React.forwardRef<HTMLDivElement, { note: CreditNoteFormValues; totals: any; originalInvoiceNumber: string }>(({ note, totals, originalInvoiceNumber }, ref) => {
     return (
       <div ref={ref} className="p-4 font-sans text-sm text-black bg-white">
         <div className="text-center space-y-1 mb-4">
@@ -292,7 +294,7 @@ export function CreditNoteForm() {
                                 role="combobox"
                                 className={cn("justify-between", !field.value && "text-muted-foreground")}
                             >
-                                {field.value && allInvoices.length > 0 ? allInvoices.find( (invoice) => invoice.id === field.value )?.invoiceNumber : "Select an invoice"}
+                                {(field.value && allInvoices.length > 0) ? allInvoices.find( (invoice) => invoice.id === field.value )?.invoiceNumber : "Select an invoice"}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                         </FormControl></PopoverTrigger><PopoverContent className="w-[--radix-popover-trigger-width] p-0"><Command filter={(value, search) => {
@@ -402,7 +404,7 @@ export function CreditNoteForm() {
                            )}
                          />
                       </TableCell>
-                      <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="text" className="text-right cursor-not-allowed focus-visible:ring-0 focus-visible:ring-offset-0" {...field} readOnly />} /></TableCell>
+                      <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="text" className="text-right cursor-not-allowed focus-visible:ring-0 focus-visible:ring-offset-0" {...field} disabled />} /></TableCell>
                       <TableCell className="text-right font-mono">{formatCurrency((watchedItems[index]?.quantity || 0) * (watchedItems[index]?.rate || 0), 'INR')}</TableCell>
                       <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                     </TableRow>
