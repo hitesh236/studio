@@ -539,14 +539,18 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
                     <div key={filterId} className="flex items-center gap-2">
                         <Popover>
                             <PopoverTrigger asChild>
-                                <Button variant="outline" className="w-auto">
+                                <Button id="date" variant={"outline"} className={cn("w-auto justify-start text-left font-normal", !filterValues.dateRange && "text-muted-foreground")}>
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    Date Range
-                                    {filterValues.dateRange.from && (
+                                    {filterValues.dateRange?.from ? (
+                                        filterValues.dateRange.to ? (
                                         <>
-                                            <Separator orientation="vertical" className="mx-2 h-4 bg-border" />
-                                            <span className="text-primary">{format(filterValues.dateRange.from, "LLL dd, y")}</span>
+                                            {format(filterValues.dateRange.from, "LLL dd, y")} - {format(filterValues.dateRange.to, "LLL dd, y")}
                                         </>
+                                        ) : (
+                                        format(filterValues.dateRange.from, "LLL dd, y")
+                                        )
+                                    ) : (
+                                        <span>Date Range</span>
                                     )}
                                 </Button>
                             </PopoverTrigger>
