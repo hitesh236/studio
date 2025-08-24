@@ -183,9 +183,11 @@ export function ReconciliationClient({ initialBankTransactions, initialBookTrans
       transactions: (BankTransaction | BookTransaction)[],
       sortConfig: SortConfig
     ) => {
-      let filtered = transactions.filter(tx => 
-        !date?.from || (tx.date >= date.from && tx.date <= (date.to || date.from))
-      );
+      let filtered = transactions.filter(tx => {
+        if (!date?.from) return true;
+        const toDate = date.to ? new Date(date.to.setHours(23, 59, 59, 999)) : new Date(date.from.setHours(23, 59, 59, 999));
+        return tx.date >= date.from && tx.date <= toDate;
+      });
 
       if (sortConfig.key) {
         filtered.sort((a, b) => {
