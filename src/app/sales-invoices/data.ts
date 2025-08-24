@@ -4,6 +4,9 @@ export type SalesInvoiceItem = {
   name: string;
   quantity: number;
   rate: number;
+  gstRate?: number;
+  hsn?: string;
+  unit?: string;
 };
 
 export type SalesInvoice = {
