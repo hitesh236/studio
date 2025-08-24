@@ -1,6 +1,7 @@
 
 'use client';
 
+import * as React from 'react';
 import { usePathname } from 'next/navigation';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -16,10 +17,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
-import { LogOut, User, LayoutGrid, BookOpen, FileText, Eye, Globe, UserCircle, Palette, MonitorPlay, Tags, Repeat, PackagePlus, Box, Truck } from 'lucide-react';
+import { LogOut, User, LayoutGrid, BookOpen, FileText, Eye, Globe, UserCircle, Palette, MonitorPlay, Tags, Repeat, PackagePlus, Box, Truck, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import useUserRole from '@/hooks/use-user-role';
 import { GlobalSearch } from './global-search';
+import { generateNotifications, type Notification } from '@/lib/notifications';
 
 const accountingMenuItems = [
     { href: '/recurring-invoices', icon: Repeat, label: 'Recurring Invoices' },
@@ -91,6 +93,76 @@ const MegaMenu = () => (
     </DropdownMenu>
 );
 
+const NotificationItem = ({ notification }: { notification: Notification }) => {
+    const timeSince = (date: Date) => {
+        const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+        let interval = seconds / 31536000;
+        if (interval > 1) return Math.floor(interval) + " years ago";
+        interval = seconds / 2592000;
+        if (interval > 1) return Math.floor(interval) + " months ago";
+        interval = seconds / 86400;
+        if (interval > 1) return Math.floor(interval) + " days ago";
+        interval = seconds / 3600;
+        if (interval > 1) return Math.floor(interval) + " hours ago";
+        interval = seconds / 60;
+        if (interval > 1) return Math.floor(interval) + " minutes ago";
+        return Math.floor(seconds) + " seconds ago";
+    };
+
+    return (
+        <DropdownMenuItem className="flex items-start gap-3 p-3 cursor-pointer">
+            {!notification.read && <div className="h-2 w-2 rounded-full bg-primary mt-1.5 shrink-0" />}
+            <notification.icon className={cn("h-5 w-5 text-muted-foreground shrink-0 mt-0.5", notification.read && 'ml-4')} />
+            <div className="flex-1">
+                <p className="text-sm font-medium">{notification.title}</p>
+                <p className="text-xs text-muted-foreground">{notification.description}</p>
+                <p className="text-xs text-muted-foreground/80 mt-1">{timeSince(notification.date)}</p>
+            </div>
+        </DropdownMenuItem>
+    )
+};
+
+const NotificationBell = () => {
+    const [notifications, setNotifications] = React.useState<Notification[]>([]);
+    
+    React.useEffect(() => {
+        setNotifications(generateNotifications());
+    }, []);
+
+    const unreadCount = notifications.filter(n => !n.read).length;
+
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                    <Bell />
+                    {unreadCount > 0 && (
+                        <div className="absolute top-0 right-0 h-4 w-4 text-xs rounded-full bg-destructive text-destructive-foreground flex items-center justify-center">
+                            {unreadCount}
+                        </div>
+                    )}
+                    <span className="sr-only">Notifications</span>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80 p-2">
+                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {notifications.length === 0 ? (
+                    <p className="text-sm text-muted-foreground p-4 text-center">No new notifications</p>
+                ) : (
+                    notifications.map(notification => (
+                        <NotificationItem key={notification.id} notification={notification} />
+                    ))
+                )}
+                <DropdownMenuSeparator />
+                 <DropdownMenuItem className="justify-center">
+                    Mark all as read
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    )
+};
+
 export function Header() {
   const { role } = useUserRole();
   return (
@@ -107,6 +179,7 @@ export function Header() {
             </Link>
         </Button>
         <ThemeToggle />
+        <NotificationBell />
         <MegaMenu />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
