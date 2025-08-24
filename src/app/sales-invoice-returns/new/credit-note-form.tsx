@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -86,9 +87,6 @@ const creditNoteItemSchema = z.object({
   purchasedQty: z.coerce.number().optional(),
   rate: z.coerce.number().min(0, 'Rate cannot be negative.'),
   gstRate: z.coerce.number().min(0).max(100).default(18),
-}).refine(data => !data.purchasedQty || data.quantity <= data.purchasedQty, {
-    message: "Return quantity cannot exceed purchased quantity.",
-    path: ["quantity"],
 });
 
 const creditNoteFormSchema = z.object({
@@ -199,7 +197,7 @@ export function CreditNoteForm() {
                 quantity: item.quantity,
                 purchasedQty: item.quantity,
                 rate: item.rate,
-                gstRate: 18, // Assuming a standard GST rate for simplicity
+                gstRate: 18, 
             })),
         })
     }
