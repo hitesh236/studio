@@ -12,8 +12,8 @@ export default function BankReconciliationPage() {
     const [bookTransactions, setBookTransactions] = React.useState<BookTransaction[] | null>(null);
 
     React.useEffect(() => {
-        setBankTransactions(generateBankTransactions(25));
-        setBookTransactions(generateBookTransactions(30));
+        setBankTransactions(generateBankTransactions(90));
+        setBookTransactions(generateBookTransactions(90));
     }, []);
     
     if (!bankTransactions || !bookTransactions) {
