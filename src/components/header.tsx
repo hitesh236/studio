@@ -109,8 +109,8 @@ const NotificationItem = ({ notification }: { notification: Notification }) => {
         return Math.floor(seconds) + " seconds ago";
     };
 
-    return (
-        <DropdownMenuItem className="flex items-start gap-3 p-3 cursor-pointer">
+    const content = (
+        <div className="flex items-start gap-3 p-3">
             {!notification.read && <div className="h-2 w-2 rounded-full bg-primary mt-1.5 shrink-0" />}
             <notification.icon className={cn("h-5 w-5 text-muted-foreground shrink-0 mt-0.5", notification.read && 'ml-4')} />
             <div className="flex-1">
@@ -118,6 +118,20 @@ const NotificationItem = ({ notification }: { notification: Notification }) => {
                 <p className="text-xs text-muted-foreground">{notification.description}</p>
                 <p className="text-xs text-muted-foreground/80 mt-1">{timeSince(notification.date)}</p>
             </div>
+        </div>
+    );
+    
+    if (notification.href) {
+        return (
+            <DropdownMenuItem asChild className="p-0 cursor-pointer">
+                <Link href={notification.href}>{content}</Link>
+            </DropdownMenuItem>
+        );
+    }
+
+    return (
+        <DropdownMenuItem className="flex items-start gap-3 p-3 cursor-default">
+            {content}
         </DropdownMenuItem>
     )
 };

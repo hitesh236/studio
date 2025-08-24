@@ -10,6 +10,7 @@ export type Notification = {
   date: Date;
   read: boolean;
   icon: LucideIcon;
+  href?: string;
 };
 
 export const generateNotifications = (): Notification[] => {
@@ -23,6 +24,7 @@ export const generateNotifications = (): Notification[] => {
       date: new Date(new Date().setDate(now.getDate() - 3)),
       read: false,
       icon: FileWarning,
+      href: '/sales-invoices',
     },
     {
       id: 'notif-2',
@@ -32,6 +34,7 @@ export const generateNotifications = (): Notification[] => {
       date: new Date(new Date().setDate(now.getDate() - 1)),
       read: false,
       icon: PackageX,
+      href: '/stock-list',
     },
     {
       id: 'notif-3',
@@ -41,6 +44,7 @@ export const generateNotifications = (): Notification[] => {
       date: new Date(),
       read: true,
       icon: UserPlus,
+      href: '/settings/user-roles',
     },
     {
       id: 'notif-4',
@@ -50,6 +54,7 @@ export const generateNotifications = (): Notification[] => {
       date: new Date(),
       read: true,
       icon: PackageX,
+      href: '/stock-list',
     },
   ];
 };
