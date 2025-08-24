@@ -75,7 +75,7 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { format, isValid, parse } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import { PaymentForm } from '../payments/payment-form';
 import { Calendar } from '@/components/ui/calendar';
@@ -175,12 +175,12 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
     if (activeFilters.has("dateRange")) {
       const { from, to } = filterValues.dateRange;
       if (from) {
-        results = results.filter((p) => p.invoiceDate >= from);
+        results = results.filter((p) => new Date(p.invoiceDate) >= from);
       }
       if (to) {
         const toDate = new Date(to);
         toDate.setHours(23, 59, 59, 999);
-        results = results.filter((p) => p.invoiceDate <= toDate);
+        results = results.filter((p) => new Date(p.invoiceDate) <= toDate);
       }
     }
     
@@ -214,8 +214,8 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
         switch(key) {
             case 'invoiceDate':
             case 'dueDate':
-                valA = (a[key as keyof SalesInvoice] as Date).getTime();
-                valB = (b[key as keyof SalesInvoice] as Date).getTime();
+                valA = new Date(a[key as keyof SalesInvoice] as string).getTime();
+                valB = new Date(b[key as keyof SalesInvoice] as string).getTime();
                 break;
             default:
                 valA = (a as any)[key];
@@ -388,8 +388,21 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
         case 'paymentStatus':
             setFilterValues(prev => ({...prev, paymentStatuses: []}));
             break;
+        case 'dateRange':
+            setFilterValues(prev => ({...prev, dateRange: { from: undefined, to: undefined }}));
+            break;
     }
     setPageAndClearSelection(0);
+  };
+  
+  const handleDateInputChange = (field: 'from' | 'to', value: string) => {
+    const parsedDate = parse(value, 'yyyy-MM-dd', new Date());
+    if (isValid(parsedDate)) {
+        setFilterValues(prev => ({
+            ...prev,
+            dateRange: { ...prev.dateRange, [field]: parsedDate }
+        }));
+    }
   };
 
   const handleDragStart = (e: React.DragEvent, columnId: string) => {
@@ -477,13 +490,37 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
                                 <Button variant="outline" className="w-auto">
                                     <CalendarIcon className="mr-2 h-4 w-4" />
                                     Date Range
-                                    <Separator orientation="vertical" className="mx-2 h-4 bg-border" />
-                                    {filterValues.dateRange.from ? (
-                                        <span className="text-primary">{format(filterValues.dateRange.from, "LLL dd, y")}</span>
-                                    ) : <span className="text-muted-foreground">Any</span>}
+                                    {filterValues.dateRange.from && (
+                                        <>
+                                            <Separator orientation="vertical" className="mx-2 h-4 bg-border" />
+                                            <span className="text-primary">{format(filterValues.dateRange.from, "LLL dd, y")}</span>
+                                        </>
+                                    )}
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
+                                 <div className="flex items-center gap-2 p-4 border-b">
+                                    <div className="space-y-1">
+                                        <Label htmlFor="date-from" className="text-xs">From</Label>
+                                        <Input
+                                            id="date-from"
+                                            type="text"
+                                            placeholder="YYYY-MM-DD"
+                                            defaultValue={filterValues.dateRange.from ? format(filterValues.dateRange.from, 'yyyy-MM-dd') : ''}
+                                            onBlur={(e) => handleDateInputChange('from', e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="date-to" className="text-xs">To</Label>
+                                        <Input
+                                            id="date-to"
+                                            type="text"
+                                            placeholder="YYYY-MM-DD"
+                                            defaultValue={filterValues.dateRange.to ? format(filterValues.dateRange.to, 'yyyy-MM-dd') : ''}
+                                            onBlur={(e) => handleDateInputChange('to', e.target.value)}
+                                        />
+                                    </div>
+                                </div>
                                 <Calendar initialFocus mode="range" defaultMonth={filterValues.dateRange.from} selected={filterValues.dateRange} onSelect={(range) => setFilterValues(prev => ({...prev, dateRange: range || {from: undefined, to: undefined}}))} numberOfMonths={2}/>
                             </PopoverContent>
                         </Popover>
@@ -777,3 +814,5 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
     </TooltipProvider>
   );
 }
+
+    
