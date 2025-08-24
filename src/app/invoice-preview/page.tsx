@@ -2,6 +2,8 @@
 'use client';
 
 import * as React from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, Printer, CreditCard } from "lucide-react";
 import { InvoicePreview } from "./invoice-preview";
@@ -23,12 +25,24 @@ import { formatCurrency } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import Loading from '../loading';
 
 
-const AddPaymentDialog = ({ invoice, isOpen, onOpenChange }: { invoice: typeof sampleInvoice, isOpen: boolean, onOpenChange: (open: boolean) => void }) => {
+const AddPaymentDialog = ({ invoice, isOpen, onOpenChange }: { invoice: SampleInvoice | null, isOpen: boolean, onOpenChange: (open: boolean) => void }) => {
     const { toast } = useToast();
     const [amount, setAmount] = React.useState('');
     const [paymentMode, setPaymentMode] = React.useState('bank');
+
+    React.useEffect(() => {
+        if (!isOpen) {
+            setAmount('');
+            setPaymentMode('bank');
+        } else if (invoice) {
+            setAmount(invoice.totals.amountDue.toString());
+        }
+    }, [isOpen, invoice]);
+
+    if (!invoice) return null;
 
     const handleSave = () => {
         const parsedAmount = parseFloat(amount);
@@ -57,15 +71,6 @@ const AddPaymentDialog = ({ invoice, isOpen, onOpenChange }: { invoice: typeof s
         onOpenChange(false);
         setAmount('');
     }
-
-    React.useEffect(() => {
-        if (!isOpen) {
-            setAmount('');
-            setPaymentMode('bank');
-        } else {
-            setAmount(invoice.totals.amountDue.toString());
-        }
-    }, [isOpen, invoice.totals.amountDue]);
 
 
     return (
@@ -115,16 +120,31 @@ const AddPaymentDialog = ({ invoice, isOpen, onOpenChange }: { invoice: typeof s
     );
 };
 
-
-export default function InvoicePreviewPage() {
+const InvoicePreviewPageContent = () => {
+  const searchParams = useSearchParams();
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false);
+
+  const invoiceDataString = searchParams.get('invoiceData');
+  const invoice = React.useMemo(() => {
+    if (!invoiceDataString) return sampleInvoice;
+    try {
+        const parsed = JSON.parse(decodeURIComponent(invoiceDataString));
+        // Dates need to be converted back to Date objects
+        parsed.invoiceDetails.date = new Date(parsed.invoiceDetails.date);
+        parsed.invoiceDetails.dueDate = new Date(parsed.invoiceDetails.dueDate);
+        return parsed as SampleInvoice;
+    } catch (error) {
+        console.error("Failed to parse invoice data from URL, showing sample.", error);
+        return sampleInvoice;
+    }
+  }, [invoiceDataString]);
 
   const handlePrint = () => {
     window.print();
   };
 
-  const isPaid = sampleInvoice.invoiceDetails.status === 'Paid';
-  const { status } = sampleInvoice.invoiceDetails;
+  const isPaid = invoice.invoiceDetails.status === 'Paid';
+  const { status } = invoice.invoiceDetails;
 
   const getStatusVariant = (status: SampleInvoice['invoiceDetails']['status']): "default" | "secondary" | "destructive" | "outline" | "warning" => {
     switch (status) {
@@ -163,14 +183,23 @@ export default function InvoicePreviewPage() {
       </div>
       <Separator className="mb-8 print:hidden" />
       <div className="max-w-4xl mx-auto bg-card p-0 sm:p-4 md:p-8 rounded-lg shadow-sm border print:shadow-none print:border-none print:rounded-none">
-        <InvoicePreview invoice={sampleInvoice} />
+        <InvoicePreview invoice={invoice} />
       </div>
 
       <AddPaymentDialog 
-            invoice={sampleInvoice}
+            invoice={invoice}
             isOpen={isPaymentDialogOpen} 
             onOpenChange={setIsPaymentDialogOpen} 
       />
     </div>
   );
 }
+
+export default function InvoicePreviewPage() {
+    return (
+        <Suspense fallback={<Loading />}>
+            <InvoicePreviewPageContent />
+        </Suspense>
+    );
+}
+
