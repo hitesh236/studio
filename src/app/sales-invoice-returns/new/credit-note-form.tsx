@@ -387,8 +387,21 @@ export function CreditNoteForm() {
                   {fields.map((field, index) => (
                     <TableRow key={field.id}>
                       <TableCell><Input value={field.itemName} disabled className="cursor-not-allowed focus-visible:ring-0 focus-visible:ring-offset-0" /></TableCell>
-                      <TableCell><Input type="number" className="text-right cursor-not-allowed focus-visible:ring-0 focus-visible:ring-offset-0" value={field.purchasedQty} disabled /></TableCell>
-                      <TableCell><FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => <Input type="text" className="text-right" {...field} />} /></TableCell>
+                      <TableCell><Input type="text" className="text-right cursor-not-allowed focus-visible:ring-0 focus-visible:ring-offset-0" value={field.purchasedQty} disabled /></TableCell>
+                       <TableCell>
+                         <FormField 
+                           control={form.control}
+                           name={`items.${index}.quantity`} 
+                           render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input type="text" className="text-right" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                             </FormItem>
+                           )}
+                         />
+                      </TableCell>
                       <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="text" className="text-right cursor-not-allowed focus-visible:ring-0 focus-visible:ring-offset-0" {...field} readOnly />} /></TableCell>
                       <TableCell className="text-right font-mono">{formatCurrency((watchedItems[index]?.quantity || 0) * (watchedItems[index]?.rate || 0), 'INR')}</TableCell>
                       <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
