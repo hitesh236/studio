@@ -61,7 +61,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "../ui/separator";
+import { Separator } from "@/components/ui/separator";
 import { SummaryCard } from "./summary-card";
 import {
   Tooltip,
@@ -72,11 +72,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -276,29 +271,8 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
     setIsPaymentDialogOpen(true);
   };
 
-  const handlePaymentSuccess = (invoiceId: string, paymentAmount: number) => {
-    setData(prevData =>
-      prevData.map(inv => {
-        if (inv.id === invoiceId) {
-          const newAmountPaid = inv.amountPaid + paymentAmount;
-          const newAmountDue = inv.amountDue - paymentAmount;
-          let newStatus: SalesInvoice['paymentStatus'] = 'Partially Paid';
-          if (newAmountDue <= 0.01) {
-            newStatus = 'Paid';
-          } else if (new Date() > inv.dueDate) {
-            newStatus = 'Overdue';
-          }
-
-          return {
-            ...inv,
-            amountPaid: newAmountPaid,
-            amountDue: newAmountDue,
-            paymentStatus: newStatus,
-          };
-        }
-        return inv;
-      })
-    );
+  const handlePaymentSuccess = () => {
+    // This could refetch data in a real app
     setIsPaymentDialogOpen(false);
   };
 
@@ -751,8 +725,11 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
                 <div className="max-h-[90vh] overflow-y-auto p-6">
                     <PaymentForm 
                         type="receipt" 
-                        onSuccess={() => {}} 
-                        // You'll need to pass customer and invoice info here
+                        onSuccess={handlePaymentSuccess} 
+                        initialData={{
+                            partyId: invoiceForPayment?.customerName,
+                            totalAmountReceived: invoiceForPayment?.amountDue,
+                        }}
                     />
                 </div>
             </DialogContent>
