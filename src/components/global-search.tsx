@@ -132,13 +132,13 @@ export function GlobalSearch() {
                 const Icon = item.icon;
                 return (
                     <CommandItem
-                    key={item.id}
-                    value={item.label}
-                    onSelect={() => runCommand(() => router.push(item.href))}
+                        key={item.id}
+                        value={`${item.label} ${item.description}`}
+                        onSelect={() => runCommand(() => router.push(item.href))}
                     >
-                    <Icon className="mr-2 h-4 w-4" />
-                    <span>{item.label}</span>
-                    <span className="ml-2 text-xs text-muted-foreground">{item.description}</span>
+                        <Icon className="mr-2 h-4 w-4" />
+                        <span>{item.label}</span>
+                        <span className="ml-2 text-xs text-muted-foreground">{item.description}</span>
                     </CommandItem>
                 );
               })}
