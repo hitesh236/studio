@@ -56,11 +56,11 @@ import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
-  DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { SummaryCard } from "./summary-card";
@@ -401,10 +401,23 @@ export function SalesInvoicesTable({ data: initialData }: { data: SalesInvoice[]
 
   const parseTallyDate = (input: string): Date | null => {
     if (!input) return null;
+    const now = new Date();
     
+    // Handle 6-digit ddmmyy format
+    if (/^\d{6}$/.test(input)) {
+        let day = parseInt(input.substring(0, 2), 10);
+        let month = parseInt(input.substring(2, 4), 10) - 1;
+        let year = parseInt(input.substring(4, 6), 10);
+        
+        if (year < 100) {
+            year += 2000;
+        }
+        const date = new Date(year, month, day);
+        return isValid(date) ? date : null;
+    }
+
     const parts = input.split(/[/.-]/);
     let day: number, month: number, year: number;
-    const now = new Date();
 
     if (parts.length === 1) { // e.g., "15"
         day = parseInt(parts[0], 10);
