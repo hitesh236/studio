@@ -19,11 +19,19 @@ export type BookTransaction = {
   status: 'unreconciled' | 'reconciled';
 };
 
-const matchingEntries = [
-    { amount: 1500, date: new Date(2024, 6, 20), description: "Vendor Payment #M1" },
-    { amount: 2200, date: new Date(2024, 6, 15), description: "Online Transfer from Client #M2" },
-    { amount: 850, date: new Date(2024, 6, 10), description: "Vendor Payment #M3" },
-];
+const matchingEntries: { amount: number, date: Date, description: string }[] = [];
+const numberOfMatchingEntries = 81; // 90% of 90
+
+for (let i = 0; i < numberOfMatchingEntries; i++) {
+    const amount = Math.floor(Math.random() * 4000) + 500;
+    const date = new Date(2024, 6, Math.floor(Math.random() * 20) + 1);
+    const isClientPayment = Math.random() > 0.5;
+    matchingEntries.push({
+        amount,
+        date,
+        description: isClientPayment ? `Online Transfer from Client #M${i + 1}` : `Vendor Payment #M${i + 1}`,
+    });
+}
 
 
 export const generateBankTransactions = (count: number): BankTransaction[] => {
@@ -50,7 +58,8 @@ export const generateBankTransactions = (count: number): BankTransaction[] => {
   });
   
   // Add other random entries
-  for (let i = 0; i < count; i++) {
+  const randomCount = Math.max(0, count - matchingEntries.length);
+  for (let i = 0; i < randomCount; i++) {
     const isDeposit = Math.random() > 0.5;
     const amount = Math.floor(Math.random() * 5000) + 100;
     if (isDeposit) {
@@ -89,7 +98,8 @@ export const generateBookTransactions = (count: number): BookTransaction[] => {
   });
 
   // Add other random entries
-  for (let i = 0; i < count; i++) {
+  const randomCount = Math.max(0, count - matchingEntries.length);
+  for (let i = 0; i < randomCount; i++) {
     const isCredit = Math.random() > 0.5;
     const amount = Math.floor(Math.random() * 5000) + 100;
     transactions.push({
