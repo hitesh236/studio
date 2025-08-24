@@ -91,6 +91,7 @@ const creditNoteItemSchema = z.object({
     path: ['quantity'],
 });
 
+
 const creditNoteFormSchema = z.object({
   originalInvoiceId: z.string().min(1, 'Original invoice must be selected.'),
   customerName: z.string(),
@@ -220,21 +221,20 @@ export function CreditNoteForm() {
     }
   }, [searchParams, onInvoiceSelect]);
   
-  const watchedItems = form.watch('items');
-  const watchedPlaceOfSupply = form.watch('placeOfSupply');
-  const originalInvoice = allInvoices.find(inv => inv.id === form.getValues('originalInvoiceId'));
+  const watchedFormValues = form.watch();
+  const originalInvoice = allInvoices.find(inv => inv.id === watchedFormValues.originalInvoiceId);
   
   const totals = React.useMemo(() => {
     let subtotal = 0;
     
-    watchedItems.forEach(item => {
+    watchedFormValues.items.forEach(item => {
         const itemAmount = (item.quantity || 0) * (item.rate || 0);
         subtotal += itemAmount;
     });
 
-    const gstRate = (watchedItems.length > 0 && watchedItems[0]?.gstRate) ? watchedItems[0].gstRate : 18; // simplified
+    const gstRate = (watchedFormValues.items.length > 0 && watchedFormValues.items[0]?.gstRate) ? watchedFormValues.items[0].gstRate : 18; // simplified
     const totalGst = subtotal * (gstRate / 100);
-    const isIntraState = watchedPlaceOfSupply === sellerDetails.state;
+    const isIntraState = watchedFormValues.placeOfSupply === sellerDetails.state;
 
     const totalCgst = isIntraState ? totalGst / 2 : 0;
     const totalSgst = isIntraState ? totalGst / 2 : 0;
@@ -243,7 +243,7 @@ export function CreditNoteForm() {
     const grandTotal = subtotal + totalGst;
 
     return { subtotal, grandTotal, totalGst, totalCgst, totalSgst, totalIgst };
-  }, [watchedItems, watchedPlaceOfSupply]);
+  }, [watchedFormValues]);
   
   const handlePrint = () => {
     const printContent = printRef.current;
@@ -405,7 +405,7 @@ export function CreditNoteForm() {
                          />
                       </TableCell>
                       <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field: rateField }) => <Input type="text" className="text-right cursor-not-allowed focus-visible:ring-0 focus-visible:ring-offset-0" {...rateField} disabled />} /></TableCell>
-                      <TableCell className="text-right font-mono">{formatCurrency((watchedItems[index]?.quantity || 0) * (watchedItems[index]?.rate || 0), 'INR')}</TableCell>
+                      <TableCell className="text-right font-mono">{formatCurrency((watchedFormValues.items[index]?.quantity || 0) * (watchedFormValues.items[index]?.rate || 0), 'INR')}</TableCell>
                       <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                     </TableRow>
                   ))}
@@ -460,3 +460,4 @@ export function CreditNoteForm() {
     </>
   );
 }
+
