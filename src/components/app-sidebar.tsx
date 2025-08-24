@@ -126,7 +126,7 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Receipts" isActive={pathname === '/payments' && new URLSearchParams(window.location.search).get('type') === 'receipt'} asChild>
+              <SidebarMenuButton tooltip="Receipts" isActive={pathname === '/payments'} asChild>
                 <Link href="/payments?type=receipt" onClick={handleLinkClick}>
                     <Banknote />
                     <span>Receipts</span>
@@ -156,7 +156,7 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Payments" isActive={pathname === '/payments' && new URLSearchParams(window.location.search).get('type') === 'payment'} asChild>
+              <SidebarMenuButton tooltip="Payments" isActive={pathname === '/payments'} asChild>
                 <Link href="/payments?type=payment" onClick={handleLinkClick}>
                     <Banknote />
                     <span>Payments</span>
