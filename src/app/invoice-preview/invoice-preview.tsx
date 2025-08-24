@@ -3,6 +3,7 @@
 
 import * as React from 'react';
 import type { SampleInvoice } from './invoice-data';
+import type { SalesInvoice } from '../sales-invoices/data';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
@@ -11,13 +12,25 @@ import { cn, formatCurrency, numberToWords } from '@/lib/utils';
 
 
 interface InvoicePreviewProps {
-  invoice: SampleInvoice;
+  invoice: SalesInvoice;
 }
 
 export function InvoicePreview({ invoice }: InvoicePreviewProps) {
-    const { seller, buyer, invoiceDetails, items, totals, bankDetails, terms } = invoice;
+    const { seller, buyer, invoiceDetails, items, totals, bankDetails, terms } = sampleInvoice;
 
-    const isIntraState = seller.state === buyer.placeOfSupply;
+    // Use the dynamic invoice data, but fall back to sample for structure
+    const dynamicItems = invoice.items || items;
+    const dynamicTotals = {
+        subtotal: invoice.totalTaxableValue,
+        cgst: invoice.gstType === 'CGST&SGST' ? invoice.totalGstAmount / 2 : 0,
+        sgst: invoice.gstType === 'CGST&SGST' ? invoice.totalGstAmount / 2 : 0,
+        igst: invoice.gstType === 'IGST' ? invoice.totalGstAmount : 0,
+        grandTotal: invoice.amountBase,
+        amountPaid: invoice.amountPaid,
+        amountDue: invoice.amountDue,
+    };
+    
+    const isIntraState = invoice.placeOfSupply === sellerDetails.state;
 
     // GST Breakdown Logic
     const gstBreakdown = React.useMemo(() => {
@@ -31,8 +44,8 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
             totalTax: number;
         }> = {};
 
-        items.forEach(item => {
-            const { hsn, quantity, rate, gstRate } = item;
+        dynamicItems.forEach(item => {
+            const { name, quantity, rate, gstRate = 18, hsn = '9983' } = item;
             const taxableAmount = quantity * rate;
             const gstAmount = taxableAmount * (gstRate / 100);
 
@@ -59,7 +72,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
             }
         });
         return Object.values(breakdown);
-    }, [items, isIntraState]);
+    }, [dynamicItems, isIntraState]);
 
     const breakdownTotals = React.useMemo(() => {
         return gstBreakdown.reduce((acc, item) => {
@@ -92,10 +105,10 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                 <div className="text-right">
                     <h2 className="text-4xl print:text-[10px] font-bold tracking-tight uppercase text-primary">Tax Invoice</h2>
                     <div className="mt-2 space-y-1 print:text-[10px] text-sm">
-                        <p><strong>Invoice No:</strong> {invoiceDetails.number}</p>
-                        <p><strong>Invoice Date:</strong> {format(invoiceDetails.date, 'PPP')}</p>
-                        <p><strong>Place of Supply:</strong> {buyer.placeOfSupply}</p>
-                        <p><strong>Due Date:</strong> {format(invoiceDetails.dueDate, 'PPP')}</p>
+                        <p><strong>Invoice No:</strong> {invoice.invoiceNumber}</p>
+                        <p><strong>Invoice Date:</strong> {format(new Date(invoice.invoiceDate), 'PPP')}</p>
+                        <p><strong>Place of Supply:</strong> {invoice.placeOfSupply}</p>
+                        <p><strong>Due Date:</strong> {format(new Date(invoice.dueDate), 'PPP')}</p>
                     </div>
                 </div>
             </header>
@@ -106,13 +119,13 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
             <section className="grid grid-cols-2 gap-8 print:gap-4 text-sm print:text-[10px]">
                 <div>
                     <h3 className="font-semibold mb-2 print:mb-1 print:text-[10px]">Bill To:</h3>
-                    <p className="font-bold print:text-[10px]">{buyer.name}</p>
+                    <p className="font-bold print:text-[10px]">{invoice.customerName}</p>
                     <p className="print:text-[10px]">{buyer.billingAddress}</p>
                     {buyer.gstin && <p className="print:text-[10px]">GSTIN: <span className="font-mono">{buyer.gstin}</span></p>}
                 </div>
                 <div>
                     <h3 className="font-semibold mb-2 print:mb-1 print:text-[10px]">Ship To:</h3>
-                    <p className="font-bold print:text-[10px]">{buyer.name}</p>
+                    <p className="font-bold print:text-[10px]">{invoice.customerName}</p>
                     <p className="print:text-[10px]">{buyer.shippingAddress}</p>
                 </div>
             </section>
@@ -123,7 +136,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                     <TableHeader>
                         <TableRow>
                             <TableHead className="w-12 text-center print:h-auto print:py-1 print:px-2 print:text-[10px]">#</TableHead>
-                            <TableHead className="print:h-auto print:py-1 print:px-2 print:text-[10px]">Item & Description</TableHead>
+                            <TableHead className="print:h-auto print:py-1 print:px-2 print:text-[10px]">{invoice.invoiceType === 'Service' ? 'Service Description' : 'Item & Description'}</TableHead>
                             <TableHead className="text-center print:h-auto print:py-1 print:px-2 print:text-[10px]">HSN</TableHead>
                             <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">Qty</TableHead>
                             <TableHead className="text-right print:h-auto print:py-1 print:px-2 print:text-[10px]">Unit</TableHead>
@@ -133,9 +146,9 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {items.map((item, index) => {
+                        {dynamicItems.map((item, index) => {
                             const taxableAmount = item.quantity * item.rate;
-                            const gstAmount = taxableAmount * (item.gstRate / 100);
+                            const gstAmount = taxableAmount * ((item.gstRate || 18) / 100);
                             const totalAmount = taxableAmount + gstAmount;
                             return (
                                 <TableRow key={item.id}>
@@ -143,11 +156,11 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                                     <TableCell className="print:py-1 print:px-2 print:text-[10px]">
                                         <p className="font-medium print:text-[10px]">{item.name}</p>
                                     </TableCell>
-                                    <TableCell className="text-center print:py-1 print:px-2 print:text-[10px]">{item.hsn}</TableCell>
+                                    <TableCell className="text-center print:py-1 print:px-2 print:text-[10px]">{item.hsn || '9983'}</TableCell>
                                     <TableCell className="text-right print:py-1 print:px-2 print:text-[10px]">{item.quantity}</TableCell>
-                                    <TableCell className="text-right print:py-1 print:px-2 print:text-[10px]">{item.unit}</TableCell>
+                                    <TableCell className="text-right print:py-1 print:px-2 print:text-[10px]">{item.unit || 'nos'}</TableCell>
                                     <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(item.rate, 'INR')}</TableCell>
-                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{item.gstRate}%</TableCell>
+                                    <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{item.gstRate || 18}%</TableCell>
                                     <TableCell className="text-right font-mono print:py-1 print:px-2 print:text-[10px]">{formatCurrency(totalAmount, 'INR')}</TableCell>
                                 </TableRow>
                             );
@@ -162,23 +175,23 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
             <section className="flex justify-between items-start gap-8 print:gap-4">
                 <div className="flex-1 space-y-2 print:text-[10px]">
                      <h4 className="font-semibold print:text-[10px]">Amount in Words:</h4>
-                    <p className="text-muted-foreground print:text-[10px]">{numberToWords(totals.grandTotal)}</p>
+                    <p className="text-muted-foreground print:text-[10px]">{numberToWords(dynamicTotals.grandTotal)}</p>
                 </div>
                  <div className="w-full max-w-sm space-y-2 print:text-[10px]">
-                    <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">Subtotal:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.subtotal, 'INR')}</span></div>
+                    <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">Subtotal:</span><span className="font-mono print:text-[10px]">{formatCurrency(dynamicTotals.subtotal, 'INR')}</span></div>
                     {isIntraState ? (
                         <>
-                            <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">CGST:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.cgst, 'INR')}</span></div>
-                            <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">SGST:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.sgst, 'INR')}</span></div>
+                            <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">CGST:</span><span className="font-mono print:text-[10px]">{formatCurrency(dynamicTotals.cgst, 'INR')}</span></div>
+                            <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">SGST:</span><span className="font-mono print:text-[10px]">{formatCurrency(dynamicTotals.sgst, 'INR')}</span></div>
                         </>
                     ) : (
-                        <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">IGST:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.igst, 'INR')}</span></div>
+                        <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">IGST:</span><span className="font-mono print:text-[10px]">{formatCurrency(dynamicTotals.igst, 'INR')}</span></div>
                     )}
                     <Separator />
-                    <div className="flex justify-between font-bold text-lg print:text-[10px]"><span className="print:text-[10px]">Grand Total:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.grandTotal, 'INR')}</span></div>
-                    <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">Amount Paid:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.amountPaid, 'INR')}</span></div>
+                    <div className="flex justify-between font-bold text-lg print:text-[10px]"><span className="print:text-[10px]">Grand Total:</span><span className="font-mono print:text-[10px]">{formatCurrency(dynamicTotals.grandTotal, 'INR')}</span></div>
+                    <div className="flex justify-between print:text-[10px]"><span className="text-muted-foreground print:text-[10px]">Amount Paid:</span><span className="font-mono print:text-[10px]">{formatCurrency(dynamicTotals.amountPaid, 'INR')}</span></div>
                     <Separator />
-                    <div className="flex justify-between font-bold text-lg print:text-[10px] text-destructive"><span className="print:text-[10px]">Amount Due:</span><span className="font-mono print:text-[10px]">{formatCurrency(totals.amountDue, 'INR')}</span></div>
+                    <div className="flex justify-between font-bold text-lg print:text-[10px] text-destructive"><span className="print:text-[10px]">Amount Due:</span><span className="font-mono print:text-[10px]">{formatCurrency(dynamicTotals.amountDue, 'INR')}</span></div>
                 </div>
             </section>
 

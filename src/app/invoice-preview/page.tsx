@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Printer, CreditCard } from "lucide-react";
 import { InvoicePreview } from "./invoice-preview";
 import { sampleInvoice, type SampleInvoice } from "./invoice-data";
+import type { SalesInvoice } from '../sales-invoices/data';
 import { Separator } from '@/components/ui/separator';
 import {
   Dialog,
@@ -25,20 +26,20 @@ const InvoicePreviewPageContent = () => {
   const searchParams = useSearchParams();
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false);
 
-  const invoiceDataString = searchParams.get('invoiceData');
   const invoice = React.useMemo(() => {
-    if (!invoiceDataString) return sampleInvoice;
+    const invoiceDataString = searchParams.get('invoiceData');
+    if (!invoiceDataString) return null;
     try {
         const parsed = JSON.parse(decodeURIComponent(invoiceDataString));
         // Dates need to be converted back to Date objects
-        parsed.invoiceDetails.date = new Date(parsed.invoiceDetails.date);
-        parsed.invoiceDetails.dueDate = new Date(parsed.invoiceDetails.dueDate);
-        return parsed as SampleInvoice;
+        parsed.invoiceDate = new Date(parsed.invoiceDate);
+        parsed.dueDate = new Date(parsed.dueDate);
+        return parsed as SalesInvoice;
     } catch (error) {
         console.error("Failed to parse invoice data from URL, showing sample.", error);
-        return sampleInvoice;
+        return null;
     }
-  }, [invoiceDataString]);
+  }, [searchParams]);
 
   const handlePrint = () => {
     window.print();
@@ -49,14 +50,27 @@ const InvoicePreviewPageContent = () => {
     // Here you would typically refetch or update the invoice data
   };
 
-  const isPaid = invoice.invoiceDetails.status === 'Paid';
-  const { status } = invoice.invoiceDetails;
+  if (!invoice) {
+    return (
+        <div className="flex h-full min-h-[calc(100vh-8rem)] items-center justify-center p-4">
+            <div className="text-center">
+                <h2 className="text-xl font-semibold">Could not load invoice data.</h2>
+                <p className="text-muted-foreground">Please go back and try again.</p>
+            </div>
+        </div>
+    );
+  }
 
-  const getStatusVariant = (status: SampleInvoice['invoiceDetails']['status']): "default" | "secondary" | "destructive" | "outline" | "warning" => {
+  const isPaid = invoice.paymentStatus === 'Paid';
+  const { status } = { status: invoice.paymentStatus };
+
+  const getStatusVariant = (status: SalesInvoice['paymentStatus']): "default" | "secondary" | "destructive" | "outline" | "warning" => {
     switch (status) {
         case 'Paid': return 'default';
         case 'Partially Paid': return 'warning';
         case 'Unpaid': return 'destructive';
+        case 'Outstanding': return 'outline';
+        case 'Overdue': return 'destructive';
         default: return 'outline';
     }
   };
@@ -113,10 +127,9 @@ const InvoicePreviewPageContent = () => {
                     <PaymentForm 
                         type="receipt" 
                         onSuccess={handlePaymentSuccess}
-                        // Pass initial data to pre-fill the form
                         initialData={{
-                            partyId: invoice.id, // Assuming invoice ID can map to a customer ID
-                            totalAmountReceived: invoice.totals.amountDue,
+                            partyId: invoice.customerName, // Pass customer name to match against party list
+                            totalAmountReceived: invoice.amountDue,
                         }}
                     />
                 </div>

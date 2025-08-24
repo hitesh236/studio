@@ -148,7 +148,7 @@ export const columns = ({
             variant = "default";
             break;
           case "Partially Paid":
-            variant = "warning";
+            variant = "secondary";
             break;
           case "Overdue":
             variant = "destructive";
