@@ -87,7 +87,7 @@ const creditNoteItemSchema = z.object({
   rate: z.coerce.number().min(0, 'Rate cannot be negative.'),
   gstRate: z.coerce.number().min(0).max(100).default(18),
 }).refine(data => data.quantity <= (data.purchasedQty || 0), {
-    message: 'Return quantity cannot exceed purchased quantity.',
+    message: 'Cannot return more than purchased quantity.',
     path: ['quantity'],
 });
 
@@ -196,7 +196,7 @@ export function CreditNoteForm() {
             items: invoice.items.map(item => ({
                 originalItemId: item.id,
                 itemName: item.name,
-                quantity: item.quantity,
+                quantity: 0,
                 purchasedQty: item.quantity,
                 rate: item.rate,
                 gstRate: 18, 
@@ -394,17 +394,17 @@ export function CreditNoteForm() {
                          <FormField 
                            control={form.control}
                            name={`items.${index}.quantity`} 
-                           render={({ field }) => (
+                           render={({ field: qtyField }) => (
                             <FormItem>
                               <FormControl>
-                                <Input type="text" className="text-right" {...field} />
+                                <Input type="text" className="text-right" {...qtyField} />
                               </FormControl>
                               <FormMessage />
                              </FormItem>
                            )}
                          />
                       </TableCell>
-                      <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field }) => <Input type="text" className="text-right cursor-not-allowed focus-visible:ring-0 focus-visible:ring-offset-0" {...field} disabled />} /></TableCell>
+                      <TableCell><FormField control={form.control} name={`items.${index}.rate`} render={({ field: rateField }) => <Input type="text" className="text-right cursor-not-allowed focus-visible:ring-0 focus-visible:ring-offset-0" {...rateField} disabled />} /></TableCell>
                       <TableCell className="text-right font-mono">{formatCurrency((watchedItems[index]?.quantity || 0) * (watchedItems[index]?.rate || 0), 'INR')}</TableCell>
                       <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                     </TableRow>
