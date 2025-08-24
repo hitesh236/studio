@@ -213,9 +213,7 @@ export function CreditNoteForm() {
                     render={({ field }) => (
                     <FormItem className="flex flex-col">
                         <FormLabel>Original Invoice</FormLabel>
-                        <Popover>
-                        <PopoverTrigger asChild>
-                            <FormControl>
+                        <Popover><PopoverTrigger asChild><FormControl>
                             <Button
                                 variant="outline"
                                 role="combobox"
@@ -231,18 +229,13 @@ export function CreditNoteForm() {
                                 : "Select an invoice"}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
-                            </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                            <Command filter={(value, search) => {
+                        </FormControl></PopoverTrigger><PopoverContent className="w-[--radix-popover-trigger-width] p-0"><Command filter={(value, search) => {
                                 const invoice = allInvoices.find(inv => inv.id === value);
                                 if (invoice?.invoiceNumber.toLowerCase().includes(search.toLowerCase()) || invoice?.customerName.toLowerCase().includes(search.toLowerCase())) return 1;
                                 return 0;
                             }}>
                                 <CommandInput placeholder="Search invoice..." />
-                                <CommandList>
-                                <CommandEmpty>No invoice found.</CommandEmpty>
-                                <CommandGroup>
+                                <CommandList><CommandEmpty>No invoice found.</CommandEmpty><CommandGroup>
                                     {allInvoices.map((invoice) => (
                                     <CommandItem
                                         value={invoice.id}
@@ -259,15 +252,12 @@ export function CreditNoteForm() {
                                         />
                                         <div className="flex flex-col">
                                         <span>{invoice.invoiceNumber} - {invoice.customerName}</span>
-                                        <span className="text-xs text-muted-foreground">{format(invoice.invoiceDate, "dd-MMM-yy")} | {formatCurrency(invoice.amount, 'INR')}</span>
+                                        <span className="text-xs text-muted-foreground">{format(invoice.invoiceDate, "dd-MMM-yy")} | {formatCurrency(invoice.amountBase, 'INR')}</span>
                                         </div>
                                     </CommandItem>
                                     ))}
-                                </CommandGroup>
-                                </CommandList>
-                            </Command>
-                        </PopoverContent>
-                        </Popover>
+                                </CommandGroup></CommandList>
+                            </Command></PopoverContent></Popover>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -320,7 +310,7 @@ export function CreditNoteForm() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-1/3 min-w-[200px]">Item</TableHead>
-                    <TableHead className="text-right min-w-[100px]">Return Qty</TableHead>
+                    <TableHead className="text-right min-w-[120px]">Return Qty</TableHead>
                     <TableHead className="text-right min-w-[120px]">Rate</TableHead>
                     <TableHead className="text-right min-w-[100px]">GST%</TableHead>
                     <TableHead className="text-right min-w-[120px]">Amount</TableHead>
