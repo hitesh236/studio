@@ -1,14 +1,24 @@
 
 'use client';
 
+import * as React from 'react';
 import { SalesInvoicesTable } from "./sales-invoices-table";
 import { generateSalesInvoices, SalesInvoice } from "./data";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import Link from 'next/link';
+import Loading from '../loading';
 
 export default function SalesInvoicesPage() {
-  const data: SalesInvoice[] = generateSalesInvoices(11);
+  const [data, setData] = React.useState<SalesInvoice[] | null>(null);
+
+  React.useEffect(() => {
+    setData(generateSalesInvoices(100));
+  }, []);
+
+  if (!data) {
+    return <Loading />;
+  }
 
   return (
     <div data-section="main-content" className="p-4 sm:p-6 lg:p-8">
