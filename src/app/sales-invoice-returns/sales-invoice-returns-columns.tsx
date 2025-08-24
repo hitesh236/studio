@@ -13,6 +13,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import Link from "next/link";
 
 
 type ColumnProps = {
@@ -43,12 +44,10 @@ export const columns = ({
         )}>
         {title}
         {isSorted ? (
-          sortConfig.direction === 'ascending' ? (
-            <ArrowUp className="ml-2 h-4 w-4" />
-          ) : (
-            <ArrowDown className="ml-2 h-4 w-4" />
-          )
-        ) : null}
+          <ArrowUp className="ml-2 h-4 w-4" />
+        ) : (
+          <ArrowDown className="ml-2 h-4 w-4" />
+        )}
       </Button>
     );
   };
@@ -88,7 +87,7 @@ export const columns = ({
       header: getSortableHeader("Credit Note # / Original Inv #", "invoiceNumber"),
       cell: (row: SalesInvoice) => (
         <div className={cn("font-medium whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>
-          <div>{row.invoiceNumber}</div>
+          <div><Link href={`/credit-note-preview?creditNoteData=${encodeURIComponent(JSON.stringify(row))}`} className="hover:underline">{row.invoiceNumber}</Link></div>
           <div className="text-xs text-muted-foreground">{row.originalInvoiceNumber}</div>
         </div>
       ),
@@ -107,7 +106,7 @@ export const columns = ({
       header: getSortableHeader("Date", "invoiceDate"),
       cell: (row: SalesInvoice) => (
         <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>
-          {format(row.invoiceDate, "MMM d, yyyy")}
+          {format(new Date(row.invoiceDate), "MMM d, yyyy")}
         </div>
       ),
     },
@@ -157,18 +156,22 @@ export const columns = ({
           <div className={cn("flex items-center justify-center gap-1", density === 'compact' && 'p-0')}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}>
-                  <Eye className="h-4 w-4" />
-                  <span className="sr-only">View Credit Note</span>
+                 <Button asChild variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}>
+                    <Link href={`/credit-note-preview?creditNoteData=${encodeURIComponent(JSON.stringify(row))}`}>
+                        <Eye className="h-4 w-4" />
+                        <span className="sr-only">View Credit Note</span>
+                    </Link>
                 </Button>
               </TooltipTrigger>
               <TooltipContent><p>View Credit Note</p></TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}>
-                  <Pencil className="h-4 w-4" />
-                  <span className="sr-only">Edit Credit Note</span>
+                <Button asChild variant="ghost" size="icon" className={cn("h-8 w-8", density === 'compact' && 'h-6 w-6')}>
+                   <Link href={`/sales-invoice-returns/new?invoiceData=${encodeURIComponent(JSON.stringify(row))}`}>
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Edit Credit Note</span>
+                    </Link>
                 </Button>
               </TooltipTrigger>
               <TooltipContent><p>Edit Credit Note</p></TooltipContent>

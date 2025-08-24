@@ -94,6 +94,7 @@ const creditNoteItemSchema = z.object({
 
 const creditNoteFormSchema = z.object({
   originalInvoiceId: z.string().min(1, 'Original invoice must be selected.'),
+  originalInvoiceNumber: z.string().optional(),
   customerName: z.string(),
   placeOfSupply: z.string(),
   creditNoteNumber: z.string().min(1, 'Credit Note number is required.'),
@@ -169,6 +170,7 @@ export function CreditNoteForm() {
     resolver: zodResolver(creditNoteFormSchema),
     defaultValues: {
       originalInvoiceId: '',
+      originalInvoiceNumber: '',
       customerName: '',
       placeOfSupply: '',
       creditNoteNumber: `CN-${Math.floor(Math.random() * 9000) + 1000}`,
@@ -183,12 +185,13 @@ export function CreditNoteForm() {
     control: form.control,
     name: 'items',
   });
-
+  
   const onInvoiceSelect = React.useCallback((invoiceId: string, invoiceList: SalesInvoice[]) => {
     const invoice = invoiceList.find(inv => inv.id === invoiceId);
     if (invoice) {
         form.reset({
             originalInvoiceId: invoice.id,
+            originalInvoiceNumber: invoice.invoiceNumber,
             customerName: invoice.customerName,
             placeOfSupply: invoice.placeOfSupply,
             creditNoteNumber: `CN-${invoice.invoiceNumber.split('-')[1]}`,
@@ -222,7 +225,6 @@ export function CreditNoteForm() {
   }, [searchParams, onInvoiceSelect]);
   
   const watchedFormValues = form.watch();
-  const originalInvoice = allInvoices.find(inv => inv.id === watchedFormValues.originalInvoiceId);
   
   const totals = React.useMemo(() => {
     let subtotal = 0;
@@ -339,7 +341,7 @@ export function CreditNoteForm() {
               <div className="space-y-4">
                  <div>
                     <Label>Original Invoice No.</Label>
-                    <Input readOnly disabled value={originalInvoice?.invoiceNumber || 'N/A'} className="mt-2 cursor-not-allowed focus-visible:ring-0 focus-visible:ring-offset-0" />
+                    <Input readOnly disabled value={form.getValues('originalInvoiceNumber') || 'N/A'} className="mt-2 cursor-not-allowed focus-visible:ring-0 focus-visible:ring-offset-0" />
                 </div>
                 <FormField control={form.control} name="creditNoteNumber" render={({ field }) => (
                     <FormItem>
@@ -446,7 +448,7 @@ export function CreditNoteForm() {
                     The credit note has been saved. You can now print it.
                 </DialogDescription>
             </DialogHeader>
-            <PrintableCreditNote ref={printRef} note={noteToPrint!} totals={totals} originalInvoiceNumber={originalInvoice?.invoiceNumber || ''} />
+            <PrintableCreditNote ref={printRef} note={noteToPrint!} totals={totals} originalInvoiceNumber={watchedFormValues.originalInvoiceNumber || ''} />
             <DialogFooter className="sm:justify-between">
                  <DialogClose asChild>
                     <Button type="button" variant="secondary">Close</Button>
