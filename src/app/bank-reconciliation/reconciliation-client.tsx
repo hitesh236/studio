@@ -96,8 +96,8 @@ const TransactionTable = ({
                         <TableHead className="w-10"></TableHead>
                         <TableHead>{getSortableHeader('Date', 'date')}</TableHead>
                         <TableHead>{getSortableHeader('Description', 'description')}</TableHead>
-                        <TableHead className="text-right">{getSortableHeader('Withdrawal', 'withdrawal')}</TableHead>
-                        <TableHead className="text-right">{getSortableHeader('Deposit', 'deposit')}</TableHead>
+                        <TableHead className="text-right">{getSortableHeader(type === 'bank' ? 'Withdrawal' : 'Debit', type === 'bank' ? 'withdrawal' : 'debit')}</TableHead>
+                        <TableHead className="text-right">{getSortableHeader(type === 'bank' ? 'Deposit' : 'Credit', type === 'bank' ? 'deposit' : 'credit')}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -192,23 +192,22 @@ export function ReconciliationClient({ initialBankTransactions, initialBookTrans
 
       if (sortConfig.key) {
         filtered.sort((a, b) => {
-          const aVal = a[sortConfig.key as keyof typeof a];
-          const bVal = b[sortConfig.key as keyof typeof b];
+            const aVal = a[sortConfig.key as keyof typeof a];
+            const bVal = b[sortConfig.key as keyof typeof b];
 
-          if (aVal === null || aVal === undefined) return 1;
-          if (bVal === null || bVal === undefined) return -1;
+            if (aVal === null || aVal === undefined) return 1;
+            if (bVal === null || bVal === undefined) return -1;
+            
+            let comparison = 0;
+            if (aVal instanceof Date && bVal instanceof Date) {
+                comparison = aVal.getTime() - bVal.getTime();
+            } else if (typeof aVal === 'string' && typeof bVal === 'string') {
+                comparison = aVal.localeCompare(bVal);
+            } else if (typeof aVal === 'number' && typeof bVal === 'number') {
+                comparison = aVal - bVal;
+            }
 
-          if (typeof aVal === 'number' && typeof bVal === 'number') {
-            return sortConfig.direction === 'ascending' ? aVal - bVal : bVal - aVal;
-          }
-          if (aVal instanceof Date && bVal instanceof Date) {
-            return sortConfig.direction === 'ascending' ? aVal.getTime() - bVal.getTime() : bVal.getTime() - aVal.getTime();
-          }
-          if (typeof aVal === 'string' && typeof bVal === 'string') {
-            return sortConfig.direction === 'ascending' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-          }
-
-          return 0;
+            return sortConfig.direction === 'ascending' ? comparison : -comparison;
         });
       }
       return filtered;
