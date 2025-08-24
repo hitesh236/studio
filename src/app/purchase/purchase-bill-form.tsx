@@ -76,6 +76,8 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { staticVendors } from '@/lib/customer-data';
 import type { Person } from '@/lib/data';
 import { generateStockListData, type StockItem } from '@/app/stock-list/data';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -196,8 +198,9 @@ const BatchDialog = ({
     )
 }
 
-export function PurchaseBillForm() {
+function PurchaseBillFormComponent() {
   const { toast } = useToast();
+  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [purchaseMode, setPurchaseMode] = React.useState<'both' | 'assets' | 'inventory'>('both');
   const [activeTab, setActiveTab] = React.useState<'assets' | 'inventory'>('inventory');
@@ -231,13 +234,33 @@ export function PurchaseBillForm() {
   });
   
   React.useEffect(() => {
-    const today = new Date();
-    const futureDate = new Date();
-    futureDate.setDate(today.getDate() + 30);
-    
-    form.setValue('billDate', today);
-    form.setValue('dueDate', futureDate);
-  }, [form]);
+    const billDataString = searchParams.get('billData');
+    if (billDataString) {
+        try {
+            const billData = JSON.parse(decodeURIComponent(billDataString));
+            const vendor = staticVendors.find(v => v.company === billData.vendorName);
+            form.reset({
+                ...billData,
+                vendorId: vendor?.id || '',
+                vendorGstin: vendor?.gstin || '',
+                vendorAddress: vendor?.address.street || '',
+                placeOfSupply: vendor?.address.state || '',
+                billDate: new Date(billData.billDate),
+                dueDate: new Date(billData.dueDate),
+                items: billData.items.map((item: any) => ({...item, ledgerAccountId: 'ledger-purchases' }))
+            });
+        } catch (error) {
+            console.error("Failed to parse bill data from URL", error);
+        }
+    } else {
+        const today = new Date();
+        const futureDate = new Date();
+        futureDate.setDate(today.getDate() + 30);
+        
+        form.setValue('billDate', today);
+        form.setValue('dueDate', futureDate);
+    }
+  }, [searchParams, form]);
 
   React.useEffect(() => {
     if (purchaseMode === 'assets') {
@@ -290,7 +313,7 @@ export function PurchaseBillForm() {
         form.setValue('vendorGstin', newVendorData.gstin);
         form.setValue('vendorAddress', newVendorData.address.street);
         
-        const stateMatch = indianStates.find(state => newVendorData.address.street.toLowerCase().includes(state.toLowerCase()));
+        const stateMatch = indianStates.find(state => newVendorData.address.toLowerCase().includes(state.toLowerCase()));
         if(stateMatch) {
             form.setValue('placeOfSupply', stateMatch);
         }
@@ -702,4 +725,12 @@ export function PurchaseBillForm() {
         </Dialog>
     </Form>
   );
+}
+
+export function PurchaseBillForm() {
+    return (
+        <Suspense fallback={<div>Loading form...</div>}>
+            <PurchaseBillFormComponent />
+        </Suspense>
+    )
 }

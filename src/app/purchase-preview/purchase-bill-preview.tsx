@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import type { PurchaseBill } from './data';
+import type { PurchaseBill } from '../purchase/data';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
@@ -15,9 +15,32 @@ interface PurchaseBillPreviewProps {
 }
 
 export function PurchaseBillPreview({ bill }: PurchaseBillPreviewProps) {
-    const { vendor, buyer, billDetails, items, totals } = bill;
+    const { vendorName, items } = bill;
+    const buyer = { // Assuming buyer is always Hicks Inc.
+        name: 'Hicks Inc.',
+        address: '123 Business Rd, Financial District, Mumbai, Maharashtra, 400001',
+        gstin: '27ABCDE1234F1Z5',
+        state: 'Maharashtra',
+    };
 
-    const isIntraState = vendor.address.includes(buyer.state);
+    const totals = {
+        subtotal: items.reduce((acc, item) => acc + item.quantity * item.rate, 0),
+        igst: 0, // Simplified for now
+        cgst: 0,
+        sgst: 0,
+        grandTotal: bill.amount,
+    };
+    
+    // Simplified GST calculation
+    const isIntraState = bill.vendorName.includes(buyer.state); // A simple check
+    const totalGst = totals.grandTotal - totals.subtotal;
+    if (isIntraState) {
+        totals.cgst = totalGst / 2;
+        totals.sgst = totalGst / 2;
+    } else {
+        totals.igst = totalGst;
+    }
+
 
     return (
         <Card className="p-8 print:p-2 shadow-none border-none print:text-[10px]">
@@ -30,24 +53,21 @@ export function PurchaseBillPreview({ bill }: PurchaseBillPreviewProps) {
                         <path d="M42.4,188.4,74.8,93.2a15.9,15.9,0,0,1,15.1-10.8h76.2a15.9,15.9,0,0,1,15.1,10.8l32.4,95.2a16,16,0,0,1-15.1,21.2H57.5A16,16,0,0,1,42.4,188.4Z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"></path><line x1="128" y1="40" x2="128" y2="82.4" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"></line>
                     </svg>
                     <div>
-                        <h1 className="text-3xl print:text-lg font-bold">{vendor.name}</h1>
-                        <p className="text-sm print:text-xs text-muted-foreground max-w-xs">{vendor.address}</p>
-                        <p className="text-sm print:text-xs text-muted-foreground">GSTIN: <span className="font-mono">{vendor.gstin}</span></p>
+                        <h1 className="text-3xl print:text-lg font-bold">{vendorName}</h1>
                     </div>
                 </div>
                 <div className="text-right">
                     <h2 className="text-4xl print:text-xl font-bold tracking-tight uppercase text-primary">Purchase Bill</h2>
                     <div className="mt-2 space-y-1 print:text-xs text-sm">
-                        <p><strong>Bill No:</strong> {billDetails.number}</p>
-                        <p><strong>Bill Date:</strong> {format(billDetails.date, 'PPP')}</p>
-                        <p><strong>Due Date:</strong> {format(billDetails.dueDate, 'PPP')}</p>
+                        <p><strong>Bill No:</strong> {bill.billNumber}</p>
+                        <p><strong>Bill Date:</strong> {format(new Date(bill.billDate), 'PPP')}</p>
+                        <p><strong>Due Date:</strong> {format(new Date(bill.dueDate), 'PPP')}</p>
                     </div>
                 </div>
             </header>
             
             <Separator className="my-6 print:my-3" />
 
-            {/* Seller & Buyer Details */}
             <section className="grid grid-cols-2 gap-8 print:gap-4 text-sm print:text-xs">
                 <div>
                     <h3 className="font-semibold mb-2 print:mb-1">Bill To:</h3>
@@ -64,32 +84,23 @@ export function PurchaseBillPreview({ bill }: PurchaseBillPreviewProps) {
                         <TableRow>
                             <TableHead className="w-12 text-center print:h-auto print:py-1 print:px-2">#</TableHead>
                             <TableHead className="print:h-auto print:py-1 print:px-2">Item Description</TableHead>
-                            <TableHead className="text-center print:h-auto print:py-1 print:px-2">HSN</TableHead>
                             <TableHead className="text-right print:h-auto print:py-1 print:px-2">Qty</TableHead>
                             <TableHead className="text-right print:h-auto print:py-1 print:px-2">Rate</TableHead>
-                            <TableHead className="text-right print:h-auto print:py-1 print:px-2">GST</TableHead>
-                            <TableHead className="text-right print:h-auto print:py-1 print:px-2">Total</TableHead>
+                            <TableHead className="text-right print:h-auto print:py-1 print:px-2">Amount</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {items.map((item, index) => {
-                            const taxableAmount = item.quantity * item.rate;
-                            const gstAmount = taxableAmount * (item.gstRate / 100);
-                            const totalAmount = taxableAmount + gstAmount;
-                            return (
-                                <TableRow key={item.id}>
-                                    <TableCell className="text-center print:py-1 print:px-2">{index + 1}</TableCell>
-                                    <TableCell className="print:py-1 print:px-2">
-                                        <p className="font-medium">{item.name}</p>
-                                    </TableCell>
-                                    <TableCell className="text-center print:py-1 print:px-2">{item.hsn}</TableCell>
-                                    <TableCell className="text-right print:py-1 print:px-2">{item.quantity} {item.unit}</TableCell>
-                                    <TableCell className="text-right font-mono print:py-1 print:px-2">{formatCurrency(item.rate, 'INR')}</TableCell>
-                                    <TableCell className="text-right font-mono print:py-1 print:px-2">{item.gstRate}%</TableCell>
-                                    <TableCell className="text-right font-mono print:py-1 print:px-2">{formatCurrency(taxableAmount, 'INR')}</TableCell>
-                                </TableRow>
-                            );
-                        })}
+                        {items.map((item, index) => (
+                            <TableRow key={item.id}>
+                                <TableCell className="text-center print:py-1 print:px-2">{index + 1}</TableCell>
+                                <TableCell className="print:py-1 print:px-2">
+                                    <p className="font-medium">{item.name}</p>
+                                </TableCell>
+                                <TableCell className="text-right print:py-1 print:px-2">{item.quantity}</TableCell>
+                                <TableCell className="text-right font-mono print:py-1 print:px-2">{formatCurrency(item.rate, 'INR')}</TableCell>
+                                <TableCell className="text-right font-mono print:py-1 print:px-2">{formatCurrency(item.quantity * item.rate, 'INR')}</TableCell>
+                            </TableRow>
+                        ))}
                     </TableBody>
                 </Table>
             </section>

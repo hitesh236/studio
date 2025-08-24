@@ -2,17 +2,47 @@
 'use client';
 
 import * as React from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, Printer } from "lucide-react";
 import { PurchaseBillPreview } from "./purchase-bill-preview";
-import { samplePurchaseBill } from "./data";
+import type { PurchaseBill } from "../purchase/data";
 import { Separator } from '@/components/ui/separator';
+import Loading from '../loading';
 
-export default function PurchasePreviewPage() {
+const PurchasePreviewPageContent = () => {
+  const searchParams = useSearchParams();
+
+  const bill = React.useMemo(() => {
+    const billDataString = searchParams.get('billData');
+    if (!billDataString) return null;
+    try {
+        const parsed = JSON.parse(decodeURIComponent(billDataString));
+        // Dates need to be converted back to Date objects
+        parsed.billDate = new Date(parsed.billDate);
+        parsed.dueDate = new Date(parsed.dueDate);
+        return parsed as PurchaseBill;
+    } catch (error) {
+        console.error("Failed to parse bill data from URL.", error);
+        return null;
+    }
+  }, [searchParams]);
 
   const handlePrint = () => {
     window.print();
   };
+  
+  if (!bill) {
+    return (
+        <div className="flex h-full min-h-[calc(100vh-8rem)] items-center justify-center p-4">
+            <div className="text-center">
+                <h2 className="text-xl font-semibold">Could not load bill data.</h2>
+                <p className="text-muted-foreground">Please go back and try again.</p>
+            </div>
+        </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 print:p-0">
@@ -31,8 +61,16 @@ export default function PurchasePreviewPage() {
       </div>
       <Separator className="mb-8 print:hidden" />
       <div className="max-w-4xl mx-auto bg-card p-0 sm:p-4 md:p-8 rounded-lg shadow-sm border print:shadow-none print:border-none print:rounded-none">
-        <PurchaseBillPreview bill={samplePurchaseBill} />
+        <PurchaseBillPreview bill={bill} />
       </div>
     </div>
   );
+}
+
+export default function PurchasePreviewPage() {
+    return (
+        <Suspense fallback={<Loading />}>
+            <PurchasePreviewPageContent />
+        </Suspense>
+    )
 }

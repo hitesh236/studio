@@ -47,7 +47,7 @@ export const columns = ({
       header: getSortableHeader("Bill #", "billNumber"),
       cell: (row: PurchaseBill) => (
         <div className="font-medium whitespace-nowrap">
-           <Link href="/purchase-preview" className="hover:underline">{row.billNumber}</Link>
+           <Link href={`/purchase-preview?billData=${encodeURIComponent(JSON.stringify(row))}`} className="hover:underline">{row.billNumber}</Link>
         </div>
       ),
     },
@@ -65,7 +65,7 @@ export const columns = ({
       header: getSortableHeader("Bill Date", "billDate"),
       cell: (row: PurchaseBill) => (
         <div className="whitespace-nowrap">
-          {format(row.billDate, "MMM d, yyyy")}
+          {format(new Date(row.billDate), "MMM d, yyyy")}
         </div>
       ),
     },
@@ -74,7 +74,7 @@ export const columns = ({
       header: getSortableHeader("Due Date", "dueDate"),
       cell: (row: PurchaseBill) => (
         <div className="whitespace-nowrap">
-          {format(row.dueDate, "MMM d, yyyy")}
+          {format(new Date(row.dueDate), "MMM d, yyyy")}
         </div>
       ),
     },
@@ -126,11 +126,23 @@ export const columns = ({
         <TooltipProvider>
             <div className="flex items-center gap-1">
                 <Tooltip>
-                    <TooltipTrigger asChild><Button asChild variant="ghost" size="icon"><Link href="/purchase-preview"><Eye /></Link></Button></TooltipTrigger>
+                    <TooltipTrigger asChild>
+                        <Button asChild variant="ghost" size="icon">
+                            <Link href={`/purchase-preview?billData=${encodeURIComponent(JSON.stringify(row))}`}>
+                                <Eye />
+                            </Link>
+                        </Button>
+                    </TooltipTrigger>
                     <TooltipContent><p>View Bill</p></TooltipContent>
                 </Tooltip>
                 <Tooltip>
-                    <TooltipTrigger asChild><Button asChild variant="ghost" size="icon"><Link href="/purchase/new"><Edit /></Link></Button></TooltipTrigger>
+                    <TooltipTrigger asChild>
+                        <Button asChild variant="ghost" size="icon">
+                            <Link href={`/purchase/new?billData=${encodeURIComponent(JSON.stringify(row))}`}>
+                                <Edit />
+                            </Link>
+                        </Button>
+                    </TooltipTrigger>
                     <TooltipContent><p>Edit Bill</p></TooltipContent>
                 </Tooltip>
                 <Tooltip>
