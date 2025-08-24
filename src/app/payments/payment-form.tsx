@@ -144,13 +144,12 @@ export function PaymentForm({ type, onSuccess }: PaymentFormProps) {
       return { ...alloc, allocatedAmount: 0 };
     });
     
-    // Check if allocations actually changed to prevent infinite loop
     const hasChanged = JSON.stringify(newAllocations) !== JSON.stringify(currentAllocations);
     if (hasChanged) {
         replace(newAllocations);
     }
 
-  }, [totalAmountReceived, partyId]); // Re-run when total amount or party changes
+  }, [totalAmountReceived, partyId, form, replace]);
 
   const unallocatedAmount = React.useMemo(() => {
     const totalAllocated = watchedAllocations.reduce((sum, alloc) => sum + (alloc.allocatedAmount || 0), 0);
@@ -161,13 +160,12 @@ export function PaymentForm({ type, onSuccess }: PaymentFormProps) {
     setIsSubmitting(true);
     console.log(data);
     await new Promise(resolve => setTimeout(resolve, 1000));
-    toast({ title: "Success", description: `${type === 'receipt' ? 'Receipt' : 'Payment'} recorded successfully.` });
     onSuccess(data);
     setIsSubmitting(false);
   }
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    if (e.target.value === '0') {
+    if (Number(e.target.value) === 0) {
       e.target.value = '';
     }
   };
@@ -218,36 +216,36 @@ export function PaymentForm({ type, onSuccess }: PaymentFormProps) {
         <div className="flex flex-col md:flex-row gap-4 items-end">
             <FormField control={form.control} name="totalAmountReceived" render={({ field }) => (
                 <FormItem><FormLabel>Amount {type === 'receipt' ? 'Received' : 'Paid'}</FormLabel><FormControl>
-                    <Input type="text" placeholder="0.00" {...field} onFocus={handleFocus} />
+                    <Input type="number" placeholder="0.00" {...field} onFocus={handleFocus} />
                 </FormControl><FormMessage /></FormItem>
             )}/>
             <div className="p-2 border rounded-md bg-muted text-sm flex-1 w-full">
                 <div className="flex justify-between">
                     <span className="text-muted-foreground">Unallocated Amount:</span>
                     <span className={cn("font-semibold", unallocatedAmount > 0 ? "text-green-600" : unallocatedAmount < 0 ? "text-destructive" : "")}>
-                        {formatCurrency(unallocatedAmount, 'INR')}
+                        {formatCurrency(unallocatedAmount)}
                     </span>
                 </div>
             </div>
         </div>
-        <div className="h-64 overflow-y-auto border rounded-md">
+        <div className="max-h-60 overflow-y-auto border rounded-md">
             <Table>
-                <TableHeader><TableRow><TableHead>Invoice No.</TableHead><TableHead>Due Date</TableHead><TableHead className="text-right">Amount Due</TableHead><TableHead className="w-48 text-right">Payment</TableHead></TableRow></TableHeader>
+                <TableHeader className="sticky top-0 bg-background z-10"><TableRow><TableHead className="w-1/4 px-2 h-10">Invoice No.</TableHead><TableHead className="w-1/4 px-2 h-10">Due Date</TableHead><TableHead className="w-1/4 text-right px-2 h-10">Amount Due</TableHead><TableHead className="w-1/4 text-right px-2 h-10">Payment</TableHead></TableRow></TableHeader>
                 <TableBody>{fields.map((field, index) => {
                     const isFullyPaid = (field.allocatedAmount || 0) >= field.amountDue;
                     return (
                         <TableRow key={field.id} className={cn(isFullyPaid && "bg-green-100 dark:bg-green-900/50")}>
-                            <TableCell>{field.invoiceNumber}</TableCell>
-                            <TableCell>{format(field.dueDate, 'dd-MMM-yy')}</TableCell>
-                            <TableCell className="text-right">{formatCurrency(field.amountDue, 'INR')}</TableCell>
-                            <TableCell>
+                            <TableCell className="px-2 py-1.5">{field.invoiceNumber}</TableCell>
+                            <TableCell className="px-2 py-1.5">{format(field.dueDate, 'dd-MMM-yy')}</TableCell>
+                            <TableCell className="text-right px-2 py-1.5">{formatCurrency(field.amountDue)}</TableCell>
+                            <TableCell className="px-2 py-1.5">
                                 <Controller
                                     control={form.control}
                                     name={`allocations.${index}.allocatedAmount`}
                                     render={({ field: controllerField }) => (
                                         <Input 
-                                            type="text" 
-                                            className="text-right" 
+                                            type="number" 
+                                            className="text-right h-8" 
                                             {...controllerField}
                                             onFocus={handleFocus}
                                             onBlur={(e) => handleAmountBlur(e, index)}
