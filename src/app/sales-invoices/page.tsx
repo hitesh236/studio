@@ -1,4 +1,6 @@
 
+'use client';
+
 import { SalesInvoicesTable } from "./sales-invoices-table";
 import { generateSalesInvoices, SalesInvoice } from "./data";
 import { Button } from "@/components/ui/button";
