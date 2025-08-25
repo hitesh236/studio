@@ -28,10 +28,10 @@ export default function ProductsPage() {
                 <CardHeader>
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
-                            <CardTitle>Product Catalogue</CardTitle>
+                            <CardTitle>Products List</CardTitle>
                             <CardDescription>A master list of all products your business deals with.</CardDescription>
                         </div>
-                        <Link href="/products/new" passHref>
+                        <Link href="/products/create" passHref>
                             <Button>
                                 <PlusCircle className="mr-2 h-4 w-4" />
                                 Add New Product

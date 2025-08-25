@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Trash2, X, Sparkles, ChevronsUpDown, Check, Layers, Save, Barcode, Percent, Receipt } from 'lucide-react';
+import { PlusCircle, Trash2, X, Sparkles, ChevronsUpDown, Check, Layers, Save, Barcode, Percent, Receipt, Calendar as CalendarIcon } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { initialCategoriesData, type Category } from '@/lib/categories';
@@ -18,6 +18,8 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn, formatCurrency } from '@/lib/utils';
 import type { Attribute } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
 
 type Variant = {
   id: string;
@@ -26,8 +28,6 @@ type Variant = {
   barcode: string;
   buyingPrice: number | '';
   price: { regular: number | ''; b2b: number | ''; b2c: number | '' };
-  stock: number | '';
-  stockValue: number | '';
   reorderPoint: number | '';
 };
 
@@ -152,11 +152,6 @@ export default function CreateProductPage() {
   const [newUom, setNewUom] = React.useState({ name: '', abbreviation: '' });
   const [showSecondaryUom, setShowSecondaryUom] = React.useState(false);
 
-  // Location State
-  const [location, setLocation] = React.useState('');
-  const [locations, setLocations] = React.useState(['Main Warehouse', 'Store', 'Shop']);
-  const [isLocationDialogOpen, setIsLocationDialogOpen] = React.useState(false);
-  const [newLocation, setNewLocation] = React.useState('');
 
   const activeSimpleUnits = React.useMemo(
     () => simpleUnits.filter((u) => u.status !== 'disabled'),
@@ -343,8 +338,6 @@ export default function CreateProductPage() {
         barcode: '',
         buyingPrice: '',
         price: { regular: '', b2b: '', b2c: '' },
-        stock: 0,
-        stockValue: '',
         reorderPoint: 0,
       };
     });
@@ -375,21 +368,6 @@ export default function CreateProductPage() {
     );
   };
   
-  const handleAddLocation = () => {
-    if (newLocation.trim()) {
-        if (locations.some(loc => loc.toLowerCase() === newLocation.trim().toLowerCase())) {
-            toast({ title: 'Location already exists.', variant: 'destructive' });
-            return;
-        }
-        const updatedLocations = [...locations, newLocation.trim()];
-        setLocations(updatedLocations);
-        setLocation(newLocation.trim());
-        toast({ title: 'Location added successfully.' });
-        setIsLocationDialogOpen(false);
-        setNewLocation('');
-    }
-  };
-
   const handleSaveProduct = () => {
     console.log({
       product: { productName, productCode, categoryPath, uom, secondaryUom },
@@ -407,8 +385,17 @@ export default function CreateProductPage() {
   const addedAttributeNames = new Set(stockAttrs.map((a) => a.name));
   
   return (
-    <div className="space-y-6 p-4 md:p-2.5">
-      <h1 className="font-bold text-[20px]">Add Product</h1>
+    <div className="space-y-6">
+        <Card>
+            <CardHeader>
+                <CardTitle className="text-2xl">Add Product</CardTitle>
+                <div className="text-muted-foreground space-y-1">
+                    <h3 className="font-semibold text-lg text-primary">Product Master Data Setup</h3>
+                    <p><strong className="text-foreground">Goal:</strong> Define what you can sell.</p>
+                    <p><strong className="text-foreground">Action:</strong> Add all product attributes, prices, taxes, and supplier info.</p>
+                </div>
+            </CardHeader>
+        </Card>
 
       <div className="space-y-6">
         <Card className="w-full">
@@ -478,14 +465,6 @@ export default function CreateProductPage() {
                   </Select>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-bold text-[18px]">Units & Stock</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
             <div className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="uom" className="text-sm">Base UOM</Label>
@@ -616,53 +595,12 @@ export default function CreateProductPage() {
                     )}
                 </div>
             </div>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div className="space-y-2">
-                    <Label htmlFor="location">Location/Warehouse</Label>
-                    <div className="relative flex items-center">
-                        <Select onValueChange={setLocation} value={location}>
-                            <SelectTrigger className="pr-12">
-                            <SelectValue placeholder="Select location" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {locations.map((loc) => (
-                                    <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
-                            <DialogTrigger asChild>
-                                <Button type="button" variant="outline" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7">
-                                    <PlusCircle className="h-4 w-4" />
-                                </Button>
-                            </DialogTrigger>
-                             <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>Add New Location</DialogTitle>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                    <Label htmlFor="location-name">Location Name</Label>
-                                    <Input id="location-name" value={newLocation} onChange={e => setNewLocation(e.target.value)} />
-                                </div>
-                                <DialogFooter>
-                                    <DialogClose asChild><Button variant="outline" type="button">Cancel</Button></DialogClose>
-                                    <Button type="button" onClick={handleAddLocation}>Save Location</Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                    </div>
-                </div>
-                 <div>
-                    <Label>Reorder Point</Label>
-                    <Input placeholder="e.g. 10" />
-                </div>
-            </div>
           </CardContent>
         </Card>
-
+        
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-bold text-[18px]">Create Stock</CardTitle>
+            <CardTitle className="text-lg font-bold text-[18px]">Create Stock Keeping Units (SKUs)</CardTitle>
             <CardDescription>
               Add attributes that you stock and reorder by. Fewer attributes lead to fewer SKUs.
             </CardDescription>
@@ -762,7 +700,7 @@ export default function CreateProductPage() {
         <Card>
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle className="text-lg font-bold text-[18px]">Variants (SKUs) & Stock</CardTitle>
+              <CardTitle className="text-lg font-bold text-[18px]">Variants (SKUs) & Pricing</CardTitle>
                <div className="flex items-center space-x-2">
                 <Switch
                   id="include-gst"
@@ -773,7 +711,7 @@ export default function CreateProductPage() {
               </div>
             </div>
             <CardDescription>
-              Low stock items (Available ≤ Reorder Point) are highlighted in red.
+              Define pricing and other details for each generated product variant.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -787,20 +725,15 @@ export default function CreateProductPage() {
                     <TableHead>SKU</TableHead>
                     <TableHead>Buying Price</TableHead>
                     <TableHead className="min-w-[150px]">Selling Prices</TableHead>
-                    <TableHead className="text-right">Opening Stock</TableHead>
-                    <TableHead className="text-right">Stock Value</TableHead>
                     <TableHead className="text-right">Reorder Point</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {variants.length > 0 ? (
                     variants.map((variant) => {
-                      const isLowStock =
-                        Number(variant.stock || 0) <= Number(variant.reorderPoint || 0);
                       return (
                         <TableRow
                           key={variant.id}
-                          className={cn(isLowStock && 'bg-destructive/10')}
                         >
                           {stockAttrs.map((attr) => (
                             <TableCell key={slug(attr.name)}>
@@ -879,36 +812,6 @@ export default function CreateProductPage() {
                               type="text"
                               className="text-right min-w-[70px]"
                               placeholder="0"
-                              value={variant.stock}
-                              onChange={(e) =>
-                                handleVariantChange(
-                                  variant.id,
-                                  'stock',
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </TableCell>
-                           <TableCell>
-                            <Input
-                              type="text"
-                              className="text-right min-w-[80px]"
-                              placeholder="0.00"
-                              value={variant.stockValue}
-                              onChange={(e) =>
-                                handleVariantChange(
-                                  variant.id,
-                                  'stockValue',
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="text"
-                              className="text-right min-w-[70px]"
-                              placeholder="0"
                               value={variant.reorderPoint}
                               onChange={(e) =>
                                 handleVariantChange(
@@ -925,7 +828,7 @@ export default function CreateProductPage() {
                   ) : (
                     <TableRow>
                       <TableCell
-                        colSpan={stockAttrs.length + 7}
+                        colSpan={stockAttrs.length + 4}
                         className="h-24 text-center text-muted-foreground"
                       >
                         No variants generated.

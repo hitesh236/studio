@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
-import { LogOut, User, LayoutGrid, BookOpen, FileText, Eye, Globe, UserCircle, Palette, MonitorPlay, Tags, Repeat, PackagePlus, Box, Truck, Bell, Download as DownloadIcon, Shield, Settings, FolderPlus } from 'lucide-react';
+import { LogOut, User, LayoutGrid, BookOpen, FileText, Eye, Globe, UserCircle, Palette, MonitorPlay, Tags, Repeat, PackagePlus, Box, Truck, Bell, Download as DownloadIcon, Shield, Settings, FolderPlus, List } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import useUserRole from '@/hooks/use-user-role';
 import { GlobalSearch } from './global-search';
@@ -30,8 +30,8 @@ const accountingMenuItems = [
 ];
 
 const stockMenuItems = [
-    { href: '/products', icon: LayoutGrid, label: 'Product Catalogue' },
-    { href: '/products/new', icon: PackagePlus, label: 'Add Product' },
+    { href: '/products', icon: List, label: 'Products List' },
+    { href: '/products/create', icon: PackagePlus, label: 'Add Product' },
     { href: '/product-structure', icon: Tags, label: 'Product Structure' },
     { href: '/uom', icon: Box, label: 'UOM' },
     { href: '/stock-transfer', icon: Truck, label: 'Transfer Stock' },
@@ -45,7 +45,6 @@ const uiMenuItems = [
     { href: '/invoice-preview-fc', icon: Globe, label: 'Invoice Preview FC' },
     { href: '/customer-portfolio', icon: UserCircle, label: 'Customer Portfolio' },
     { href: '/ui', icon: Palette, label: 'UI' },
-    { href: '/products/create', icon: PackagePlus, label: 'Create Product' },
 ];
 
 const settingsMenuItems = [
@@ -106,6 +105,7 @@ const MegaMenu = () => (
                             </Link>
                         </DropdownMenuItem>
                     ))}
+                    <PWAInstaller />
                 </div>
             </div>
         </DropdownMenuContent>
@@ -212,7 +212,6 @@ export function Header() {
             </Link>
         </Button>
         <ThemeToggle />
-        <PWAInstaller />
         <NotificationBell />
         <MegaMenu />
         <DropdownMenu>
