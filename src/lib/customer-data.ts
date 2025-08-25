@@ -22,7 +22,7 @@ export const staticCustomers: Person[] = [
     bio: 'Loyal customer, prefers quick delivery.',
     gstin: '27ABCDE1234F1Z5',
     type: 'Customer',
-    balance: 12500,
+    balance: -12500, // Negative balance means they owe us money (Receivable)
     lastSeen: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
   },
   {
@@ -39,7 +39,7 @@ export const staticCustomers: Person[] = [
     bio: 'Bulk buyer, sensitive to pricing.',
     gstin: '29ABCDE1234F1Z6',
     type: 'Customer',
-    balance: 0,
+    balance: 500, // Positive balance means we owe them money (Payable/Credit)
     lastSeen: new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000), // 25 days ago
   },
   {
@@ -56,7 +56,7 @@ export const staticCustomers: Person[] = [
     bio: 'High-value customer, currently inactive.',
     gstin: '19ABCDE1234F1Z7',
     type: 'Customer',
-    balance: 21000,
+    balance: -21000,
     lastSeen: new Date(now.getTime() - 100 * 24 * 60 * 60 * 1000), // 100 days ago
   },
   {
@@ -73,7 +73,7 @@ export const staticCustomers: Person[] = [
     bio: 'Regular customer, pays on time.',
     gstin: '24ABCDE1234F1Z8',
     type: 'Customer',
-    balance: 5600,
+    balance: -5600,
     lastSeen: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
   },
    {
@@ -107,7 +107,7 @@ export const staticCustomers: Person[] = [
     bio: 'Responds well to promotional offers.',
     gstin: '07ABCDE1234F1Z1',
     type: 'Customer',
-    balance: 15400,
+    balance: -15400,
     lastSeen: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
   },
   {
@@ -141,7 +141,7 @@ export const staticCustomers: Person[] = [
     bio: 'Refers new customers frequently.',
     gstin: '27ABCDE1234F1Z3',
     type: 'Customer',
-    balance: 0,
+    balance: 950, // We owe Anika money
     lastSeen: new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000), // 45 days ago
   },
   // 3 Company Customers
@@ -159,7 +159,7 @@ export const staticCustomers: Person[] = [
     bio: 'Enterprise client with a large account.',
     gstin: '36ABCDE1234F1Z4',
     type: 'Customer',
-    balance: 75000,
+    balance: -75000,
     lastSeen: new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
   },
   {
@@ -176,7 +176,7 @@ export const staticCustomers: Person[] = [
     bio: 'Requires detailed technical specifications.',
     gstin: '29FGHIJ5678K1Z5',
     type: 'Customer',
-    balance: 15000,
+    balance: -15000,
     lastSeen: new Date(now.getTime() - 40 * 24 * 60 * 60 * 1000), // 40 days ago
   },
   {
@@ -213,7 +213,7 @@ export const staticVendors: Person[] = [
     bio: 'Primary supplier for computer peripherals.',
     gstin: '27ZYXWV9876E1Z4',
     type: 'Vendor',
-    balance: -25000,
+    balance: -25000, // Negative balance means we owe them money (Payable)
     lastSeen: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000),
   },
   {
@@ -281,7 +281,7 @@ export const staticVendors: Person[] = [
     bio: 'Provides all our packaging materials.',
     gstin: '24FEDCB1234A1Z0',
     type: 'Vendor',
-    balance: 0,
+    balance: 1500, // Positive balance means they owe us money (Receivable from vendor)
     lastSeen: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000),
   },
 ];

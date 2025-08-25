@@ -134,15 +134,20 @@ export const columns = ({
           return <div className={cn("font-mono text-right whitespace-nowrap text-muted-foreground", density === 'compact' && 'py-1 px-2 text-sm')}>-</div>
         }
 
-        let colorClass = '';
-        if (row.type === 'Customer') {
-          colorClass = row.balance > 0 ? 'text-green-600' : 'text-destructive';
-        } else { // Vendor
-          colorClass = row.balance < 0 ? 'text-green-600' : 'text-destructive';
-        }
+        const isCustomer = row.type === 'Customer';
+        const isPayable = isCustomer ? row.balance > 0 : row.balance < 0; // Payable from your perspective
+        const isReceivable = isCustomer ? row.balance < 0 : row.balance > 0; // Receivable by you
         
+        let colorClass = '';
+        if(isReceivable) colorClass = 'text-green-600';
+        if(isPayable) colorClass = 'text-destructive';
+
+        const formattedAmount = formatCurrency(Math.abs(row.balance));
+
         return (
-          <div className={cn("font-mono text-right whitespace-nowrap", colorClass, density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(Math.abs(row.balance))}</div>
+          <div className={cn("font-mono text-right whitespace-nowrap", colorClass, density === 'compact' && 'py-1 px-2 text-sm')}>
+            {isPayable ? `(${formattedAmount})` : formattedAmount}
+          </div>
         )
       },
     },
