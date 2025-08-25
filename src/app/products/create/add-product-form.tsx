@@ -152,7 +152,7 @@ const ProductCombobox = ({
 };
 
 
-export default function CreateProductPage() {
+export default function AddProductForm() {
   const { toast } = useToast();
 
   // Core Product State
@@ -651,7 +651,7 @@ export default function CreateProductPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-bold text-[18px]">Create Stock</CardTitle>
+            <CardTitle className="text-lg font-bold text-[18px]">Create Variants</CardTitle>
             <CardDescription>
               Add attributes that you stock and reorder by. Fewer attributes lead to fewer SKUs.
             </CardDescription>
@@ -659,7 +659,7 @@ export default function CreateProductPage() {
           <CardContent className="space-y-6">
             <div className="space-y-4">
                <div className="w-full">
-                <Label>Common grocery attributes</Label>
+                <Label>Add common attributes</Label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {presetAttributes.map((preset) => (
                     <Button
@@ -722,6 +722,7 @@ export default function CreateProductPage() {
                       </div>
                       <Input
                         value={attr.values?.join(', ')}
+                        type="text"
                         onChange={(e) =>
                           handleStockAttrChange(index, 'values', e.target.value)
                         }

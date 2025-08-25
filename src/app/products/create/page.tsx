@@ -1,5 +1,7 @@
 
-import { AddProductForm } from './add-product-form';
+'use client';
+
+import AddProductForm from './add-product-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function CreateProductPage() {
