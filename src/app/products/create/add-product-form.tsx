@@ -639,7 +639,7 @@ export function AddProductForm() {
                               <TooltipProvider>
                                   <Tooltip>
                                       <TooltipTrigger asChild>
-                                          <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                                          <Button type="button" variant="ghost" size="icon" className="h-4 w-4" asChild><Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" /></Button>
                                       </TooltipTrigger>
                                       <TooltipContent>
                                           <p>Unit of Measurements</p>
@@ -717,9 +717,7 @@ export function AddProductForm() {
                         </FormItem>
                       )}
                     />
-                </div>
-                <div className="space-y-2">
-                    {showSecondaryUom ? (
+                     {showSecondaryUom ? (
                         <>
                           <FormField
                             name="secondaryUom"
@@ -788,8 +786,6 @@ export function AddProductForm() {
                         )
                     )}
                 </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                 <FormField
                   name="preferredSupplier"
                   control={form.control}
@@ -812,7 +808,7 @@ export function AddProductForm() {
                     </FormItem>
                   )}
                 />
-                <FormField
+                 <FormField
                   name="hsnCode"
                   control={form.control}
                   render={({ field }) => (
