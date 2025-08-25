@@ -12,7 +12,7 @@ export type StockItem = {
     attributes?: Record<string, string>;
     hsnCode?: string;
     defaultTaxRate?: number;
-    mrp?: number;
+    mrp: number;
     sellingPrice: number;
     purchasePrice: number;
     reorderLevel?: number;
@@ -72,6 +72,10 @@ export function generateStockListData(count: number = 80): StockItem[] {
       category: getRandomElement(categories),
       brand: getRandomElement(brands),
       uom: getRandomElement(uoms),
+      attributes: {
+          'Pack Size': '1kg',
+          'Dietary': 'Vegetarian',
+      },
       hsnCode: String(Math.floor(Math.random() * 900000) + 100000),
       defaultTaxRate: getRandomElement([5, 12, 18]),
       mrp: sellingPrice * 1.1, // 10% above selling price
@@ -80,7 +84,9 @@ export function generateStockListData(count: number = 80): StockItem[] {
       reorderLevel: Math.floor(Math.random() * 20) + 5,
       suppliers: [getRandomElement(suppliers)],
       barcode: `BRC${String(Math.floor(Math.random() * 90000000) + 10000000)}`,
-      status: Math.random() > 0.9 ? 'Inactive' : 'Active',
+      status: Math.random() > 0.1 ? 'Active' : 'Inactive',
+      
+      // Inventory specific
       stockInHand: stockInHand,
       location: 'Main Warehouse',
       expiryDate: Math.random() > 0.3 ? getRandomDate(now, new Date(now.getFullYear() + 2, now.getMonth(), now.getDate())) : undefined,

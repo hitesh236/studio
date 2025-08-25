@@ -18,6 +18,7 @@ import { Search, ListFilter, Edit, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export function ProductCatalogueTable({ data }: { data: StockItem[] }) {
   const [filter, setFilter] = React.useState('');
@@ -74,7 +75,7 @@ export function ProductCatalogueTable({ data }: { data: StockItem[] }) {
                     ))}
                 </DropdownMenuContent>
             </DropdownMenu>
-            <DropdownMenu>
+             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline">
                         <ListFilter className="mr-2 h-4 w-4" />
@@ -100,13 +101,21 @@ export function ProductCatalogueTable({ data }: { data: StockItem[] }) {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Image</TableHead>
               <TableHead>Product Name</TableHead>
               <TableHead>SKU</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Brand</TableHead>
+              <TableHead>UoM</TableHead>
+              <TableHead>Attributes</TableHead>
+              <TableHead>HSN Code</TableHead>
+              <TableHead>GST</TableHead>
+              <TableHead className="text-right">MRP</TableHead>
               <TableHead className="text-right">Selling Price</TableHead>
               <TableHead className="text-right">Cost Price</TableHead>
-              <TableHead>Tax Rate</TableHead>
+              <TableHead className="text-right">Reorder Lvl</TableHead>
+              <TableHead>Supplier(s)</TableHead>
+              <TableHead>Barcode</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-center">Actions</TableHead>
             </TableRow>
@@ -114,13 +123,34 @@ export function ProductCatalogueTable({ data }: { data: StockItem[] }) {
           <TableBody>
             {filteredData.map(item => (
               <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.productName}</TableCell>
-                <TableCell>{item.sku}</TableCell>
-                <TableCell>{item.category}</TableCell>
-                <TableCell>{item.brand}</TableCell>
-                <TableCell className="text-right font-mono">{formatCurrency(item.sellingPrice, 'INR')}</TableCell>
-                <TableCell className="text-right font-mono">{formatCurrency(item.purchasePrice, 'INR')}</TableCell>
+                <TableCell>
+                    <Image 
+                        src="https://png.pngtree.com/png-vector/20210604/ourmid/pngtree-gray-network-placeholder-png-image_3416659.jpg" 
+                        alt={item.productName}
+                        width={40}
+                        height={40}
+                        className="rounded-md object-cover"
+                        data-ai-hint="product image"
+                    />
+                </TableCell>
+                <TableCell className="font-medium whitespace-nowrap">{item.productName}</TableCell>
+                <TableCell className="whitespace-nowrap">{item.sku}</TableCell>
+                <TableCell className="whitespace-nowrap">{item.category}</TableCell>
+                <TableCell className="whitespace-nowrap">{item.brand}</TableCell>
+                <TableCell>{item.uom}</TableCell>
+                <TableCell className="whitespace-nowrap">
+                  {item.attributes && Object.entries(item.attributes).map(([key, value]) => (
+                    <span key={key} className="text-xs">{key}: {value}; </span>
+                  ))}
+                </TableCell>
+                <TableCell>{item.hsnCode}</TableCell>
                 <TableCell>{item.defaultTaxRate}%</TableCell>
+                <TableCell className="text-right font-mono whitespace-nowrap">{formatCurrency(item.mrp, 'INR')}</TableCell>
+                <TableCell className="text-right font-mono whitespace-nowrap">{formatCurrency(item.sellingPrice, 'INR')}</TableCell>
+                <TableCell className="text-right font-mono whitespace-nowrap">{formatCurrency(item.purchasePrice, 'INR')}</TableCell>
+                <TableCell className="text-right font-mono">{item.reorderLevel}</TableCell>
+                <TableCell className="whitespace-nowrap">{item.suppliers?.join(', ')}</TableCell>
+                <TableCell>{item.barcode}</TableCell>
                 <TableCell><Badge variant={getStatusVariant(item.status)}>{item.status}</Badge></TableCell>
                 <TableCell className="text-center">
                    <Button variant="ghost" size="icon" asChild>
