@@ -10,8 +10,11 @@ import Loading from '../loading';
 export default function TrialBalancePage() {
     const [data, setData] = React.useState<TrialBalanceRow[] | null>(null);
 
+    // This would typically fetch data based on a date range, 
+    // but for now, we generate it once.
     React.useEffect(() => {
-        setData(generateTrialBalanceData());
+        const defaultDateRange = { from: new Date(2024, 0, 1), to: new Date() };
+        setData(generateTrialBalanceData(defaultDateRange));
     }, []);
 
     if (!data) {
@@ -20,7 +23,7 @@ export default function TrialBalancePage() {
 
     return (
         <div className="p-4 sm:p-6 lg:p-8">
-            <TrialBalanceView data={data} />
+            <TrialBalanceView initialData={data} />
         </div>
     );
 }
