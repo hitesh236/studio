@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -34,7 +34,6 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Save, Search, Check, ChevronsUpDown, PlusCircle, Trash2 } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
@@ -55,18 +54,13 @@ const contactSchema = z.object({
     contact: z.string().optional(),
 });
 
-const shippingAddressSchema = z.object({
-    address: z.string().optional(),
-    state: z.string().optional(),
-});
-
 const partyFormSchema = z.object({
   partyType: z.enum(['customer', 'vendor']),
   gstinSearch: z.string().optional(),
   
   // Basic Info
-  businessName: z.string().min(1, 'Business Name is required.'),
-  phone: z.string().min(1, 'At least one phone number is required.'),
+  businessName: z.string(),
+  phone: z.string(),
   email: z.string().email("Invalid email address.").optional().or(z.literal('')),
   address: z.string().optional(),
   state: z.string().optional(),
@@ -75,16 +69,20 @@ const partyFormSchema = z.object({
   customerType: z.string().optional(),
   gstin: z.string().length(15, 'GSTIN must be 15 characters.').optional().or(z.literal('')),
 
-  // Miscellaneous
+  // Other Information
   contactPerson: z.string().optional(),
   creditLimit: z.coerce.number().optional(),
   creditLimitDays: z.coerce.number().int().optional(),
   multipleContacts: z.array(contactSchema).optional(),
-  shippingAddresses: z.array(shippingAddressSchema).optional(),
+  shippingAddresses: z.string().optional(),
   notes: z.string().optional(),
   attachments: z.any().optional(),
   industry: z.string().optional(),
+}).refine(data => data.businessName.trim() !== '' || data.phone.trim() !== '', {
+    message: "Either Party Name or Phone Number is required.",
+    path: ["businessName"],
 });
+
 
 type PartyFormValues = z.infer<typeof partyFormSchema>;
 
@@ -103,7 +101,7 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
       openingBalance: 0,
       balanceType: 'debit',
       multipleContacts: [{ name: '', contact: '' }],
-      shippingAddresses: [{ address: '', state: '' }],
+      shippingAddresses: '',
     },
   });
 
@@ -112,11 +110,6 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
     name: 'multipleContacts',
   });
   
-  const { fields: addressFields, append: appendAddress, remove: removeAddress } = useFieldArray({
-    control: form.control,
-    name: 'shippingAddresses',
-  });
-
   const { watch } = form;
   const partyType = watch('partyType');
 
@@ -259,7 +252,7 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
             
              <Card>
                 <CardHeader>
-                    <h3 className="text-lg font-bold">Miscellaneous</h3>
+                    <h3 className="text-lg font-bold">Other Information</h3>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -304,12 +297,18 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                         <FormField name="contactPerson" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Contact Person</FormLabel><FormControl><Input placeholder="e.g., John Doe" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                        <FormField name="creditLimit" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Credit Limit (Amount)</FormLabel><FormControl><Input type="text" placeholder="e.g., 50000" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                        <FormField name="creditLimitDays" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>Credit Limit (Days)</FormLabel><FormControl><Input type="text" placeholder="e.g., 30" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
+                        
+                        {partyType === 'customer' && (
+                            <>
+                                <FormField name="creditLimit" control={form.control} render={({ field }) => (
+                                    <FormItem><FormLabel>Credit Limit (Amount)</FormLabel><FormControl><Input type="text" placeholder="e.g., 50000" {...field} /></FormControl><FormMessage /></FormItem>
+                                )}/>
+                                <FormField name="creditLimitDays" control={form.control} render={({ field }) => (
+                                    <FormItem><FormLabel>Credit Limit (Days)</FormLabel><FormControl><Input type="text" placeholder="e.g., 30" {...field} /></FormControl><FormMessage /></FormItem>
+                                )}/>
+                            </>
+                        )}
+                        
                          <FormField name="industry" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Industry / Segment</FormLabel><FormControl><Input placeholder="e.g., IT, Manufacturing" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
@@ -340,36 +339,25 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                         </Button>
                     </div>
 
-                    <div>
-                        <Label>Shipping Addresses</Label>
-                        <div className="space-y-2 mt-2">
-                             {addressFields.map((field, index) => (
-                                <div key={field.id} className="flex items-center gap-2">
-                                    <FormField name={`shippingAddresses.${index}.address`} control={form.control} render={({ field }) => (
-                                        <Input {...field} placeholder="Full Shipping Address" />
-                                    )} />
-                                    <FormField name={`shippingAddresses.${index}.state`} control={form.control} render={({ field }) => (
-                                        <div className="w-[200px]">
-                                            <Select onValueChange={field.onChange} value={field.value}>
-                                                <FormControl><SelectTrigger><SelectValue placeholder="State" /></SelectTrigger></FormControl>
-                                                <SelectContent>
-                                                    {indianStates.map(state => (
-                                                        <SelectItem key={state} value={state}>{state}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    )} />
-                                    <Button type="button" variant="ghost" size="icon" className="text-destructive shrink-0" onClick={() => removeAddress(index)}>
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
-                        <Button type="button" variant="link" size="sm" className="mt-2" onClick={() => appendAddress({ address: '', state: '' })}>
-                            <PlusCircle className="mr-2 h-4 w-4" /> Add More Addresses
-                        </Button>
-                    </div>
+                    {partyType === 'customer' && (
+                        <FormField
+                            name="shippingAddresses"
+                            control={form.control}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Shipping Addresses</FormLabel>
+                                    <FormControl>
+                                        <Textarea
+                                            placeholder="Enter multiple shipping addresses, each on a new line."
+                                            {...field}
+                                            rows={4}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    )}
 
                     <FormField name="notes" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Remarks / Notes</FormLabel><FormControl><Textarea placeholder="Any other special instructions or comments..." {...field} /></FormControl><FormMessage /></FormItem>
