@@ -12,7 +12,11 @@ export default function CreateProductPage() {
             <CardHeader>
                 <CardTitle>Add Product</CardTitle>
                 <CardDescription>
-                    Product Master Data Setup. Goal: Define what you can sell. Action: Add all product attributes, prices, taxes, and supplier info.
+                  Product Master Data Setup.
+                  <br />
+                  Goal: Define what you can sell.
+                  <br />
+                  Action: Add all product attributes, prices, taxes, and supplier info.
                 </CardDescription>
             </CardHeader>
             <CardContent className="p-4 sm:p-6">
