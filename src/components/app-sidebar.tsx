@@ -56,6 +56,7 @@ import Link from 'next/link';
 import * as React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import useUserRole from '@/hooks/use-user-role';
+import { Badge } from './ui/badge';
 
 export function AppSidebar() {
   const { state, isMobile, setOpen, setOpenMobile } = useSidebar();
@@ -116,6 +117,15 @@ export function AppSidebar() {
                         <span>Sales</span>
                     </Link>
                 </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Recurring Invoices" isActive={pathname.startsWith('/recurring-invoices')} asChild>
+                <Link href="/recurring-invoices" onClick={handleLinkClick}>
+                  <Repeat />
+                  <span>Recurring</span>
+                  <Badge variant="secondary" className="ml-auto group-data-[state=expanded]:inline-flex hidden">Pro</Badge>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton tooltip="Sales Returns" isActive={pathname.startsWith('/sales-invoice-returns')} asChild>
