@@ -9,7 +9,7 @@ export default function AllTransactionsPage() {
     const [journalEntries, setJournalEntries] = React.useState<JournalEntry[] | null>(null);
 
     React.useEffect(() => {
-        setJournalEntries(generateJournalEntries(2));
+        setJournalEntries(generateJournalEntries(200));
     }, []);
 
     if (!journalEntries) {
