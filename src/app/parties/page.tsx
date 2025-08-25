@@ -5,7 +5,7 @@ import { HicksTableContainer } from "@/components/hicks-table/hicks-table-contai
 import type { Person } from "@/lib/data";
 import { staticCustomers, staticVendors } from "@/lib/customer-data";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Users, TrendingUp, TrendingDown } from "lucide-react";
+import { PlusCircle, Users, TrendingUp, TrendingDown, Edit } from "lucide-react";
 import { motion } from 'framer-motion';
 import { SummaryCard } from "@/components/hicks-table/summary-card";
 import { useMemo, useState, useEffect } from 'react';
@@ -17,11 +17,21 @@ import Loading from "../loading";
 export default function PartiesPage() {
   const [data, setData] = useState<Person[]>([]);
   const [filter, setFilter] = useState<'all' | 'customer' | 'vendor'>('all');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingParty, setEditingParty] = useState<Person | null>(null);
 
   useEffect(() => {
     setData([...staticCustomers, ...staticVendors]);
   }, []);
+
+  const handleEditParty = (party: Person) => {
+    setEditingParty(party);
+  };
+
+  const closeDialogs = () => {
+    setIsAddDialogOpen(false);
+    setEditingParty(null);
+  }
 
   const filteredData = useMemo(() => {
     if (filter === 'all') {
@@ -70,7 +80,7 @@ export default function PartiesPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
             >
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                   <DialogTrigger asChild>
                       <Button>
                         <PlusCircle className="mr-2 h-4 w-4" />
@@ -79,7 +89,7 @@ export default function PartiesPage() {
                   </DialogTrigger>
                   <DialogContent className="max-w-6xl p-0 bg-background">
                       <div className="max-h-[90vh] overflow-y-auto">
-                        <AddPartyForm onSuccess={() => setIsDialogOpen(false)} />
+                        <AddPartyForm onSuccess={closeDialogs} />
                       </div>
                   </DialogContent>
                 </Dialog>
@@ -104,7 +114,16 @@ export default function PartiesPage() {
             />
         </div>
 
-      <HicksTableContainer data={filteredData} />
+      <HicksTableContainer data={filteredData} onEditParty={handleEditParty} />
+
+      <Dialog open={!!editingParty} onOpenChange={(open) => !open && setEditingParty(null)}>
+        <DialogContent className="max-w-6xl p-0 bg-background">
+            <div className="max-h-[90vh] overflow-y-auto">
+            <AddPartyForm onSuccess={closeDialogs} editingParty={editingParty} />
+            </div>
+        </DialogContent>
+      </Dialog>
+
       <p className="text-center text-xs text-muted-foreground mt-4">Note: Customer 'status' is 'Active' if the last transaction was within the last 90 days.</p>
     </div>
   );

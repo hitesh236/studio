@@ -75,7 +75,7 @@ const ALL_COLUMNS = [
     { id: 'actions', label: 'Actions' },
   ];
 
-export function HicksTableContainer({ data }: { data: Person[] }) {
+export function HicksTableContainer({ data, onEditParty }: { data: Person[], onEditParty: (party: Person) => void }) {
   const [filter, setFilter] = useState("");
   const [density, setDensity] = useState<"normal" | "compact">("normal");
   const [page, setPage] = useState(0);
@@ -257,6 +257,7 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
       onSelectAll: handleSelectAll,
       onSelectRow: toggleRowSelection,
       paginatedData,
+      onEditParty,
     });
     
     const visibleCols = allCols.filter(c => columnVisibility.has(c.accessor as string));
@@ -266,7 +267,7 @@ export function HicksTableContainer({ data }: { data: Person[] }) {
     });
 
     return visibleCols;
-  }, [expandedRows, toggleRowExpansion, density, sortConfig, requestSort, columnVisibility, columnOrder, selectedRows, paginatedData]);
+  }, [expandedRows, toggleRowExpansion, density, sortConfig, requestSort, columnVisibility, columnOrder, selectedRows, paginatedData, onEditParty]);
 
 
   const getPaginationButtons = () => {

@@ -19,6 +19,7 @@ type ColumnProps = {
   onSelectAll: (checked: boolean) => void;
   onSelectRow: (id: string) => void;
   paginatedData: Person[];
+  onEditParty: (party: Person) => void;
 };
 
 export const columns = ({ 
@@ -30,7 +31,8 @@ export const columns = ({
   selectedRows,
   onSelectAll,
   onSelectRow,
-  paginatedData 
+  paginatedData,
+  onEditParty
 }: ColumnProps) => {
   const getSortableHeader = (title: string, accessor: string) => {
     const isSorted = sortConfig.key === accessor;
@@ -86,12 +88,16 @@ export const columns = ({
       header: getSortableHeader("User", "name"),
       cell: (row: Person) => (
         <div className={cn("flex items-center gap-2", density === 'compact' && 'py-1 px-2 text-sm')}>
-          <div>
+          <div onClick={() => toggleRowExpansion(row.id)} className="cursor-pointer">
              <Link href={`/customer-portfolio?customerData=${encodeURIComponent(JSON.stringify(row))}`} className="font-medium whitespace-nowrap hover:underline hover:text-primary">
               {`${row.firstName} ${row.lastName}`}
             </Link>
             <div className="text-xs text-muted-foreground whitespace-nowrap">{row.email}</div>
           </div>
+           <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => onEditParty(row)}>
+                <Edit className="h-4 w-4" />
+                <span className="sr-only">Edit Party</span>
+            </Button>
         </div>
       ),
     },
@@ -99,16 +105,8 @@ export const columns = ({
       accessor: "company",
       header: getSortableHeader("Company", "company"),
       cell: (row: Person) => (
-        <div 
-          onClick={() => toggleRowExpansion(row.id)} 
-          className={cn("cursor-pointer whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>
-          <div className="flex items-center gap-2">
-             {row.company}
-            <Button variant="ghost" size="icon" className="h-6 w-6 opacity-60 hover:opacity-100 data-[state=open]:opacity-100">
-               {expandedRows.has(row.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-               <span className="sr-only">Expand row</span>
-            </Button>
-          </div>
+        <div className={cn("whitespace-nowrap", density === 'compact' && 'py-1 px-2 text-sm')}>
+          {row.company}
         </div>
       )
     },
@@ -135,15 +133,15 @@ export const columns = ({
         }
 
         const isCustomer = row.type === 'Customer';
-        const isPayable = isCustomer ? row.balance > 0 : row.balance < 0; // Payable from your perspective
-        const isReceivable = isCustomer ? row.balance < 0 : row.balance > 0; // Receivable by you
+        const isReceivable = isCustomer ? row.balance < 0 : row.balance > 0;
+        const isPayable = isCustomer ? row.balance > 0 : row.balance < 0;
         
         let colorClass = '';
         if(isReceivable) colorClass = 'text-green-600';
         if(isPayable) colorClass = 'text-destructive';
 
-        const formattedAmount = formatCurrency(Math.abs(row.balance));
-
+        const formattedAmount = formatCurrency(Math.abs(row.balance), 'INR');
+        
         return (
           <div className={cn("font-mono text-right whitespace-nowrap", colorClass, density === 'compact' && 'py-1 px-2 text-sm')}>
             {isPayable ? `(${formattedAmount})` : formattedAmount}

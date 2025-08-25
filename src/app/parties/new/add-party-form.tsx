@@ -37,6 +37,7 @@ import { Loader2, Save, Search, Check, ChevronsUpDown, PlusCircle, Trash2 } from
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
+import type { Person } from '@/lib/data';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -73,11 +74,9 @@ const partyFormSchema = z.object({
   contactPerson: z.string().optional(),
   creditLimit: z.coerce.number().optional(),
   creditLimitDays: z.coerce.number().int().optional(),
-  multipleContacts: z.array(contactSchema).optional(),
   shippingAddresses: z.string().optional(),
   notes: z.string().optional(),
   attachments: z.any().optional(),
-  industry: z.string().optional(),
 }).refine(data => data.businessName.trim() !== '' || data.phone.trim() !== '', {
     message: "Either Party Name or Phone Number is required.",
     path: ["businessName"],
@@ -87,9 +86,16 @@ const partyFormSchema = z.object({
 type PartyFormValues = z.infer<typeof partyFormSchema>;
 
 
-export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
+export function AddPartyForm({ 
+  onSuccess,
+  editingParty 
+}: { 
+  onSuccess?: () => void,
+  editingParty?: Person | null 
+}) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const isEditing = !!editingParty;
 
   const form = useForm<PartyFormValues>({
     resolver: zodResolver(partyFormSchema),
@@ -100,16 +106,27 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
       email: '',
       openingBalance: 0,
       balanceType: 'debit',
-      multipleContacts: [{ name: '', contact: '' }],
       shippingAddresses: '',
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: 'multipleContacts',
-  });
-  
+  React.useEffect(() => {
+    if (editingParty) {
+      form.reset({
+        partyType: editingParty.type.toLowerCase() as 'customer' | 'vendor',
+        businessName: editingParty.company,
+        phone: editingParty.phone,
+        email: editingParty.email,
+        address: editingParty.address.street,
+        state: editingParty.address.state,
+        openingBalance: Math.abs(editingParty.balance),
+        balanceType: editingParty.balance >= 0 ? 'debit' : 'credit',
+        gstin: editingParty.gstin,
+        // Reset other fields as needed
+      });
+    }
+  }, [editingParty, form]);
+
   const { watch } = form;
   const partyType = watch('partyType');
 
@@ -134,10 +151,10 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
   async function onSubmit(data: PartyFormValues) {
     setIsSubmitting(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log('New Party Data:', data);
+    console.log('Party Data:', data);
     toast({
-      title: "Party Created",
-      description: `${data.businessName} has been successfully added.`,
+      title: `Party ${isEditing ? 'Updated' : 'Created'}`,
+      description: `${data.businessName} has been successfully ${isEditing ? 'updated' : 'added'}.`,
     });
     setIsSubmitting(false);
     if(onSuccess) onSuccess();
@@ -151,12 +168,12 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-xl">Create New Party</CardTitle>
-                    <CardDescription>Add a new customer or vendor to your system.</CardDescription>
+                    <CardTitle className="text-xl">{isEditing ? 'Edit Party' : 'Create New Party'}</CardTitle>
+                    <CardDescription>{isEditing ? 'Update the details for this party.' : 'Add a new customer or vendor to your system.'}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-                       <FormField
+                       {!isEditing && <FormField
                             control={form.control}
                             name="partyType"
                             render={({ field }) => (
@@ -176,7 +193,7 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                                     <FormMessage />
                                 </FormItem>
                             )}
-                        />
+                        />}
                          <div className="flex items-end gap-2">
                             <FormField control={form.control} name="gstinSearch" render={({ field }) => (
                                 <FormItem className="flex-1">
@@ -315,28 +332,6 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                          <FormField name="attachments" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Attachments</FormLabel><FormControl><Input type="file" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                    </div>
-
-                    <div>
-                        <Label>Multiple Contacts</Label>
-                        <div className="space-y-2 mt-2">
-                             {fields.map((field, index) => (
-                                <div key={field.id} className="flex items-center gap-2">
-                                    <FormField name={`multipleContacts.${index}.name`} control={form.control} render={({ field }) => (
-                                        <Input {...field} placeholder="Contact Name" />
-                                    )} />
-                                    <FormField name={`multipleContacts.${index}.contact`} control={form.control} render={({ field }) => (
-                                        <Input {...field} placeholder="Phone or Email" />
-                                    )} />
-                                    <Button type="button" variant="ghost" size="icon" className="text-destructive shrink-0" onClick={() => remove(index)}>
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
-                        <Button type="button" variant="link" size="sm" className="mt-2" onClick={() => append({ name: '', contact: '' })}>
-                            <PlusCircle className="mr-2 h-4 w-4" /> Add More Contacts
-                        </Button>
                     </div>
 
                     {partyType === 'customer' && (
