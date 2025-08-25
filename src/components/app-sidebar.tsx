@@ -218,6 +218,14 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Trial Balance" isActive={pathname.startsWith('/trial-balance')} asChild>
+                    <Link href="/trial-balance" onClick={handleLinkClick}>
+                        <Scale />
+                        <span>Trial Balance</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
               <SidebarMenuButton tooltip="All Entries" isActive={pathname.startsWith('/journal-entries')} asChild>
                 <Link href="/journal-entries" onClick={handleLinkClick}>
                     <BookOpen />
