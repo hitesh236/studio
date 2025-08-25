@@ -28,10 +28,7 @@ type Variant = {
   barcode: string;
   buyingPrice: number | '';
   price: { regular: number | ''; b2b: number | ''; b2c: number | '' };
-  stock: number | '';
-  stockValue: number | '';
   reorderPoint: number | '';
-  expiryDate?: Date;
 };
 
 // Helper functions
@@ -108,7 +105,7 @@ const PriceBreakdown = ({ sellingPrice, buyingPrice, gstRate, includesGst }: { s
     );
 };
 
-export default function CreateProductPage() {
+export function AddProductForm() {
   const { toast } = useToast();
 
   // Core Product State
@@ -154,12 +151,6 @@ export default function CreateProductPage() {
   const [isUomDialogOpen, setIsUomDialogOpen] = React.useState(false);
   const [newUom, setNewUom] = React.useState({ name: '', abbreviation: '' });
   const [showSecondaryUom, setShowSecondaryUom] = React.useState(false);
-
-  // Location State
-  const [location, setLocation] = React.useState('');
-  const [locations, setLocations] = React.useState(['Main Warehouse', 'Store', 'Shop']);
-  const [isLocationDialogOpen, setIsLocationDialogOpen] = React.useState(false);
-  const [newLocation, setNewLocation] = React.useState('');
 
   const activeSimpleUnits = React.useMemo(
     () => simpleUnits.filter((u) => u.status !== 'disabled'),
@@ -346,10 +337,7 @@ export default function CreateProductPage() {
         barcode: '',
         buyingPrice: '',
         price: { regular: '', b2b: '', b2c: '' },
-        stock: 0,
-        stockValue: '',
         reorderPoint: 0,
-        expiryDate: undefined,
       };
     });
     setVariants(newVariants);
@@ -357,7 +345,7 @@ export default function CreateProductPage() {
 
   const handleVariantChange = (
     id: string,
-    field: keyof Omit<Variant, 'id' | 'values' | 'price' | 'expiryDate'>,
+    field: keyof Omit<Variant, 'id' | 'values' | 'price'>,
     value: string | number
   ) => {
     setVariants((prev) =>
@@ -365,15 +353,6 @@ export default function CreateProductPage() {
     );
   };
   
-  const handleVariantDateChange = (
-    id: string,
-    date: Date | undefined
-  ) => {
-    setVariants((prev) =>
-      prev.map((v) => (v.id === id ? { ...v, expiryDate: date } : v))
-    );
-  };
-
   const handlePriceChange = (
     id: string,
     priceType: 'regular' | 'b2b' | 'b2c',
@@ -388,21 +367,6 @@ export default function CreateProductPage() {
     );
   };
   
-  const handleAddLocation = () => {
-    if (newLocation.trim()) {
-        if (locations.some(loc => loc.toLowerCase() === newLocation.trim().toLowerCase())) {
-            toast({ title: 'Location already exists.', variant: 'destructive' });
-            return;
-        }
-        const updatedLocations = [...locations, newLocation.trim()];
-        setLocations(updatedLocations);
-        setLocation(newLocation.trim());
-        toast({ title: 'Location added successfully.' });
-        setIsLocationDialogOpen(false);
-        setNewLocation('');
-    }
-  };
-
   const handleSaveProduct = () => {
     console.log({
       product: { productName, productCode, categoryPath, uom, secondaryUom },
@@ -420,9 +384,7 @@ export default function CreateProductPage() {
   const addedAttributeNames = new Set(stockAttrs.map((a) => a.name));
   
   return (
-    <div className="space-y-6 p-4 md:p-2.5">
-      <h1 className="font-bold text-[20px]">Add Product</h1>
-
+    <div className="space-y-6">
       <div className="space-y-6">
         <Card className="w-full">
           <CardHeader>
@@ -496,7 +458,7 @@ export default function CreateProductPage() {
         
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-bold text-[18px]">Units & Stock</CardTitle>
+            <CardTitle className="text-lg font-bold text-[18px]">Units & Measurements</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-4">
@@ -629,55 +591,14 @@ export default function CreateProductPage() {
                     )}
                 </div>
             </div>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div className="space-y-2">
-                    <Label htmlFor="location">Location/Warehouse</Label>
-                    <div className="relative flex items-center">
-                        <Select onValueChange={setLocation} value={location}>
-                            <SelectTrigger className="pr-12">
-                            <SelectValue placeholder="Select location" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {locations.map((loc) => (
-                                    <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
-                            <DialogTrigger asChild>
-                                <Button type="button" variant="outline" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7">
-                                    <PlusCircle className="h-4 w-4" />
-                                </Button>
-                            </DialogTrigger>
-                             <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>Add New Location</DialogTitle>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                    <Label htmlFor="location-name">Location Name</Label>
-                                    <Input id="location-name" value={newLocation} onChange={e => setNewLocation(e.target.value)} />
-                                </div>
-                                <DialogFooter>
-                                    <DialogClose asChild><Button variant="outline" type="button">Cancel</Button></DialogClose>
-                                    <Button type="button" onClick={handleAddLocation}>Save Location</Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                    </div>
-                </div>
-                 <div>
-                    <Label>Reorder Point</Label>
-                    <Input placeholder="e.g. 10" />
-                </div>
-            </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-bold text-[18px]">Create Stock</CardTitle>
+            <CardTitle className="text-lg font-bold text-[18px]">Create Variants</CardTitle>
             <CardDescription>
-              Add attributes that you stock and reorder by. Fewer attributes lead to fewer SKUs.
+              Add attributes that create different versions of this product, like size or color.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -775,7 +696,7 @@ export default function CreateProductPage() {
         <Card>
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle className="text-lg font-bold text-[18px]">Variants (SKUs) & Stock</CardTitle>
+              <CardTitle className="text-lg font-bold text-[18px]">Variants (SKUs) & Pricing</CardTitle>
                <div className="flex items-center space-x-2">
                 <Switch
                   id="include-gst"
@@ -786,7 +707,7 @@ export default function CreateProductPage() {
               </div>
             </div>
             <CardDescription>
-              Low stock items (Available ≤ Reorder Point) are highlighted in red.
+              Set pricing and identifiers for each generated product variant.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -800,17 +721,13 @@ export default function CreateProductPage() {
                     <TableHead>SKU</TableHead>
                     <TableHead>Buying Price</TableHead>
                     <TableHead className="min-w-[150px]">Selling Prices</TableHead>
-                    <TableHead>Expiry Date</TableHead>
-                    <TableHead className="text-right">Opening Stock</TableHead>
-                    <TableHead className="text-right">Stock Value</TableHead>
                     <TableHead className="text-right">Reorder Point</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {variants.length > 0 ? (
                     variants.map((variant) => {
-                      const isLowStock =
-                        Number(variant.stock || 0) <= Number(variant.reorderPoint || 0);
+                      const isLowStock = false; // Stock management removed for now
                       return (
                         <TableRow
                           key={variant.id}
@@ -888,57 +805,6 @@ export default function CreateProductPage() {
                                      <PriceBreakdown sellingPrice={variant.price.b2c} buyingPrice={variant.buyingPrice} gstRate={gstRate} includesGst={sellingPriceIncludesGst} />
                                 </div>
                             </TableCell>
-                             <TableCell>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant={"outline"}
-                                            className={cn("w-[150px] justify-start text-left font-normal", !variant.expiryDate && "text-muted-foreground")}
-                                        >
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {variant.expiryDate ? format(variant.expiryDate, "dd/MM/yyyy") : <span>No Expiry</span>}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
-                                        <Calendar
-                                            mode="single"
-                                            selected={variant.expiryDate}
-                                            onSelect={(date) => handleVariantDateChange(variant.id, date)}
-                                            initialFocus
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                            </TableCell>
-                          <TableCell>
-                            <Input
-                              type="text"
-                              className="text-right min-w-[70px]"
-                              placeholder="0"
-                              value={variant.stock}
-                              onChange={(e) =>
-                                handleVariantChange(
-                                  variant.id,
-                                  'stock',
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </TableCell>
-                           <TableCell>
-                            <Input
-                              type="text"
-                              className="text-right min-w-[80px]"
-                              placeholder="0.00"
-                              value={variant.stockValue}
-                              onChange={(e) =>
-                                handleVariantChange(
-                                  variant.id,
-                                  'stockValue',
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </TableCell>
                           <TableCell>
                             <Input
                               type="text"
@@ -960,7 +826,7 @@ export default function CreateProductPage() {
                   ) : (
                     <TableRow>
                       <TableCell
-                        colSpan={stockAttrs.length + 8}
+                        colSpan={stockAttrs.length + 5}
                         className="h-24 text-center text-muted-foreground"
                       >
                         No variants generated.
