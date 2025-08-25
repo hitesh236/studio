@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -126,7 +127,7 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Receipts" isActive={pathname === '/payments'} asChild>
+              <SidebarMenuButton tooltip="Receipts" isActive={pathname === '/payments' && (new URLSearchParams(window.location.search)).get('type') === 'receipt'} asChild>
                 <Link href="/payments?type=receipt" onClick={handleLinkClick}>
                     <Banknote />
                     <span>Receipts</span>
@@ -156,7 +157,7 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Payments" isActive={pathname === '/payments'} asChild>
+              <SidebarMenuButton tooltip="Payments" isActive={pathname === '/payments' && (new URLSearchParams(window.location.search)).get('type') === 'payment'} asChild>
                 <Link href="/payments?type=payment" onClick={handleLinkClick}>
                     <Banknote />
                     <span>Payments</span>
@@ -174,14 +175,6 @@ export function AppSidebar() {
                     <Link href="/stock-list" onClick={handleLinkClick}>
                         <List />
                         <span>Stock List</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Opening Stock" isActive={pathname.startsWith('/stock/opening-stock')} asChild>
-                    <Link href="/stock/opening-stock" onClick={handleLinkClick}>
-                        <FolderPlus />
-                        <span>Opening Stock</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
