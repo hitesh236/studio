@@ -31,7 +31,7 @@ const accountingMenuItems = [
 
 const stockMenuItems = [
     { href: '/products', icon: List, label: 'Products List' },
-    { href: '/products/create', icon: PackagePlus, label: 'Add Product' },
+    { href: '/products/create', icon: PackagePlus, label: 'Create Product' },
     { href: '/product-structure', icon: Tags, label: 'Product Structure' },
     { href: '/uom', icon: Box, label: 'UOM' },
     { href: '/stock-transfer', icon: Truck, label: 'Transfer Stock' },
