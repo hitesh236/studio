@@ -72,82 +72,31 @@ function buildSku(baseCode: string, attrNames: string[], values: string[]) {
   return parts.filter(Boolean).join('-');
 }
 
-const ProductCombobox = ({
-  value,
-  onChange,
-  onProductSelect,
-  products,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  onProductSelect: (product: StockItem) => void;
-  products: StockItem[];
+const AttributeValueInput = ({
+  initialValue,
+  onBlur,
+  ...props
+}: React.ComponentProps<typeof Input> & {
+  initialValue: string[];
+  onBlur: (value: string[]) => void;
 }) => {
-  const [open, setOpen] = React.useState(false);
+  const [value, setValue] = React.useState(initialValue.join(', '));
+
+  React.useEffect(() => {
+    setValue(initialValue.join(', '));
+  }, [initialValue]);
+
+  const handleBlur = () => {
+    onBlur(value.split(',').map(s => s.trim()).filter(Boolean));
+  };
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <FormControl>
-          <Button
-            variant="outline"
-            role="combobox"
-            className={cn(
-              'w-full justify-between',
-              !value && 'text-muted-foreground'
-            )}
-          >
-            {value
-              ? products.find((product) => product.id === value)?.productName
-              : 'Select item'}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </FormControl>
-      </PopoverTrigger>
-      <PopoverContent className="w-full p-0" style={{minWidth: 'var(--radix-popover-trigger-width)'}}>
-        <Command
-          filter={(value, search) => {
-            const product = products.find((p) => p.id === value);
-            if (
-              product?.productName.toLowerCase().includes(search.toLowerCase()) ||
-              product?.sku.toLowerCase().includes(search)
-            )
-              return 1;
-            return 0;
-          }}
-        >
-          <CommandInput placeholder="Search items..." />
-          <CommandList>
-            <CommandEmpty>No item found.</CommandEmpty>
-            <CommandGroup>
-              {products.map((product) => (
-                <CommandItem
-                  value={product.id}
-                  key={product.id}
-                  onSelect={() => {
-                    onChange(product.id);
-                    onProductSelect(product);
-                    setOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      'mr-2 h-4 w-4',
-                      product.id === value ? 'opacity-100' : 'opacity-0'
-                    )}
-                  />
-                  <div className="flex justify-between w-full">
-                    <span>{product.productName}</span>
-                    <span className="text-muted-foreground text-xs">
-                      {product.sku}
-                    </span>
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <Input
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={handleBlur}
+      {...props}
+    />
   );
 };
 
@@ -336,15 +285,15 @@ export default function AddProductForm() {
   const handleStockAttrChange = (
     index: number,
     field: 'name' | 'values',
-    value: string
+    value: string | string[]
   ) => {
     setStockAttrs((prev) => {
       const newAttrs = [...prev];
       const attr = newAttrs[index];
       if (field === 'name') {
-        attr.name = value;
+        attr.name = value as string;
       } else {
-        attr.values = value.split(',').map((s) => s.trim()).filter(Boolean);
+        attr.values = value as string[];
       }
       return newAttrs;
     });
@@ -720,14 +669,13 @@ export default function AddProductForm() {
                           readOnly={presetAttributes.includes(attr.name)}
                         />
                       </div>
-                      <Input
-                        value={attr.values?.join(', ')}
-                        type="text"
-                        onChange={(e) =>
-                          handleStockAttrChange(index, 'values', e.target.value)
-                        }
-                        placeholder="Enter comma-separated values (e.g., 500ml, 1L)"
-                      />
+                      <AttributeValueInput
+                          initialValue={attr.values || []}
+                          onBlur={(newValues) =>
+                            handleStockAttrChange(index, 'values', newValues)
+                          }
+                          placeholder="Enter comma-separated values (e.g., 500ml, 1L)"
+                        />
                     </div>
                   ))}
                 </div>
