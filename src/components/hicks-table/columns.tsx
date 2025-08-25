@@ -130,22 +130,19 @@ export const columns = ({
       accessor: "balance",
       header: getSortableHeader("Balance", "balance"),
       cell: (row: Person) => {
-        let balanceText;
-        let colorClass;
-
         if (row.balance === 0) {
-            balanceText = '-';
-            colorClass = 'text-muted-foreground';
-        } else if (row.balance > 0) {
-            balanceText = `${formatCurrency(row.balance)} (To Collect)`;
-            colorClass = 'text-green-600';
-        } else {
-            balanceText = `${formatCurrency(Math.abs(row.balance))} (To Pay)`;
-            colorClass = 'text-destructive';
+          return <div className={cn("font-mono text-right whitespace-nowrap text-muted-foreground", density === 'compact' && 'py-1 px-2 text-sm')}>-</div>
+        }
+
+        let colorClass = '';
+        if (row.type === 'Customer') {
+          colorClass = row.balance > 0 ? 'text-green-600' : 'text-destructive';
+        } else { // Vendor
+          colorClass = row.balance < 0 ? 'text-green-600' : 'text-destructive';
         }
         
         return (
-          <div className={cn("font-mono text-right whitespace-nowrap", colorClass, density === 'compact' && 'py-1 px-2 text-sm')}>{balanceText}</div>
+          <div className={cn("font-mono text-right whitespace-nowrap", colorClass, density === 'compact' && 'py-1 px-2 text-sm')}>{formatCurrency(Math.abs(row.balance))}</div>
         )
       },
     },
