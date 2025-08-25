@@ -9,9 +9,9 @@ export default function CreateProductPage() {
             <CardHeader>
                 <CardTitle>Add Product</CardTitle>
                 <CardDescription>
-                  <p>Product Master Data Setup.</p>
-                  <p><strong>Goal:</strong> Define what you can sell.</p>
-                  <p><strong>Action:</strong> Add all product attributes, prices, taxes, and supplier info.</p>
+                  <div>Product Master Data Setup.</div>
+                  <div><strong>Goal:</strong> Define what you can sell.</div>
+                  <div><strong>Action:</strong> Add all product attributes, prices, taxes, and supplier info.</div>
                 </CardDescription>
             </CardHeader>
             <CardContent className="p-4 sm:p-6">
