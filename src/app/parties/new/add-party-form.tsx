@@ -55,26 +55,32 @@ const contactSchema = z.object({
     contact: z.string().optional(),
 });
 
+const shippingAddressSchema = z.object({
+    address: z.string().optional(),
+    state: z.string().optional(),
+});
+
 const partyFormSchema = z.object({
-  partyType: z.enum(['customer', 'vendor', 'both']),
+  partyType: z.enum(['customer', 'vendor']),
   gstinSearch: z.string().optional(),
   
   // Basic Info
   businessName: z.string().min(1, 'Business Name is required.'),
   phone: z.string().min(1, 'At least one phone number is required.'),
   email: z.string().email("Invalid email address.").optional().or(z.literal('')),
-  billingAddress: z.string().optional(),
+  address: z.string().optional(),
   state: z.string().optional(),
   openingBalance: z.coerce.number().optional().default(0),
   balanceType: z.enum(['debit', 'credit']).default('debit'),
   customerType: z.string().optional(),
+  gstin: z.string().length(15, 'GSTIN must be 15 characters.').optional().or(z.literal('')),
 
   // Miscellaneous
   contactPerson: z.string().optional(),
   creditLimit: z.coerce.number().optional(),
   creditLimitDays: z.coerce.number().int().optional(),
-  gstin: z.string().length(15, 'GSTIN must be 15 characters.').optional().or(z.literal('')),
   multipleContacts: z.array(contactSchema).optional(),
+  shippingAddresses: z.array(shippingAddressSchema).optional(),
   notes: z.string().optional(),
   attachments: z.any().optional(),
   industry: z.string().optional(),
@@ -97,12 +103,18 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
       openingBalance: 0,
       balanceType: 'debit',
       multipleContacts: [{ name: '', contact: '' }],
+      shippingAddresses: [{ address: '', state: '' }],
     },
   });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'multipleContacts',
+  });
+  
+  const { fields: addressFields, append: appendAddress, remove: removeAddress } = useFieldArray({
+    control: form.control,
+    name: 'shippingAddresses',
   });
 
   const { watch } = form;
@@ -116,7 +128,7 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
             description: `Looking up details for ${gstin}. This is a placeholder for a real API call.`
         });
         form.setValue('businessName', 'GSTIN Fetched Company');
-        form.setValue('billingAddress', '123 GST Street, Mumbai, Maharashtra, 400001');
+        form.setValue('address', '123 GST Street, Mumbai, Maharashtra, 400001');
     } else {
         toast({
             variant: 'destructive',
@@ -138,6 +150,8 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
     if(onSuccess) onSuccess();
   }
 
+  const partyTypeLabel = partyType === 'customer' ? 'Customer' : 'Vendor';
+
   return (
     <div className="space-y-6 p-4">
         <Form {...form}>
@@ -145,7 +159,7 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
             <Card>
                 <CardHeader>
                     <CardTitle className="text-xl">Create New Party</CardTitle>
-                    <CardDescription>Add a new customer, vendor, or both to your system.</CardDescription>
+                    <CardDescription>Add a new customer or vendor to your system.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
@@ -164,7 +178,6 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                                         <SelectContent>
                                             <SelectItem value="customer">Customer</SelectItem>
                                             <SelectItem value="vendor">Vendor</SelectItem>
-                                            <SelectItem value="both">Both (Customer & Vendor)</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
@@ -191,7 +204,7 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField name="businessName" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Customer Name</FormLabel><FormControl><Input placeholder="e.g., Innovate Inc." {...field} /></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel>{partyTypeLabel} Name</FormLabel><FormControl><Input placeholder={`e.g., Innovate Inc.`} {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
                     <FormField name="phone" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input type="tel" placeholder="+91 12345 67890" {...field} /></FormControl><FormMessage /></FormItem>
@@ -199,46 +212,11 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                      <FormField name="email" control={form.control} render={({ field }) => (
                         <FormItem><FormLabel>Email Address</FormLabel><FormControl><Input type="email" placeholder="contact@example.com" {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
-                     <div className="flex items-end gap-2">
-                        <FormField name="openingBalance" control={form.control} render={({ field }) => (
-                            <FormItem className="flex-1"><FormLabel>Opening Balance</FormLabel><FormControl><Input type="text" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                        <FormField name="balanceType" control={form.control} render={({ field }) => (
-                            <FormItem className="space-y-3"><FormControl>
-                                <RadioGroup onValueChange={field.onChange} value={field.value} className="flex items-center space-x-4">
-                                    <FormItem className="flex items-center space-x-2 space-y-0">
-                                        <FormControl><RadioGroupItem value="debit" /></FormControl>
-                                        <FormLabel className="font-normal flex items-baseline gap-1.5">
-                                            <span>Debit</span>
-                                            <span className="text-xs text-muted-foreground">(To collect)</span>
-                                        </FormLabel>
-                                    </FormItem>
-                                    <FormItem className="flex items-center space-x-2 space-y-0">
-                                        <FormControl><RadioGroupItem value="credit" /></FormControl>
-                                        <FormLabel className="font-normal flex items-baseline gap-1.5">
-                                            <span>Credit</span>
-                                            <span className="text-xs text-muted-foreground">(To Pay)</span>
-                                        </FormLabel>
-                                    </FormItem>
-                                </RadioGroup>
-                            </FormControl><FormMessage /></FormItem>
-                        )}/>
-                    </div>
-                     <FormField name="customerType" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Customer Type</FormLabel>
-                         <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
-                            <SelectContent>
-                                <SelectItem value="individual">Individual</SelectItem>
-                                <SelectItem value="business">Business</SelectItem>
-                                <SelectItem value="dealer">Dealer</SelectItem>
-                                <SelectItem value="retailer">Retailer</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <FormMessage /></FormItem>
+                    <FormField name="gstin" control={form.control} render={({ field }) => (
+                        <FormItem><FormLabel>GSTIN / Tax ID</FormLabel><FormControl><Input placeholder="Optional GSTIN" {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
-                    <FormField name="billingAddress" control={form.control} render={({ field }) => (
-                        <FormItem><FormLabel>Billing Address</FormLabel><FormControl><Textarea placeholder="Full billing address" {...field} rows={3}/></FormControl><FormMessage /></FormItem>
+                     <FormField name="address" control={form.control} render={({ field }) => (
+                        <FormItem className="md:col-span-2"><FormLabel>Address</FormLabel><FormControl><Textarea placeholder="Full address" {...field} rows={3}/></FormControl><FormMessage /></FormItem>
                     )}/>
                     <FormField name="state" control={form.control} render={({ field }) => (
                         <FormItem>
@@ -278,13 +256,51 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                     )}/>
                 </CardContent>
             </Card>
-
+            
              <Card>
                 <CardHeader>
                     <h3 className="text-lg font-bold">Miscellaneous</h3>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                         <div className="flex items-end gap-2">
+                            <FormField name="openingBalance" control={form.control} render={({ field }) => (
+                                <FormItem className="flex-1"><FormLabel>Opening Balance</FormLabel><FormControl><Input type="text" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
+                            )}/>
+                            <FormField name="balanceType" control={form.control} render={({ field }) => (
+                                <FormItem className="space-y-3"><FormControl>
+                                    <RadioGroup onValueChange={field.onChange} value={field.value} className="flex items-center space-x-4">
+                                        <FormItem className="flex items-center space-x-2 space-y-0">
+                                            <FormControl><RadioGroupItem value="debit" /></FormControl>
+                                            <FormLabel className="font-normal flex items-baseline gap-1.5">
+                                                <span>Debit</span>
+                                                <span className="text-xs text-muted-foreground">(To collect)</span>
+                                            </FormLabel>
+                                        </FormItem>
+                                        <FormItem className="flex items-center space-x-2 space-y-0">
+                                            <FormControl><RadioGroupItem value="credit" /></FormControl>
+                                            <FormLabel className="font-normal flex items-baseline gap-1.5">
+                                                <span>Credit</span>
+                                                <span className="text-xs text-muted-foreground">(To Pay)</span>
+                                            </FormLabel>
+                                        </FormItem>
+                                    </RadioGroup>
+                                </FormControl><FormMessage /></FormItem>
+                            )}/>
+                        </div>
+                        <FormField name="customerType" control={form.control} render={({ field }) => (
+                            <FormItem><FormLabel>{partyTypeLabel} Type</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                    <SelectItem value="individual">Individual</SelectItem>
+                                    <SelectItem value="business">Business</SelectItem>
+                                    <SelectItem value="dealer">Dealer</SelectItem>
+                                    <SelectItem value="retailer">Retailer</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage /></FormItem>
+                        )}/>
                         <FormField name="contactPerson" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Contact Person</FormLabel><FormControl><Input placeholder="e.g., John Doe" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
@@ -293,9 +309,6 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                         )}/>
                         <FormField name="creditLimitDays" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Credit Limit (Days)</FormLabel><FormControl><Input type="text" placeholder="e.g., 30" {...field} /></FormControl><FormMessage /></FormItem>
-                        )}/>
-                         <FormField name="gstin" control={form.control} render={({ field }) => (
-                            <FormItem><FormLabel>GSTIN / Tax ID</FormLabel><FormControl><Input placeholder="Optional GSTIN" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                          <FormField name="industry" control={form.control} render={({ field }) => (
                             <FormItem><FormLabel>Industry / Segment</FormLabel><FormControl><Input placeholder="e.g., IT, Manufacturing" {...field} /></FormControl><FormMessage /></FormItem>
@@ -323,7 +336,38 @@ export function AddPartyForm({ onSuccess }: { onSuccess?: () => void }) {
                             ))}
                         </div>
                         <Button type="button" variant="link" size="sm" className="mt-2" onClick={() => append({ name: '', contact: '' })}>
-                            <PlusCircle className="mr-2 h-4 w-4" /> Add More
+                            <PlusCircle className="mr-2 h-4 w-4" /> Add More Contacts
+                        </Button>
+                    </div>
+
+                    <div>
+                        <Label>Shipping Addresses</Label>
+                        <div className="space-y-2 mt-2">
+                             {addressFields.map((field, index) => (
+                                <div key={field.id} className="flex items-center gap-2">
+                                    <FormField name={`shippingAddresses.${index}.address`} control={form.control} render={({ field }) => (
+                                        <Input {...field} placeholder="Full Shipping Address" />
+                                    )} />
+                                    <FormField name={`shippingAddresses.${index}.state`} control={form.control} render={({ field }) => (
+                                        <div className="w-[200px]">
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <FormControl><SelectTrigger><SelectValue placeholder="State" /></SelectTrigger></FormControl>
+                                                <SelectContent>
+                                                    {indianStates.map(state => (
+                                                        <SelectItem key={state} value={state}>{state}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    )} />
+                                    <Button type="button" variant="ghost" size="icon" className="text-destructive shrink-0" onClick={() => removeAddress(index)}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                        <Button type="button" variant="link" size="sm" className="mt-2" onClick={() => appendAddress({ address: '', state: '' })}>
+                            <PlusCircle className="mr-2 h-4 w-4" /> Add More Addresses
                         </Button>
                     </div>
 
