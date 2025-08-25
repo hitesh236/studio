@@ -135,7 +135,7 @@ export const columns = ({
 
         if (row.balance === 0) {
             balanceText = '-';
-            colorClass = '';
+            colorClass = 'text-muted-foreground';
         } else if (row.balance > 0) {
             balanceText = `${formatCurrency(row.balance)} (To Collect)`;
             colorClass = 'text-green-600';
