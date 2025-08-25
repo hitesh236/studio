@@ -1,8 +1,11 @@
-
 {
   "name": "Hicks Inc. Accounting",
   "short_name": "Hicks Inc.",
   "description": "An enterprise accounting and data table application.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#03A6A1",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
@@ -14,10 +17,5 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
-  "start_url": "/",
-  "display": "standalone",
-  "orientation": "portrait"
+  ]
 }
