@@ -7,19 +7,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Trash2, X, Sparkles, ChevronsUpDown, Check, Layers, Save, Barcode, Percent, Receipt, Calendar as CalendarIcon } from 'lucide-react';
+import { PlusCircle, Trash2, X, Sparkles, ChevronsUpDown, Check, Layers, Save, Barcode, Percent, Receipt, Calendar as CalendarIcon, Info } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { initialCategoriesData, type Category } from '@/lib/categories';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
 import { initialSimpleUnits, initialCompoundUnits, type SimpleUnit, type CompoundUnit } from '@/lib/uom-data';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn, formatCurrency } from '@/lib/utils';
 import type { Attribute } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { staticVendors } from '@/lib/customer-data';
 
 type Variant = {
   id: string;
@@ -453,17 +455,21 @@ export function AddProductForm() {
                   </Select>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-bold text-[18px]">Units & Measurements</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-4">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                 <div className="space-y-2">
-                    <Label htmlFor="uom" className="text-sm">Base UOM</Label>
+                    <Label htmlFor="uom" className="text-sm flex items-center gap-2">
+                        Base UOM
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Unit of Measurements</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </Label>
                     <div className="relative flex items-center">
                         <Select onValueChange={setUom} value={uom}>
                             <SelectTrigger className="pr-12">
@@ -579,21 +585,40 @@ export function AddProductForm() {
                         </>
                     ) : (
                         uom && (
-                        <Button
-                            type="button"
-                            variant="link"
-                            className="p-0 h-9"
-                            onClick={() => setShowSecondaryUom(true)}
-                        >
-                            + Add Secondary Unit
-                        </Button>
+                        <div className="flex flex-col h-full justify-end">
+                            <Button
+                                type="button"
+                                variant="link"
+                                className="p-0 h-9 justify-start"
+                                onClick={() => setShowSecondaryUom(true)}
+                            >
+                                + Add Secondary Unit
+                            </Button>
+                        </div>
                         )
                     )}
                 </div>
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                <div>
+                  <Label htmlFor="preferred-supplier">Preferred Supplier</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a supplier" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {staticVendors.map((vendor) => (
+                        <SelectItem key={vendor.id} value={vendor.id}>
+                          {vendor.company}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+            </div>
           </CardContent>
         </Card>
-
+        
         <Card>
           <CardHeader>
             <CardTitle className="text-lg font-bold text-[18px]">Create Variants</CardTitle>
