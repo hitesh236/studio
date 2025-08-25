@@ -169,7 +169,6 @@ export function AddProductForm() {
     'Storage',
     'Country of Origin',
     'Certifications',
-    'Tags',
   ]);
   const [customDescAttrName, setCustomDescAttrName] = React.useState('');
   const [selectedDescAttr, setSelectedDescAttr] = React.useState('');
@@ -902,6 +901,7 @@ export function AddProductForm() {
                         />
                       </div>
                       <Input
+                        type="text"
                         value={attr.values?.join(', ')}
                         onChange={(e) =>
                           handleStockAttrChange(index, 'values', e.target.value)
