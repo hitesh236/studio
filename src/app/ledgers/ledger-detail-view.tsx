@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { format } from 'date-fns';
+import { format, parse, isValid } from 'date-fns';
 import { Calendar as CalendarIcon, Download, TrendingUp, CircleDollarSign, Scale, Banknote } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 
@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
 import { SummaryCard } from '@/app/sales-invoices/summary-card';
+import { Label } from '@/components/ui/label';
 
 export type LedgerTransaction = {
     id: string;
@@ -61,7 +62,7 @@ const MobileLedgerCard = ({ entry }: { entry: { id: string; date: Date; descript
 
 export function LedgerDetailView({ ledgerTransactions, openingBalance }: { ledgerTransactions: LedgerTransaction[], openingBalance: number }) {
     const [filter, setFilter] = React.useState('');
-    const [date, setDate] = React.useState<DateRange | undefined>({ from: undefined, to: undefined });
+    const [date, setDate] = React.useState<DateRange | undefined>({ from: new Date(new Date().getFullYear(), 0, 1), to: new Date() });
 
     const filteredLedgerData = React.useMemo(() => {
         return ledgerTransactions.filter(entry => {
@@ -93,6 +94,13 @@ export function LedgerDetailView({ ledgerTransactions, openingBalance }: { ledge
         return { totalDebit, totalCredit, closingBalance };
     }, [processedLedgerData, openingBalance]);
     
+    const handleDateInputChange = (field: 'from' | 'to', value: string) => {
+        const parsedDate = parse(value, 'yyyy-MM-dd', new Date());
+        if (isValid(parsedDate)) {
+            setDate(prev => ({ ...prev, [field]: parsedDate }));
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -122,6 +130,28 @@ export function LedgerDetailView({ ledgerTransactions, openingBalance }: { ledge
                                 </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0" align="end">
+                                     <div className="flex items-center gap-2 p-4 border-b">
+                                        <div className="space-y-1">
+                                            <Label htmlFor="date-from" className="text-xs">From</Label>
+                                            <Input
+                                                id="date-from"
+                                                type="text"
+                                                placeholder="YYYY-MM-DD"
+                                                defaultValue={date?.from ? format(date.from, 'yyyy-MM-dd') : ''}
+                                                onBlur={(e) => handleDateInputChange('from', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label htmlFor="date-to" className="text-xs">To</Label>
+                                            <Input
+                                                id="date-to"
+                                                type="text"
+                                                placeholder="YYYY-MM-DD"
+                                                defaultValue={date?.to ? format(date.to, 'yyyy-MM-dd') : ''}
+                                                onBlur={(e) => handleDateInputChange('to', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
                                     <Calendar initialFocus mode="range" defaultMonth={date?.from} selected={date} onSelect={setDate} numberOfMonths={2} />
                                 </PopoverContent>
                             </Popover>
@@ -135,12 +165,12 @@ export function LedgerDetailView({ ledgerTransactions, openingBalance }: { ledge
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Particulars</TableHead>
-                                    <TableHead>Voucher No.</TableHead>
-                                    <TableHead className="text-right">Debit</TableHead>
-                                    <TableHead className="text-right">Credit</TableHead>
-                                    <TableHead className="text-right">Balance</TableHead>
+                                    <TableHead className="whitespace-nowrap">Date</TableHead>
+                                    <TableHead className="whitespace-nowrap">Particulars</TableHead>
+                                    <TableHead className="whitespace-nowrap">Voucher No.</TableHead>
+                                    <TableHead className="text-right whitespace-nowrap">Debit</TableHead>
+                                    <TableHead className="text-right whitespace-nowrap">Credit</TableHead>
+                                    <TableHead className="text-right whitespace-nowrap">Balance</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -148,9 +178,9 @@ export function LedgerDetailView({ ledgerTransactions, openingBalance }: { ledge
                                     const balanceType = entry.balance >= 0 ? 'Dr' : 'Cr';
                                     return (
                                         <TableRow key={entry.id}>
-                                            <TableCell>{format(entry.date, 'dd-MMM-yy')}</TableCell>
+                                            <TableCell className="whitespace-nowrap">{format(entry.date, 'dd-MMM-yy')}</TableCell>
                                             <TableCell>{entry.description}</TableCell>
-                                            <TableCell>{entry.ref}</TableCell>
+                                            <TableCell className="whitespace-nowrap">{entry.ref}</TableCell>
                                             <TableCell className="text-right font-mono text-primary">{entry.debit > 0 ? formatCurrency(entry.debit, 'INR') : '-'}</TableCell>
                                             <TableCell className="text-right font-mono text-destructive">{entry.credit > 0 ? formatCurrency(entry.credit, 'INR') : '-'}</TableCell>
                                             <TableCell className="text-right font-mono">{formatCurrency(Math.abs(entry.balance), 'INR')} {balanceType}</TableCell>
