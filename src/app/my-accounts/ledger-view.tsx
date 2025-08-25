@@ -80,6 +80,10 @@ import {
   Shield,
   ArrowUp,
   ArrowDown,
+  Landmark,
+  Wallet,
+  TrendingUp,
+  TrendingDown,
 } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -117,6 +121,13 @@ const LedgerEntry = ({
 
   const effectiveReportType = reportType || (ledger.reportType ?? null);
 
+  const getIcon = () => {
+    if (ledger.type === 'group') {
+      return <Folder className="h-4 w-4 shrink-0 text-amber-500" />;
+    }
+    return <FileText className="h-4 w-4 shrink-0 text-sky-500" />;
+  };
+
   return (
     <div>
       <div
@@ -138,7 +149,7 @@ const LedgerEntry = ({
               ))}
           </span>
 
-          {ledger.type === 'group' ? <Folder className="h-4 w-4 shrink-0 text-amber-500" /> : <FileText className="h-4 w-4 shrink-0 text-sky-500" />}
+          {getIcon()}
 
           <span className={cn('text-sm truncate', level === 0 ? 'font-semibold' : 'font-normal')}>
             {ledger.name}
