@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -21,7 +22,6 @@ import { cn } from '@/lib/utils';
 import useUserRole from '@/hooks/use-user-role';
 import { GlobalSearch } from './global-search';
 import { generateNotifications, type Notification } from '@/lib/notifications';
-import { PWAInstaller } from './pwa-installer';
 
 const accountingMenuItems = [
     { href: '/recurring-invoices', icon: Repeat, label: 'Recurring Invoices' },
@@ -103,7 +103,6 @@ const MegaMenu = () => (
                             </Link>
                         </DropdownMenuItem>
                     ))}
-                     <PWAInstaller />
                 </div>
             </div>
         </DropdownMenuContent>

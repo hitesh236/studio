@@ -2,9 +2,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { DropdownMenuItem } from './ui/dropdown-menu';
-import { Download as DownloadIcon } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: Array<string>;
@@ -31,38 +28,24 @@ export function PWAInstaller() {
     };
   }, []);
 
-  const handleInstallClick = () => {
-    if (!installPrompt) {
-      return;
+  useEffect(() => {
+    if (installPrompt) {
+      const timer = setTimeout(() => {
+        installPrompt.prompt();
+        installPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the install prompt');
+          } else {
+            console.log('User dismissed the install prompt');
+          }
+          setInstallPrompt(null);
+        });
+      }, 3000); // Wait 3 seconds before prompting
+
+      return () => clearTimeout(timer);
     }
-    installPrompt.prompt();
-    installPrompt.userChoice.then((choiceResult) => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the install prompt');
-      } else {
-        console.log('User dismissed the install prompt');
-      }
-      setInstallPrompt(null);
-    });
-  };
+  }, [installPrompt]);
 
-  const canInstall = !!installPrompt;
-
-  return (
-    <Tooltip>
-        <TooltipTrigger asChild>
-            <div className="relative w-full"> {/* Wrapper div for tooltip to work on disabled items */}
-                <DropdownMenuItem onClick={handleInstallClick} disabled={!canInstall} className="flex items-center gap-2 cursor-pointer">
-                    <DownloadIcon className="h-4 w-4 text-muted-foreground" />
-                    <span>Install App</span>
-                </DropdownMenuItem>
-            </div>
-        </TooltipTrigger>
-        {!canInstall && (
-            <TooltipContent>
-                <p>Installation not available on this browser or app is already installed.</p>
-            </TooltipContent>
-        )}
-    </Tooltip>
-  );
+  // This component now handles logic in the background and renders nothing.
+  return null;
 }
