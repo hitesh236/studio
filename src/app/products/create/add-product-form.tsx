@@ -22,6 +22,11 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { staticVendors } from '@/lib/customer-data';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { Badge } from '@/components/ui/badge';
 
 type Variant = {
   id: string;
@@ -32,6 +37,32 @@ type Variant = {
   price: { regular: number | ''; b2b: number | ''; b2c: number | '' };
   reorderPoint: number | '';
 };
+
+const invoiceItemSchema = z.object({
+  productId: z.string().min(1, 'Item selection is required.'),
+  itemName: z.string().min(1, 'Item name is required.'),
+  hsnCode: z.string().optional(),
+  quantity: z.coerce.number().min(0.01, 'Quantity must be positive.'),
+  unit: z.string().optional(),
+  rate: z.coerce.number().min(0, 'Rate cannot be negative.'),
+  discount: z.coerce.number().min(0).max(100).optional().default(0),
+  gstRate: z.coerce.number().min(0).max(100).default(18),
+});
+
+const productFormSchema = z.object({
+    productName: z.string().min(1, "Product name is required."),
+    productCode: z.string().optional(),
+    categoryPath: z.array(z.string()).min(1, "Category is required."),
+    hsnCode: z.string().optional(),
+    gstRate: z.coerce.number().min(0).max(100),
+    uom: z.string().min(1, "Unit of Measurement is required."),
+    secondaryUom: z.string().optional(),
+    preferredSupplier: z.string().optional(),
+    reorderPoint: z.coerce.number().optional(),
+    tags: z.array(z.string()).optional(),
+});
+
+type ProductFormValues = z.infer<typeof productFormSchema>;
 
 // Helper functions
 const slug = (s: string) =>
@@ -110,12 +141,24 @@ const PriceBreakdown = ({ sellingPrice, buyingPrice, gstRate, includesGst }: { s
 export function AddProductForm() {
   const { toast } = useToast();
 
-  // Core Product State
-  const [productName, setProductName] = React.useState('');
-  const [productCode, setProductCode] = React.useState('');
-  const [gstRate, setGstRate] = React.useState<number>(18);
-  const [sellingPriceIncludesGst, setSellingPriceIncludesGst] = React.useState(false);
+  const form = useForm<ProductFormValues>({
+    resolver: zodResolver(productFormSchema),
+    defaultValues: {
+      productName: '',
+      productCode: '',
+      categoryPath: [],
+      hsnCode: '',
+      gstRate: 18,
+      uom: '',
+      secondaryUom: '',
+      preferredSupplier: '',
+      reorderPoint: 0,
+      tags: [],
+    },
+  });
 
+  // Core Product State
+  const [sellingPriceIncludesGst, setSellingPriceIncludesGst] = React.useState(false);
 
   // Descriptive Attributes State
   const [descriptiveAttrs, setDescriptiveAttrs] = React.useState<{
@@ -139,14 +182,12 @@ export function AddProductForm() {
   const [variants, setVariants] = React.useState<Variant[]>([]);
 
   // Category State
-  const [categoryPath, setCategoryPath] = React.useState<string[]>([]);
+  const categoryPath = form.watch('categoryPath');
   const [categoryLevels, setCategoryLevels] = React.useState<Category[][]>([
     initialCategoriesData,
   ]);
 
   // UOM State
-  const [uom, setUom] = React.useState('');
-  const [secondaryUom, setSecondaryUom] = React.useState('');
   const [simpleUnits, setSimpleUnits] = React.useState<SimpleUnit[]>(
     initialSimpleUnits
   );
@@ -158,6 +199,9 @@ export function AddProductForm() {
     () => simpleUnits.filter((u) => u.status !== 'disabled'),
     [simpleUnits]
   );
+  
+  const uom = form.watch('uom');
+  const secondaryUom = form.watch('secondaryUom');
 
   const secondaryUomOptions = React.useMemo(() => {
     if (!uom) return [];
@@ -195,7 +239,7 @@ export function AddProductForm() {
     if (value) {
       newPath.push(value);
     }
-    setCategoryPath(newPath);
+    form.setValue('categoryPath', newPath);
   };
 
   const handleAddUom = () => {
@@ -217,7 +261,7 @@ export function AddProductForm() {
         status: 'active',
       };
       setSimpleUnits((prev) => [...prev, newUnit]);
-      setUom(newUnit.id);
+      form.setValue('uom', newUnit.id);
       toast({ title: 'UOM Added' });
       setIsUomDialogOpen(false);
       setNewUom({ name: '', abbreviation: '' });
@@ -321,7 +365,7 @@ export function AddProductForm() {
     const valueArrays = attrsWithValues.map((a) => a.values!);
     const combinations = cartesian(valueArrays);
 
-    const baseCode = productCode || productName || 'PROD';
+    const baseCode = form.getValues('productCode') || form.getValues('productName') || 'PROD';
     const newVariants: Variant[] = combinations.map((combo, index) => {
       const valuesMap: { [key: string]: string } = {};
       attrsWithValues.forEach((attr, i) => {
@@ -339,7 +383,7 @@ export function AddProductForm() {
         barcode: '',
         buyingPrice: '',
         price: { regular: '', b2b: '', b2c: '' },
-        reorderPoint: 0,
+        reorderPoint: form.getValues('reorderPoint') || 0,
       };
     });
     setVariants(newVariants);
@@ -368,10 +412,13 @@ export function AddProductForm() {
       )
     );
   };
-  
-  const handleSaveProduct = () => {
+
+  const presetAttributes = ['Brand', 'Pack Size', 'Flavor', 'Fat %', 'Color'];
+  const addedAttributeNames = new Set(stockAttrs.map((a) => a.name));
+
+  const onSubmit = (data: ProductFormValues) => {
     console.log({
-      product: { productName, productCode, categoryPath, uom, secondaryUom },
+      product: data,
       descriptive: descriptiveAttrs,
       inventory: stockAttrs,
       variants: variants,
@@ -380,208 +427,352 @@ export function AddProductForm() {
       title: 'Product Saved!',
       description: 'Check the console for the saved data structure.',
     });
-  };
+  }
 
-  const presetAttributes = ['Brand', 'Pack Size', 'Flavor', 'Fat %', 'Color'];
-  const addedAttributeNames = new Set(stockAttrs.map((a) => a.name));
+  const TagsInput = ({ field }: { field: any }) => {
+    const [inputValue, setInputValue] = React.useState('');
+    const [open, setOpen] = React.useState(false);
+    const inputRef = React.useRef<HTMLInputElement>(null);
+    const predefinedTags = ['new-arrival', 'best-seller', 'featured', 'on-sale', 'clearance', 'eco-friendly', 'premium'];
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter' && inputValue.trim()) {
+        e.preventDefault();
+        if (!field.value.includes(inputValue.trim())) {
+          field.onChange([...field.value, inputValue.trim()]);
+        }
+        setInputValue('');
+      } else if (e.key === 'Backspace' && !inputValue && field.value.length > 0) {
+        field.onChange(field.value.slice(0, -1));
+      }
+    };
+
+    const removeTag = (tagToRemove: string) => {
+      field.onChange(field.value.filter((tag: string) => tag !== tagToRemove));
+    };
+
+    const filteredTags = predefinedTags.filter(
+      (tag) => !field.value.includes(tag) && tag.toLowerCase().includes(inputValue.toLowerCase())
+    );
+
+    return (
+      <FormItem>
+        <Command>
+            <div className="group rounded-md border border-input px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                <div className="flex flex-wrap gap-1">
+                    {field.value.map((tag: string) => (
+                        <Badge key={tag} variant="secondary">
+                            {tag}
+                            <button
+                                type="button"
+                                className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                onClick={() => removeTag(tag)}
+                            >
+                                <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                            </button>
+                        </Badge>
+                    ))}
+                    <CommandInput
+                        ref={inputRef}
+                        placeholder="Add tags..."
+                        value={inputValue}
+                        onValueChange={setInputValue}
+                        onKeyDown={handleKeyDown}
+                        onFocus={() => setOpen(true)}
+                        onBlur={() => setOpen(false)}
+                        className="ml-2 flex-1 bg-transparent p-0 outline-none placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 border-0 h-auto"
+                    />
+                </div>
+            </div>
+            {open && (filteredTags.length > 0 || (inputValue && !predefinedTags.includes(inputValue))) && (
+                <div className="relative">
+                    <div className="absolute top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
+                        <CommandList className="max-h-40">
+                            <CommandEmpty>No results found.</CommandEmpty>
+                            <CommandGroup>
+                                {filteredTags.map((tag) => (
+                                    <CommandItem
+                                        key={tag}
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }}
+                                        onSelect={() => {
+                                            if (!field.value.includes(tag)) {
+                                                field.onChange([...field.value, tag]);
+                                            }
+                                            setInputValue('');
+                                        }}
+                                    >
+                                        {tag}
+                                    </CommandItem>
+                                ))}
+                                {inputValue.trim() && !predefinedTags.includes(inputValue.trim()) && (
+                                     <CommandItem
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }}
+                                        onSelect={() => {
+                                            if (!field.value.includes(inputValue.trim())) {
+                                                field.onChange([...field.value, inputValue.trim()]);
+                                            }
+                                            setInputValue('');
+                                        }}
+                                    >
+                                        Create "{inputValue}"
+                                    </CommandItem>
+                                )}
+                            </CommandGroup>
+                        </CommandList>
+                    </div>
+                </div>
+            )}
+        </Command>
+        <div className="relative">
+            <FormDescription>
+                Type a tag and press Enter. Suggestions will appear as you type.
+            </FormDescription>
+        </div>
+        <FormMessage />
+      </FormItem>
+    );
+};
   
   return (
-    <div className="space-y-6">
-      <div className="space-y-6">
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="space-y-6">
         <Card className="w-full">
           <CardHeader>
             <CardTitle className="text-lg font-bold text-[18px]">Core Product</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="productName">Product Name *</Label>
-                <Input
-                  id="productName"
-                  value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
-                  placeholder="e.g., Amul Milk"
-                />
-              </div>
-              <div>
-                <Label htmlFor="productCode">
-                  Product Code (for SKU prefix)
-                </Label>
-                <Input
-                  id="productCode"
-                  value={productCode}
-                  onChange={(e) => setProductCode(e.target.value)}
-                  placeholder="e.g., MLK-AMUL"
-                />
-              </div>
+              <FormField
+                name="productName"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Product Name *</FormLabel>
+                    <FormControl><Input placeholder="e.g., Amul Milk" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                name="productCode"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Product Code (for SKU prefix)</FormLabel>
+                    <FormControl><Input placeholder="e.g., MLK-AMUL" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Category</Label>
-                <div className="grid grid-cols-1 gap-2">
-                  {categoryLevels.map((levelCategories, level) => (
-                    <Select
-                      key={level}
-                      onValueChange={(value) => handleCategoryChange(level, value)}
-                      value={categoryPath[level] || ''}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={`Select Level ${level + 1}`} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {levelCategories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ))}
-                </div>
-              </div>
-              <div>
-                  <Label>GST Rate (%)</Label>
-                  <Select onValueChange={(v) => setGstRate(Number(v))} value={String(gstRate)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[0, 5, 12, 18, 28].map((rate) => (
-                        <SelectItem key={rate} value={String(rate)}>
-                          {rate}%
-                        </SelectItem>
+              <FormField
+                name="categoryPath"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <div className="grid grid-cols-1 gap-2">
+                      {categoryLevels.map((levelCategories, level) => (
+                        <Select
+                          key={level}
+                          onValueChange={(value) => handleCategoryChange(level, value)}
+                          value={field.value[level] || ''}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder={`Select Level ${level + 1}`} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {levelCategories.map((cat) => (
+                              <SelectItem key={cat.id} value={cat.id}>
+                                {cat.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       ))}
-                    </SelectContent>
-                  </Select>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div>
+                <FormField
+                  name="gstRate"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>GST Rate (%)</FormLabel>
+                      <Select onValueChange={(v) => field.onChange(Number(v))} value={String(field.value)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[0, 5, 12, 18, 28].map((rate) => (
+                            <SelectItem key={rate} value={String(rate)}>
+                              {rate}%
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                 <div className="space-y-2">
-                    <Label htmlFor="uom" className="text-sm flex items-center gap-2">
-                        Base UOM
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Unit of Measurements</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </Label>
-                    <div className="relative flex items-center">
-                        <Select onValueChange={setUom} value={uom}>
-                            <SelectTrigger className="pr-12">
-                            <SelectValue placeholder="Select unit" />
-                            </SelectTrigger>
-                            <SelectContent>
-                            {activeSimpleUnits.map((unit) => (
-                                <SelectItem key={unit.id} value={unit.id}>
-                                {unit.name} ({unit.abbreviation})
-                                </SelectItem>
-                            ))}
-                            </SelectContent>
-                        </Select>
-                        <Dialog
-                            open={isUomDialogOpen}
-                            onOpenChange={setIsUomDialogOpen}
-                        >
-                            <DialogTrigger asChild>
-                            <Button type="button" variant="outline" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7">
-                                <PlusCircle className="h-4 w-4" />
-                            </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Add New Unit</DialogTitle>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                                <div className="space-y-2">
-                                <Label htmlFor="uom-name">Unit Name</Label>
-                                <Input
-                                    id="uom-name"
-                                    value={newUom.name}
-                                    onChange={(e) =>
-                                    setNewUom((u) => ({ ...u, name: e.target.value }))
-                                    }
-                                    placeholder="e.g., Pieces"
-                                />
-                                </div>
-                                <div className="space-y-2">
-                                <Label htmlFor="uom-abbr">Abbreviation</Label>
-                                <Input
-                                    id="uom-abbr"
-                                    value={newUom.abbreviation}
-                                    onChange={(e) =>
-                                    setNewUom((u) => ({
-                                        ...u,
-                                        abbreviation: e.target.value,
-                                    }))
-                                    }
-                                    placeholder="e.g., pcs"
-                                />
-                                </div>
-                            </div>
-                            <DialogFooter>
-                                <DialogClose asChild>
-                                <Button variant="outline" type="button">
-                                    Cancel
-                                </Button>
-                                </DialogClose>
-                                <Button type="button" onClick={handleAddUom}>
-                                Save Unit
-                                </Button>
-                            </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                    </div>
+                    <FormField
+                      name="uom"
+                      control={form.control}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm flex items-center gap-2">
+                              Base UOM
+                              <TooltipProvider>
+                                  <Tooltip>
+                                      <TooltipTrigger asChild>
+                                          <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                          <p>Unit of Measurements</p>
+                                      </TooltipContent>
+                                  </Tooltip>
+                              </TooltipProvider>
+                          </FormLabel>
+                          <div className="relative flex items-center">
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                  <SelectTrigger className="pr-12">
+                                  <SelectValue placeholder="Select unit" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                  {activeSimpleUnits.map((unit) => (
+                                      <SelectItem key={unit.id} value={unit.id}>
+                                      {unit.name} ({unit.abbreviation})
+                                      </SelectItem>
+                                  ))}
+                                  </SelectContent>
+                              </Select>
+                              <Dialog
+                                  open={isUomDialogOpen}
+                                  onOpenChange={setIsUomDialogOpen}
+                              >
+                                  <DialogTrigger asChild>
+                                  <Button type="button" variant="outline" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7">
+                                      <PlusCircle className="h-4 w-4" />
+                                  </Button>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                  <DialogHeader>
+                                      <DialogTitle>Add New Unit</DialogTitle>
+                                  </DialogHeader>
+                                  <div className="grid gap-4 py-4">
+                                      <div className="space-y-2">
+                                      <Label htmlFor="uom-name">Unit Name</Label>
+                                      <Input
+                                          id="uom-name"
+                                          value={newUom.name}
+                                          onChange={(e) =>
+                                          setNewUom((u) => ({ ...u, name: e.target.value }))
+                                          }
+                                          placeholder="e.g., Pieces"
+                                      />
+                                      </div>
+                                      <div className="space-y-2">
+                                      <Label htmlFor="uom-abbr">Abbreviation</Label>
+                                      <Input
+                                          id="uom-abbr"
+                                          value={newUom.abbreviation}
+                                          onChange={(e) =>
+                                          setNewUom((u) => ({
+                                              ...u,
+                                              abbreviation: e.target.value,
+                                          }))
+                                          }
+                                          placeholder="e.g., pcs"
+                                      />
+                                      </div>
+                                  </div>
+                                  <DialogFooter>
+                                      <DialogClose asChild>
+                                      <Button variant="outline" type="button">
+                                          Cancel
+                                      </Button>
+                                      </DialogClose>
+                                      <Button type="button" onClick={handleAddUom}>
+                                      Save Unit
+                                      </Button>
+                                  </DialogFooter>
+                                  </DialogContent>
+                              </Dialog>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                 </div>
                 <div className="space-y-2">
                     {showSecondaryUom ? (
                         <>
-                          <Label className="text-sm">Secondary UOM</Label>
-                          <div className="flex items-center gap-2">
-                            <Select
-                                onValueChange={setSecondaryUom}
-                                value={secondaryUom}
-                                disabled={secondaryUomOptions.length === 0}
-                            >
-                                <SelectTrigger>
-                                <SelectValue
-                                    placeholder={
-                                    secondaryUomOptions.length > 0
-                                        ? 'Select secondary unit'
-                                        : 'No conversion found'
-                                    }
-                                />
-                                </SelectTrigger>
-                                <SelectContent>
-                                {secondaryUomOptions.map((unit) => (
-                                    <SelectItem key={unit.id} value={unit.id}>
-                                    {unit.name} ({unit.abbreviation})
-                                    </SelectItem>
-                                ))}
-                                </SelectContent>
-                            </Select>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="text-destructive shrink-0"
-                                onClick={() => {
-                                setShowSecondaryUom(false);
-                                setSecondaryUom('');
-                                }}
-                            >
-                                <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          {conversionRate && (
-                            <p className="text-xs text-muted-foreground pt-1">
-                                {conversionRate}
-                            </p>
+                          <FormField
+                            name="secondaryUom"
+                            control={form.control}
+                            render={({ field }) => (
+                              <FormItem>
+                                <Label className="text-sm">Secondary UOM</Label>
+                                <div className="flex items-center gap-2">
+                                  <Select
+                                      onValueChange={field.onChange}
+                                      value={field.value}
+                                      disabled={secondaryUomOptions.length === 0}
+                                  >
+                                      <SelectTrigger>
+                                      <SelectValue
+                                          placeholder={
+                                          secondaryUomOptions.length > 0
+                                              ? 'Select secondary unit'
+                                              : 'No conversion found'
+                                          }
+                                      />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                      {secondaryUomOptions.map((unit) => (
+                                          <SelectItem key={unit.id} value={unit.id}>
+                                          {unit.name} ({unit.abbreviation})
+                                          </SelectItem>
+                                      ))}
+                                      </SelectContent>
+                                  </Select>
+                                  <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      className="text-destructive shrink-0"
+                                      onClick={() => {
+                                      setShowSecondaryUom(false);
+                                      form.setValue('secondaryUom', '');
+                                      }}
+                                  >
+                                      <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                                {conversionRate && (
+                                  <p className="text-xs text-muted-foreground pt-1">
+                                      {conversionRate}
+                                  </p>
+                                )}
+                                <FormMessage />
+                              </FormItem>
                             )}
+                          />
                         </>
                     ) : (
                         uom && (
@@ -600,21 +791,41 @@ export function AddProductForm() {
                 </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                <div>
-                  <Label htmlFor="preferred-supplier">Preferred Supplier</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a supplier" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {staticVendors.map((vendor) => (
-                        <SelectItem key={vendor.id} value={vendor.id}>
-                          {vendor.company}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <FormField
+                  name="preferredSupplier"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Preferred Supplier</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a supplier" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {staticVendors.map((vendor) => (
+                            <SelectItem key={vendor.id} value={vendor.id}>
+                              {vendor.company}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name="hsnCode"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>HSN/SAC Code</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. 847160" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
             </div>
           </CardContent>
         </Card>
@@ -629,7 +840,7 @@ export function AddProductForm() {
           <CardContent className="space-y-6">
             <div className="space-y-4">
                <div className="w-full">
-                <Label>Common grocery attributes</Label>
+                <Label>Common attributes</Label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {presetAttributes.map((preset) => (
                     <Button
@@ -811,7 +1022,7 @@ export function AddProductForm() {
                                     value={variant.price.regular}
                                     onChange={(e) => handlePriceChange(variant.id, 'regular', e.target.value)}
                                     />
-                                    <PriceBreakdown sellingPrice={variant.price.regular} buyingPrice={variant.buyingPrice} gstRate={gstRate} includesGst={sellingPriceIncludesGst} />
+                                    <PriceBreakdown sellingPrice={variant.price.regular} buyingPrice={variant.buyingPrice} gstRate={form.getValues('gstRate')} includesGst={sellingPriceIncludesGst} />
                                     <Input
                                     type="text"
                                     placeholder="B2B Price"
@@ -819,7 +1030,7 @@ export function AddProductForm() {
                                     value={variant.price.b2b}
                                     onChange={(e) => handlePriceChange(variant.id, 'b2b', e.target.value)}
                                     />
-                                     <PriceBreakdown sellingPrice={variant.price.b2b} buyingPrice={variant.buyingPrice} gstRate={gstRate} includesGst={sellingPriceIncludesGst} />
+                                     <PriceBreakdown sellingPrice={variant.price.b2b} buyingPrice={variant.buyingPrice} gstRate={form.getValues('gstRate')} includesGst={sellingPriceIncludesGst} />
                                     <Input
                                     type="text"
                                     placeholder="B2C Price"
@@ -827,22 +1038,26 @@ export function AddProductForm() {
                                     value={variant.price.b2c}
                                     onChange={(e) => handlePriceChange(variant.id, 'b2c', e.target.value)}
                                     />
-                                     <PriceBreakdown sellingPrice={variant.price.b2c} buyingPrice={variant.buyingPrice} gstRate={gstRate} includesGst={sellingPriceIncludesGst} />
+                                     <PriceBreakdown sellingPrice={variant.price.b2c} buyingPrice={variant.buyingPrice} gstRate={form.getValues('gstRate')} includesGst={sellingPriceIncludesGst} />
                                 </div>
                             </TableCell>
                           <TableCell>
-                            <Input
-                              type="text"
-                              className="text-right min-w-[70px]"
-                              placeholder="0"
-                              value={variant.reorderPoint}
-                              onChange={(e) =>
-                                handleVariantChange(
-                                  variant.id,
-                                  'reorderPoint',
-                                  e.target.value
-                                )
-                              }
+                            <FormField
+                                name="reorderPoint"
+                                control={form.control}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormControl>
+                                            <Input
+                                            type="number"
+                                            className="text-right min-w-[70px]"
+                                            placeholder="0"
+                                            {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
                             />
                           </TableCell>
                         </TableRow>
@@ -923,13 +1138,32 @@ export function AddProductForm() {
           </CardContent>
         </Card>
         
+        <Card>
+            <CardHeader>
+                <CardTitle className="text-lg font-bold text-[18px]">Organization</CardTitle>
+            </CardHeader>
+             <CardContent>
+                <FormField
+                    control={form.control}
+                    name="tags"
+                    render={({ field }) => (
+                    <div className="md:col-span-2">
+                        <FormLabel>Tags/Keywords</FormLabel>
+                        <TagsInput field={field} />
+                    </div>
+                    )}
+                />
+            </CardContent>
+        </Card>
+        
         <div className="flex justify-end gap-4">
             <Button variant="outline">Save Draft</Button>
-            <Button onClick={handleSaveProduct}>
+            <Button type="submit">
               <Save className="mr-2 h-4 w-4" /> Save Product
             </Button>
         </div>
       </div>
-    </div>
+    </form>
+    </Form>
   );
 }
