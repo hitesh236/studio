@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { DropdownMenuItem } from './ui/dropdown-menu';
 import { Download as DownloadIcon } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: Array<string>;
@@ -45,14 +46,23 @@ export function PWAInstaller() {
     });
   };
 
-  if (!installPrompt) {
-    return null;
-  }
+  const canInstall = !!installPrompt;
 
   return (
-    <DropdownMenuItem onClick={handleInstallClick} className="flex items-center gap-2 cursor-pointer">
-      <DownloadIcon className="h-4 w-4 text-muted-foreground" />
-      <span>Install App</span>
-    </DropdownMenuItem>
+    <Tooltip>
+        <TooltipTrigger asChild>
+            <div className="relative w-full"> {/* Wrapper div for tooltip to work on disabled items */}
+                <DropdownMenuItem onClick={handleInstallClick} disabled={!canInstall} className="flex items-center gap-2 cursor-pointer">
+                    <DownloadIcon className="h-4 w-4 text-muted-foreground" />
+                    <span>Install App</span>
+                </DropdownMenuItem>
+            </div>
+        </TooltipTrigger>
+        {!canInstall && (
+            <TooltipContent>
+                <p>Installation not available on this browser or app is already installed.</p>
+            </TooltipContent>
+        )}
+    </Tooltip>
   );
 }
