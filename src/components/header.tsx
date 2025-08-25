@@ -30,8 +30,8 @@ const accountingMenuItems = [
 ];
 
 const stockMenuItems = [
-    { href: '/products', icon: List, label: 'Products List' },
-    { href: '/products/create', icon: PackagePlus, label: 'Create Product' },
+    { href: '/products', icon: List, label: 'Product Catalogue' },
+    { href: '/products/new', icon: PackagePlus, label: 'Add Product' },
     { href: '/product-structure', icon: Tags, label: 'Product Structure' },
     { href: '/uom', icon: Box, label: 'UOM' },
     { href: '/stock-transfer', icon: Truck, label: 'Transfer Stock' },
@@ -45,6 +45,7 @@ const uiMenuItems = [
     { href: '/invoice-preview-fc', icon: Globe, label: 'Invoice Preview FC' },
     { href: '/customer-portfolio', icon: UserCircle, label: 'Customer Portfolio' },
     { href: '/ui', icon: Palette, label: 'UI' },
+    { href: '/products/create', icon: PackagePlus, label: 'Create Product' },
 ];
 
 const settingsMenuItems = [
