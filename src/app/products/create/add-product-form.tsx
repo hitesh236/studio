@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -833,45 +834,48 @@ export function AddProductForm() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-4">
-               <div className="w-full">
-                <Label>Common attributes</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {presetAttributes.map((preset) => (
-                    <Button
-                      key={preset}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleAddStockAttr(preset)}
-                      disabled={addedAttributeNames.has(preset)}
-                    >
-                      <PlusCircle className="mr-2 h-4 w-4" /> {preset}
-                    </Button>
-                  ))}
+            <div className="space-y-4 rounded-md border p-4">
+                <Label>1. Add Variant Attributes</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <p className="text-sm font-medium">Common Attributes</p>
+                        <div className="flex flex-wrap gap-2">
+                        {presetAttributes.map((preset) => (
+                            <Button
+                            key={preset}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleAddStockAttr(preset)}
+                            disabled={addedAttributeNames.has(preset)}
+                            >
+                            <PlusCircle className="mr-2 h-4 w-4" /> {preset}
+                            </Button>
+                        ))}
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <p className="text-sm font-medium">Custom Attribute</p>
+                        <div className="flex gap-2">
+                        <Input
+                            value={customAttrName}
+                            onChange={(e) => setCustomAttrName(e.target.value)}
+                            placeholder="e.g., Material"
+                        />
+                        <Button
+                            type="button"
+                            onClick={() => handleAddStockAttr(customAttrName)}
+                        >
+                            Add
+                        </Button>
+                        </div>
+                    </div>
                 </div>
-              </div>
-              <div className="w-full">
-                <Label>Add custom attribute</Label>
-                <div className="flex gap-2 mt-2">
-                  <Input
-                    value={customAttrName}
-                    onChange={(e) => setCustomAttrName(e.target.value)}
-                    placeholder="e.g., Region, Plug Type"
-                  />
-                  <Button
-                    type="button"
-                    onClick={() => handleAddStockAttr(customAttrName)}
-                  >
-                    Add Attribute
-                  </Button>
-                </div>
-              </div>
             </div>
 
             {stockAttrs.length > 0 && (
-              <div className="space-y-4 pt-4 border-t">
-                <Label>Selected Attributes & Values</Label>
+              <div className="space-y-4 rounded-md border p-4">
+                <Label>2. Define Attribute Values</Label>
                 <div className="space-y-4">
                   {stockAttrs.map((attr, index) => (
                     <div
@@ -910,7 +914,7 @@ export function AddProductForm() {
               </div>
             )}
 
-            <div className="flex gap-4">
+            <div className="flex gap-4 pt-4 border-t">
               <Button type="button" onClick={handleGenerateVariants}>
                 <Sparkles className="mr-2 h-4 w-4" /> Generate Variants
               </Button>
