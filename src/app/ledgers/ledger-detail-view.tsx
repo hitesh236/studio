@@ -1,8 +1,9 @@
+
 'use client';
 
 import * as React from 'react';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Download, TrendingUp, CircleDollarSign, Scale } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, TrendingUp, CircleDollarSign, Scale, Banknote } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 
 import { cn, formatCurrency } from '@/lib/utils';
@@ -58,7 +59,7 @@ const MobileLedgerCard = ({ entry }: { entry: { id: string; date: Date; descript
     );
 };
 
-export function LedgerDetailView({ ledgerTransactions }: { ledgerTransactions: LedgerTransaction[] }) {
+export function LedgerDetailView({ ledgerTransactions, openingBalance }: { ledgerTransactions: LedgerTransaction[], openingBalance: number }) {
     const [filter, setFilter] = React.useState('');
     const [date, setDate] = React.useState<DateRange | undefined>({ from: undefined, to: undefined });
 
@@ -73,13 +74,13 @@ export function LedgerDetailView({ ledgerTransactions }: { ledgerTransactions: L
     }, [filter, date, ledgerTransactions]);
 
     const processedLedgerData = React.useMemo(() => {
-        let runningBalance = 0;
+        let runningBalance = openingBalance;
         const chronologicallyProcessed = filteredLedgerData.map(entry => {
             runningBalance += entry.debit - entry.credit;
             return { ...entry, balance: runningBalance };
         });
         return chronologicallyProcessed.reverse();
-    }, [filteredLedgerData]);
+    }, [filteredLedgerData, openingBalance]);
 
     const ledgerSummary = React.useMemo(() => {
         let totalDebit = 0;
@@ -88,14 +89,15 @@ export function LedgerDetailView({ ledgerTransactions }: { ledgerTransactions: L
             totalDebit += entry.debit;
             totalCredit += entry.credit;
         });
-        const closingBalance = totalDebit - totalCredit;
+        const closingBalance = openingBalance + totalDebit - totalCredit;
         return { totalDebit, totalCredit, closingBalance };
-    }, [processedLedgerData]);
+    }, [processedLedgerData, openingBalance]);
     
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <SummaryCard icon={TrendingUp} title="Total Debits" value={formatCurrency(ledgerSummary.totalDebit, 'INR')} variant="primary" />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <SummaryCard icon={Banknote} title="Opening Balance" value={formatCurrency(openingBalance, 'INR')} variant="primary" />
+                <SummaryCard icon={TrendingUp} title="Total Debits" value={formatCurrency(ledgerSummary.totalDebit, 'INR')} />
                 <SummaryCard icon={CircleDollarSign} title="Total Credits" value={formatCurrency(ledgerSummary.totalCredit, 'INR')} />
                 <SummaryCard icon={Scale} title="Closing Balance" value={formatCurrency(ledgerSummary.closingBalance, 'INR')} />
             </div>
