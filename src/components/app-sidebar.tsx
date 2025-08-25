@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -201,7 +200,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Accounts &amp; Books</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Groups & Ledgers" isActive={pathname.startsWith('/my-accounts')} asChild>
+              <SidebarMenuButton tooltip="Groups &amp; Ledgers" isActive={pathname.startsWith('/my-accounts')} asChild>
                 <Link href="/my-accounts" onClick={handleLinkClick}>
                     <Wallet />
                     <span>Groups &amp; Ledgers</span>
@@ -305,27 +304,6 @@ export function AppSidebar() {
       </SidebarContent>
       
       <SidebarFooter>
-        {canAccessAdmin && <SidebarGroup>
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Company Settings" isActive={pathname.startsWith('/settings') && !pathname.startsWith('/settings/user-roles')} asChild>
-                        <Link href="/settings" onClick={handleLinkClick}>
-                            <Settings />
-                            <span>Company Settings</span>
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Users & Roles" isActive={pathname.startsWith('/settings/user-roles')} asChild>
-                        <Link href="/settings/user-roles" onClick={handleLinkClick}>
-                            <Shield />
-                            <span>Users & Roles</span>
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
-        </SidebarGroup>}
-        <SidebarSeparator />
         <div className="flex items-center gap-2 p-2.5">
             <Avatar className="h-8 w-8">
                 <AvatarImage src="https://placehold.co/40x40.png" alt="@shadcn" data-ai-hint="profile picture" />

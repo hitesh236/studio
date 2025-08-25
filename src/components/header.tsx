@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -17,7 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
-import { LogOut, User, LayoutGrid, BookOpen, FileText, Eye, Globe, UserCircle, Palette, MonitorPlay, Tags, Repeat, PackagePlus, Box, Truck, Bell, Download as DownloadIcon } from 'lucide-react';
+import { LogOut, User, LayoutGrid, BookOpen, FileText, Eye, Globe, UserCircle, Palette, MonitorPlay, Tags, Repeat, PackagePlus, Box, Truck, Bell, Download as DownloadIcon, Shield, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import useUserRole from '@/hooks/use-user-role';
 import { GlobalSearch } from './global-search';
@@ -46,6 +45,11 @@ const uiMenuItems = [
     { href: '/products/create', icon: PackagePlus, label: 'Create Product' },
 ];
 
+const settingsMenuItems = [
+    { href: '/settings', icon: Settings, label: 'Company Settings' },
+    { href: '/settings/user-roles', icon: Shield, label: 'Users & Roles' },
+];
+
 const MegaMenu = () => (
     <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -54,8 +58,8 @@ const MegaMenu = () => (
                 <span className="sr-only">Open Components Menu</span>
             </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-64 sm:w-[400px] md:w-[600px] p-2" align="end">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+        <DropdownMenuContent className="w-64 sm:w-[400px] md:w-[800px] p-2" align="end">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
                 <div className="space-y-1">
                     <DropdownMenuLabel>Accounting</DropdownMenuLabel>
                     {accountingMenuItems.map(item => (
@@ -70,6 +74,17 @@ const MegaMenu = () => (
                 <div className="space-y-1">
                     <DropdownMenuLabel>Stock</DropdownMenuLabel>
                     {stockMenuItems.map(item => (
+                        <DropdownMenuItem key={item.href} asChild>
+                            <Link href={item.href} className="flex items-center gap-2">
+                                <item.icon className="h-4 w-4 text-muted-foreground" />
+                                <span>{item.label}</span>
+                            </Link>
+                        </DropdownMenuItem>
+                    ))}
+                </div>
+                 <div className="space-y-1">
+                    <DropdownMenuLabel>Settings</DropdownMenuLabel>
+                    {settingsMenuItems.map(item => (
                         <DropdownMenuItem key={item.href} asChild>
                             <Link href={item.href} className="flex items-center gap-2">
                                 <item.icon className="h-4 w-4 text-muted-foreground" />
