@@ -36,7 +36,7 @@ export const columns = ({ sortConfig, requestSort }: ColumnProps) => {
     );
   };
 
-  const getStatusVariant = (status: StockItem['status']): 'default' | 'destructive' | 'secondary' => {
+  const getStatusVariant = (status: 'In Stock' | 'Low Stock' | 'Out of Stock'): 'default' | 'destructive' | 'secondary' => {
     switch(status) {
       case 'In Stock': return 'default';
       case 'Low Stock': return 'secondary';
@@ -58,7 +58,7 @@ export const columns = ({ sortConfig, requestSort }: ColumnProps) => {
     { accessor: 'stockInHand', header: getSortableHeader('Stock on Hand', 'stockInHand'), cell: (row: StockItem) => <p className="text-right font-mono">{row.stockInHand} {row.uom}</p> },
     { accessor: 'purchasePrice', header: getSortableHeader('Purchase Price', 'purchasePrice'), cell: (row: StockItem) => <p className="text-right font-mono">{formatCurrency(row.purchasePrice, 'INR')}</p> },
     { accessor: 'sellingPrice', header: getSortableHeader('Selling Price', 'sellingPrice'), cell: (row: StockItem) => <p className="text-right font-mono">{formatCurrency(row.sellingPrice, 'INR')}</p> },
-    { accessor: 'status', header: getSortableHeader('Status', 'status'), cell: (row: StockItem) => <Badge variant={getStatusVariant(row.status)}>{row.status}</Badge> },
+    { accessor: 'status', header: getSortableHeader('Status', 'status'), cell: (row: StockItem) => <Badge variant={getStatusVariant(row.status as any)}>{row.status}</Badge> },
     { accessor: 'expiryDate', header: getSortableHeader('Expiry Date', 'expiryDate'), cell: (row: StockItem) => row.expiryDate ? format(row.expiryDate, 'dd MMM, yyyy') : '-' },
     {
       accessor: 'actions',
