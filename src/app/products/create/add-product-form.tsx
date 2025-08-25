@@ -58,8 +58,8 @@ const productFormSchema = z.object({
     gstRate: z.coerce.number().min(0).max(100),
     uom: z.string().min(1, "Unit of Measurement is required."),
     secondaryUom: z.string().optional(),
-    preferredSupplier: z.string().optional(),
     reorderPoint: z.coerce.number().optional(),
+    preferredSupplier: z.string().optional(),
     tags: z.array(z.string()).optional(),
 });
 
@@ -152,8 +152,8 @@ export function AddProductForm() {
       gstRate: 18,
       uom: '',
       secondaryUom: '',
-      preferredSupplier: '',
       reorderPoint: 0,
+      preferredSupplier: '',
       tags: [],
     },
   });
@@ -626,6 +626,19 @@ export function AddProductForm() {
                     </FormItem>
                   )}
                 />
+                 <FormField
+                  name="hsnCode"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem className="mt-4">
+                      <FormLabel>HSN/SAC Code</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. 847160" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
@@ -805,19 +818,6 @@ export function AddProductForm() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                 <FormField
-                  name="hsnCode"
-                  control={form.control}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>HSN/SAC Code</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. 847160" {...field} />
-                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
