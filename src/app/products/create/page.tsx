@@ -1,7 +1,4 @@
 
-'use client';
-
-import * as React from 'react';
 import { AddProductForm } from './add-product-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -12,11 +9,9 @@ export default function CreateProductPage() {
             <CardHeader>
                 <CardTitle>Add Product</CardTitle>
                 <CardDescription>
-                  Product Master Data Setup.
-                  <br />
-                  Goal: Define what you can sell.
-                  <br />
-                  Action: Add all product attributes, prices, taxes, and supplier info.
+                  <p>Product Master Data Setup.</p>
+                  <p><strong>Goal:</strong> Define what you can sell.</p>
+                  <p><strong>Action:</strong> Add all product attributes, prices, taxes, and supplier info.</p>
                 </CardDescription>
             </CardHeader>
             <CardContent className="p-4 sm:p-6">
