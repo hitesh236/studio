@@ -79,7 +79,12 @@ import {
   ShieldOff,
   Shield,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Landmark,
+  Wallet,
+  UserCircle,
+  TrendingUp,
+  TrendingDown,
 } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -93,6 +98,17 @@ const nonDeletableGroupIds = new Set([
   'equity', 'capital-account', 'income', 'direct-incomes', 'indirect-incomes',
   'sales-accounts', 'expenses', 'direct-expenses', 'indirect-expenses', 'purchase-accounts',
 ]);
+
+const getGroupIcon = (ledgerId: string) => {
+    switch (ledgerId) {
+        case 'assets': return <Landmark className="h-4 w-4 shrink-0 text-green-500" />;
+        case 'liabilities': return <Wallet className="h-4 w-4 shrink-0 text-red-500" />;
+        case 'equity': return <Shield className="h-4 w-4 shrink-0 text-blue-500" />;
+        case 'income': return <TrendingUp className="h-4 w-4 shrink-0 text-emerald-500" />;
+        case 'expenses': return <TrendingDown className="h-4 w-4 shrink-0 text-orange-500" />;
+        default: return <Folder className="h-4 w-4 shrink-0 text-amber-500" />;
+    }
+};
 
 const LedgerEntry = ({
   ledger,
@@ -138,11 +154,7 @@ const LedgerEntry = ({
               ))}
           </span>
 
-          {ledger.type === 'group' ? (
-            <Folder className="h-4 w-4 shrink-0 text-amber-500" />
-          ) : (
-            <FileText className="h-4 w-4 shrink-0 text-sky-500" />
-          )}
+          {ledger.type === 'group' ? getGroupIcon(ledger.id) : <FileText className="h-4 w-4 shrink-0 text-sky-500" />}
 
           <span className={cn('text-sm truncate', level === 0 ? 'font-semibold' : 'font-normal')}>
             {ledger.name}
