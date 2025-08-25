@@ -84,6 +84,7 @@ import {
   Wallet,
   TrendingUp,
   TrendingDown,
+  Layers,
 } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -122,6 +123,9 @@ const LedgerEntry = ({
   const effectiveReportType = reportType || (ledger.reportType ?? null);
 
   const getIcon = () => {
+    if (level === 0 && ledger.type === 'group') {
+      return <Layers className="h-4 w-4 shrink-0 text-amber-500" />;
+    }
     if (ledger.type === 'group') {
       return <Folder className="h-4 w-4 shrink-0 text-amber-500" />;
     }
