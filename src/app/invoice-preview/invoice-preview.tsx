@@ -9,14 +9,22 @@ import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, Table
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { cn, formatCurrency, numberToWords } from '@/lib/utils';
+import { sampleInvoice } from './invoice-data';
 
 
 interface InvoicePreviewProps {
   invoice: SalesInvoice;
 }
 
+const sellerDetails = {
+    name: 'Hicks Inc.',
+    address: '123 Business Rd, Financial District, Mumbai, Maharashtra, 400001',
+    gstin: '27ABCDE1234F1Z5',
+    state: 'Maharashtra',
+};
+
 export function InvoicePreview({ invoice }: InvoicePreviewProps) {
-    const { seller, buyer, invoiceDetails, items, totals, bankDetails, terms } = sampleInvoice;
+    const { seller, buyer, items, bankDetails, terms } = sampleInvoice;
 
     // Use the dynamic invoice data, but fall back to sample for structure
     const dynamicItems = invoice.items || items;
