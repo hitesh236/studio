@@ -77,6 +77,30 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { generateStockListData, type StockItem } from '@/app/stock-list/data';
 
+// --- Sample Data for Demonstration ---
+const sampleInvoiceData = {
+    customerName: 'Innovate Inc.',
+    customerGstin: '27AXYZE9876G1Z3',
+    billingAddress: '789 Industrial Area, Andheri (E), Mumbai, Maharashtra, 400093',
+    placeOfSupply: 'Maharashtra',
+    isShippingSameAsBilling: true,
+    shippingAddress: '',
+    invoiceNumber: 'INV-2024-07-001',
+    invoiceDate: new Date('2024-07-21'),
+    dueDate: new Date('2024-08-20'),
+    currency: 'INR' as 'INR' | 'USD' | 'EUR',
+    exchangeRate: 1,
+    items: [
+        { productId: 'prod-1', itemName: 'Cloud Hosting Services', hsnCode: '998315', quantity: 1, unit: 'year', rate: 50000, discount: 0, gstRate: 18 },
+        { productId: 'prod-2', itemName: 'Domain Name Registration', hsnCode: '998314', quantity: 1, unit: 'item', rate: 2500, discount: 0, gstRate: 18 },
+        { productId: 'prod-3', itemName: 'Technical Support Retainer', hsnCode: '998313', quantity: 12, unit: 'months', rate: 10000, discount: 0, gstRate: 18 },
+    ],
+    notes: 'Thank you for your business. All payments are due within 30 days.',
+    paymentReceived: 100000,
+    paymentMode: 'bank',
+};
+
+
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
   'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
@@ -157,7 +181,7 @@ export function InvoiceForm() {
   });
 
   const [customers, setCustomers] = React.useState([
-    { id: 'cust1', name: 'Innovate Inc.', gstin: '27ABCDE1234F1Z5', address: '123 Tech Park, Mumbai, Maharashtra' },
+    { id: 'cust1', name: 'Innovate Inc.', gstin: '27AXYZE9876G1Z3', address: '789 Industrial Area, Andheri (E), Mumbai, Maharashtra, 400093' },
     { id: 'cust2', name: 'Solutions Corp.', gstin: '29AABCS1234A1Z5', address: '456 Business Hub, Bengaluru, Karnataka' },
     { id: 'cust3', name: 'Quantum Tech', gstin: '36AAAAA0000A1Z0', address: '789 Science City, Hyderabad, Telangana' },
   ]);
@@ -172,20 +196,7 @@ export function InvoiceForm() {
 
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
-    defaultValues: {
-      customerName: '',
-      billingAddress: '',
-      isShippingSameAsBilling: true,
-      invoiceNumber: '',
-      invoiceDate: undefined,
-      dueDate: undefined,
-      currency: 'INR',
-      exchangeRate: 1,
-      items: [{ productId: '', itemName: '', hsnCode: '', quantity: 1, rate: 0, discount: 0, gstRate: 18, unit: 'pcs' }],
-      notes: 'Thank you for your business. All payments are due within 30 days.',
-      paymentReceived: 0,
-      paymentMode: '',
-    },
+    defaultValues: sampleInvoiceData
   });
 
   const currentFinancialYear = React.useMemo(() => {
@@ -206,18 +217,11 @@ export function InvoiceForm() {
   }, [numberingSettings, currentFinancialYear]);
   
   React.useEffect(() => {
-    form.setValue('invoiceNumber', invoicePreview);
+    if (!form.getValues('invoiceNumber')) {
+      form.setValue('invoiceNumber', invoicePreview);
+    }
   }, [invoicePreview, form]);
 
-  React.useEffect(() => {
-    const today = new Date();
-    const futureDate = new Date();
-    futureDate.setDate(today.getDate() + 30);
-    
-    form.setValue('invoiceDate', today);
-    form.setValue('dueDate', futureDate);
-  }, [form]);
-  
   React.useEffect(() => {
     if (invoiceCreationMode === 'item') {
         setInvoiceType('item');
@@ -498,36 +502,47 @@ export function InvoiceForm() {
                                 <FormItem>
                                     <FormLabel>Bill To</FormLabel>
                                     <div className="flex items-start gap-2">
-                                        <Select
-                                            onValueChange={(value) => {
-                                                const selectedCustomer = customers.find(c => c.name === value);
-                                                if (selectedCustomer) {
-                                                    form.setValue('customerName', selectedCustomer.name);
-                                                    form.setValue('customerGstin', selectedCustomer.gstin);
-                                                    form.setValue('billingAddress', selectedCustomer.address);
-                                                    const stateMatch = indianStates.find(state => selectedCustomer.address.toLowerCase().includes(state.toLowerCase()));
-                                                    if(stateMatch) {
-                                                        form.setValue('placeOfSupply', stateMatch);
-                                                    }
-                                                } else {
-                                                    field.onChange(value);
-                                                }
-                                            }}
-                                            value={field.value}
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select a customer" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {customers.map(customer => (
-                                                    <SelectItem key={customer.id} value={customer.name}>
-                                                        {customer.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <FormControl>
+                                                    <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
+                                                        {field.value || "Select a customer"}
+                                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                    </Button>
+                                                </FormControl>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                                <Command>
+                                                    <CommandInput placeholder="Search customer..." />
+                                                    <CommandList>
+                                                        <CommandEmpty>No customer found.</CommandEmpty>
+                                                        <CommandGroup>
+                                                            {customers.map(customer => (
+                                                                <CommandItem
+                                                                    key={customer.id}
+                                                                    value={customer.name}
+                                                                    onSelect={(currentValue) => {
+                                                                        const selectedCustomer = customers.find(c => c.name.toLowerCase() === currentValue.toLowerCase());
+                                                                        if (selectedCustomer) {
+                                                                            form.setValue('customerName', selectedCustomer.name);
+                                                                            form.setValue('customerGstin', selectedCustomer.gstin);
+                                                                            form.setValue('billingAddress', selectedCustomer.address);
+                                                                            const stateMatch = indianStates.find(state => selectedCustomer.address.toLowerCase().includes(state.toLowerCase()));
+                                                                            if(stateMatch) {
+                                                                                form.setValue('placeOfSupply', stateMatch);
+                                                                            }
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <Check className={cn("mr-2 h-4 w-4", field.value === customer.name ? "opacity-100" : "opacity-0")} />
+                                                                    {customer.name}
+                                                                </CommandItem>
+                                                            ))}
+                                                        </CommandGroup>
+                                                    </CommandList>
+                                                </Command>
+                                            </PopoverContent>
+                                        </Popover>
                                         <Dialog open={isCustomerDialogOpen} onOpenChange={setIsCustomerDialogOpen}>
                                             <DialogTrigger asChild>
                                                 <Button type="button" variant="outline" size="icon" className="shrink-0">

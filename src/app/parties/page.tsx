@@ -19,7 +19,6 @@ export default function PartiesPage() {
   const [filter, setFilter] = useState<'all' | 'customer' | 'vendor'>('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingParty, setEditingParty] = useState<Person | null>(null);
-
   useEffect(() => {
     setData([...staticCustomers, ...staticVendors]);
   }, []);
