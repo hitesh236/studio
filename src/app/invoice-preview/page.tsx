@@ -7,7 +7,7 @@ import { Suspense } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, Printer, CreditCard } from "lucide-react";
 import { InvoicePreview } from "./invoice-preview";
-import { sampleInvoice, type SampleInvoice } from "./invoice-data";
+import { sampleInvoice as sampleInvoiceData } from "./invoice-data";
 import type { SalesInvoice } from '../sales-invoices/data';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -28,7 +28,31 @@ const InvoicePreviewPageContent = () => {
 
   const invoice = React.useMemo(() => {
     const invoiceDataString = searchParams.get('invoiceData');
-    if (!invoiceDataString) return null;
+    if (!invoiceDataString) {
+        // Fallback to sample data if no data is in the URL
+        const sampleSalesInvoice: SalesInvoice = {
+            id: sampleInvoiceData.invoiceDetails.number,
+            invoiceNumber: sampleInvoiceData.invoiceDetails.number,
+            customerName: sampleInvoiceData.buyer.name,
+            invoiceDate: sampleInvoiceData.invoiceDetails.date,
+            dueDate: sampleInvoiceData.invoiceDetails.dueDate,
+            currencyCode: 'INR',
+            exchangeRate: 1,
+            amountForeign: sampleInvoiceData.totals.grandTotal,
+            amountBase: sampleInvoiceData.totals.grandTotal,
+            totalTaxableValue: sampleInvoiceData.totals.subtotal,
+            totalGstAmount: sampleInvoiceData.totals.cgst + sampleInvoiceData.totals.sgst + sampleInvoiceData.totals.igst,
+            gstType: 'CGST&SGST',
+            placeOfSupply: sampleInvoiceData.buyer.placeOfSupply,
+            paymentStatus: sampleInvoiceData.invoiceDetails.status,
+            amountPaid: sampleInvoiceData.totals.amountPaid,
+            amountDue: sampleInvoiceData.totals.amountDue,
+            createdBy: 'Admin',
+            items: sampleInvoiceData.items.map(item => ({...item, unit: item.unit})),
+            invoiceType: 'Service',
+        };
+        return sampleSalesInvoice;
+    };
     try {
         const parsed = JSON.parse(decodeURIComponent(invoiceDataString));
         // Dates need to be converted back to Date objects
